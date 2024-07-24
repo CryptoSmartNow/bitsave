@@ -2,17 +2,20 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
   arbitrum,
   base,
+  liskSepolia,
   mainnet,
   optimism,
   polygon,
   sepolia,
+  
 } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
-  appName: 'RainbowKit App',
-  projectId: 'YOUR_PROJECT_ID',
+  appName: 'Bitsave App',
+  projectId: 'dfffb9bb51c39516580c01f134de2345',
   chains: [
     mainnet,
+    liskSepolia,
     polygon,
     optimism,
     arbitrum,

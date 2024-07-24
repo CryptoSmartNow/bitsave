@@ -1,6 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-};
+const withTM = require('next-transpile-modules')(['rc-util', 'antd', '@ant-design/icons']);
 
-module.exports = nextConfig;
+module.exports = withTM({
+  reactStrictMode: true,
+  webpack: (config) => {
+    // Additional custom webpack configurations if needed
+    return config;
+  },
+});
