@@ -1,17 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 
-  .containerMain {
-    box-sizing: border-box;
-    font-family: "Space Grotesk", sans-serif;
-    margin: 0 auto;
-    padding: 0;
-    height: auto;
-    background-color: #F6F8FB;
-  }
+
+
+.containerMain {
+  font-family: "Space Grotesk", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #F6F8FB;
+}
   
   .container {
-    height: 100%;
-    /* display: flex; */
+    height: auto;
     align-items: center;
     justify-content: center;
   }
@@ -20,7 +19,10 @@
     background-color: #0F2A32;
     height: 400px;
     width: 100%;
+    margin-bottom: 50px;
   }
+
+  
   
   
 .bit_header {
@@ -64,10 +66,10 @@
 
 .bottom_tab_nav_container {
   position: fixed;
-  bottom: 50px;
+  bottom: auto;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
+  width: auto;
 }
 
 .bottom_tab_nav {
@@ -114,19 +116,20 @@
   background-color: rgba(255, 255, 255, 0.03);
   border-radius: 25px;
   position: relative;
+  bottom: 30px;
   /* bottom: 10px; */
 }
 
 .bit_container {
-  position: relative;
+  position: absolute;
 }
 
-.bit_savings {
+.bit_saving {
   position: absolute;
   left: 0;
   width: 100%;
   height: 25px;
-  background-color: #F6F8FB;
+  padding: 20px;
   border-top-left-radius: 25px;
   border-top-right-radius: 25px;
 }
@@ -146,6 +149,7 @@
   position: absolute;
   top: 20px;
   left: 30px;
+  margin-bottom: 15px;
   height: 32px;
   width: 170px;
   background-color: rgba(255, 255, 255, 0.2);
@@ -200,7 +204,7 @@
   width: 100%;
   height: auto;
   margin-top: 20px;
-  background-color: #F6F8FB;
+  padding: 10px;
 }
 
 
@@ -226,11 +230,12 @@
   max-width: 400px;
   height: 40px;
   padding: 5px 20px;
-  border-radius: 25px;
+  border-radius: 10px;
   border: none;
   text-align: left;
   margin-left: 10px;
   margin-right: 10px;
+  background-color: #FFFFFF;
 }
 
 .search_button {
@@ -239,7 +244,7 @@
   margin-left: 5px;
   margin-right: 5px;
   background-color: #81D7B4;
-  border-radius: 100px;
+  border-radius: 20px;
   border: none;
   color: white;
   font-size: 16px;
@@ -248,11 +253,11 @@
 
 .tab_nav {
   display: flex;
-  justify-content: space-between;
-  margin-top: 150px;
-  width: 20%;
-  max-width: 200px;
-  margin-left: 20px;
+  justify-content: center;
+  margin-top: 200px;
+  /* width: auto; */
+  /* max-width: 500px; */
+  /* margin-left: 20px; */
   margin-right: auto;
 }
 
@@ -298,9 +303,9 @@
   border-radius: 20px;
   width: 90%;
   max-width: 700em;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
   margin: 20px auto;
-  padding: 20px;
+  padding: 25px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -343,7 +348,7 @@
 .top_up_button {
   padding: 8px 5px;
   border: 1px solid #B4BCBF;
-  border-radius: 25px;
+  border-radius: 15px;
   color: #687A7F;
   font-size: 12px;
   display: flex;
@@ -351,6 +356,21 @@
   justify-content: center; /* Align text horizontally to center */
   background-color: #fff;
   width: 80px;
+}
+
+
+.top_up_button2 {
+  padding: 8px 5px;
+  border: 2px solid #9ADFC3;
+  border-radius: 15px;
+  color: #687A7F;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  background-color: #fff;
+  width: 100%;
+  margin-top: 20px;
 }
 
 
@@ -432,15 +452,16 @@
 }
 
 .no_plan_card {
-  background-color: white;
+  background-color: #F6F8FB;
   border-radius: 20px;
   width: 90%;
-  max-width: 700em;
+  /* max-width: 700em; */
   margin: 20px auto;
   padding: 20px;
   text-align: center;
-  bottom: none;
-  height: auto;
+  bottom: 20em;
+  /* height: auto; */
+  margin-bottom: 500px;
 }
 
 .spinner_icon {

@@ -53,6 +53,7 @@ body {
     background-color: var(--light-purple);
     word-break: break-word;
     scroll-behavior: smooth;
+    background-color: #F6F8FB;
 }
 
 body.hide_scroll {
