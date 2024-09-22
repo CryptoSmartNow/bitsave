@@ -22,7 +22,7 @@ import axios from "axios";
 const { Option } = Select;
 const { Step } = Steps;
 
-const CONTRACT_ADDRESS = "0x01f0443DaEC78fbaBb2D0927fEdFf5C20a4A39b5";
+const CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 
 export default function Dashboard() {
   const [selectedDayRange, setSelectedDayRange] = useState({
