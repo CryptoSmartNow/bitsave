@@ -10,9 +10,8 @@ import {
   Chain,
 } from 'wagmi/chains';
 
-// Define Lisk mainnet without 'network' property
 const liskMainnet: Chain = {
-  id:  1135, // Replace this with the actual chain ID for Lisk mainnet
+  id:  1135, 
   name: 'Lisk Mainnet',
   nativeCurrency: {
     decimals: 18,
@@ -21,13 +20,13 @@ const liskMainnet: Chain = {
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.api.lisk.com'], // Replace with actual Lisk mainnet RPC URL
+      http: ['https://rpc.api.lisk.com'], 
     },
   },
   blockExplorers: {
     default: {
       name: 'Lisk Explorer',
-      url: 'https://blockscout.lisk.com', // Replace with actual Lisk explorer URL
+      url: 'https://blockscout.lisk.com', 
     },
   },
 };
@@ -37,7 +36,7 @@ export const config = getDefaultConfig({
   projectId: 'dfffb9bb51c39516580c01f134de2345',
   chains: [
     mainnet,
-    liskMainnet, // Add Lisk mainnet here
+    liskMainnet, 
     liskSepolia,
     polygon,
     optimism,
