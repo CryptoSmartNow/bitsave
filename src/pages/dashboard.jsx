@@ -17,6 +17,9 @@ import CONTRACT_ABI from "../contractABI";
 import CHILD_CONTRACT_ABI from "../childContractABI";
 import SavingsPlanCard from "../components/savingsPlanCards";
 import axios from "axios";
+import erc20Data from '../erc20ABI.json';
+const erc20ABI = erc20Data.abi;
+
 // import handleWithdraw from '../components/handleWithdraw';  
 
 const { Option } = Select;
@@ -164,91 +167,127 @@ export default function Dashboard() {
 };
 
 
-  const handleCreateSavings = async () => {
-    if (!isConnected) {
-      message.error("Please connect your wallet.");
-      return;
+const COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=lisk,ethereum&vs_currencies=eth";
+
+const getLiskToEthRate = async () => {
+  try {
+    const response = await fetch(COINGECKO_API_URL);
+    const data = await response.json();
+    return data.lisk.eth; // Extract the Lisk to ETH conversion rate
+  } catch (error) {
+    console.error("Error fetching Lisk to ETH rate:", error);
+    throw new Error("Failed to retrieve Lisk to ETH conversion rate");
+  }
+};
+
+const approveERC20 = async (tokenAddress, amount, signer) => {
+  const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
+
+  // Approve token transfer
+  const tx = await erc20Contract.approve(CONTRACT_ADDRESS, amount);
+  await tx.wait();
+  console.log("Approval Transaction Hash:", tx.hash);
+};
+
+const handleCreateSavings = async () => {
+  if (!isConnected) {
+    message.error("Please connect your wallet.");
+    return;
+  }
+  setLoading(true);
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+
+    // Step 1: Check if the contract exists at the specified address
+    const code = await provider.getCode(CONTRACT_ADDRESS);
+    if (code === "0x") {
+      throw new Error("Contract not found on this network. Check the contract address and network.");
     }
-    setLoading(true);
-    try {
-      // Create an Ethereum provider
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        CONTRACT_ABI,
-        signer
-      );
 
-      // Check if user has joined Bitsave
-      const userChildContractAddress =
-        await contract.getUserChildContractAddress();
-      if (userChildContractAddress === ethers.constants.AddressZero) {
-        // User has not joined, so join Bitsave
-        const joinTx = await contract.joinBitsave({
-          value: ethers.utils.parseEther("0.0001"),
-        });
-        await joinTx.wait();
-      }
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-      console.log(userChildContractAddress);
-
-      const maturityTime = selectedDayRange.to
-        ? Math.floor(
-            new Date(
-              selectedDayRange.to.year,
-              selectedDayRange.to.month - 1,
-              selectedDayRange.to.day
-            ).getTime() / 1000
-          )
-        : 0;
-      const safeMode = false;
-      const tokenToSave = "0x0000000000000000000000000000000000000000";
-
-      // Ensure amount is a valid string and convert to BigNumber in wei
-      const parsedAmount = ethers.utils.parseUnits(amount, 18); // Convert amount from ether to wei
-
-      console.log("Parameters:", {
-        savingsName,
-        maturityTime,
-        selectedPenalty,
-        safeMode,
-        tokenToSave,
-        parsedAmount,
+    // Check user’s child contract address
+    const userChildContractAddress = await contract.getUserChildContractAddress();
+    if (userChildContractAddress === ethers.constants.AddressZero) {
+      const joinTx = await contract.joinBitsave({
+        value: ethers.utils.parseEther("0.0001"), // Initial join value
       });
-
-      // Set manual gas limit and ensure to pass the correct tx options
-      const txOptions = {
-        gasLimit: 1000000, // Adjust as needed
-        value: parsedAmount, // Pass the amount in wei if contract needs ETH
-      };
-
-      // Create savings plan
-      const tx = await contract.createSaving(
-        savingsName,
-        maturityTime,
-        selectedPenalty,
-        safeMode,
-        tokenToSave,
-        parsedAmount,
-        txOptions
-      );
-
-      await tx.wait();
-
-      message.success("Savings plan created successfully!");
-      handleModalClose(); // Close modal and reset form fields
-
-      // Fetch the updated savings data
-      fetchSavingsData(); 
-    } catch (error) {
-      console.error("Error creating savings plan:", error);
-      message.error("Failed to create savings plan.");
-    } finally {
-      setLoading(false); // Set loading state to false
+      await joinTx.wait();
     }
-  };
+
+    console.log("User child contract address:", userChildContractAddress);
+
+    const maturityTime = selectedDayRange.to
+      ? Math.floor(
+          new Date(
+            selectedDayRange.to.year,
+            selectedDayRange.to.month - 1,
+            selectedDayRange.to.day
+          ).getTime() / 1000
+        )
+      : 0;
+    const safeMode = false;
+    const tokenToSave = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24";
+
+    // Step 2: Convert user-entered LSK amount to ETH dynamically
+    const liskToEthRate = await getLiskToEthRate();
+    const userEnteredLiskAmount = parseFloat(amount);
+    const ethEquivalentAmount = ethers.utils.parseEther((userEnteredLiskAmount * liskToEthRate).toString());
+
+    // Add the initial join amount (0.0001 ETH) to the ETH equivalent amount
+    const totalAmount = ethEquivalentAmount.add(ethers.utils.parseEther("0.0001"));
+
+    console.log("Parameters:", {
+      savingsName,
+      maturityTime,
+      selectedPenalty,
+      safeMode,
+      tokenToSave,
+      userEnteredLiskAmount,
+      liskToEthRate,
+      ethEquivalentAmount,
+      totalAmount,
+    });
+
+    // Approve token transfer for the total amount in ETH
+    await approveERC20(tokenToSave, totalAmount, signer);
+
+    // Transaction options including gas limit and total ETH value
+    const txOptions = {
+      gasLimit: 1200000,
+      value: totalAmount, // Total amount in ETH for transaction
+    };
+
+    // Step 3: Attempt to create a savings plan
+    const tx = await contract.createSaving(
+      savingsName,
+      maturityTime,
+      selectedPenalty,
+      safeMode,
+      tokenToSave,
+      ethEquivalentAmount, // Pass only ETH equivalent amount to the contract
+      txOptions
+    );
+
+    await tx.wait();
+
+    message.success("Savings plan created successfully!");
+    handleModalClose();
+
+    fetchSavingsData();
+  } catch (error) {
+    console.error("Error creating savings plan:", error);
+    message.error("Failed to create savings plan.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
 
 
   const handleTopUp = async (nameOfSavings, amount) => {
@@ -274,7 +313,7 @@ export default function Dashboard() {
       });
 
       // Hardcode token address
-      const tokenToRetrieve = '0x0000000000000000000000000000000000000000';
+      const tokenToRetrieve = '0xac485391EB2d7D88253a7F1eF18C37f4242D1A24';
 
       // Call the incrementSaving function
       const tx = await contract.incrementSaving(nameOfSavings, tokenToRetrieve, amountInUnits, {
@@ -282,7 +321,6 @@ export default function Dashboard() {
         value: amountInUnits 
       });
 
-      // Wait for transaction to be mined
       await tx.wait();
 
       message.success('Top-up successful!');
