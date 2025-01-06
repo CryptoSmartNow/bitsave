@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import bit from "../styles/bitdash.module.css";
 import { Modal, Button, Input, Select, Steps, message } from "antd/lib";
+import { Drawer, Menu } from "antd/lib";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import "react-modern-calendar-datepicker/lib/DatePicker.css";
 import { Calendar, utils } from "@hassanmojab/react-modern-calendar-datepicker";
@@ -10,6 +11,11 @@ import {
   faWallet,
   faPlus,
   faSearch,
+  faTrophy,
+  faCog,
+  faLifeRing,
+  faQuestionCircle,
+  faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { ethers } from "ethers";
 import { useAccount } from "wagmi";
@@ -18,6 +24,9 @@ import CHILD_CONTRACT_ABI from "../childContractABI";
 import SavingsPlanCard from "../components/savingsPlanCards";
 import axios from "axios";
 import erc20Data from '../erc20ABI.json';
+import WalletConnect from "../components/walletconnect";
+import Head from 'next/head';
+import TopUpModal from "../components/TopupModal";
 const erc20ABI = erc20Data.abi;
 
 // import handleWithdraw from '../components/handleWithdraw';  
@@ -41,9 +50,24 @@ export default function Dashboard() {
   const [savingsData, setSavingsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalSavedAmountUSD, setTotalSavedAmountUSD] = useState(0);
-  const [activeTab, setActiveTab] = useState("current");
+  const [activeTab, setActiveTab] = useState('current');
+  const [isLoadingSavings, setIsLoadingSavings] = useState(true);
 
   const { isConnected } = useAccount();
+  const [selectedKey, setSelectedKey] = useState("1");
+
+  const handleMenuClick = (e) => {
+    setSelectedKey(e.key);  
+  };
+  const [visible, setVisible] = useState(false);
+
+  const showDrawer = () => {
+    setVisible(true);
+  };
+
+  const onClose = () => {
+    setVisible(false);
+  };
 
   useEffect(() => {
     if (isConnected) {
@@ -73,322 +97,342 @@ export default function Dashboard() {
     }
   };
 
+  const [currentSavings, setCurrentSavings] = useState([]);
+  const [completedSavings, setCompletedSavings] = useState([]);
+
   const fetchSavingsData = async () => {
     if (!isConnected) return;
 
     try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      setIsLoadingSavings(true);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-        const userChildContractAddress = await contract.getUserChildContractAddress();
-        if (userChildContractAddress !== ethers.constants.AddressZero) {
-            const childContract = new ethers.Contract(userChildContractAddress, CHILD_CONTRACT_ABI, signer);
-            const savingsNamesObj = await childContract.getSavingsNames();
+      const userChildContractAddress = await contract.getUserChildContractAddress();
+      if (userChildContractAddress !== ethers.constants.AddressZero) {
+        const childContract = new ethers.Contract(userChildContractAddress, CHILD_CONTRACT_ABI, signer);
+        const savingsNamesObj = await childContract.getSavingsNames();
+        const savingsNamesArray = savingsNamesObj[0];
 
-            console.log("savingsNamesObj:", savingsNamesObj); 
+        if (Array.isArray(savingsNamesArray)) {
+          const ethPriceInUSD = await fetchEthPrice();
+          if (ethPriceInUSD) {
+            const reversedSavingsNamesArray = [...savingsNamesArray].reverse();
+            let totalSavedAmountETH = ethers.BigNumber.from(0);
 
-            const savingsNamesArray = savingsNamesObj[0];
+            const savingsListPromises = reversedSavingsNamesArray.map(async (savingName) => {
+              const savingData = await childContract.getSaving(savingName);
+              if (!savingData.isValid) return null;
 
-            if (Array.isArray(savingsNamesArray)) {
-                const ethPriceInUSD = await fetchEthPrice();
+              const amountInETH = ethers.utils.formatEther(savingData.amount);
+              totalSavedAmountETH = totalSavedAmountETH.add(savingData.amount);
 
-                if (ethPriceInUSD) {
-                    const reversedSavingsNamesArray = [...savingsNamesArray].reverse();
+              const currentDate = new Date();
+              const startTimestamp = savingData.startTime.toNumber();
+              const maturityTimestamp = savingData.maturityTime.toNumber();
+              const startDate = new Date(startTimestamp * 1000);
+              const maturityDate = new Date(maturityTimestamp * 1000);
 
-                    // Initialize totalSavedAmount in ETH
-                    let totalSavedAmountETH = ethers.BigNumber.from(0);
+              console.log('Saving data from contract:', savingData);
 
-                    const savingsListPromises = reversedSavingsNamesArray.map(async (savingName) => {
-                        const savingData = await childContract.getSaving(savingName);
+              const totalDuration = maturityDate - startDate;
+              const elapsedTime = currentDate - startDate;
+              const progress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
 
-                        if (!savingData.isValid) {
-                            // Skip invalid savings
-                            return null;
-                        }
+              const timeDifference = maturityDate - currentDate;
+              const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24));
+              const months = Math.floor(daysDifference / 30);
+              const days = daysDifference % 30;
 
-                        const amountInETH = ethers.utils.formatEther(savingData.amount); // Convert BigNumber to string in ETH
-                        totalSavedAmountETH = totalSavedAmountETH.add(savingData.amount);
+              return {
+                name: savingName,
+                createdDate: startDate.toLocaleDateString(),
+                savedAmount: amountInETH,
+                tokenId: savingData.tokenId,
+                penalty: `${savingData.penaltyPercentage}%`,
+                startTime: startDate.toLocaleString(),
+                startTimestamp: startTimestamp * 1000,
+                progress: `${progress}`,
+                remainingTime: `${months} Months and ${days} Days Remaining`,
+                isCompleted: currentDate >= maturityDate
+              };
+            });
 
-                        // Calculate the remaining time
-                        const currentDate = new Date();
-                        const startDate = new Date(savingData.startTime.toNumber() * 1000);
-                        const maturityDate = new Date(savingData.maturityTime.toNumber() * 1000);
+            const allSavings = (await Promise.all(savingsListPromises)).filter(Boolean);
+            
+            // Separate savings into current and completed
+            const current = allSavings.filter(saving => !saving.isCompleted);
+            const completed = allSavings.filter(saving => saving.isCompleted);
 
-                        // Calculate total duration and elapsed time
-                        const totalDuration = maturityDate - startDate;
-                        const elapsedTime = currentDate - startDate;
+            setCurrentSavings(current);
+            setCompletedSavings(completed);
 
-                        // Calculate progress percentage
-                        let progress = 0;
-                        if (elapsedTime > 0) {
-                            progress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
-                        }
-
-                        // Convert the time difference into months and days
-                        const timeDifference = maturityDate - currentDate;
-                        const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24));
-                        const months = Math.floor(daysDifference / 30);
-                        const days = daysDifference % 30;
-
-                        return {
-                            name: savingName,
-                            createdDate: new Date(savingData.startTime.toNumber() * 1000).toLocaleDateString(),
-                            savedAmount: `${amountInETH} ETH`,
-                            penalty: `${savingData.penaltyPercentage}%`,
-                            startTime: new Date(savingData.startTime.toNumber() * 1000).toLocaleString(),
-                            progress: `${progress}`, // Display progress percentage
-                            remainingTime: `${months} Months and ${days} Days Remaining`, // Display remaining time
-                        };
-                    });
-
-                    const savingsList = (await Promise.all(savingsListPromises)).filter(Boolean);
-
-                    // Convert totalSavedAmount in ETH to USD
-                    const totalSavedAmountInUSD = parseFloat(ethers.utils.formatEther(totalSavedAmountETH)) * ethPriceInUSD;
-
-                    // Format the amount to have a minimum of 3 decimal places
-                    const formattedAmountUSD = totalSavedAmountInUSD.toFixed(3);
-
-                    setTotalSavedAmountUSD(parseFloat(formattedAmountUSD));
-                    setSavingsData(savingsList);
-                } else {
-                    console.error("Failed to fetch ETH price.");
-                }
-            } else {
-                console.error("savingsNamesArray is not an array:", savingsNamesArray);
-            }
-        } else {
-            console.log("User has not joined Bitsave yet.");
+            const totalSavedAmountInUSD = parseFloat(ethers.utils.formatEther(totalSavedAmountETH)) * ethPriceInUSD;
+            const formattedAmountUSD = totalSavedAmountInUSD.toFixed(3);
+            setTotalSavedAmountUSD(parseFloat(formattedAmountUSD));
+          }
         }
+      }
     } catch (error) {
-        console.error("Error fetching savings data:", error);
+      console.error("Error fetching savings data:", error);
+    } finally {
+      setIsLoadingSavings(false);
     }
-};
+  };
 
-
-const COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=lisk,ethereum&vs_currencies=eth";
-
-const getLiskToEthRate = async () => {
-  try {
-    const response = await fetch(COINGECKO_API_URL);
-    const data = await response.json();
-    return data.lisk.eth; // Extract the Lisk to ETH conversion rate
-  } catch (error) {
-    console.error("Error fetching Lisk to ETH rate:", error);
-    throw new Error("Failed to retrieve Lisk to ETH conversion rate");
-  }
-};
-
-const approveERC20 = async (tokenAddress, amount, signer) => {
-  const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
-
-  // Approve token transfer
-  const tx = await erc20Contract.approve(CONTRACT_ADDRESS, amount);
-  await tx.wait();
-  console.log("Approval Transaction Hash:", tx.hash);
-};
-
-const handleCreateSavings = async () => {
-  if (!isConnected) {
-    message.error("Please connect your wallet.");
-    return;
-  }
-  setLoading(true);
-
-  try {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-
-    // Step 1: Check if the contract exists at the specified address
-    const code = await provider.getCode(CONTRACT_ADDRESS);
-    if (code === "0x") {
-      throw new Error("Contract not found on this network. Check the contract address and network.");
-    }
-
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-    // Check user’s child contract address
-    const userChildContractAddress = await contract.getUserChildContractAddress();
-    if (userChildContractAddress === ethers.constants.AddressZero) {
-      const joinTx = await contract.joinBitsave({
-        value: ethers.utils.parseEther("0.0001"), // Initial join value
+  const getLiskToEthRate = async () => {
+    try {
+      const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: {
+          ids: 'lisk',
+          vs_currencies: 'eth'
+        },
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        timeout: 5000
       });
-      await joinTx.wait();
+      
+      if (response.data && response.data.lisk && response.data.lisk.eth) {
+        return response.data.lisk.eth;
+      }
+      
+      // Use fallback rate if API response is invalid
+      console.warn('Invalid API response, using fallback rate');
+      return FALLBACK_LISK_ETH_RATE;
+    } catch (error) {
+      console.warn('API call failed, using fallback rate:', error.message);
+      return FALLBACK_LISK_ETH_RATE;
     }
+  };
 
-    console.log("User child contract address:", userChildContractAddress);
+  const approveERC20 = async (tokenAddress, amount, signer) => {
+    const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
 
-    const maturityTime = selectedDayRange.to
-      ? Math.floor(
+    // Approve token transfer
+    const tx = await erc20Contract.approve(CONTRACT_ADDRESS, amount);
+    await tx.wait();
+    console.log("Approval Transaction Hash:", tx.hash);
+  };
+
+  const handleLskSavingsCreate = async () => {
+    if (!isConnected) {
+      message.error("Please connect your wallet.");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      // Get conversion rate with retry mechanism
+      let liskToEthRate;
+      for (let i = 0; i < 3; i++) { // Try 3 times
+        try {
+          liskToEthRate = await getLiskToEthRate();
+          break;
+        } catch (error) {
+          if (i === 2) throw error; // If all retries failed
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+        }
+      }
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = provider.getSigner();
+
+      // Step 1: Check if the contract exists at the specified address
+      const code = await provider.getCode(CONTRACT_ADDRESS);
+      if (code === "0x") {
+        throw new Error("Contract not found on this network. Check the contract address and network.");
+      }
+
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+      // Check user’s child contract address
+      const userChildContractAddress = await contract.getUserChildContractAddress();
+      if (userChildContractAddress === ethers.constants.AddressZero) {
+        const joinTx = await contract.joinBitsave({
+          value: ethers.utils.parseEther("0.0001"), 
+        });
+        await joinTx.wait();
+      }
+
+      console.log("User child contract address:", userChildContractAddress);
+
+      const maturityTime = selectedDayRange.to
+        ? Math.floor(
           new Date(
             selectedDayRange.to.year,
             selectedDayRange.to.month - 1,
             selectedDayRange.to.day
           ).getTime() / 1000
         )
-      : 0;
-    const safeMode = false;
-    const tokenToSave = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24";
+        : 0;
+      const safeMode = false;
+      const tokenToSave = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24";
 
-    // Step 2: Convert user-entered LSK amount to ETH dynamically
-    const liskToEthRate = await getLiskToEthRate();
-    const userEnteredLiskAmount = parseFloat(amount);
-    const ethEquivalentAmount = ethers.utils.parseEther((userEnteredLiskAmount * liskToEthRate).toString());
+      // Step 2: Convert user-entered LSK amount to ETH dynamically
+      const userEnteredLiskAmount = parseFloat(amount);
+      const ethEquivalentAmount = ethers.utils.parseEther((userEnteredLiskAmount * liskToEthRate).toString());
 
-    // Add the initial join amount (0.0001 ETH) to the ETH equivalent amount
-    const totalAmount = ethEquivalentAmount.add(ethers.utils.parseEther("0.0001"));
+      // Add the initial join amount (0.0001 ETH) to the ETH equivalent amount
+      const totalAmount = ethEquivalentAmount.add(ethers.utils.parseEther("0.0001"));
 
-    console.log("Parameters:", {
-      savingsName,
-      maturityTime,
-      selectedPenalty,
-      safeMode,
-      tokenToSave,
-      userEnteredLiskAmount,
-      liskToEthRate,
-      ethEquivalentAmount,
-      totalAmount,
-    });
+      console.log("Parameters:", {
+        savingsName,
+        maturityTime,
+        selectedPenalty,
+        safeMode,
+        tokenToSave,
+        userEnteredLiskAmount,
+        liskToEthRate,
+        ethEquivalentAmount,
+        totalAmount,
+      });
 
-    // Approve token transfer for the total amount in ETH
-    await approveERC20(tokenToSave, totalAmount, signer);
+      // Approve token transfer for the total amount in ETH
+      await approveERC20(tokenToSave, totalAmount, signer);
 
-    // Transaction options including gas limit and total ETH value
-    const txOptions = {
-      gasLimit: 1200000,
-      value: totalAmount, // Total amount in ETH for transaction
-    };
+      // Transaction options including gas limit and total ETH value
+      const txOptions = {
+        gasLimit: 1200000,
+        value: totalAmount, // Total amount in ETH for transaction
+      };
 
-    // Step 3: Attempt to create a savings plan
-    const tx = await contract.createSaving(
-      savingsName,
-      maturityTime,
-      selectedPenalty,
-      safeMode,
-      tokenToSave,
-      ethEquivalentAmount, // Pass only ETH equivalent amount to the contract
-      txOptions
-    );
-
-    await tx.wait();
-
-    message.success("Savings plan created successfully!");
-    handleModalClose();
-
-    fetchSavingsData();
-  } catch (error) {
-    console.error("Error creating savings plan:", error);
-    message.error("Failed to create savings plan.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-
-
-  const handleTopUp = async (nameOfSavings, amount) => {
-    try {
-      // Initialize provider and signer
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
-
-      // Initialize contract instance
-      const contract = new ethers.Contract(
-        '0x01f0443DaEC78fbaBb2D0927fEdFf5C20a4A39b5', 
-        CONTRACT_ABI,
-        signer
+      // Step 3: Attempt to create a savings plan
+      const tx = await contract.createSaving(
+        savingsName,
+        maturityTime,
+        selectedPenalty,
+        safeMode,
+        tokenToSave,
+        ethEquivalentAmount, // Pass only ETH equivalent amount to the contract
+        txOptions
       );
-
-      const amountInUnits = ethers.utils.parseUnits(amount, 18); 
-
-      // Log the parameters for debugging
-      console.log("Calling contract with parameters:", {
-        nameOfSavings,
-        amountInUnits: amountInUnits
-      });
-
-      // Hardcode token address
-      const tokenToRetrieve = '0xac485391EB2d7D88253a7F1eF18C37f4242D1A24';
-
-      // Call the incrementSaving function
-      const tx = await contract.incrementSaving(nameOfSavings, tokenToRetrieve, amountInUnits, {
-        gasLimit: 1000000, 
-        value: amountInUnits 
-      });
 
       await tx.wait();
 
-      message.success('Top-up successful!');
-      fetchSavingsData();  // Refresh savings data after top-up
-    } catch (error) {
-      console.error('Error during top-up:', error);
+      message.success("Savings plan created successfully!");
+      handleModalClose();
 
-      // Handle different types of errors
-      if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
-        message.error('Cannot estimate gas limit. The transaction may fail or require manual gas limit.');
-      } else if (error.message.includes('Invalid saving increment value sent')) {
-        message.error('Invalid saving increment value. Please check the values you provided.');
-      } else {
-        message.error(`Top-up failed: ${error.message}`);
-      }
+      fetchSavingsData();
+    } catch (error) {
+      console.error("Error creating savings plan:", error);
+      message.error("Failed to create savings plan.");
+    } finally {
+      setLoading(false);
     }
   };
 
-
-  const handleWithdraw = async (nameOfSavings) => {
+  const handleLskSavingsTopUp = async (savingName, amount) => {
     try {
-      // Initialize provider and signer
+      if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        throw new Error('Please enter a valid amount');
+      }
+
+      setLoading(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
-  
-      // Initialize contract instance
-      const contract = new ethers.Contract(
-        '0x01f0443DaEC78fbaBb2D0927fEdFf5C20a4A39b5', 
-        CONTRACT_ABI,
-        signer
-      );
-  
+      
+      // First get the child contract
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       const userChildContractAddress = await contract.getUserChildContractAddress();
-      // Initialize child contract instance
-      const childContract = new ethers.Contract(
-        userChildContractAddress,
-        CHILD_CONTRACT_ABI,
-        signer
-      );
-  
-      // Check if the savings name exists and get its value
-      const savingData = await childContract.getSaving(nameOfSavings);
-      if (!savingData.isValid) {
-        message.error('Savings plan does not exist. Please try again.');
-        return;
+      
+      // Verify contract exists
+      const childContractCode = await provider.getCode(userChildContractAddress);
+      if (childContractCode === "0x") {
+        throw new Error("Child contract not found. Please create a savings plan first.");
       }
-  
-      // Call the withdrawSaving function without passing the value
-      const tx = await contract.withdrawSaving(nameOfSavings, {
-        gasLimit: 1000000,
+
+      const childContract = new ethers.Contract(userChildContractAddress, CHILD_CONTRACT_ABI, signer);
+
+      // Get conversion rate
+      let liskToEthRate;
+      try {
+        liskToEthRate = await getLiskToEthRate();
+      } catch (error) {
+        console.warn('Using fallback rate due to API error');
+        liskToEthRate = FALLBACK_LISK_ETH_RATE;
+      }
+
+      // Convert LSK amount to ETH with proper decimal handling
+      const liskAmount = parseFloat(amount);
+      const ethAmountFloat = liskAmount * liskToEthRate;
+      const ethAmountString = ethAmountFloat.toFixed(18);
+      const ethAmount = ethers.utils.parseEther(ethAmountString);
+
+      // Get the LISK token contract
+      const tokenAddress = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24";
+      const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
+
+      // Check LISK balance
+      const userAddress = await signer.getAddress();
+      const balance = await erc20Contract.balanceOf(userAddress);
+      if (balance.lt(ethAmount)) {
+        throw new Error('Insufficient LISK balance');
+      }
+
+      // Check current allowance
+      const currentAllowance = await erc20Contract.allowance(userAddress, userChildContractAddress);
+      if (currentAllowance.lt(ethAmount)) {
+        console.log('Approving tokens...');
+        const approveTx = await erc20Contract.approve(userChildContractAddress, ethAmount);
+        await approveTx.wait();
+        console.log('Token approval successful');
+      }
+
+      // Verify the saving exists and is valid
+      const saving = await childContract.getSaving(savingName);
+      if (!saving.isValid) {
+        throw new Error('Invalid saving plan');
+      }
+
+      console.log('Performing increment...', {
+        savingName,
+        amount: ethAmount.toString(),
+        childContract: userChildContractAddress
       });
-  
-      // Wait for transaction to be mined
-      await tx.wait();
-   
-      message.success('Withdrawal successful!');
-      fetchSavingsData();
-    } catch (error) {
-      console.error('Error during withdrawal:', error);
-  
-      // Handle different types of errors
-      if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
-        message.error('Cannot estimate gas limit. The transaction may fail or require manual gas limit.');
-      } else {
-        message.error(`Withdrawal failed: ${error.message}`);
+
+      // Call incrementSaving with proper parameters and error handling
+      const incrementTx = await childContract.incrementSaving(
+        savingName,
+        ethAmount,
+        {
+          gasLimit: 1000000,
+          gasPrice: await provider.getGasPrice()
+        }
+      );
+
+      console.log('Transaction sent:', incrementTx.hash);
+      const receipt = await incrementTx.wait();
+      
+      if (receipt.status === 0) {
+        throw new Error('Transaction failed during execution');
       }
+
+      message.success('Top-up successful!');
+      await fetchSavingsData();
+    } catch (error) {
+      console.error('Top-up error:', error);
+      if (error.code === 'CALL_EXCEPTION') {
+        message.error('Transaction reverted: Please check your balance and try again');
+      } else if (error.message.includes('insufficient')) {
+        message.error('Insufficient balance to complete the transaction');
+      } else {
+        message.error(error.message || 'Transaction failed - please try again');
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleLskWithdraw = async (nameOfSavings) => {
+    if (currency !== "lsk") {
+      message.error("Token selected not yet active, please select another");
+      return;
+    }
+    await handleLskSavingsWithdraw(nameOfSavings);
   };
 
   const showModal = () => {
@@ -591,175 +635,337 @@ const handleCreateSavings = async () => {
     },
   ];
 
+  // Add new LSK-specific functions
+  const handleLskCreateSavings = async () => {
+    if (currency !== "lsk") {
+      message.error("Token selected not yet active, please select another");
+      return;
+    }
+    await handleLskSavingsCreate();
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const [isTopUpModalVisible, setIsTopUpModalVisible] = useState(false);
+  const [selectedSavingName, setSelectedSavingName] = useState('');
+
+  const handleTopUpClick = (savingName) => {
+    if (!savingName) {
+      message.error('Invalid savings plan');
+      return;
+    }
+    setSelectedSavingName(savingName);
+    setIsTopUpModalVisible(true);
+  };
+
   return (
-    <section className={bit.containerMain}>
-      <div className={bit.container}>
-        <div className={bit.bit_holder}>
-          <div className={bit.bit_header}>
-            <div className={bit.item}>
-              <span className={bit.text}>
-                <ConnectButton />
-                <br />
-                <span className={bit.username}></span>
-              </span>
-            </div>
-            <div className={bit.item}>
-              <div
-                className={bit.hamburger_menu}
-                style={{ fontSize: "30px", marginTop: "20px" }}
-              >
-                &#9776;
+    <>
+      <Head>
+        <title>Dashboard | Bitsave</title>
+        <meta name="description" content="Bitsave dashboard - Manage your savings plans" />
+      </Head>
+      <section className={bit.containerMain}>
+        <div className={bit.container}>
+          <div className={bit.bit_holder}>
+            <div className={bit.bit_header}>
+              <div className={bit.item}>
+                  <WalletConnect   />
+              </div>
+              <div className={bit.item}>
+                <div
+                  className={bit.hamburger_menu}
+                  onClick={showDrawer}
+                >
+                  &#9776;
+                </div>
+
+                <Drawer
+                  title={<span style={{ fontFamily: 'Space Grotesk', fontSize: '24px' }}>Bitsave Menu</span>}
+                  placement="left"
+                  onClose={onClose}
+                  open={visible}
+                  width={400}
+                >
+                  <Menu
+                    mode="vertical"
+                    selectedKeys={[selectedKey]}  // This will highlight the selected menu item
+                    onClick={handleMenuClick}  // Update the selected key on item click
+                    style={{
+                      borderRight: 'none',  // Optional: removes the default border
+                    }}
+                  >
+                    <Menu.Item
+                      key="1"
+                      icon={<FontAwesomeIcon icon={faTachometerAlt} />}
+                      style={{
+                        backgroundColor: selectedKey === '1' ? '#81D7B4' : '#ffffff',  // Active state
+                        color: selectedKey === '1' ? 'white' : 'black',  // Active state
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Dashboard
+                    </Menu.Item>
+                    <Menu.Item
+                      key="2"
+                      icon={<FontAwesomeIcon icon={faTrophy} />}
+                      style={{
+                        backgroundColor: selectedKey === '2' ? '#81D7B4' : '#ffffff',  
+                        color: selectedKey === '2' ? 'white' : 'black',  
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Leaderboard
+                    </Menu.Item>
+                    <Menu.Item
+                      key="3"
+                      icon={<FontAwesomeIcon icon={faCog} />}
+                      style={{
+                        backgroundColor: selectedKey === '3' ? '#81D7B4' : '#ffffff',  
+                        color: selectedKey === '3' ? 'white' : 'black',  
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Settings
+                    </Menu.Item>
+                    <Menu.Item
+                      key="4"
+                      icon={<FontAwesomeIcon icon={faLifeRing} />}
+                      style={{
+                        backgroundColor: selectedKey === '4' ? '#81D7B4' : '#ffffff',  
+                        color: selectedKey === '4' ? 'white' : 'black',  
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Support
+                    </Menu.Item>
+                    <Menu.Item
+                      key="5"
+                      icon={<FontAwesomeIcon icon={faQuestionCircle} />}
+                      style={{
+                        backgroundColor: selectedKey === '5' ? '#81D7B4' : '#ffffff',  
+                        color: selectedKey === '5' ? 'white' : 'black',  
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      FAQs
+                    </Menu.Item>
+                  </Menu>
+                </Drawer>
               </div>
             </div>
-          </div>
-          <div className={bit.inner_div}>
-            <div className={bit.bit_glassy}>
-              <div className={bit.glass_div}>
-                <span className={bit.glass_text}>
+            <div className={bit.inner_div}>
+              <div className={bit.bit_glassy}>
+                <div className={bit.glass_div}>
+                  <span className={bit.glass_text}>
+                    <FontAwesomeIcon
+                      icon={faWallet}
+                      style={{
+                        marginTop: "10px",
+                        marginRight: "10px",
+                        color: "#9ADFC3",
+                      }}
+                    />
+                    Total Locked Value
+                  </span>
+                </div>
+                <div className={bit.amount}>$ {totalSavedAmountUSD}</div>
+              </div>
+              <Button
+                type="ghost"
+                icon={
                   <FontAwesomeIcon
-                    icon={faWallet}
+                    icon={faPlus}
                     style={{
+                      color: "#fff",
                       marginTop: "10px",
                       marginRight: "10px",
-                      color: "#9ADFC3",
                     }}
                   />
-                  Total Locked Value
-                </span>
-              </div>
-              <div className={bit.amount}>$ {totalSavedAmountUSD}</div>
+                }
+                onClick={showModal}
+                className={bit.create_button}
+              >
+                Create Savings Plan
+              </Button>
+
             </div>
-            <Button
-              type="ghost"
-              icon={
-                <FontAwesomeIcon
-                  icon={faPlus}
-                  style={{
-                    color: "#fff",
-                    marginTop: "10px",
-                    marginRight: "10px",
-                  }}
+            <div className={bit.bit_savings}>
+              <div className={bit.header_description}>
+                <h3>My Savings 💰</h3>
+              </div>
+              <div className={bit.search_box}>
+                <Input
+                  placeholder="Search savings here..."
+                  className={bit.search_input}
+                  style={{ marginBottom: "10px" }}
                 />
-              }
-              onClick={showModal}
-              className={bit.create_button}
-            >
-              Create Savings Plan
-            </Button>
-            
-          </div>
-          <div className={bit.bit_savings}>
-            <div className={bit.header_description}>
-              <h3>My Savings 💰</h3>
-            </div>
-            <div className={bit.search_box}>
-              <Input
-                placeholder="Search savings here..."
-                className={bit.search_input}
-                style={{ marginBottom: "10px" }}
-              />
-              <Button
-                className={bit.search_button}
-                icon={<FontAwesomeIcon icon={faSearch} />}
-              />
-            </div>
-          </div>
-        </div>
-        <div className={bit.tab_nav}>
-          <div
-            className={`${bit.tab_item} ${bit.active}`}
-            style={{ marginRight: "10px", color: "#81D7B4" }}
-          >
-            Current
-            <div
-              className={`${bit.tab_indicator} ${bit.active}`}
-              style={{ backgroundColor: "#81D7B4" }}
-            ></div>
-          </div>
-          <div className={bit.tab_item}>
-            Completed
-            {/* <div className={bit.tab_indicator} style={{ backgroundColor: '#81D7B4' }}></div> */}
-          </div>
-        </div>
-        {/* <SavingsPlanCard hasSavingsPlan={savingsData.length > 0} savingsData={savingsData} /> */}
-        {savingsData.length > 0 ? (
-          savingsData.map((saving, index) => (
-            <SavingsPlanCard key={index} plan={saving} onTopUp={handleTopUp} onWithdraw={handleWithdraw} />
-          ))
-        ) : (
-          <div className={bit.no_plan_card}>
-            <div className={bit.row}>
-              <div className={bit.spinner_icon}>
-                <i
-                  className="fas fa-spinner fa-spin"
-                  style={{ textAlign: "center" }}
-                ></i>
+                <Button
+                  className={bit.search_button}
+                  icon={<FontAwesomeIcon icon={faSearch} />}
+                />
               </div>
             </div>
-            <div className={bit.custom_description}>
-              Oops! You do not have any savings plan yet.
+          </div>
+          <div className={bit.tab_nav}>
+            <div
+              className={`${bit.tab_item} ${activeTab === 'current' ? bit.active : ''}`}
+              style={{ 
+                color: activeTab === 'current' ? "#81D7B4" : "#666",
+                cursor: "pointer" 
+              }}
+              onClick={() => handleTabChange('current')}
+            >
+              Current
+              <div
+                className={`${bit.tab_indicator} ${activeTab === 'current' ? bit.active : ''}`}
+                style={{ backgroundColor: "#81D7B4" }}
+              ></div>
+            </div>
+            <div 
+              className={`${bit.tab_item} ${activeTab === 'completed' ? bit.active : ''}`}
+              style={{ 
+                color: activeTab === 'completed' ? "#81D7B4" : "#666",
+                cursor: "pointer" 
+              }}
+              onClick={() => handleTabChange('completed')}
+            >
+              Completed
+              <div
+                className={`${bit.tab_indicator} ${activeTab === 'completed' ? bit.active : ''}`}
+                style={{ backgroundColor: "#81D7B4" }}
+              ></div>
             </div>
           </div>
-        )}
-      </div>
-      <Modal
-        title="Create Savings Plan"
-        open={isModalOpen}
-        onCancel={handleModalClose}
-        footer={[
-          <Button
-            key="back"
-            onClick={prev}
-            disabled={currentStep === 0}
-            style={{
-              borderColor: "#81D7B4",
-              color: "#81D7B4",
-              backgroundColor: "white",
-              borderWidth: "2px",
-            }}
-          >
-            Back
-          </Button>,
-          <Button
-            key="next"
-            type="primary"
-            onClick={
-              currentStep === steps.length - 1 ? handleCreateSavings : next
-            }
-            style={{
-              backgroundColor: "#81D7B4",
-              borderColor: "#81D7B4",
-              color: "#fff",
-              fontFamily: "Space Grotesk",
-            }}
-          >
-            {currentStep === steps.length - 1 ? "Create" : "Next"}
-          </Button>,
-        ]}
-      >
-        <Steps current={currentStep} style={{ marginBottom: "20px" }}>
-          {steps.map((item, index) => (
-            <Step
-              key={item.title}
-              title={item.title}
-              status={
-                currentStep > index
-                  ? "finish"
-                  : currentStep === index
-                  ? "process"
-                  : "wait"
+          {activeTab === 'current' ? (
+            isLoadingSavings ? (
+              <div className={bit.no_plan_card}>
+                <div className={bit.row}>
+                  <div className={bit.spinner_icon}>
+                    <i className="fas fa-spinner fa-spin" style={{ textAlign: "center" }}></i>
+                  </div>
+                </div>
+                <div className={bit.custom_description}>
+                  Loading your savings plans...
+                </div>
+              </div>
+            ) : currentSavings.length > 0 ? (
+              currentSavings.map((saving, index) => (
+                <SavingsPlanCard 
+                  key={index} 
+                  plan={saving} 
+                  onTopUp={handleTopUpClick}
+                  onWithdraw={handleLskWithdraw} 
+                />
+              ))
+            ) : (
+              <div className={bit.no_plan_card}>
+                <div className={bit.custom_description}>
+                  Oops! You do not have any current savings plans.
+                </div>
+              </div>
+            )
+          ) : (
+            isLoadingSavings ? (
+              <div className={bit.no_plan_card}>
+                <div className={bit.row}>
+                  <div className={bit.spinner_icon}>
+                    <i className="fas fa-spinner fa-spin" style={{ textAlign: "center" }}></i>
+                  </div>
+                </div>
+                <div className={bit.custom_description}>
+                  Loading completed savings...
+                </div>
+              </div>
+            ) : completedSavings.length > 0 ? (
+              completedSavings.map((saving, index) => (
+                <SavingsPlanCard 
+                  key={index} 
+                  plan={saving} 
+                  onTopUp={handleTopUpClick}
+                  onWithdraw={handleLskWithdraw} 
+                />
+              ))
+            ) : (
+              <div className={bit.no_plan_card}>
+                <div className={bit.custom_description}>
+                  No completed savings plans yet.
+                </div>
+              </div>
+            )
+          )}
+        </div>
+        <Modal
+          title="Create Savings Plan"
+          open={isModalOpen}
+          onCancel={handleModalClose}
+          footer={[
+            <Button
+              key="back"
+              onClick={prev}
+              disabled={currentStep === 0}
+              style={{
+                borderColor: "#81D7B4",
+                color: "#81D7B4",
+                backgroundColor: "white",
+                borderWidth: "2px",
+              }}
+            >
+              Back
+            </Button>,
+            <Button
+              key="next"
+              type="primary"
+              onClick={
+                currentStep === steps.length - 1 
+                  ? handleLskCreateSavings 
+                  : next
               }
-              icon={
-                currentStep > index ? (
-                  <CheckCircleOutlined style={{ color: "#81D7B4" }} />
-                ) : null
-              }
-              style={{ color: currentStep >= index ? "#81D7B4" : "#81D7B4" }}
-            />
-          ))}
-        </Steps>
-        <div>{steps[currentStep].content}</div>
-      </Modal>
-    </section>
+              loading={loading}
+              disabled={loading}
+              style={{
+                backgroundColor: "#81D7B4",
+                borderColor: "#81D7B4",
+                color: "#fff",
+                fontFamily: "Space Grotesk",
+              }}
+            >
+              {loading ? "Please wait..." : currentStep === steps.length - 1 ? "Create" : "Next"}
+            </Button>,
+          ]}
+        >
+          <Steps current={currentStep} style={{ marginBottom: "20px" }}>
+            {steps.map((item, index) => (
+              <Step
+                key={item.title}
+                title={item.title}
+                status={
+                  currentStep > index
+                    ? "finish"
+                    : currentStep === index
+                      ? "process"
+                      : "wait"
+                }
+                icon={
+                  currentStep > index ? (
+                    <CheckCircleOutlined style={{ color: "#81D7B4" }} />
+                  ) : null
+                }
+                style={{ color: currentStep >= index ? "#81D7B4" : "#81D7B4" }}
+              />
+            ))}
+          </Steps>
+          <div>{steps[currentStep].content}</div>
+        </Modal>
+        <TopUpModal 
+          isVisible={isTopUpModalVisible}
+          onClose={() => setIsTopUpModalVisible(false)}
+
+          onTopUp={handleLskSavingsTopUp}
+          savingName={selectedSavingName}
+        />
+      </section>
+    </>
   );
 }

@@ -1,0 +1,71 @@
+/* Styling for the container with the buttons */
+.buttonContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+/* Styles for connect wallet button */
+.connectWalletBtn {
+  background-color: #81D7B4;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 10px;
+  transition: background-color 0.3s;
+}
+
+.connectWalletBtn:hover {
+  background-color: #81D7B4;
+}
+
+/* Styles for wallet balance button */
+.walletBalanceBtn {
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 10px;
+  transition: background-color 0.3s;
+}
+
+.walletBalanceBtn:hover {
+  background-color: #ddd;
+}
+
+.walletBalanceBtn span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Modal Styling */
+.networkModal .ant-modal-header {
+  background-color: #1e1e1e;
+  color: white;
+}
+
+.networkModal .ant-modal-title {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.networkModal .ant-modal-content {
+  background-color: #333;
+}
+
+.networkButton {
+  margin-bottom: 10px;
+  background-color: #81D7B4;
+  color: white;
+  border-radius: 8px;
+  font-size: 16px;
+  padding: 10px;
+  transition: background-color 0.3s;
+}
+
+.networkButton:hover {
+  background-color: #81D7B4;
+}

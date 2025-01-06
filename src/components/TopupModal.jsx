@@ -1,21 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, message } from 'antd/lib';
 
-const TopUpModal = ({ isVisible, onClose, onTopUp }) => {
+const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
   const [form] = Form.useForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lskToEthRate, setLskToEthRate] = useState(null);
+
+  useEffect(() => {
+    fetchLskToEthRate();
+  }, []);
+
+  const fetchLskToEthRate = async () => {
+    try {
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=lisk&vs_currencies=eth"
+      );
+      const data = await response.json();
+      setLskToEthRate(data.lisk.eth);
+    } catch (error) {
+      console.error("Error fetching LSK/ETH rate:", error);
+      message.error("Could not fetch conversion rate. Please try again later.");
+    }
+  };
 
   const onFinish = async (values) => {
     try {
-      // Convert amount to string for handleTopUp
-      const { nameOfSavings, amount } = values;
-      const amountInString = amount.toString(); // Convert to string if necessary
+      setIsSubmitting(true);
+      const { amount } = values;
+      
+      if (!lskToEthRate) {
+        throw new Error("Conversion rate not available");
+      }
 
-      // Call handleTopUp with form values
-      await onTopUp(nameOfSavings, amountInString);
-      form.resetFields(); // Clear form fields after successful top-up
-      onClose(); // Close the modal
+      // Convert LSK amount to ETH with proper decimal handling
+      const lskAmount = parseFloat(amount);
+      const ethAmount = (lskAmount * lskToEthRate).toString();
+      
+      console.log(`Converting ${lskAmount} LSK to ${ethAmount} ETH`);
+      
+      await onTopUp(savingName, ethAmount);
+      form.resetFields();
+      onClose();
     } catch (error) {
-      message.error('Error processing top-up.');
+      console.error('Top-up error:', error);
+      message.error(error.message || 'Error processing top-up.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -31,33 +61,53 @@ const TopUpModal = ({ isVisible, onClose, onTopUp }) => {
         layout="vertical"
         onFinish={onFinish}
       >
-        <Form.Item
-          name="nameOfSavings"
-          label="Name of Savings"
-          rules={[{ required: true, message: 'Please enter the name of savings.' }]}
-        >
-          <Input placeholder="Enter savings name" />
-        </Form.Item>
+        {savingName && (
+          <p style={{ marginBottom: '16px' }}>
+            Enter the amount you want to top up for <strong>{savingName}</strong>
+          </p>
+        )}
 
         <Form.Item
           name="amount"
-          label="Amount"
           rules={[{ required: true, message: 'Please enter the amount.' }]}
         >
-          <Input type="number" step="any" placeholder="Enter amount" />
+          <Input 
+            type="number" 
+            step="any" 
+            placeholder="Enter LSK amount" 
+            prefix="LSK"
+            autoFocus
+            disabled={isSubmitting}
+          />
         </Form.Item>
 
+        {lskToEthRate && (
+          <p style={{ fontSize: '12px', color: '#666' }}>
+            1 LSK = {lskToEthRate} ETH
+          </p>
+        )}
+
         <Form.Item>
-          <Button type="primary" htmlType="submit" style={{
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            loading={isSubmitting}
+            disabled={isSubmitting || !lskToEthRate}
+            style={{
               backgroundColor: "#81D7B4",
               borderColor: "#81D7B4",
               color: "#fff",
               fontFamily: "Space Grotesk",
-              marginRight: "10px", }}>
-            Top Up
+              marginRight: "10px",
+            }}
+          >
+            {isSubmitting ? "Please wait..." : "Top Up"}
           </Button>
-          <Button onClick={onClose}>
-            Close
+          <Button 
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
           </Button>
         </Form.Item>
       </Form>
