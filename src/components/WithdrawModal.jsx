@@ -1,25 +1,20 @@
-import React, { useState } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd/lib';
+import React, { useState } from "react";
+import { Modal, Button } from "antd/lib";
 
-const WithdrawModal = ({ isVisible, onClose, onWithdraw }) => {
-  const [form] = Form.useForm();
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [savingsName, setSavingsName] = useState('');
+const WithdrawModal = ({ isVisible, onClose, onWithdraw, savingName }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleContinue = (values) => {
-    setSavingsName(values.nameOfSavings);
-    setShowConfirmation(true);
-  };
-
-  const handleWithdraw = () => {
-    onWithdraw(savingsName);
-    setShowConfirmation(false);
-    form.resetFields();
-    onClose();
-  };
-
-  const handleCancelConfirmation = () => {
-    setShowConfirmation(false);
+  const handleWithdraw = async () => {
+    setIsSubmitting(true);
+    try {
+      // Call the onWithdraw function with the savings name
+      await onWithdraw(savingName);
+      onClose(); // Close the modal after successful withdrawal
+    } catch (error) {
+      console.error("Withdrawal error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -29,52 +24,31 @@ const WithdrawModal = ({ isVisible, onClose, onWithdraw }) => {
       onCancel={onClose}
       footer={null}
     >
-      {!showConfirmation ? (
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleContinue}
+      <p>
+        Do you want to withdraw your savings for <strong>{savingName}</strong>?
+      </p>
+
+      <div style={{ textAlign: "right" }}>
+        <Button
+          onClick={onClose}
+          style={{ marginRight: "10px" }}
         >
-          <Form.Item
-            name="nameOfSavings"
-            label="Enter Name of Savings"
-            rules={[{ required: true, message: 'Please enter the name of savings.' }]}
-          >
-            <Input placeholder="Enter savings name" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" style={{
-              backgroundColor: "#81D7B4",
-              borderColor: "#81D7B4",
-              color: "#fff",
-              fontFamily: "Space Grotesk",
-              marginRight: "10px",
-            }}>
-              Continue
-            </Button>
-            <Button onClick={onClose}>
-              Cancel
-            </Button>
-          </Form.Item>
-        </Form>
-      ) : (
-        <div>
-          <p>Withdrawing your savings before the maturity date will cause you to lose money based on the penalty set. Do you want to continue?</p>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button type="primary" onClick={handleWithdraw} style={{
-              backgroundColor: "#81D7B4",
-              borderColor: "#81D7B4",
-              color: "#fff",
-              fontFamily: "Space Grotesk",
-              marginRight: "10px",}}>
-              Yes, Continue
-            </Button>
-            <Button onClick={handleCancelConfirmation}>
-              Cancel Withdrawal
-            </Button>
-          </div>
-        </div>
-      )}
+          Cancel
+        </Button>
+        <Button
+          type="primary"
+          onClick={handleWithdraw}
+          loading={isSubmitting}
+          style={{
+            backgroundColor: "#81D7B4",
+            borderColor: "#81D7B4",
+            color: "#fff",
+            fontFamily: "Space Grotesk",
+          }}
+        >
+          Withdraw
+        </Button>
+      </div>
     </Modal>
   );
 };

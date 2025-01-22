@@ -27,14 +27,17 @@ import erc20Data from '../erc20ABI.json';
 import WalletConnect from "../components/walletconnect";
 import Head from 'next/head';
 import TopUpModal from "../components/TopupModal";
+import LeaderboardModal from '../components/LeaderboardModal';
 const erc20ABI = erc20Data.abi;
 
-// import handleWithdraw from '../components/handleWithdraw';  
+import handleWithdraw from '../components/WithdrawModal';
+import WithdrawModal from "../components/WithdrawModal";
 
 const { Option } = Select;
 const { Step } = Steps;
 
-const CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+// const CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+const CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
 
 export default function Dashboard() {
   const [selectedDayRange, setSelectedDayRange] = useState({
@@ -57,7 +60,11 @@ export default function Dashboard() {
   const [selectedKey, setSelectedKey] = useState("1");
 
   const handleMenuClick = (e) => {
-    setSelectedKey(e.key);  
+    setSelectedKey(e.key);
+    if (e.key === 'leaderboard') {
+      fetchLeaderboardData();
+      setIsLeaderboardVisible(true);
+    }
   };
   const [visible, setVisible] = useState(false);
 
@@ -160,7 +167,7 @@ export default function Dashboard() {
             });
 
             const allSavings = (await Promise.all(savingsListPromises)).filter(Boolean);
-            
+
             // Separate savings into current and completed
             const current = allSavings.filter(saving => !saving.isCompleted);
             const completed = allSavings.filter(saving => saving.isCompleted);
@@ -182,6 +189,7 @@ export default function Dashboard() {
   };
 
   const getLiskToEthRate = async () => {
+    const FALLBACK_LISK_ETH_RATE = 0.00028;
     try {
       const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
         params: {
@@ -194,11 +202,11 @@ export default function Dashboard() {
         },
         timeout: 5000
       });
-      
+
       if (response.data && response.data.lisk && response.data.lisk.eth) {
         return response.data.lisk.eth;
       }
-      
+
       // Use fallback rate if API response is invalid
       console.warn('Invalid API response, using fallback rate');
       return FALLBACK_LISK_ETH_RATE;
@@ -253,7 +261,7 @@ export default function Dashboard() {
       const userChildContractAddress = await contract.getUserChildContractAddress();
       if (userChildContractAddress === ethers.constants.AddressZero) {
         const joinTx = await contract.joinBitsave({
-          value: ethers.utils.parseEther("0.0001"), 
+          value: ethers.utils.parseEther("0.0001"),
         });
         await joinTx.wait();
       }
@@ -325,115 +333,136 @@ export default function Dashboard() {
     }
   };
 
-  const handleLskSavingsTopUp = async (savingName, amount) => {
+
+  const handleLskSavingsTopUp = async (amount, savingsPlanName) => {
+    if (!isConnected) {
+      message.error("Please connect your wallet.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-        throw new Error('Please enter a valid amount');
+      // Ensure `amount` is sanitized
+      console.log("Raw amount value:", amount);
+      const sanitizedAmount = amount.trim();
+      const userEnteredLiskAmount = parseFloat(sanitizedAmount);
+
+      // Validate the sanitized amount
+      if (!sanitizedAmount || isNaN(userEnteredLiskAmount) || userEnteredLiskAmount <= 0) {
+        throw new Error("Invalid amount entered.");
       }
 
-      setLoading(true);
+      // Get LSK to ETH conversion rate with retry
+      let liskToEthRate;
+      for (let i = 0; i < 3; i++) {
+        try {
+          liskToEthRate = await getLiskToEthRate();
+          if (isNaN(liskToEthRate) || liskToEthRate <= 0) {
+            throw new Error("Invalid Lisk to ETH rate.");
+          }
+          break;
+        } catch (error) {
+          if (i === 2) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1s before retrying
+        }
+      }
+
+      // Other logic remains unchanged
       const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
-      
-      // First get the child contract
+
+      const code = await provider.getCode(CONTRACT_ADDRESS);
+      if (code === "0x") {
+        throw new Error("Contract not found on this network. Check the contract address and network.");
+      }
+
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       const userChildContractAddress = await contract.getUserChildContractAddress();
-      
-      // Verify contract exists
-      const childContractCode = await provider.getCode(userChildContractAddress);
-      if (childContractCode === "0x") {
-        throw new Error("Child contract not found. Please create a savings plan first.");
+      if (userChildContractAddress === ethers.constants.AddressZero) {
+        throw new Error("You must join Bitsave before topping up.");
       }
 
-      const childContract = new ethers.Contract(userChildContractAddress, CHILD_CONTRACT_ABI, signer);
+      const ethEquivalentAmount = ethers.utils.parseEther((userEnteredLiskAmount * liskToEthRate).toString());
 
-      // Get conversion rate
-      let liskToEthRate;
-      try {
-        liskToEthRate = await getLiskToEthRate();
-      } catch (error) {
-        console.warn('Using fallback rate due to API error');
-        liskToEthRate = FALLBACK_LISK_ETH_RATE;
-      }
+      console.log("Data being sent to incrementSaving:");
+      console.log("Savings Name:", savingsPlanName);
+      console.log("Token Address:", "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24");
+      console.log("ETH Equivalent Amount:", ethEquivalentAmount.toString());
 
-      // Convert LSK amount to ETH with proper decimal handling
-      const liskAmount = parseFloat(amount);
-      const ethAmountFloat = liskAmount * liskToEthRate;
-      const ethAmountString = ethAmountFloat.toFixed(18);
-      const ethAmount = ethers.utils.parseEther(ethAmountString);
-
-      // Get the LISK token contract
-      const tokenAddress = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24";
-      const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
-
-      // Check LISK balance
-      const userAddress = await signer.getAddress();
-      const balance = await erc20Contract.balanceOf(userAddress);
-      if (balance.lt(ethAmount)) {
-        throw new Error('Insufficient LISK balance');
-      }
-
-      // Check current allowance
-      const currentAllowance = await erc20Contract.allowance(userAddress, userChildContractAddress);
-      if (currentAllowance.lt(ethAmount)) {
-        console.log('Approving tokens...');
-        const approveTx = await erc20Contract.approve(userChildContractAddress, ethAmount);
-        await approveTx.wait();
-        console.log('Token approval successful');
-      }
-
-      // Verify the saving exists and is valid
-      const saving = await childContract.getSaving(savingName);
-      if (!saving.isValid) {
-        throw new Error('Invalid saving plan');
-      }
-
-      console.log('Performing increment...', {
-        savingName,
-        amount: ethAmount.toString(),
-        childContract: userChildContractAddress
-      });
-
-      // Call incrementSaving with proper parameters and error handling
-      const incrementTx = await childContract.incrementSaving(
-        savingName,
-        ethAmount,
+      const tx = await contract.incrementSaving(
+        savingsPlanName,
+        "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24",
+        ethEquivalentAmount,
         {
-          gasLimit: 1000000,
-          gasPrice: await provider.getGasPrice()
+          gasLimit: 800000,
+          value: ethEquivalentAmount,
         }
       );
+      await tx.wait();
 
-      console.log('Transaction sent:', incrementTx.hash);
-      const receipt = await incrementTx.wait();
-      
-      if (receipt.status === 0) {
-        throw new Error('Transaction failed during execution');
-      }
-
-      message.success('Top-up successful!');
-      await fetchSavingsData();
+      message.success("Savings plan topped up successfully!");
+      fetchSavingsData();
     } catch (error) {
-      console.error('Top-up error:', error);
-      if (error.code === 'CALL_EXCEPTION') {
-        message.error('Transaction reverted: Please check your balance and try again');
-      } else if (error.message.includes('insufficient')) {
-        message.error('Insufficient balance to complete the transaction');
-      } else {
-        message.error(error.message || 'Transaction failed - please try again');
-      }
+      console.error("Error topping up savings plan:", error);
+      message.error(`Failed to top up savings plan: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLskWithdraw = async (nameOfSavings) => {
-    if (currency !== "lsk") {
-      message.error("Token selected not yet active, please select another");
-      return;
+  async function handleLskWithdraw(nameOfSavings) {
+    try {
+      // Ensure Ethereum provider is available (e.g., MetaMask)
+      if (!window.ethereum) {
+        throw new Error("Ethereum provider not found. Please install MetaMask.");
+      }
+  
+      // Create a new provider and signer
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+  
+      // Create a contract instance
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  
+      // Simulate the transaction using callStatic
+      try {
+        await contract.callStatic.withdrawSaving(nameOfSavings);
+      } catch (staticError) {
+        console.error("Static call failed, likely cause:", staticError.message || staticError);
+        throw new Error(
+          "Transaction simulation failed. Check the contract state or input parameters."
+        );
+      }
+  
+      // Estimate gas for the transaction
+      let gasEstimate;
+      try {
+        gasEstimate = await contract.estimateGas.withdrawSaving(nameOfSavings);
+        console.log("Gas estimate:", gasEstimate.toString());
+      } catch (gasError) {
+        console.warn("Gas estimation failed, using fallback gas limit:", gasError.message || gasError);
+        gasEstimate = 100000; // Fallback gas limit
+      }
+  
+      // Call the withdraw function
+      const tx = await contract.withdrawSaving(nameOfSavings, {
+        gasLimit: gasEstimate,
+      });
+  
+      // Wait for the transaction to be mined
+      const receipt = await tx.wait();
+  
+      if (receipt.status === 1) {
+        console.log("Withdrawal successful!", receipt);
+      } else {
+        console.error("Transaction failed! Receipt:", receipt);
+      }
+    } catch (error) {
+      console.error("Error during withdrawal:", error.message || error);
     }
-    await handleLskSavingsWithdraw(nameOfSavings);
-  };
+  }
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -649,6 +678,7 @@ export default function Dashboard() {
   };
 
   const [isTopUpModalVisible, setIsTopUpModalVisible] = useState(false);
+  const [isHandleWithdrawModalVisible, setIsHandleWithdrawModalVisible] = useState(false);
   const [selectedSavingName, setSelectedSavingName] = useState('');
 
   const handleTopUpClick = (savingName) => {
@@ -658,6 +688,30 @@ export default function Dashboard() {
     }
     setSelectedSavingName(savingName);
     setIsTopUpModalVisible(true);
+  };
+
+  const handleWithdrawClick = (savingName) => {
+    if (!savingName) {
+      message.error('Invalid savings plan');
+      return;
+    }
+    setSelectedSavingName(savingName);
+    setIsHandleWithdrawModalVisible(true);
+  };
+
+
+  const [isLeaderboardVisible, setIsLeaderboardVisible] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+
+  const fetchLeaderboardData = async () => {
+    // Fetch your leaderboard data from an API or state
+    const data = [
+      { rank: 1, user: 'User1', amount: '1000 LSK' },
+      { rank: 2, user: 'User2', amount: '800 LSK' },
+      { rank: 3, user: 'User3', amount: '600 LSK' },
+      // Add more data as needed
+    ];
+    setLeaderboardData(data);
   };
 
   return (
@@ -671,7 +725,7 @@ export default function Dashboard() {
           <div className={bit.bit_holder}>
             <div className={bit.bit_header}>
               <div className={bit.item}>
-                  <WalletConnect   />
+                <WalletConnect />
               </div>
               <div className={bit.item}>
                 <div
@@ -711,8 +765,8 @@ export default function Dashboard() {
                       key="2"
                       icon={<FontAwesomeIcon icon={faTrophy} />}
                       style={{
-                        backgroundColor: selectedKey === '2' ? '#81D7B4' : '#ffffff',  
-                        color: selectedKey === '2' ? 'white' : 'black',  
+                        backgroundColor: selectedKey === '2' ? '#81D7B4' : '#ffffff',
+                        color: selectedKey === '2' ? 'white' : 'black',
                         fontWeight: 'bold',
                       }}
                     >
@@ -722,8 +776,8 @@ export default function Dashboard() {
                       key="3"
                       icon={<FontAwesomeIcon icon={faCog} />}
                       style={{
-                        backgroundColor: selectedKey === '3' ? '#81D7B4' : '#ffffff',  
-                        color: selectedKey === '3' ? 'white' : 'black',  
+                        backgroundColor: selectedKey === '3' ? '#81D7B4' : '#ffffff',
+                        color: selectedKey === '3' ? 'white' : 'black',
                         fontWeight: 'bold',
                       }}
                     >
@@ -733,8 +787,8 @@ export default function Dashboard() {
                       key="4"
                       icon={<FontAwesomeIcon icon={faLifeRing} />}
                       style={{
-                        backgroundColor: selectedKey === '4' ? '#81D7B4' : '#ffffff',  
-                        color: selectedKey === '4' ? 'white' : 'black',  
+                        backgroundColor: selectedKey === '4' ? '#81D7B4' : '#ffffff',
+                        color: selectedKey === '4' ? 'white' : 'black',
                         fontWeight: 'bold',
                       }}
                     >
@@ -744,8 +798,8 @@ export default function Dashboard() {
                       key="5"
                       icon={<FontAwesomeIcon icon={faQuestionCircle} />}
                       style={{
-                        backgroundColor: selectedKey === '5' ? '#81D7B4' : '#ffffff',  
-                        color: selectedKey === '5' ? 'white' : 'black',  
+                        backgroundColor: selectedKey === '5' ? '#81D7B4' : '#ffffff',
+                        color: selectedKey === '5' ? 'white' : 'black',
                         fontWeight: 'bold',
                       }}
                     >
@@ -811,9 +865,9 @@ export default function Dashboard() {
           <div className={bit.tab_nav}>
             <div
               className={`${bit.tab_item} ${activeTab === 'current' ? bit.active : ''}`}
-              style={{ 
+              style={{
                 color: activeTab === 'current' ? "#81D7B4" : "#666",
-                cursor: "pointer" 
+                cursor: "pointer"
               }}
               onClick={() => handleTabChange('current')}
             >
@@ -823,11 +877,11 @@ export default function Dashboard() {
                 style={{ backgroundColor: "#81D7B4" }}
               ></div>
             </div>
-            <div 
+            <div
               className={`${bit.tab_item} ${activeTab === 'completed' ? bit.active : ''}`}
-              style={{ 
+              style={{
                 color: activeTab === 'completed' ? "#81D7B4" : "#666",
-                cursor: "pointer" 
+                cursor: "pointer"
               }}
               onClick={() => handleTabChange('completed')}
             >
@@ -852,11 +906,11 @@ export default function Dashboard() {
               </div>
             ) : currentSavings.length > 0 ? (
               currentSavings.map((saving, index) => (
-                <SavingsPlanCard 
-                  key={index} 
-                  plan={saving} 
+                <SavingsPlanCard
+                  key={index}
+                  plan={saving}
                   onTopUp={handleTopUpClick}
-                  onWithdraw={handleLskWithdraw} 
+                  onWithdraw={handleWithdrawClick}
                 />
               ))
             ) : (
@@ -880,11 +934,11 @@ export default function Dashboard() {
               </div>
             ) : completedSavings.length > 0 ? (
               completedSavings.map((saving, index) => (
-                <SavingsPlanCard 
-                  key={index} 
-                  plan={saving} 
+                <SavingsPlanCard
+                  key={index}
+                  plan={saving}
                   onTopUp={handleTopUpClick}
-                  onWithdraw={handleLskWithdraw} 
+                  onWithdraw={handleLskWithdraw}
                 />
               ))
             ) : (
@@ -918,8 +972,8 @@ export default function Dashboard() {
               key="next"
               type="primary"
               onClick={
-                currentStep === steps.length - 1 
-                  ? handleLskCreateSavings 
+                currentStep === steps.length - 1
+                  ? handleLskCreateSavings
                   : next
               }
               loading={loading}
@@ -958,12 +1012,24 @@ export default function Dashboard() {
           </Steps>
           <div>{steps[currentStep].content}</div>
         </Modal>
-        <TopUpModal 
+        <TopUpModal
           isVisible={isTopUpModalVisible}
           onClose={() => setIsTopUpModalVisible(false)}
 
           onTopUp={handleLskSavingsTopUp}
           savingName={selectedSavingName}
+        />
+
+        <WithdrawModal
+          isVisible={isHandleWithdrawModalVisible}
+          onClose={() => setIsHandleWithdrawModalVisible(false)}
+          onWithdraw={handleLskWithdraw}
+          savingName={selectedSavingName}  // Pass the selected savings name
+        />
+        <LeaderboardModal
+          isVisible={isLeaderboardVisible}
+          onClose={() => setIsLeaderboardVisible(false)}
+          data={leaderboardData}
         />
       </section>
     </>

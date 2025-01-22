@@ -96,6 +96,15 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
     }
   };
 
+  const handleWithdrawClick = async () => {
+    setIsLoading(true);
+    try {
+      await onWithdraw(plan.name);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const showWithdrawModal = () => {
     setIsWithdrawModalVisible(true);
   };
@@ -243,18 +252,18 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
         </span>
       </div>
       <div className={bit.withdraw_container}>
-        <button className={bit.top_up_button2} onClick={showWithdrawModal}>
+        <button className={bit.top_up_button2} onClick={handleWithdrawClick}>
           <FontAwesomeIcon icon={faArrowDown} style={{ color: '#687a7f', marginRight: '5px' }} />
           Withdraw
         </button>
       </div>
 
-      <WithdrawModal 
+      {/* <WithdrawModal 
         isVisible={isWithdrawModalVisible} 
         onClose={handleWithdrawClose} 
         onWithdraw={onWithdraw}
         savingName={plan.name}
-      />
+      /> */}
     </div>
   );
 };

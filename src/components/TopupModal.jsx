@@ -1,49 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd/lib';
+import React, { useState, useEffect } from "react";
+import { Modal, Form, Input, Button, message } from "antd/lib";
 
 const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lskToEthRate, setLskToEthRate] = useState(null);
-
-  useEffect(() => {
-    fetchLskToEthRate();
-  }, []);
-
-  const fetchLskToEthRate = async () => {
-    try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=lisk&vs_currencies=eth"
-      );
-      const data = await response.json();
-      setLskToEthRate(data.lisk.eth);
-    } catch (error) {
-      console.error("Error fetching LSK/ETH rate:", error);
-      message.error("Could not fetch conversion rate. Please try again later.");
-    }
-  };
 
   const onFinish = async (values) => {
     try {
-      setIsSubmitting(true);
       const { amount } = values;
-      
-      if (!lskToEthRate) {
-        throw new Error("Conversion rate not available");
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+        throw new Error("Invalid amount entered.");
       }
 
-      // Convert LSK amount to ETH with proper decimal handling
-      const lskAmount = parseFloat(amount);
-      const ethAmount = (lskAmount * lskToEthRate).toString();
-      
-      console.log(`Converting ${lskAmount} LSK to ${ethAmount} ETH`);
-      
-      await onTopUp(savingName, ethAmount);
+      setIsSubmitting(true);
+
+      // Pass amount and savings plan name to the handler
+      await onTopUp(amount, savingName);
       form.resetFields();
       onClose();
     } catch (error) {
-      console.error('Top-up error:', error);
-      message.error(error.message || 'Error processing top-up.');
+      console.error("Top-up error:", error);
+      message.error(error.message || "Error processing top-up.");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,43 +33,40 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
       onCancel={onClose}
       footer={null}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-      >
+      <Form form={form} layout="vertical" onFinish={onFinish}>
         {savingName && (
-          <p style={{ marginBottom: '16px' }}>
+          <p style={{ marginBottom: "16px" }}>
             Enter the amount you want to top up for <strong>{savingName}</strong>
           </p>
         )}
 
         <Form.Item
           name="amount"
-          rules={[{ required: true, message: 'Please enter the amount.' }]}
+          rules={[
+            { required: true, message: "Please enter the amount." },
+            {
+              validator: (_, value) => {
+                if (!value || parseFloat(value) > 0) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Amount must be a positive number."));
+              },
+            },
+          ]}
         >
-          <Input 
-            type="number" 
-            step="any" 
-            placeholder="Enter LSK amount" 
+          <Input
+            type="number"
+            step="any"
+            placeholder="Enter LSK amount"
             prefix="LSK"
             autoFocus
-            disabled={isSubmitting}
           />
         </Form.Item>
 
-        {lskToEthRate && (
-          <p style={{ fontSize: '12px', color: '#666' }}>
-            1 LSK = {lskToEthRate} ETH
-          </p>
-        )}
-
         <Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            loading={isSubmitting}
-            disabled={isSubmitting || !lskToEthRate}
+          <Button
+            type="primary"
+            htmlType="submit"
             style={{
               backgroundColor: "#81D7B4",
               borderColor: "#81D7B4",
@@ -100,15 +74,11 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
               fontFamily: "Space Grotesk",
               marginRight: "10px",
             }}
+            loading={isSubmitting}
           >
-            {isSubmitting ? "Please wait..." : "Top Up"}
+            Top Up
           </Button>
-          <Button 
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Form.Item>
       </Form>
     </Modal>
