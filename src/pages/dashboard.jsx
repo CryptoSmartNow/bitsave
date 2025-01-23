@@ -407,19 +407,20 @@ export default function Dashboard() {
       console.log("USDC Equivalent Amount:", usdcEquivalentAmount.toString());
   
       // Approve the contract to spend the stablecoin
-      const approveERC20 = async (tokenAddress, amount, signer) => {
-        const erc20Abi = ["function approve(address spender, uint256 amount) public returns (bool)"];
-        const erc20Contract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-        const spender = BASE_CONTRACT_ADDRESS;
-        const tx = await erc20Contract.approve(spender, amount);
+      const approveBASEERC20 = async (tokenAddress, amount, signer) => {
+        const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
+    
+        // Approve token transfer
+        const tx = await erc20Contract.approve(CONTRACT_ADDRESS, amount);
         await tx.wait();
-        console.log("Approval Transaction Successful");
+        console.log("Approval Transaction Hash:", tx.hash);
       };
+      const totalAmount = usdcEquivalentAmount.add(ethers.utils.parseEther("0.0001"));
   
-      await approveERC20(tokenToSave, usdcEquivalentAmount, signer);
+      await approveBASEERC20(tokenToSave, usdcEquivalentAmount, signer);
       const txOptions = {
         gasLimit: 1200000,
-        value: usdcEquivalentAmount, // Total amount in ETH for transaction
+        value: totalAmount, // Total amount in ETH for transaction
       };
   
       // Create the saving plan on the Bitsave contract
