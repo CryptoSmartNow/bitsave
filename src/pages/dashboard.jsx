@@ -419,7 +419,7 @@ export default function Dashboard() {
       await approveERC20(tokenToSave, usdcEquivalentAmount, signer);
       const txOptions = {
         gasLimit: 1200000,
-        value: totalAmount, // Total amount in ETH for transaction
+        value: usdcEquivalentAmount, // Total amount in ETH for transaction
       };
   
       // Create the saving plan on the Bitsave contract
