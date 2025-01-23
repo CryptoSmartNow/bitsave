@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Modal, Form, Input, Button, message } from "antd/lib";
 
-const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
+const TopUpModal = ({ isVisible, onClose, onTopUp, savingName, network }) => {
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -14,8 +14,8 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
 
       setIsSubmitting(true);
 
-      // Pass amount and savings plan name to the handler
-      await onTopUp(amount, savingName);
+      // Pass amount, savings plan name, and network type to the handler
+      await onTopUp(amount, savingName, network);
       form.resetFields();
       onClose();
     } catch (error) {
@@ -36,7 +36,8 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
       <Form form={form} layout="vertical" onFinish={onFinish}>
         {savingName && (
           <p style={{ marginBottom: "16px" }}>
-            Enter the amount you want to top up for <strong>{savingName}</strong>
+            Top up for <strong>{savingName}</strong> on{" "}
+            <strong>{network === "lisk" ? "Lisk" : "Base"}</strong> network.
           </p>
         )}
 
@@ -49,7 +50,9 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
                 if (!value || parseFloat(value) > 0) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error("Amount must be a positive number."));
+                return Promise.reject(
+                  new Error("Amount must be a positive number.")
+                );
               },
             },
           ]}
@@ -57,8 +60,8 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName }) => {
           <Input
             type="number"
             step="any"
-            placeholder="Enter LSK amount"
-            prefix="LSK"
+            placeholder={`Enter amount (${network === "lisk" ? "LSK" : "USDC"})`}
+            prefix={network === "lisk" ? "LSK" : "USDC"}
             autoFocus
           />
         </Form.Item>

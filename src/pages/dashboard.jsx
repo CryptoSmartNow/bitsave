@@ -504,74 +504,70 @@ export default function Dashboard() {
   };
 
 
-  const handleLskSavingsTopUp = async (amount, savingsPlanName) => {
+  const handleSavingsTopUp = async (amount, savingsPlanName, network) => {
     if (!isConnected) {
       message.error("Please connect your wallet.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      // Ensure `amount` is sanitized
-      console.log("Raw amount value:", amount);
+      // Common setup
       const sanitizedAmount = amount.trim();
-      const userEnteredLiskAmount = parseFloat(sanitizedAmount);
-
-      // Validate the sanitized amount
-      if (!sanitizedAmount || isNaN(userEnteredLiskAmount) || userEnteredLiskAmount <= 0) {
+      const userEnteredAmount = parseFloat(sanitizedAmount);
+  
+      if (!sanitizedAmount || isNaN(userEnteredAmount) || userEnteredAmount <= 0) {
         throw new Error("Invalid amount entered.");
       }
-
-      // Get LSK to ETH conversion rate with retry
-      let liskToEthRate;
-      for (let i = 0; i < 3; i++) {
-        try {
-          liskToEthRate = await getLiskToEthRate();
-          if (isNaN(liskToEthRate) || liskToEthRate <= 0) {
-            throw new Error("Invalid Lisk to ETH rate.");
-          }
-          break;
-        } catch (error) {
-          if (i === 2) throw error;
-          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1s before retrying
-        }
-      }
-
-      // Other logic remains unchanged
+  
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
-
-      const code = await provider.getCode(CONTRACT_ADDRESS);
+  
+      let contractAddress, tokenAddress, parsedAmount;
+  
+      if (network === "lisk") {
+        // Lisk-specific logic
+        const liskToEthRate = await getLiskToEthRate();
+        if (isNaN(liskToEthRate) || liskToEthRate <= 0) {
+          throw new Error("Invalid Lisk to ETH rate.");
+        }
+  
+        contractAddress = CONTRACT_ADDRESS; // Lisk contract
+        tokenAddress = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24"; // Lisk token
+        parsedAmount = ethers.utils.parseEther(
+          (userEnteredAmount * liskToEthRate).toString()
+        );
+      } else {
+        // Base-specific logic
+        contractAddress = BASE_CONTRACT_ADDRESS; // Base contract
+        tokenAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // Base token
+        parsedAmount = ethers.utils.parseEther(userEnteredAmount.toString());
+      }
+  
+      const code = await provider.getCode(contractAddress);
       if (code === "0x") {
         throw new Error("Contract not found on this network. Check the contract address and network.");
       }
-
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
       const userChildContractAddress = await contract.getUserChildContractAddress();
       if (userChildContractAddress === ethers.constants.AddressZero) {
         throw new Error("You must join Bitsave before topping up.");
       }
-
-      const ethEquivalentAmount = ethers.utils.parseEther((userEnteredLiskAmount * liskToEthRate).toString());
-
-      console.log("Data being sent to incrementSaving:");
-      console.log("Savings Name:", savingsPlanName);
-      console.log("Token Address:", "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24");
-      console.log("ETH Equivalent Amount:", ethEquivalentAmount.toString());
-
+  
       const tx = await contract.incrementSaving(
         savingsPlanName,
-        "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24",
-        ethEquivalentAmount,
+        tokenAddress,
+        parsedAmount,
         {
           gasLimit: 800000,
-          value: ethEquivalentAmount,
+          value: network === "lisk" ? parsedAmount : undefined, // Only include value for Lisk
         }
       );
       await tx.wait();
-
+  
       message.success("Savings plan topped up successfully!");
       fetchSavingsData();
     } catch (error) {
@@ -1191,7 +1187,7 @@ export default function Dashboard() {
           isVisible={isTopUpModalVisible}
           onClose={() => setIsTopUpModalVisible(false)}
 
-          onTopUp={handleLskSavingsTopUp}
+          onTopUp={handleSavingsTopUp}
           savingName={selectedSavingName}
         />
 
