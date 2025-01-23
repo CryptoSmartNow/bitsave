@@ -348,6 +348,17 @@ export default function Dashboard() {
         throw new Error("No Ethereum wallet detected. Please install MetaMask.");
       }
   
+      console.log("User Input - Amount:", amount); // Log the amount entered by the user
+      console.log("User Input - Savings Name:", savingsName); // Log the savings name
+      console.log("User Input - Selected Day Range:", selectedDayRange); // Log the selected day range
+      console.log("User Input - Selected Penalty:", selectedPenalty); // Log the selected penalty
+  
+      // Validate the user-entered amount
+      const userEnteredUsdcAmount = parseFloat(amount);
+      if (isNaN(userEnteredUsdcAmount) || userEnteredUsdcAmount <= 0) {
+        throw new Error("Invalid amount. Please enter an amount greater than zero.");
+      }
+  
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
@@ -356,6 +367,8 @@ export default function Dashboard() {
       const BASE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
   
       const network = await provider.getNetwork();
+      console.log("User's Current Network:", network); // Log user's current network details
+  
       if (network.chainId !== BASE_CHAIN_ID) {
         throw new Error("Please switch your wallet to the Base network.");
       }
@@ -364,6 +377,8 @@ export default function Dashboard() {
   
       // Get user child contract address or join Bitsave if not already registered
       let userChildContractAddress = await contract.getUserChildContractAddress();
+      console.log("User's Child Contract Address (Before Join):", userChildContractAddress);
+  
       if (userChildContractAddress === ethers.constants.AddressZero) {
         const joinTx = await contract.joinBitsave({
           value: ethers.utils.parseEther("0.0001"), // Ensure correct joining fee
@@ -371,6 +386,7 @@ export default function Dashboard() {
         await joinTx.wait();
   
         userChildContractAddress = await contract.getUserChildContractAddress();
+        console.log("User's Child Contract Address (After Join):", userChildContractAddress);
       }
   
       // Convert maturity time to UNIX timestamp
@@ -385,9 +401,10 @@ export default function Dashboard() {
         : 0;
   
       const safeMode = false; // Assuming safe mode is not enabled for now
-      const tokenToSave = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; 
-      const userEnteredUsdcAmount = parseFloat(amount);
+      const tokenToSave = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
       const usdcEquivalentAmount = ethers.utils.parseUnits(userEnteredUsdcAmount.toString(), 6);
+  
+      console.log("USDC Equivalent Amount:", usdcEquivalentAmount.toString());
   
       // Approve the contract to spend the stablecoin
       const approveERC20 = async (tokenAddress, amount, signer) => {
@@ -396,6 +413,7 @@ export default function Dashboard() {
         const spender = BASE_CONTRACT_ADDRESS;
         const tx = await erc20Contract.approve(spender, amount);
         await tx.wait();
+        console.log("Approval Transaction Successful");
       };
   
       await approveERC20(tokenToSave, usdcEquivalentAmount, signer);
