@@ -109,86 +109,135 @@ export default function Dashboard() {
   const [currentSavings, setCurrentSavings] = useState([]);
   const [completedSavings, setCompletedSavings] = useState([]);
 
+
+  
   const fetchSavingsData = async () => {
     if (!isConnected) return;
-
+  
     try {
       setIsLoadingSavings(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-      const userChildContractAddress = await contract.getUserChildContractAddress();
-      if (userChildContractAddress !== ethers.constants.AddressZero) {
-        const childContract = new ethers.Contract(userChildContractAddress, CHILD_CONTRACT_ABI, signer);
-        const savingsNamesObj = await childContract.getSavingsNames();
-        const savingsNamesArray = savingsNamesObj[0];
-
-        if (Array.isArray(savingsNamesArray)) {
-          const ethPriceInUSD = await fetchEthPrice();
-          if (ethPriceInUSD) {
-            const reversedSavingsNamesArray = [...savingsNamesArray].reverse();
-            let totalSavedAmountETH = ethers.BigNumber.from(0);
-
-            const savingsListPromises = reversedSavingsNamesArray.map(async (savingName) => {
+      const network = await provider.getNetwork();
+      console.log("Connected Network:", network);
+  
+      const ethPriceInUSD = await fetchEthPrice(); // Fetch ETH price for Lisk conversion
+  
+      let baseSavings = [];
+      let liskSavings = [];
+      let totalBaseSavings = ethers.BigNumber.from(0);
+      let totalLiskSavingsInUSD = ethers.BigNumber.from(0);
+  
+      // Helper function to fetch savings from a specific contract
+      const fetchSavingsFromContract = async (contractAddress, abi, decimals, isBase) => {
+        const contract = new ethers.Contract(contractAddress, abi, signer);
+        const userChildContractAddress = await contract.getUserChildContractAddress();
+  
+        if (userChildContractAddress !== ethers.constants.AddressZero) {
+          const childContract = new ethers.Contract(
+            userChildContractAddress,
+            CHILD_CONTRACT_ABI,
+            signer
+          );
+  
+          const savingsNamesObj = await childContract.getSavingsNames();
+          const savingsNamesArray = savingsNamesObj[0];
+  
+          if (Array.isArray(savingsNamesArray)) {
+            let totalSavedAmount = ethers.BigNumber.from(0);
+  
+            const savingsListPromises = savingsNamesArray.map(async (savingName) => {
               const savingData = await childContract.getSaving(savingName);
               if (!savingData.isValid) return null;
-
-              const amountInETH = ethers.utils.formatEther(savingData.amount);
-              totalSavedAmountETH = totalSavedAmountETH.add(savingData.amount);
-
+  
+              totalSavedAmount = totalSavedAmount.add(savingData.amount);
+  
               const currentDate = new Date();
               const startTimestamp = savingData.startTime.toNumber();
               const maturityTimestamp = savingData.maturityTime.toNumber();
               const startDate = new Date(startTimestamp * 1000);
               const maturityDate = new Date(maturityTimestamp * 1000);
-
-              console.log('Saving data from contract:', savingData);
-
+  
               const totalDuration = maturityDate - startDate;
               const elapsedTime = currentDate - startDate;
-              const progress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
-
+              const progress = Math.min(
+                Math.floor((elapsedTime / totalDuration) * 100),
+                100
+              );
+  
               const timeDifference = maturityDate - currentDate;
               const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24));
               const months = Math.floor(daysDifference / 30);
               const days = daysDifference % 30;
-
+  
               return {
                 name: savingName,
                 createdDate: startDate.toLocaleDateString(),
-                savedAmount: amountInETH,
+                savedAmount: ethers.utils.formatUnits(savingData.amount, decimals),
                 tokenId: savingData.tokenId,
                 penalty: `${savingData.penaltyPercentage}%`,
                 startTime: startDate.toLocaleString(),
                 startTimestamp: startTimestamp * 1000,
                 progress: `${progress}`,
                 remainingTime: `${months} Months and ${days} Days Remaining`,
-                isCompleted: currentDate >= maturityDate
+                isCompleted: currentDate >= maturityDate,
               };
             });
-
+  
             const allSavings = (await Promise.all(savingsListPromises)).filter(Boolean);
-
-            // Separate savings into current and completed
-            const current = allSavings.filter(saving => !saving.isCompleted);
-            const completed = allSavings.filter(saving => saving.isCompleted);
-
-            setCurrentSavings(current);
-            setCompletedSavings(completed);
-
-            const totalSavedAmountInUSD = parseFloat(ethers.utils.formatEther(totalSavedAmountETH)) * ethPriceInUSD;
-            const formattedAmountUSD = totalSavedAmountInUSD.toFixed(3);
-            setTotalSavedAmountUSD(parseFloat(formattedAmountUSD));
+            return { allSavings, totalSavedAmount };
           }
         }
+  
+        return { allSavings: [], totalSavedAmount: ethers.BigNumber.from(0) };
+      };
+  
+      // Fetch savings from Base network
+      if (network.chainId === 8453) {
+        const { allSavings, totalSavedAmount } = await fetchSavingsFromContract(
+          BASE_CONTRACT_ADDRESS,
+          CONTRACT_ABI,
+          6, // USDC uses 6 decimals
+          true
+        );
+        baseSavings = allSavings;
+        totalBaseSavings = totalSavedAmount;
       }
+  
+      // Fetch savings from Lisk network
+      if (network.chainId === 1135) {
+        const { allSavings, totalSavedAmount } = await fetchSavingsFromContract(
+          CONTRACT_ADDRESS,
+          CONTRACT_ABI,
+          18, // ETH uses 18 decimals
+          false
+        );
+        liskSavings = allSavings;
+        totalLiskSavingsInUSD = totalSavedAmount.mul(ethers.utils.parseEther(ethPriceInUSD.toString()));
+      }
+  
+      // Combine savings from both networks
+      const allSavings = [...baseSavings, ...liskSavings];
+      const currentSavings = allSavings.filter((saving) => !saving.isCompleted);
+      const completedSavings = allSavings.filter((saving) => saving.isCompleted);
+  
+      setCurrentSavings(currentSavings);
+      setCompletedSavings(completedSavings);
+  
+      // Total savings in USD (Base is already in USD, Lisk is converted to USD)
+      const totalSavingsInUSD = parseFloat(
+        ethers.utils.formatUnits(totalBaseSavings.add(totalLiskSavingsInUSD), 6)
+      );
+      setTotalSavedAmountUSD(totalSavingsInUSD.toFixed(2)); // Format to 2 decimal places
     } catch (error) {
       console.error("Error fetching savings data:", error);
     } finally {
       setIsLoadingSavings(false);
     }
   };
+
+
+
 
   const getLiskToEthRate = async () => {
     const FALLBACK_LISK_ETH_RATE = 0.00028;

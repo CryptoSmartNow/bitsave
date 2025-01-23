@@ -47,7 +47,7 @@ const WalletConnect = () => {
 
   const handleNetworkSwitch = async (newChainId: number) => {
     try {
-      await switchChain({ chainId: newChainId });
+      switchChain({ chainId: newChainId });
       setModalOpen(false);
     } catch (error) {
       console.error('Failed to switch network:', error);

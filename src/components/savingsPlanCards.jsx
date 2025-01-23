@@ -17,10 +17,10 @@ const NETWORK_CONFIG = {
     logo: '/lisk-logo.svg',
     coingeckoId: 'lisk'
   },
-  ETH: {
-    symbol: 'ETH',
-    logo: '/eth-logo.svg',
-    coingeckoId: 'ethereum'
+  BASE: {
+    symbol: 'BASE',
+    logo: '/base-logo.png',
+    coingeckoId: 'base'
   }
 };
 
@@ -28,14 +28,14 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
   const [isWithdrawModalVisible, setIsWithdrawModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [convertedAmount, setConvertedAmount] = useState(null);
-  const [tokenType, setTokenType] = useState('ETH');
+  const [tokenType, setTokenType] = useState(null); // Set to null initially to handle undefined
 
   // Determine if this is a LISK saving
   useEffect(() => {
     if (plan.tokenId && plan.tokenId.toLowerCase() === LISK_TOKEN_ADDRESS.toLowerCase()) {
       setTokenType('LISK');
     } else {
-      setTokenType('ETH');
+      setTokenType('BASE');
     }
   }, [plan.tokenId]);
 
@@ -84,7 +84,9 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
       }
     };
 
-    fetchConversionRate();
+    if (tokenType) { // Ensure tokenType is set before fetching the conversion rate
+      fetchConversionRate();
+    }
   }, [plan.savedAmount, tokenType]);
 
   const handleTopUpClick = async () => {
@@ -175,29 +177,75 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
     }
   };
 
-  const NetworkButton = () => (
-    <div className={bit.network_badge}>
-      <Image
-        src={NETWORK_CONFIG[tokenType].logo}
-        alt={`${tokenType} Logo`}
-        width={24}
-        height={24}
-      />
-      <span>{tokenType}</span>
-    </div>
-  );
+  const NetworkButton = () => {
+    // Add a check to ensure tokenType is defined before accessing NETWORK_CONFIG
+    if (!tokenType || !NETWORK_CONFIG[tokenType]) {
+      return null; // Return nothing if tokenType is undefined or invalid
+    }
+    return (
+      <div className={bit.network_badge}>
+        <Image
+          src={NETWORK_CONFIG[tokenType].logo}
+          alt={`${tokenType} Logo`}
+          width={24}
+          height={24}
+        />
+        <span>{tokenType}</span>
+      </div>
+    );
+  };
 
   const formatAmount = () => {
     if (convertedAmount === null) return 'Loading...';
-    
+  
     try {
       const config = NETWORK_CONFIG[tokenType];
+  
+      // For BASE token (USDC), show the saved amount directly as USD with 2 decimals
+      if (tokenType === 'BASE') {
+        // Ensure the saved amount is a BigNumber
+        const savedAmountBigNumber = plan.savedAmount;
+  
+        // Log the raw BigNumber for debugging
+        console.log('Saved amount BigNumber (BASE):', savedAmountBigNumber);
+  
+        // Convert BigNumber to a string and then to a floating-point number
+        let savedAmount = parseFloat(savedAmountBigNumber.toString());
+  
+        // Log the converted savedAmount for debugging
+        console.log('Converted savedAmount:', savedAmount);
+  
+        // Handle case where the amount might be NaN (not a valid number)
+        if (isNaN(savedAmount)) {
+          console.error('Invalid saved amount:', savedAmountBigNumber);
+          return 'Invalid amount';
+        }
+  
+        // Handle precision issues (for example, if it's very close to 1 USD)
+        if (Math.abs(savedAmount - 1) < 1e-6) {
+          savedAmount = 1; // Fix small value to 1 USD
+        }
+  
+        // Format the saved amount with 2 decimal places
+        const formattedAmount = savedAmount.toFixed(2);
+  
+        // Log the formatted amount for debugging
+        console.log('Formatted saved amount (BASE):', formattedAmount);
+  
+        return `${formattedAmount} USD`;
+      }
+  
+      // For LISK token, format as per the conversion
       const decimals = convertedAmount < 1 ? 6 : 4;
       const formattedAmount = convertedAmount.toFixed(decimals);
+      
+      // Log the converted amount for debugging
+      console.log('Converted amount (LISK):', formattedAmount);
+      
       return `${formattedAmount} ${config.symbol}`;
     } catch (error) {
       console.error('Error formatting amount:', error);
-      return `${plan.savedAmount} ETH`;
+      return `${plan.savedAmount} ETH`; // Fallback in case of error
     }
   };
 
@@ -257,13 +305,6 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
           Withdraw
         </button>
       </div>
-
-      {/* <WithdrawModal 
-        isVisible={isWithdrawModalVisible} 
-        onClose={handleWithdrawClose} 
-        onWithdraw={onWithdraw}
-        savingName={plan.name}
-      /> */}
     </div>
   );
 };
