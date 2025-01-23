@@ -417,6 +417,10 @@ export default function Dashboard() {
       };
   
       await approveERC20(tokenToSave, usdcEquivalentAmount, signer);
+      const txOptions = {
+        gasLimit: 1200000,
+        value: totalAmount, // Total amount in ETH for transaction
+      };
   
       // Create the saving plan on the Bitsave contract
       const tx = await contract.createSaving(
@@ -426,9 +430,7 @@ export default function Dashboard() {
         safeMode,
         tokenToSave,
         usdcEquivalentAmount,
-        {
-          gasLimit: ethers.BigNumber.from("500000"), // Adjusted gas limit for safety
-        }
+        txOptions
       );
   
       await tx.wait();
