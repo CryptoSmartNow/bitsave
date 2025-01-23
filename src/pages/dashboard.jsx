@@ -411,7 +411,7 @@ export default function Dashboard() {
         const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
     
         // Approve token transfer
-        const tx = await erc20Contract.approve(CONTRACT_ADDRESS, amount);
+        const tx = await erc20Contract.approve(BASE_CONTRACT_ADDRESS, amount);
         await tx.wait();
         console.log("Approval Transaction Hash:", tx.hash);
       };
