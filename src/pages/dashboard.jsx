@@ -38,6 +38,8 @@ const { Step } = Steps;
 
 // const CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
+const BASE_CONTRACT_ADDRESS = "0x7d839923eb2dac3a0d1cabb270102e481a208f33";
+
 
 export default function Dashboard() {
   const [selectedDayRange, setSelectedDayRange] = useState({
@@ -334,6 +336,104 @@ export default function Dashboard() {
   };
 
 
+  const handleBaseSavingsCreate = async () => {
+    if (!isConnected) {
+      message.error("Please connect your wallet.");
+      return;
+    }
+    setLoading(true);
+  
+    try {
+      if (!window.ethereum) {
+        throw new Error("No Ethereum wallet detected. Please install MetaMask.");
+      }
+  
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = provider.getSigner();
+  
+      const BASE_CHAIN_ID = 8453; // Base network chain ID
+      const BASE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+  
+      const network = await provider.getNetwork();
+      if (network.chainId !== BASE_CHAIN_ID) {
+        throw new Error("Please switch your wallet to the Base network.");
+      }
+  
+      const contract = new ethers.Contract(BASE_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  
+      // Get user child contract address or join Bitsave if not already registered
+      let userChildContractAddress = await contract.getUserChildContractAddress();
+      if (userChildContractAddress === ethers.constants.AddressZero) {
+        const joinTx = await contract.joinBitsave({
+          value: ethers.utils.parseEther("0.0001"), // Ensure correct joining fee
+        });
+        await joinTx.wait();
+  
+        userChildContractAddress = await contract.getUserChildContractAddress();
+      }
+  
+      // Convert maturity time to UNIX timestamp
+      const maturityTime = selectedDayRange.to
+        ? Math.floor(
+            new Date(
+              selectedDayRange.to.year,
+              selectedDayRange.to.month - 1,
+              selectedDayRange.to.day
+            ).getTime() / 1000
+          )
+        : 0;
+  
+      const safeMode = false; // Assuming safe mode is not enabled for now
+      const tokenToSave = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; 
+      const userEnteredUsdcAmount = parseFloat(amount);
+      const usdcEquivalentAmount = ethers.utils.parseUnits(userEnteredUsdcAmount.toString(), 6);
+  
+      // Approve the contract to spend the stablecoin
+      const approveERC20 = async (tokenAddress, amount, signer) => {
+        const erc20Abi = ["function approve(address spender, uint256 amount) public returns (bool)"];
+        const erc20Contract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+        const spender = BASE_CONTRACT_ADDRESS;
+        const tx = await erc20Contract.approve(spender, amount);
+        await tx.wait();
+      };
+  
+      await approveERC20(tokenToSave, usdcEquivalentAmount, signer);
+  
+      // Create the saving plan on the Bitsave contract
+      const tx = await contract.createSaving(
+        savingsName,
+        maturityTime,
+        selectedPenalty,
+        safeMode,
+        tokenToSave,
+        usdcEquivalentAmount,
+        {
+          gasLimit: ethers.BigNumber.from("500000"), // Adjusted gas limit for safety
+        }
+      );
+  
+      await tx.wait();
+  
+      message.success("Savings plan created successfully!");
+      handleModalClose();
+      fetchSavingsData(); // Refresh the savings data after successful creation
+    } catch (error) {
+      console.error("Error creating savings plan:", error);
+  
+      if (error.code === "CALL_EXCEPTION") {
+        message.error("Transaction reverted. Please check the contract and inputs.");
+      } else if (error.code === "INSUFFICIENT_FUNDS") {
+        message.error("Insufficient funds to cover the transaction.");
+      } else {
+        message.error(error.message || "Failed to create savings plan.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const handleLskSavingsTopUp = async (amount, savingsPlanName) => {
     if (!isConnected) {
       message.error("Please connect your wallet.");
@@ -571,7 +671,7 @@ export default function Dashboard() {
             >
               <Option value="ethereum">ETH</Option>
               <Option value="lsk">LSK</Option>
-              <Option value="usdt">USDT</Option>
+              <Option value="base">BASE</Option>
               <Option value="arb">ARB</Option>
             </Select>
           </div>
@@ -665,12 +765,17 @@ export default function Dashboard() {
   ];
 
   // Add new LSK-specific functions
-  const handleLskCreateSavings = async () => {
-    if (currency !== "lsk") {
+  const handleCreateSavings = async () => {
+    if (currency !== "lsk" && currency !== "base") {
       message.error("Token selected not yet active, please select another");
       return;
     }
-    await handleLskSavingsCreate();
+  
+    if (currency === "lsk") {
+      await handleLskSavingsCreate();
+    } else if (currency === "base") {
+      await handleBaseSavingsCreate();
+    }
   };
 
   const handleTabChange = (tab) => {
@@ -973,7 +1078,7 @@ export default function Dashboard() {
               type="primary"
               onClick={
                 currentStep === steps.length - 1
-                  ? handleLskCreateSavings
+                  ? handleCreateSavings
                   : next
               }
               loading={loading}
