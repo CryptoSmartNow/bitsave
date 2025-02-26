@@ -30,7 +30,6 @@ import TopUpModal from "../components/TopupModal";
 import LeaderboardModal from '../components/LeaderboardModal';
 const erc20ABI = erc20Data.abi;
 
-import handleWithdraw from '../components/WithdrawModal';
 import WithdrawModal from "../components/WithdrawModal";
 
 const { Option } = Select;
@@ -38,7 +37,7 @@ const { Step } = Steps;
 
 // const CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
-const BASE_CONTRACT_ADDRESS = "0x7d839923eb2dac3a0d1cabb270102e481a208f33";
+const BASE_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
 
 
 export default function Dashboard() {
@@ -118,18 +117,8 @@ export default function Dashboard() {
       setIsLoadingSavings(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const network = await provider.getNetwork();
-      console.log("Connected Network:", network);
   
-      const ethPriceInUSD = await fetchEthPrice(); // Fetch ETH price for Lisk conversion
-  
-      let baseSavings = [];
-      let liskSavings = [];
-      let totalBaseSavings = ethers.BigNumber.from(0);
-      let totalLiskSavingsInUSD = ethers.BigNumber.from(0);
-  
-      // Helper function to fetch savings from a specific contract
-      const fetchSavingsFromContract = async (contractAddress, abi, decimals, isBase) => {
+      const fetchSavingsFromContract = async (contractAddress, abi, decimals) => {
         const contract = new ethers.Contract(contractAddress, abi, signer);
         const userChildContractAddress = await contract.getUserChildContractAddress();
   
@@ -170,10 +159,15 @@ export default function Dashboard() {
               const months = Math.floor(daysDifference / 30);
               const days = daysDifference % 30;
   
+              // ✅ Convert amount properly based on token decimals (e.g., USDC: 6, ETH: 18)
+              const formattedAmount = parseFloat(
+                ethers.utils.formatUnits(savingData.amount, decimals)
+              ).toFixed(2);
+  
               return {
                 name: savingName,
                 createdDate: startDate.toLocaleDateString(),
-                savedAmount: ethers.utils.formatUnits(savingData.amount, decimals),
+                savedAmount: formattedAmount, // ✅ Shows 1.00 instead of 0.0000001
                 tokenId: savingData.tokenId,
                 penalty: `${savingData.penaltyPercentage}%`,
                 startTime: startDate.toLocaleString(),
@@ -192,45 +186,35 @@ export default function Dashboard() {
         return { allSavings: [], totalSavedAmount: ethers.BigNumber.from(0) };
       };
   
-      // Fetch savings from Base network
-      if (network.chainId === 8453) {
-        const { allSavings, totalSavedAmount } = await fetchSavingsFromContract(
-          BASE_CONTRACT_ADDRESS,
-          CONTRACT_ABI,
-          6, // USDC uses 6 decimals
-          true
-        );
-        baseSavings = allSavings;
-        totalBaseSavings = totalSavedAmount;
-      }
+      // Fetch savings from the contract
+      const { allSavings, totalSavedAmount } = await fetchSavingsFromContract(
+        CONTRACT_ADDRESS, // Use the main contract address
+        CONTRACT_ABI,
+        6 // ✅ Change decimals based on token (6 for USDC, 18 for ETH)
+      );
   
-      // Fetch savings from Lisk network
-      if (network.chainId === 1135) {
-        const { allSavings, totalSavedAmount } = await fetchSavingsFromContract(
-          CONTRACT_ADDRESS,
-          CONTRACT_ABI,
-          18, // ETH uses 18 decimals
-          false
-        );
-        liskSavings = allSavings;
-        totalLiskSavingsInUSD = totalSavedAmount.mul(ethers.utils.parseEther(ethPriceInUSD.toString()));
-      }
+      console.log("Fetched Savings Data:", allSavings); // Log the fetched savings data
   
-      // Combine savings from both networks
-      const allSavings = [...baseSavings, ...liskSavings];
       const currentSavings = allSavings.filter((saving) => !saving.isCompleted);
       const completedSavings = allSavings.filter((saving) => saving.isCompleted);
   
       setCurrentSavings(currentSavings);
       setCompletedSavings(completedSavings);
   
-      // Total savings in USD (Base is already in USD, Lisk is converted to USD)
+      console.log("Current Savings:", currentSavings); // Log current savings
+      console.log("Completed Savings:", completedSavings); // Log completed savings
+  
+      // ✅ Format total savings correctly
       const totalSavingsInUSD = parseFloat(
-        ethers.utils.formatUnits(totalBaseSavings.add(totalLiskSavingsInUSD), 6)
-      );
-      setTotalSavedAmountUSD(totalSavingsInUSD.toFixed(2)); // Format to 2 decimal places
+        ethers.utils.formatUnits(totalSavedAmount, 6) // ✅ Adjust decimals if needed
+      ).toFixed(2);
+  
+      setTotalSavedAmountUSD(totalSavingsInUSD);
+  
+      console.log("Total Savings in USD:", totalSavingsInUSD); // Log total savings in USD
     } catch (error) {
       console.error("Error fetching savings data:", error);
+      message.error("Failed to fetch savings data. Please try again.");
     } finally {
       setIsLoadingSavings(false);
     }
@@ -397,10 +381,10 @@ export default function Dashboard() {
         throw new Error("No Ethereum wallet detected. Please install MetaMask.");
       }
   
-      console.log("User Input - Amount:", amount); // Log the amount entered by the user
-      console.log("User Input - Savings Name:", savingsName); // Log the savings name
-      console.log("User Input - Selected Day Range:", selectedDayRange); // Log the selected day range
-      console.log("User Input - Selected Penalty:", selectedPenalty); // Log the selected penalty
+      console.log("User Input - Amount:", amount);
+      console.log("User Input - Savings Name:", savingsName);
+      console.log("User Input - Selected Day Range:", selectedDayRange);
+      console.log("User Input - Selected Penalty:", selectedPenalty);
   
       // Validate the user-entered amount
       const userEnteredUsdcAmount = parseFloat(amount);
@@ -408,15 +392,19 @@ export default function Dashboard() {
         throw new Error("Invalid amount. Please enter an amount greater than zero.");
       }
   
+      // ✅ FIX: Ensure proper conversion to USDC (6 decimals)
+      const usdcEquivalentAmount = ethers.utils.parseUnits(userEnteredUsdcAmount.toFixed(6), 6);
+      console.log("USDC Equivalent Amount (After Fix):", usdcEquivalentAmount.toString());
+  
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
   
       const BASE_CHAIN_ID = 8453; // Base network chain ID
-      const BASE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+      const BASE_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
   
       const network = await provider.getNetwork();
-      console.log("User's Current Network:", network); // Log user's current network details
+      console.log("User's Current Network:", network);
   
       if (network.chainId !== BASE_CHAIN_ID) {
         throw new Error("Please switch your wallet to the Base network.");
@@ -449,21 +437,19 @@ export default function Dashboard() {
           )
         : 0;
   
-      const safeMode = false; // Assuming safe mode is not enabled for now
+      const safeMode = false;
       const tokenToSave = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-      const usdcEquivalentAmount = ethers.utils.parseUnits(userEnteredUsdcAmount.toString(), 6);
-  
-      console.log("USDC Equivalent Amount:", usdcEquivalentAmount.toString());
   
       // Approve the contract to spend the stablecoin
       const approveBASEERC20 = async (tokenAddress, amount, signer) => {
         const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
-    
+  
         // Approve token transfer
         const tx = await erc20Contract.approve(BASE_CONTRACT_ADDRESS, amount);
         await tx.wait();
         console.log("Approval Transaction Hash:", tx.hash);
       };
+  
       const totalAmount = usdcEquivalentAmount.add(ethers.utils.parseEther("0.0001"));
   
       await approveBASEERC20(tokenToSave, usdcEquivalentAmount, signer);
@@ -503,8 +489,7 @@ export default function Dashboard() {
     }
   };
 
-
-  const handleSavingsTopUp = async (amount, savingsPlanName, network) => {
+  const handleBaseSavingsTopUp = async (amount, savingsPlanName) => {
     if (!isConnected) {
       message.error("Please connect your wallet.");
       return;
@@ -513,10 +498,12 @@ export default function Dashboard() {
     setLoading(true);
   
     try {
-      // Common setup
+      // Ensure `amount` is sanitized
+      console.log("Raw amount value:", amount);
       const sanitizedAmount = amount.trim();
       const userEnteredAmount = parseFloat(sanitizedAmount);
   
+      // Validate the sanitized amount
       if (!sanitizedAmount || isNaN(userEnteredAmount) || userEnteredAmount <= 0) {
         throw new Error("Invalid amount entered.");
       }
@@ -525,51 +512,52 @@ export default function Dashboard() {
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
   
-      let contractAddress, tokenAddress, parsedAmount;
-  
-      if (network === "lisk") {
-        // Lisk-specific logic
-        const liskToEthRate = await getLiskToEthRate();
-        if (isNaN(liskToEthRate) || liskToEthRate <= 0) {
-          throw new Error("Invalid Lisk to ETH rate.");
-        }
-  
-        contractAddress = CONTRACT_ADDRESS; // Lisk contract
-        tokenAddress = "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24"; // Lisk token
-        parsedAmount = ethers.utils.parseEther(
-          (userEnteredAmount * liskToEthRate).toString()
-        );
-      } else {
-        // Base-specific logic
-        contractAddress = BASE_CONTRACT_ADDRESS; // Base contract
-        tokenAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // Base token
-        parsedAmount = ethers.utils.parseEther(userEnteredAmount.toString());
-      }
-  
-      const code = await provider.getCode(contractAddress);
+      // Check if the contract exists at the specified address
+      const code = await provider.getCode(BASE_CONTRACT_ADDRESS);
       if (code === "0x") {
         throw new Error("Contract not found on this network. Check the contract address and network.");
       }
   
-      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
+      const contract = new ethers.Contract(BASE_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  
+      // Check if the user has a child contract
       const userChildContractAddress = await contract.getUserChildContractAddress();
       if (userChildContractAddress === ethers.constants.AddressZero) {
         throw new Error("You must join Bitsave before topping up.");
       }
   
+      // Convert the user-entered amount to the appropriate units (e.g., USDC uses 6 decimals)
+      const usdcEquivalentAmount = ethers.utils.parseUnits(userEnteredAmount.toString(), 6);
+  
+      console.log("Data being sent to incrementSaving:");
+      console.log("Savings Name:", savingsPlanName);
+      console.log("Token Address:", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"); // USDC on Base
+      console.log("USDC Equivalent Amount:", usdcEquivalentAmount.toString());
+  
+      // Approve the contract to spend the USDC tokens
+      const approveBASEERC20 = async (tokenAddress, amount, signer) => {
+        const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
+        const tx = await erc20Contract.approve(BASE_CONTRACT_ADDRESS, amount);
+        await tx.wait();
+        console.log("Approval Transaction Hash:", tx.hash);
+      };
+  
+      await approveBASEERC20("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", usdcEquivalentAmount, signer);
+  
+      // Call the incrementSaving function on the contract
       const tx = await contract.incrementSaving(
-        savingsPlanName,
-        tokenAddress,
-        parsedAmount,
+        savingsPlanName, // Pass the savings plan name
+        "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC token address
+        usdcEquivalentAmount, // Amount in USDC
         {
-          gasLimit: 800000,
-          value: network === "lisk" ? parsedAmount : undefined, // Only include value for Lisk
+          gasLimit: 800000, // Adjust gas limit as needed
         }
       );
+  
       await tx.wait();
   
       message.success("Savings plan topped up successfully!");
-      fetchSavingsData();
+      fetchSavingsData(); // Refresh the savings data after topping up
     } catch (error) {
       console.error("Error topping up savings plan:", error);
       message.error(`Failed to top up savings plan: ${error.message}`);
@@ -642,7 +630,7 @@ export default function Dashboard() {
   const resetFormFields = () => {
     setSavingsName("");
     setAmount("");
-    setCurrency("ethereum");
+    setCurrency("");
     setSelectedDayRange({ from: null, to: null });
     setSelectedPenalty(1);
     setCurrentStep(0);
@@ -736,9 +724,7 @@ export default function Dashboard() {
               style={{ width: "150px" }}
             >
               <Option value="ethereum">ETH</Option>
-              <Option value="lsk">LSK</Option>
-              <Option value="base">BASE</Option>
-              <Option value="arb">ARB</Option>
+              <Option value="usdc">USDC</Option>
             </Select>
           </div>
         </div>
@@ -832,14 +818,9 @@ export default function Dashboard() {
 
   // Add new LSK-specific functions
   const handleCreateSavings = async () => {
-    if (currency !== "lsk" && currency !== "base") {
-      message.error("Token selected not yet active, please select another");
-      return;
-    }
-  
     if (currency === "lsk") {
       await handleLskSavingsCreate();
-    } else if (currency === "base") {
+    } else if (currency === "usdc" || "ethereum") {
       await handleBaseSavingsCreate();
     }
   };
@@ -1187,16 +1168,17 @@ export default function Dashboard() {
           isVisible={isTopUpModalVisible}
           onClose={() => setIsTopUpModalVisible(false)}
 
-          onTopUp={handleSavingsTopUp}
+          onTopUp={handleBaseSavingsTopUp}
           savingName={selectedSavingName}
         />
 
-        <WithdrawModal
-          isVisible={isHandleWithdrawModalVisible}
-          onClose={() => setIsHandleWithdrawModalVisible(false)}
-          onWithdraw={handleLskWithdraw}
-          savingName={selectedSavingName}  // Pass the selected savings name
-        />
+<WithdrawModal
+  isVisible={isHandleWithdrawModalVisible}
+  onClose={() => setIsHandleWithdrawModalVisible(false)}
+  onWithdraw={handleLskWithdraw}
+  savingName={selectedSavingName}
+  penaltyPercentage={selectedPenalty} // Pass the penalty percentage here
+/>
         <LeaderboardModal
           isVisible={isLeaderboardVisible}
           onClose={() => setIsLeaderboardVisible(false)}

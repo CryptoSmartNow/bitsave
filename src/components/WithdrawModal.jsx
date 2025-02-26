@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Button } from "antd/lib";
 
-const WithdrawModal = ({ isVisible, onClose, onWithdraw, savingName }) => {
+const WithdrawModal = ({ isVisible, onClose, onWithdraw, savingName, penaltyPercentage }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleWithdraw = async () => {
@@ -26,6 +26,11 @@ const WithdrawModal = ({ isVisible, onClose, onWithdraw, savingName }) => {
     >
       <p>
         Do you want to withdraw your savings for <strong>{savingName}</strong>?
+      </p>
+
+      {/* Warning message about the penalty */}
+      <p style={{ color: "#ff4d4f", fontWeight: "bold" }}>
+        Warning: If you proceed, you will lose {penaltyPercentage}% of your savings as a penalty.
       </p>
 
       <div style={{ textAlign: "right" }}>

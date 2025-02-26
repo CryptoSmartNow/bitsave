@@ -16,7 +16,7 @@ const WalletConnect = () => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-  const LSK_ADDRESS = '0xac485391EB2d7D88253a7F1eF18C37f4242D1A24';
+  // const LSK_ADDRESS = '0xac485391EB2d7D88253a7F1eF18C37f4242D1A24'; // Commented out Lisk
 
   // Get USDC balance on Base
   const { data: usdcBalance, isLoading: isLoadingUsdc } = useBalance({
@@ -25,23 +25,23 @@ const WalletConnect = () => {
     chainId: 8453, // Base chain ID
   });
 
-  // Get LSK balance on Lisk
-  const { data: lskBalance, isLoading: isLoadingLsk } = useBalance({
-    address,
-    token: LSK_ADDRESS,
-    chainId: 1135, // Lisk chain ID
-  });
+  // Get LSK balance on Lisk (commented out)
+  // const { data: lskBalance, isLoading: isLoadingLsk } = useBalance({
+  //   address,
+  //   token: LSK_ADDRESS,
+  //   chainId: 1135, // Lisk chain ID
+  // });
 
-  const loading = isLoadingUsdc || isLoadingLsk;
+  const loading = isLoadingUsdc; // Removed Lisk from the loading state
 
   const getDisplayBalance = () => {
     if (loading) return <Spin size="small" />;
     if (chainId === 8453) {
       return `${usdcBalance?.value ? (Number(usdcBalance.value) / 1e6).toFixed(2) : '0'} USDC`;
     }
-    if (chainId === 1135) {
-      return `${lskBalance?.value ? (Number(lskBalance.value) / 1e18).toFixed(2) : '0'} LSK`;
-    }
+    // if (chainId === 1135) {
+    //   return `${lskBalance?.value ? (Number(lskBalance.value) / 1e18).toFixed(2) : '0'} LSK`;
+    // }
     return '0';
   };
 
@@ -104,12 +104,13 @@ const WalletConnect = () => {
           onClick={() => handleNetworkSwitch(8453)} 
           block 
           className={styles.networkButton}
-          loading={isSwitching}
+          loading={isSwitching} 
           disabled={isSwitching}
         >
           Base
         </Button>
-        <Button 
+        {/* Removed Lisk network switch button */}
+        {/* <Button 
           onClick={() => handleNetworkSwitch(1135)} 
           block 
           className={styles.networkButton}
@@ -117,7 +118,7 @@ const WalletConnect = () => {
           disabled={isSwitching}
         >
           Lisk
-        </Button>
+        </Button> */}
         <Button 
           onClick={handleDisconnect} 
           block 

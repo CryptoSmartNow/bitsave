@@ -87,5 +87,4 @@ const TopUpModal = ({ isVisible, onClose, onTopUp, savingName, network }) => {
     </Modal>
   );
 };
-
 export default TopUpModal;

@@ -4,90 +4,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSackDollar, faPlus, faArrowDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import WithdrawModal from './WithdrawModal';
-import axios from 'axios';
 
-const LISK_TOKEN_ADDRESS = '0xac485391EB2d7D88253a7F1eF18C37f4242D1A24';
-
-// Add fallback conversion rate
-const FALLBACK_LISK_ETH_RATE = 0.00001234; // Update this with a reasonable fallback rate
-
+// Base network configuration
 const NETWORK_CONFIG = {
-  LISK: {
-    symbol: 'LSK',
-    logo: '/lisk-logo.svg',
-    coingeckoId: 'lisk'
-  },
   BASE: {
-    symbol: 'BASE',
-    logo: '/base-logo.png',
-    coingeckoId: 'base'
-  }
+    symbol: 'USDC', // USDC is the token used on Base
+    logo: '/base-logo.png', // Update with the correct logo path
+    decimals: 6, // USDC uses 6 decimals
+  },
 };
 
 const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
   const [isWithdrawModalVisible, setIsWithdrawModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [convertedAmount, setConvertedAmount] = useState(null);
-  const [tokenType, setTokenType] = useState(null); // Set to null initially to handle undefined
 
-  // Determine if this is a LISK saving
-  useEffect(() => {
-    if (plan.tokenId && plan.tokenId.toLowerCase() === LISK_TOKEN_ADDRESS.toLowerCase()) {
-      setTokenType('LISK');
-    } else {
-      setTokenType('BASE');
-    }
-  }, [plan.tokenId]);
-
-  // Fetch conversion rate and convert amount
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        const ethAmount = parseFloat(plan.savedAmount);
-        
-        if (tokenType === 'LISK') {
-          try {
-            const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-              params: {
-                ids: 'lisk',
-                vs_currencies: 'eth'
-              },
-              headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-              },
-              timeout: 5000 // Reduce timeout to 5 seconds
-            });
-
-            if (response.data && response.data.lisk && response.data.lisk.eth) {
-              const liskEthRate = response.data.lisk.eth;
-              const liskAmount = ethAmount / liskEthRate;
-              setConvertedAmount(liskAmount);
-            } else {
-              // Use fallback rate if API response is invalid
-              const liskAmount = ethAmount / FALLBACK_LISK_ETH_RATE;
-              setConvertedAmount(liskAmount);
-              console.warn('Using fallback conversion rate');
-            }
-          } catch (error) {
-            // Use fallback rate if API call fails
-            const liskAmount = ethAmount / FALLBACK_LISK_ETH_RATE;
-            setConvertedAmount(liskAmount);
-            console.warn('API call failed, using fallback conversion rate:', error.message);
-          }
-        } else {
-          setConvertedAmount(ethAmount);
-        }
-      } catch (error) {
-        console.error('Error in conversion:', error);
-        setConvertedAmount(parseFloat(plan.savedAmount));
-      }
-    };
-
-    if (tokenType) { // Ensure tokenType is set before fetching the conversion rate
-      fetchConversionRate();
-    }
-  }, [plan.savedAmount, tokenType]);
+  // Determine if this is a Base saving (default)
+  const tokenType = 'BASE'; // Since we're only using Base now
 
   const handleTopUpClick = async () => {
     setIsLoading(true);
@@ -119,15 +51,11 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
     try {
       const startDate = new Date(parseInt(startTimestamp));
       const now = new Date();
-      
+
       // Ensure valid dates
       if (isNaN(startDate.getTime()) || isNaN(now.getTime())) {
         return 'Date not available';
       }
-
-      // For debugging
-      console.log('Start date:', startDate.toISOString());
-      console.log('Now:', now.toISOString());
 
       // If the savings was created in the future
       if (startDate > now) {
@@ -137,12 +65,12 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
       // Calculate the exact difference
       const diffTime = Math.abs(now - startDate);
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
+
       // Calculate months and remaining days more precisely
       const startYear = startDate.getFullYear();
       const startMonth = startDate.getMonth();
       const startDay = startDate.getDate();
-      
+
       const nowYear = now.getFullYear();
       const nowMonth = now.getMonth();
       const nowDay = now.getDate();
@@ -162,7 +90,7 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
       if (months === 0) {
         return days === 1 ? '1 day ago' : `${days} days ago`;
       } else if (months === 1) {
-        return days === 0 
+        return days === 0
           ? '1 month ago'
           : `1 month and ${days} ${days === 1 ? 'day' : 'days'} ago`;
       } else {
@@ -170,7 +98,6 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
           ? `${months} months ago`
           : `${months} months and ${days} ${days === 1 ? 'day' : 'days'} ago`;
       }
-
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Date not available';
@@ -178,7 +105,6 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
   };
 
   const NetworkButton = () => {
-    // Add a check to ensure tokenType is defined before accessing NETWORK_CONFIG
     if (!tokenType || !NETWORK_CONFIG[tokenType]) {
       return null; // Return nothing if tokenType is undefined or invalid
     }
@@ -195,59 +121,28 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
     );
   };
 
-  const formatAmount = () => {
-    if (convertedAmount === null) return 'Loading...';
+  // const formatAmount = () => {
+  //   try {
+  //     const savedAmountString = plan.savedAmount.toString();
+  //     const savedAmount = parseFloat(savedAmountString);
   
-    try {
-      const config = NETWORK_CONFIG[tokenType];
+  //     if (isNaN(savedAmount)) {
+  //       console.error("Invalid saved amount:", plan.savedAmount);
+  //       return "Invalid amount";
+  //     }
   
-      // For BASE token (USDC), show the saved amount directly as USD with 2 decimals
-      if (tokenType === 'BASE') {
-        // Ensure the saved amount is a BigNumber
-        const savedAmountBigNumber = plan.savedAmount;
+  //     // Convert the amount correctly (USDC has 6 decimals)
+  //     const usdcAmount = savedAmount * Math.pow(10, 6); 
   
-        // Log the raw BigNumber for debugging
-        console.log('Saved amount BigNumber (BASE):', savedAmountBigNumber);
+  //     // Format to remove scientific notation
+  //     const formattedAmount = usdcAmount % 1 === 0 ? usdcAmount.toFixed(0) : usdcAmount.toFixed(2);
   
-        // Convert BigNumber to a string and then to a floating-point number
-        let savedAmount = parseFloat(savedAmountBigNumber.toString());
-  
-        // Log the converted savedAmount for debugging
-        console.log('Converted savedAmount:', savedAmount);
-  
-        // Handle case where the amount might be NaN (not a valid number)
-        if (isNaN(savedAmount)) {
-          console.error('Invalid saved amount:', savedAmountBigNumber);
-          return 'Invalid amount';
-        }
-  
-        // Handle precision issues (for example, if it's very close to 1 USD)
-        if (Math.abs(savedAmount - 1) < 1e-6) {
-          savedAmount = 1; // Fix small value to 1 USD
-        }
-  
-        // Format the saved amount with 2 decimal places
-        const formattedAmount = savedAmount.toFixed(2);
-  
-        // Log the formatted amount for debugging
-        console.log('Formatted saved amount (BASE):', formattedAmount);
-  
-        return `${formattedAmount} USD`;
-      }
-  
-      // For LISK token, format as per the conversion
-      const decimals = convertedAmount < 1 ? 6 : 4;
-      const formattedAmount = convertedAmount.toFixed(decimals);
-      
-      // Log the converted amount for debugging
-      console.log('Converted amount (LISK):', formattedAmount);
-      
-      return `${formattedAmount} ${config.symbol}`;
-    } catch (error) {
-      console.error('Error formatting amount:', error);
-      return `${plan.savedAmount} ETH`; // Fallback in case of error
-    }
-  };
+  //     return `${formattedAmount} USDC`;
+  //   } catch (error) {
+  //     console.error("Error formatting amount:", error);
+  //     return `${plan.savedAmount} USDC`;
+  //   }
+  // };
 
   return (
     <div className={bit.bit_card}>
@@ -266,7 +161,7 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
         </div>
         <div className={bit.top_up_section}>
           {plan.isCompleted ? (
-            <button 
+            <button
               className={bit.completed_button}
               disabled
             >
@@ -274,8 +169,8 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
               Done
             </button>
           ) : (
-            <button 
-              className={bit.top_up_button} 
+            <button
+              className={bit.top_up_button}
               onClick={handleTopUpClick}
               disabled={isLoading}
             >
@@ -287,7 +182,7 @@ const SavingsPlanCard = ({ plan, onTopUp, onWithdraw }) => {
       </div>
       <hr className={bit.separator} />
       <div className={`${bit.additional_info} ${bit.compact_info}`}>
-        <span className={bit.saved_amount}>{formatAmount()}</span>
+        <span className={bit.saved_amount}>{plan.savedAmount} {NETWORK_CONFIG[tokenType].symbol} </span>
         <span className={bit.reward}>Your set penalty is {plan.penalty}</span>
       </div>
       <div className={bit.progress_bar}>
