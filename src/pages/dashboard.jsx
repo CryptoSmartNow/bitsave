@@ -566,7 +566,7 @@ export default function Dashboard() {
     }
   };
 
-  async function handleLskWithdraw(nameOfSavings) {
+  async function handleBaseWithdraw(nameOfSavings) {
     try {
       // Ensure Ethereum provider is available (e.g., MetaMask)
       if (!window.ethereum) {
@@ -609,6 +609,8 @@ export default function Dashboard() {
       const receipt = await tx.wait();
   
       if (receipt.status === 1) {
+        message.success("Withdrawal successful!");
+        fetchSavingsData();
         console.log("Withdrawal successful!", receipt);
       } else {
         console.error("Transaction failed! Receipt:", receipt);
@@ -1175,7 +1177,7 @@ export default function Dashboard() {
 <WithdrawModal
   isVisible={isHandleWithdrawModalVisible}
   onClose={() => setIsHandleWithdrawModalVisible(false)}
-  onWithdraw={handleLskWithdraw}
+  onWithdraw={handleBaseWithdraw}
   savingName={selectedSavingName}
   penaltyPercentage={selectedPenalty} // Pass the penalty percentage here
 />
