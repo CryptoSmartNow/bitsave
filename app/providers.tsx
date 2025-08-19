@@ -14,6 +14,7 @@ import {
   zerionWallet
 } from '@rainbow-me/rainbowkit/wallets';
 import { useTheme } from 'next-themes';
+import { SuiteProviderWrapper } from './SuiteProvider';
 
 // Import Rainbow Kit styles
 import '@rainbow-me/rainbowkit/styles.css';
@@ -71,7 +72,9 @@ export function Providers({ children }: { children: ReactNode }) {
             borderRadius: 'large',
           })}
         >
-          {children}
+          <SuiteProviderWrapper>
+            {children}
+          </SuiteProviderWrapper>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
