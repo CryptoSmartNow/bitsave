@@ -25,6 +25,7 @@ const Header = memo(function Header() {
           <Link href="/#how-it-works" className="text-gray-700 hover:text-[#81D7B4] transition-colors"  >How It Works</Link>
           <Link href="/#security" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Security</Link>
           <Link href="/#features" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Features</Link>
+          <Link href="/blog" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Blog</Link>
           <Link href="/#faq" className="text-gray-700 hover:text-[#81D7B4] transition-colors">FAQ</Link>
         </nav>
         
@@ -84,13 +85,18 @@ const Header = memo(function Header() {
               Features
             </Link>
             <Link 
+              href="/blog" 
+              className="px-4 py-2 text-gray-700 hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Blog
+            </Link>
+            <Link 
               href="/#faq" 
               className="px-4 py-2 text-gray-700 hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               FAQ
-
-
             </Link>
             <div className="mx-4">
                <Link 
