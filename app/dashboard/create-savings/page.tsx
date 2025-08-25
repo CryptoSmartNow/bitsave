@@ -229,6 +229,9 @@ export default function CreateSavingsPage() {
       if (!name.trim()) {
         newErrors.name = 'Please enter a name for your savings plan'
         valid = false
+      } else if (name !== name.trim()) {
+        newErrors.name = 'Plan name cannot have leading or trailing spaces'
+        valid = false
       }
 
       if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -1361,7 +1364,7 @@ export default function CreateSavingsPage() {
                             type="text"
                             id="planName"
                             value={name}
-                            onChange={(e) => setName(e.target.value.trim())}
+                            onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Vacation Fund, Emergency Savings"
                             className={`relative w-full px-4 py-3 bg-white/70 backdrop-blur-sm rounded-xl border text-gray-900 ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200/50 focus:ring-[#81D7B4]/50 focus:border-[#81D7B4]/50'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
                           />
@@ -1380,7 +1383,7 @@ export default function CreateSavingsPage() {
                             type="text"
                             id="amount"
                             value={amount}
-                            onChange={(e) => setAmount(e.target.value.trim())}
+                            onChange={(e) => setAmount(e.target.value)}
                             placeholder="0.00"
                             className={`relative w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-sm rounded-xl border text-gray-900 ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200/50 focus:ring-[#81D7B4]/50 focus:border-[#81D7B4]/50'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
                           />
