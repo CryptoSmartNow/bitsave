@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useReferrals } from '@/lib/useReferrals'
+import { useEffect } from 'react';
+import { useReferrals } from '@/lib/useReferrals';
 
 export default function ReferralTracker() {
   const { trackReferralVisit } = useReferrals()

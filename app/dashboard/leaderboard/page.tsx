@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Space_Grotesk } from 'next/font/google'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Space_Grotesk } from 'next/font/google';
+import Link from 'next/link';
 
 // Initialize the Space Grotesk font
 const spaceGrotesk = Space_Grotesk({ 
@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
           const address = accounts[0];
           setCurrentUserAddress(address);
         } else {
-          console.log('Ethereum wallet not detected. Please install MetaMask or another wallet.');
+  
           // Set a fallback for development/testing
           setCurrentUserAddress('0x0000000000000000000000000000000000000000');
         }

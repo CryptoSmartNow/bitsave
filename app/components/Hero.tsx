@@ -1,16 +1,11 @@
 'use client'
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useEffect, useRef, memo } from 'react';
+import Link from 'next/link';
 
-export default function Hero() {
+const Hero = memo(function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const shimmerElementsRef = useRef<Array<{width: number, top: number, rotation: number, duration: number, delay: number}>>([]);
-  const router = useRouter();
-  const { isConnected } = useAccount();
-  const { openConnectModal } = useConnectModal();
 
   // Initialize shimmer elements data with fixed values to avoid hydration mismatch
   useEffect(() => {
@@ -25,24 +20,6 @@ export default function Hero() {
       }));
     }
   }, []);
-
-  // Handle wallet connection and redirect
-  const handleOpenApp = () => {
-    if (isConnected) {
-      // If already connected, redirect to dashboard
-      router.push('/dashboard');
-    } else {
-      // If not connected, open wallet connect modal
-      openConnectModal?.();
-    }
-  };
-
-  // Effect to redirect to dashboard when connected
-  useEffect(() => {
-    if (isConnected) {
-      router.push('/dashboard');
-    }
-  }, [isConnected, router]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -132,18 +109,19 @@ export default function Hero() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button 
-                onClick={handleOpenApp}
-                className="group relative px-8 py-4 bg-[#81D7B4] text-white font-semibold rounded-xl hover:bg-[#6bc49f] transition-all duration-300 transform hover:scale-105 hover:shadow-xl overflow-hidden"
+              <Link 
+                href="/dashboard"
+                prefetch={true}
+                className="group relative px-8 py-4 bg-[#81D7B4] text-white font-semibold rounded-xl hover:bg-[#6bc49f] transition-all duration-300 transform hover:scale-105 hover:shadow-xl overflow-hidden inline-flex items-center justify-center"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4] to-[#6bc49f] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative z-10 flex items-center gap-2">
-                  {isConnected ? 'Open Dashboard' : 'Connect Wallet'}
+                  Open App
                   <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </span>
-              </button>
+              </Link>
               
               <button 
                 onClick={() => window.open('https://youtube.com/shorts/CWRQ7rgtHzU?si=xd8ia_IQyonxOXFM', '_blank')}
@@ -416,4 +394,6 @@ export default function Hero() {
       `}</style>
     </section>
   );
-}
+})
+
+export default Hero;

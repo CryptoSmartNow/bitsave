@@ -48,7 +48,7 @@ export default function Settings() {
     if (email.trim()) {
       setShowOtpModal(true);
       // Here you would typically send OTP to the email
-      console.log('Sending OTP to:', email);
+
     }
   };
 
@@ -81,7 +81,7 @@ export default function Settings() {
       setShowOtpModal(false);
       setOtp(['', '', '', '', '', '']);
       // Show success message or update UI
-      console.log('Email verified successfully!');
+
     }, 2000);
   };
 

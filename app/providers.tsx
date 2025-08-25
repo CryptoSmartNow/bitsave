@@ -7,11 +7,12 @@ import { mainnet, sepolia, base } from 'wagmi/chains';
 import { RainbowKitProvider, lightTheme, darkTheme } from '@rainbow-me/rainbowkit';
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { 
-  metaMaskWallet,
+  walletConnectWallet,
   coinbaseWallet,
-  trustWallet,
+  zerionWallet,
   rabbyWallet,
-  zerionWallet
+  metaMaskWallet,
+  trustWallet
 } from '@rainbow-me/rainbowkit/wallets';
 import { useTheme } from 'next-themes';
 
@@ -27,13 +28,14 @@ const chains = [mainnet, sepolia, base] as const;
 // Create wallet groups with connectorsForWallets - Only supported wallets
 const connectors = connectorsForWallets([
     {
-      groupName: 'Wallets Supported On Bitsave',
+      groupName: 'Compatible Wallets - Fully Supported by BitSave',
       wallets: [
-        metaMaskWallet,
+        walletConnectWallet,
         coinbaseWallet,
-        rabbyWallet,
-        trustWallet,
         zerionWallet,
+        rabbyWallet,
+        metaMaskWallet,
+        trustWallet,
       ],
     },
 ], {

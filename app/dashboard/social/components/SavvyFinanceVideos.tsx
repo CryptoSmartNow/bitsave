@@ -1,6 +1,6 @@
 "use client"
-import { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 // Utility function to generate YouTube thumbnail URL with fallback
 const getYouTubeThumbnail = (videoId: string, quality: 'maxresdefault' | 'hqdefault' | 'mqdefault' | 'sddefault' = 'maxresdefault') => {

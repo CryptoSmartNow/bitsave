@@ -3,7 +3,7 @@ import { getUserInteractionsCollection, UserInteraction } from '@/lib/mongodb';
 
 export async function GET() {
   try {
-    console.log('API: Starting to fetch interactions');
+  
     const collection = await getUserInteractionsCollection();
     
     // If MongoDB is unavailable, return empty array with warning
@@ -15,9 +15,9 @@ export async function GET() {
       });
     }
     
-    console.log('API: Got collection, fetching interactions');
+
     const interactions = await collection.find({}).sort({ timestamp: -1 }).toArray();
-    console.log('API: Found interactions:', interactions.length);
+
     
     // If no interactions exist, seed with sample data
     if (interactions.length === 0) {
@@ -67,7 +67,7 @@ export async function GET() {
       ];
       
       await collection.insertMany(sampleData);
-      console.log('API: Seeded sample data');
+  
       return NextResponse.json(sampleData);
     }
     
@@ -134,7 +134,7 @@ export async function GET() {
       }
     ];
     
-    console.log('Returning mock data due to database error');
+
     return NextResponse.json(mockData);
   }
 }

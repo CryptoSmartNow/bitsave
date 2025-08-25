@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
+import { handleContractError } from '@/lib/contractErrorHandler';
 
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
@@ -56,7 +57,7 @@ export default function WithdrawPage() {
       const contract = new ethers.Contract(getContractAddress(), CONTRACT_ABI, signer);
       
       const gasEstimate = await contract.withdrawSaving.estimateGas(withdrawalName);
-      console.log('Gas estimate for withdrawal:', gasEstimate.toString());
+
       const gasLimit = Math.floor(Number(gasEstimate) * 1.2);
       
       const tx = await contract.withdrawSaving(withdrawalName, {
@@ -78,7 +79,9 @@ export default function WithdrawPage() {
       }
     } catch (err: unknown) {
       console.error('Withdrawal error:', err);
-      setError(err instanceof Error ? err.message : 'Withdrawal failed. Please try again.');
+      // Use the contract error handler to provide user-friendly error messages
+      const errorMessage = handleContractError(err, 'main');
+      setError(errorMessage);
       await trackError(err instanceof Error ? err.message : 'Unknown error', { component: 'withdrawal' });
     } finally {
       setIsLoading(false);

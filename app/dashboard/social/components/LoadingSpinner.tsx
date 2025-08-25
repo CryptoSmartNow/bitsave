@@ -1,5 +1,5 @@
 "use client"
-import { memo } from 'react'
+import { memo } from 'react';
 
 const LoadingSpinner = memo(() => (
   <div className="text-center py-8">

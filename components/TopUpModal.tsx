@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Space_Grotesk } from 'next/font/google'
-import { ethers } from 'ethers'
-import axios from 'axios'
-import { useAccount } from 'wagmi'
-import { toast } from 'react-hot-toast'
-import Image from 'next/image'
-import { trackTransaction, trackError } from '@/lib/interactionTracker'
+import { useState, useRef, useEffect, memo } from 'react';
+import { motion } from 'framer-motion';
+import { Space_Grotesk } from 'next/font/google';
+import { ethers } from 'ethers';
+import axios from 'axios';
+import { useAccount } from 'wagmi';
+import { toast } from 'react-hot-toast';
+import Image from 'next/image';
+import { trackTransaction, trackError } from '@/lib/interactionTracker';
 
 // Contract addresses and ABIs
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
@@ -17,8 +17,9 @@ const ETH_TOKEN_ADDRESS = "0x0000000000000000000000000000000000000000"
 const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDGLO_CELO_ADDRESS = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3"
 
-import CONTRACT_ABI from '@/app/abi/contractABI.js'
-import erc20ABI from '@/app/abi/erc20ABI.json'
+import CONTRACT_ABI from '@/app/abi/contractABI.js';
+import erc20ABI from '@/app/abi/erc20ABI.json';
+import { handleContractError } from '@/lib/contractErrorHandler';
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'],
@@ -34,7 +35,7 @@ interface TopUpModalProps {
   tokenName?: string
 }
 
-export default function TopUpModal({ isOpen, onClose, planName, isEth = false, tokenName }: TopUpModalProps) {
+const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth = false, tokenName }: TopUpModalProps) {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
@@ -194,7 +195,7 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
     setSuccess(false);
 
     try {
-      console.log("Raw amount value:", amount);
+  
       const sanitizedAmount = amount.trim();
       const userEnteredAmount = parseFloat(sanitizedAmount);
 
@@ -248,16 +249,13 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
 
       const tokenAmount = ethers.parseUnits(userEnteredAmount.toString(), decimals);
 
-      console.log("Data being sent to incrementSaving:");
-      console.log("Savings Name:", savingsPlanName);
-      console.log("Token Address:", tokenAddress);
-      console.log("Token Amount:", tokenAmount.toString());
+
 
       const approveERC20 = async (tokenAddress: string, amount: ethers.BigNumberish, signer: ethers.Signer) => {
         const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
         const tx = await erc20Contract.approve(contractAddress, amount);
         await tx.wait();
-        console.log("Approval Transaction Hash:", tx.hash);
+
       };
 
       await approveERC20(tokenAddress, tokenAmount, signer);
@@ -275,7 +273,7 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
       setTxHash(receipt.hash);
       
       try {
-        const apiResponse = await axios.post(
+        await axios.post(
           "https://bitsaveapi.vercel.app/transactions/",
           {
             amount: userEnteredAmount,
@@ -293,7 +291,7 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
             }
           }
         );
-        console.log("API response:", apiResponse.data);
+
       } catch (apiError) {
         console.error("Error sending transaction data to API:", apiError);
       }
@@ -341,7 +339,9 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
         });
       }
       
-      setError(`Failed to top up savings plan: ${error instanceof Error ? error.message : String(error)}`);
+      // Use the contract error handler to provide user-friendly error messages
+      const errorMessage = handleContractError(error, 'main');
+      setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
       setLoading(false);
@@ -404,7 +404,7 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
       setTxHash(receipt.hash);
       
       try {
-        const apiResponse = await axios.post(
+        await axios.post(
           "https://bitsaveapi.vercel.app/transactions/",
           {
             amount: usdAmount,
@@ -422,7 +422,7 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
             }
           }
         );
-        console.log("API response:", apiResponse.data);
+
       } catch (apiError) {
         console.error("Error sending transaction data to API:", apiError);
       }
@@ -446,7 +446,9 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
         });
       }
       
-      setError(`Failed to top up ETH savings plan: ${error instanceof Error ? error.message : String(error)}`);
+      // Use the contract error handler to provide user-friendly error messages
+      const errorMessage = handleContractError(error, 'main');
+      setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
       setLoading(false);
@@ -737,7 +739,7 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
                       name="amount"
                       id="amount"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => setAmount(e.target.value.trim())}
                       className="focus:ring-[#81D7B4] focus:border-[#81D7B4] block w-full pl-8 pr-12 py-3 sm:text-sm border-gray-300 rounded-xl shadow-md bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
                       placeholder="0.00"
                       aria-describedby="amount-currency"
@@ -888,4 +890,6 @@ export default function TopUpModal({ isOpen, onClose, planName, isEth = false, t
       )}
     </div>
   )
-}
+})
+
+export default TopUpModal

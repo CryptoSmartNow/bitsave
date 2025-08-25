@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Space_Grotesk } from 'next/font/google'
-import Link from 'next/link'
-import WithdrawModal from '@/components/WithdrawModal'
-import TopUpModal from '@/components/TopUpModal'
-import { ethers } from 'ethers'
-import { useAccount } from 'wagmi'
-import contractABI from '@/app/abi/contractABI.js'
-import childContractABI from '@/app/abi/childContractABI.js'
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Space_Grotesk } from 'next/font/google';
+import Link from 'next/link';
+import WithdrawModal from '@/components/WithdrawModal';
+import TopUpModal from '@/components/TopUpModal';
+import { ethers } from 'ethers';
+import { useSavingsData } from '@/hooks/useSavingsData';
 
 // Initialize the Space Grotesk font
 const spaceGrotesk = Space_Grotesk({
@@ -17,9 +15,7 @@ const spaceGrotesk = Space_Grotesk({
   display: 'swap',
 })
 
-// Contract address
-const MAIN_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
-const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"; // Celo
+
 // Define types for our plan data
 interface Plan {
   id: string;
@@ -39,13 +35,7 @@ interface Plan {
   network?: string; // Add network field
 }
 
-interface SavingsData {
-  totalLocked: string;
-  deposits: number;
-  rewards: string;
-  currentPlans: Plan[];
-  completedPlans: Plan[];
-}
+
 
 // Helper to get logo for a token
 function getTokenLogo(tokenName: string, tokenLogo?: string) {
@@ -62,31 +52,10 @@ export default function PlansPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false)
   const [topUpPlan, setTopUpPlan] = useState<Plan | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isCorrectNetwork, setIsCorrectNetwork] = useState(true)
-  const [ethPrice, setEthPrice] = useState(3500) // Default ETH price
   const [goodDollarPrice, setGoodDollarPrice] = useState(0.0001);
-  const [savingsData, setSavingsData] = useState<SavingsData>({
-    totalLocked: "0.00",
-    deposits: 0,
-    rewards: "0.00",
-    currentPlans: [],
-    completedPlans: []
-  })
 
-  const { address, isConnected } = useAccount()
-
-  // Function to fetch current ETH price
-  const fetchEthPrice = async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-      const data = await response.json();
-      return data.ethereum.usd;
-    } catch (error) {
-      console.error("Error fetching ETH price:", error);
-      return null;
-    }
-  };
+  // Use the new caching hook for savings data
+  const { savingsData, isLoading, isCorrectNetwork, ethPrice } = useSavingsData()
 
   // Fetch GoodDollar price from Coingecko
   const fetchGoodDollarPrice = async () => {
@@ -99,203 +68,6 @@ export default function PlansPage() {
       return 0.0001; // fallback
     }
   };
-
-  const fetchSavingsData = async () => {
-    if (!isConnected || !address) return;
-    try {
-      setIsLoading(true);
-      const currentEthPrice = await fetchEthPrice();
-      console.log(`Current ETH price: ${currentEthPrice}`);
-      setEthPrice(currentEthPrice || 3500);
-
-      if (!window.ethereum) {
-        throw new Error("No Ethereum wallet detected. Please install MetaMask.");
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-
-      // Check if on Base or Celo network
-      const network = await provider.getNetwork();
-      const BASE_CHAIN_ID = BigInt(8453); // Base network chainId
-      const CELO_CHAIN_ID = BigInt(42220); // Celo network chainId
-
-      if (network.chainId !== BASE_CHAIN_ID && network.chainId !== CELO_CHAIN_ID) {
-        setIsCorrectNetwork(false);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsCorrectNetwork(true);
-
-      // Determine which contract address to use based on the network
-      const isBase = network.chainId === BASE_CHAIN_ID;
-      const contractAddress = isBase ? MAIN_CONTRACT_ADDRESS : CELO_CONTRACT_ADDRESS;
-
-      const contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-      // Get user's child contract address
-      const userChildContractAddress = await contract.getUserChildContractAddress();
-
-      if (userChildContractAddress === ethers.ZeroAddress) {
-        // User hasn't joined BitSave yet
-        setSavingsData({
-          totalLocked: "0.00",
-          deposits: 0,
-          rewards: "0.00",
-          currentPlans: [],
-          completedPlans: []
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Create a contract instance for the user's child contract
-      const childContract = new ethers.Contract(
-        userChildContractAddress,
-        childContractABI,
-        signer
-      );
-
-      // Get savings names from the child contract
-      const savingsNamesObj = await childContract.getSavingsNames();
-      const savingsNamesArray = savingsNamesObj[0];
-
-      // Change 'let' to 'const' for variables that aren't reassigned
-      const currentPlans = [];
-      const completedPlans = [];
-      // Remove or change to const since it's not used
-      // const totalLockedValue = ethers.parseEther("0");
-      let totalDeposits = 0;
-      let totalUsdValue = 0;
-
-      // Process each savings plan
-      if (Array.isArray(savingsNamesArray)) {
-        // Create a Set to track processed plan names and avoid duplicates
-        const processedPlanNames = new Set();
-
-        for (const savingName of savingsNamesArray) {
-          try {
-            // Skip if we've already processed this plan name
-            if (processedPlanNames.has(savingName)) continue;
-
-            // Add to processed set
-            processedPlanNames.add(savingName);
-
-            // Get saving details
-            const savingData = await childContract.getSaving(savingName);
-            if (!savingData.isValid) continue;
-
-            // Check if it's ETH or token based
-            const tokenId = savingData.tokenId;
-            const isEth = tokenId === "0x0000000000000000000000000000000000000000";
-            // Check if this is a $G token plan
-            const isGToken = tokenId.toLowerCase() === "0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A".toLowerCase();
-            // Check if this is a USDGLO token plan
-            const isUSDGLO = tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3".toLowerCase();
-
-            // Get decimals based on token type
-            // ETH and $G use 18 decimals, USDGLO and USDC use 6 decimals, cUSD uses 18 decimals
-            const decimals = isEth || isGToken || (network.chainId !== BASE_CHAIN_ID && !isUSDGLO) ? 18 : 6;
-
-            // Extract penalty percentage from saving data
-            const penaltyPercentage = Number(savingData.penaltyPercentage);
-
-            // Format amounts
-            const targetFormatted = ethers.formatUnits(savingData.amount, decimals);
-            // Use amount as the current deposited amount (not interestAccumulated)
-            const currentFormatted = ethers.formatUnits(savingData.amount, decimals);
-
-            const currentDate = new Date();
-            const startTimestamp = Number(savingData.startTime);
-            const maturityTimestamp = Number(savingData.maturityTime);
-            const startDate = new Date(startTimestamp * 1000);
-            const maturityDate = new Date(maturityTimestamp * 1000);
-
-            const totalDuration = maturityDate.getTime() - startDate.getTime();
-            const elapsedTime = currentDate.getTime() - startDate.getTime();
-            const progress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
-
-
-
-            // Add to total USD value using current deposited amount
-            if (isEth) {
-              const ethAmount = parseFloat(currentFormatted);
-              const usdValue = ethAmount * currentEthPrice;
-              console.log(`ETH plan: ${savingName}, deposited: ${ethAmount} ETH, USD value: ${usdValue}, ethPrice: ${currentEthPrice}`);
-              totalUsdValue += usdValue;
-            } else if (isGToken) {
-              // GoodDollar: format using 18 decimals, then multiply by live price
-              const gAmount = parseFloat(currentFormatted);
-              totalUsdValue += gAmount * goodDollarPrice;
-            } else if (isUSDGLO) {
-              totalUsdValue += parseFloat(currentFormatted); // USDGLO is 6 decimals, already USD
-            } else {
-              // cUSD: format using 18 decimals, already USD
-              totalUsdValue += parseFloat(currentFormatted);
-            }
-
-            totalDeposits++;
-
-            const planData = {
-              id: savingName.trim(),
-              address: userChildContractAddress,
-              name: savingName.trim(),
-              currentAmount: currentFormatted,
-              targetAmount: targetFormatted,
-              progress: progress,
-              isEth,
-              isGToken,
-              isUSDGLO, // Add this property
-              startTime: startTimestamp,
-              maturityTime: maturityTimestamp,
-              penaltyPercentage: penaltyPercentage,
-              tokenName: isEth ? 'ETH' : isGToken ? '$G' : isUSDGLO ? 'USDGLO' : (network.chainId === BASE_CHAIN_ID ? 'USDC' : 'cUSD'),
-              tokenLogo: isEth ? '/eth.png' : isGToken ? '/$g.png' : isUSDGLO ? '/usdglo.png' : (network.chainId === BASE_CHAIN_ID ? '/usdc.png' : '/cusd.png'),
-              network: network.chainId === BASE_CHAIN_ID ? 'Base' : 'Celo',
-            };
-
-            // Add to appropriate list based on completion status
-            if (progress >= 100 || currentDate >= maturityDate) {
-              completedPlans.push(planData);
-            } else {
-              currentPlans.push(planData);
-            }
-          } catch (error) {
-            console.error(`Error processing savings plan ${savingName}:`, error);
-          }
-        }
-      }
-
-      // Sort plans from newest to oldest based on start time (most recent first)
-      currentPlans.sort((a, b) => b.startTime - a.startTime);
-      completedPlans.sort((a, b) => b.startTime - a.startTime);
-
-      console.log(`Total USD value before setting state: ${totalUsdValue}`);
-      setSavingsData({
-        totalLocked: totalUsdValue.toFixed(2),
-        deposits: totalDeposits,
-        rewards: "0.00", // Placeholder for rewards calculation
-        currentPlans,
-        completedPlans
-      });
-    } catch (error) {
-      console.error("Error fetching savings data:", error);
-      setSavingsData({
-        totalLocked: "0.00",
-        deposits: 0,
-        rewards: "0.00",
-        currentPlans: [],
-        completedPlans: []
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSavingsData();
-  }, [isConnected, address]);
 
   useEffect(() => {
     fetchGoodDollarPrice().then(setGoodDollarPrice);
@@ -686,11 +458,10 @@ export default function PlansPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           planName={selectedPlan.name}
-        planId={selectedPlan.address}
-        isEth={selectedPlan.isEth}
-        penaltyPercentage={selectedPlan.penaltyPercentage}
-        tokenName={selectedPlan.tokenName}
-        isCompleted={new Date().getTime() >= selectedPlan.maturityTime * 1000}
+          isEth={selectedPlan.isEth}
+          penaltyPercentage={selectedPlan.penaltyPercentage}
+          tokenName={selectedPlan.tokenName}
+          isCompleted={new Date().getTime() >= selectedPlan.maturityTime * 1000}
         />
       )}
 

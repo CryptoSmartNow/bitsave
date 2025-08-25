@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
 import Image from 'next/image';
 import childContractABI from '../app/abi/childContractABI.js';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
+import { handleContractError } from '@/lib/contractErrorHandler';
 
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
@@ -15,18 +16,16 @@ interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
   planName: string;
-  planId: string;
   isEth: boolean;
   penaltyPercentage?: number;
   tokenName?: string;
   isCompleted?: boolean;
 }
 
-export default function WithdrawModal({ 
+const WithdrawModal = memo(function WithdrawModal({ 
   isOpen, 
   onClose, 
   planName, 
-  planId, 
   isEth,
   penaltyPercentage,
   tokenName,
@@ -86,7 +85,7 @@ export default function WithdrawModal({
   const handleWithdraw = async () => {
     try {
       const sanitizedPlanName = planName;
-      console.log(`Attempting to withdraw from plan: "${sanitizedPlanName}" at address: ${planId}`);
+
       
       // Added timeout to prevent hanging
       const withdrawalPromise = isEth 
@@ -131,12 +130,12 @@ export default function WithdrawModal({
       const amount = ethers.formatUnits(savingData.amount, 18); 
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
-      console.log(`Gas estimate for ETH withdrawal: ${gasEstimate}`);
+
 
      const tx = await contract.withdrawSaving(nameOfSavings, {
         gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)), 
       });
-      console.log(nameOfSavings)
+
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
 
@@ -149,7 +148,7 @@ export default function WithdrawModal({
           headers["X-API-Key"] = process.env.NEXT_PUBLIC_API_KEY;
         }
         
-        const apiResponse = await fetch("https://bitsaveapi.vercel.app/transactions/", {
+        await fetch("https://bitsaveapi.vercel.app/transactions/", {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -162,7 +161,7 @@ export default function WithdrawModal({
             currency: "ETH"
           })
         });
-        console.log("API response:", apiResponse);
+
       } catch (apiError) {
         console.error("Error sending transaction data to API:", apiError);
       }
@@ -208,7 +207,9 @@ export default function WithdrawModal({
         });
       }
       
-      setError(`Failed to withdraw: ${error instanceof Error ? error.message : String(error)}`);
+      // Use the contract error handler to provide user-friendly error messages
+      const errorMessage = handleContractError(error, 'main');
+      setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
       setIsLoading(false);
@@ -239,7 +240,7 @@ export default function WithdrawModal({
       const amount = ethers.formatUnits(savingData.amount, 6);
       
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
-      console.log(`Gas estimate for token withdrawal: ${gasEstimate}`);
+
       const tx = await contract.withdrawSaving(nameOfSavings, {
         gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
       });
@@ -257,7 +258,7 @@ export default function WithdrawModal({
           headers["X-API-Key"] = process.env.NEXT_PUBLIC_API_KEY;
         }
         
-        const apiResponse = await fetch("https://bitsaveapi.vercel.app/transactions/", {
+        await fetch("https://bitsaveapi.vercel.app/transactions/", {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -270,7 +271,7 @@ export default function WithdrawModal({
             currency: currentTokenName
           })
         });
-        console.log("API response:", apiResponse);
+
       } catch (apiError) {
         console.error("Error sending transaction data to API:", apiError);
       }
@@ -292,7 +293,9 @@ export default function WithdrawModal({
         });
       }
       
-      setError(`Failed to withdraw: ${error instanceof Error ? error.message : String(error)}`);
+      // Use the contract error handler to provide user-friendly error messages
+      const errorMessage = handleContractError(error, 'main');
+      setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
       setIsLoading(false);
@@ -524,4 +527,6 @@ export default function WithdrawModal({
       )}
     </div>
   );
-}
+})
+
+export default WithdrawModal

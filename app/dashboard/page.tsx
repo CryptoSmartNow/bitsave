@@ -1,46 +1,56 @@
 'use client'
-import { useState, useEffect } from 'react';
+// React hooks for state management and lifecycle
+import { useState, useEffect, useCallback, useMemo } from 'react';
+// Wagmi hook for wallet connection status
 import { useAccount } from 'wagmi';
+// Next.js navigation utilities
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+// Google Fonts integration
 import { Space_Grotesk } from 'next/font/google';
+// Custom modal components for savings operations
 import TopUpModal from '../../components/TopUpModal';
 import WithdrawModal from '../../components/WithdrawModal';
+// Animation library for smooth UI transitions
 import { motion } from 'framer-motion';
-import { ethers } from 'ethers';
-import contractABI from '../abi/contractABI.js';
-import childContractABI from '../abi/childContractABI.js';
-import axios from 'axios';
+// Custom error handling for contract operations
+import { handleContractError } from '../../lib/contractErrorHandler';
+// Custom hook for savings data with caching
+import { useSavingsData } from '../../hooks/useSavingsData';
+// Cache initialization utility
+import { initializeSavingsCache } from '../../utils/savingsCache';
 
-// Initialize the Space Grotesk font
+// Configure Space Grotesk font with optimal loading settings
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
-  display: 'swap',
+  display: 'swap', // Improves font loading performance
   variable: '--font-space-grotesk'
 });
 
 
-// Contract addresses
-// const MAIN_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
-const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
-const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
-const BitSaveABI = contractABI;
 
-// Token address mapping for Celo
-const CELO_TOKEN_MAP: { [address: string]: { name: string; decimals: number; logo: string } } = {
-  '0x765de816845861e75a25fca122bb6898b8b1282a': { name: 'cUSD', decimals: 18, logo: '/cusd.png' },
-  '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3': { name: 'USDGLO', decimals: 6, logo: '/usdglo.png' },
-  '0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a': { name: 'Gooddollar', decimals: 18, logo: '/$g.png' },
-};
-
+// Main Dashboard component - displays user's savings plans and account overview
 export default function Dashboard() {
-  const [, setCurrentNetwork] = useState<{ chainId: bigint, name: string } | null>(null);
-  const [isBaseNetwork, setIsBaseNetwork] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  // Component lifecycle state
+  const [mounted, setMounted] = useState(false); // Prevents hydration issues
+  
+  // Wallet connection hooks from wagmi
   const { address, isConnected } = useAccount();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('current');
-  const [, setEthPrice] = useState<number | null>(null);
+  
+  // Custom hook for savings data with caching
+  const {
+    savingsData,
+    isLoading,
+    isBaseNetwork,
+    isCorrectNetwork,
+    refetch: refetchSavingsData
+  } = useSavingsData();
+  
+  // UI state management
+  const [activeTab, setActiveTab] = useState('current'); // Toggle between current/completed savings
+  
+  // Modal state for top-up operations
   const [topUpModal, setTopUpModal] = useState({
     isOpen: false,
     planName: '',
@@ -49,12 +59,15 @@ export default function Dashboard() {
     isGToken: false,
     tokenName: ''
   });
-  const [displayName, setDisplayName] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [selectedUpdate, setSelectedUpdate] = useState<{ title: string, content: string, date: string } | null>(null);
+  
+  // User interface state
+  const [displayName, setDisplayName] = useState(''); // User's display name (Twitter or wallet)
+  const [showNotifications, setShowNotifications] = useState(false); // Notification panel visibility
+  const [showUpdateModal, setShowUpdateModal] = useState(false); // Update modal visibility
+  const [selectedUpdate, setSelectedUpdate] = useState<{ title: string, content: string, date: string } | null>(null); // Selected update for modal
 
 
+  // Platform updates state - stores announcements and news
   const [updates, setUpdates] = useState<Array<{
     id: string;
     title: string;
@@ -63,11 +76,10 @@ export default function Dashboard() {
     isNew: boolean;
   }>>([]);
 
-  
-
+  // Effect hook to set user display name based on connected accounts
   useEffect(() => {
     if (mounted && address) {
-      // Check for Twitter username first
+      // Check for Twitter username first (highest priority)
       const xUsername = localStorage.getItem('xUsername');
       const isXConnected = localStorage.getItem('isXConnected');
       
@@ -86,6 +98,9 @@ export default function Dashboard() {
     }
   }, [mounted, address]);
 
+  // TypeScript interfaces for type safety
+  
+  // Leaderboard entry structure for ranking display
   interface LeaderboardEntry {
     useraddress: string;
     totalamount: number;
@@ -94,6 +109,7 @@ export default function Dashboard() {
     rank?: number;
   }
 
+  // Platform update structure for announcements
   interface Update {
     id: string;
     title: string;
@@ -102,40 +118,46 @@ export default function Dashboard() {
     isNew: boolean;
   }
 
+  // User's read status for updates
   interface ReadUpdate {
     id: string;
     isNew: boolean;
   }
 
-  // Function to fetch all updates
-  const fetchAllUpdates = async () => {
+  // Fetch platform updates from API with timeout protection
+  const fetchAllUpdates = useCallback(async () => {
     try {
-      // Add timeout to prevent hanging
+      // Implement request timeout to prevent hanging requests
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 second timeout
       
+      // Make API request to fetch all platform updates
       const response = await fetch('https://bitsaveapi.vercel.app/updates/', {
         method: 'GET',
         headers: {
-          'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || ''
+          'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '' // API authentication
         },
-        signal: controller.signal
+        signal: controller.signal // Enable request cancellation
       });
       
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId); // Clear timeout if request completes
 
+      // Check if the API request was successful
       if (!response.ok) {
         throw new Error('Failed to fetch updates');
       }
 
+      // Parse the updates data from the response
       const allUpdates = await response.json();
 
-      // If user is connected, fetch read status with timeout
+      // If user is connected, fetch their read status for personalized experience
       if (address) {
         try {
+          // Set up timeout for user-specific request (shorter timeout)
           const userController = new AbortController();
-          const userTimeoutId = setTimeout(() => userController.abort(), 4000);
+          const userTimeoutId = setTimeout(() => userController.abort(), 4000); // 4 second timeout
           
+          // Fetch user's read status for updates
           const userResponse = await fetch(`https://bitsaveapi.vercel.app/updates/user/${address}`, {
             method: 'GET',
             headers: {
@@ -149,45 +171,50 @@ export default function Dashboard() {
           if (userResponse.ok) {
             const userReadUpdates = await userResponse.json() as ReadUpdate[];
 
-            // Mark updates as read or unread based on user data
+            // Cross-reference updates with user's read status
             const processedUpdates = allUpdates.map((update: Update) => {
               const isRead = userReadUpdates.some((readUpdate: ReadUpdate) =>
                 readUpdate.id === update.id && !readUpdate.isNew
               );
               return {
                 ...update,
-                isNew: !isRead
+                isNew: !isRead // Mark as new if not read by user
               };
             });
 
             setUpdates(processedUpdates);
           } else {
-            // If user endpoint fails, assume all updates are new
+            // Fallback: if user endpoint fails, assume all updates are new
             setUpdates(allUpdates.map((update: Update) => ({ ...update, isNew: true })));
           }
         } catch {
-          console.log('User updates fetch failed, using default state');
+          // Handle user-specific fetch errors gracefully
+          // User updates fetch failed, using default state
           setUpdates(allUpdates.map((update: Update) => ({ ...update, isNew: true })));
         }
       } else {
-        // If no user connected, assume all updates are new
+        // No user connected: all updates appear as new
         setUpdates(allUpdates.map((update: Update) => ({ ...update, isNew: true })));
       }
     } catch (error) {
+      // Handle different types of errors appropriately
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Updates fetch was aborted due to timeout');
+        // Updates fetch was aborted due to timeout
       } else {
-        console.error('Error fetching updates:', error);
+        console.error('Error fetching updates:', handleContractError(error));
       }
+      // Set empty state on error
       setUpdates([]);
     }
-  };
+  }, [address]);
 
-  // Function to mark an update as read
-  const markUpdateAsRead = async (updateId: string) => {
+  // Mark a specific update as read by the current user
+  const markUpdateAsRead = useCallback(async (updateId: string) => {
+    // Only proceed if user is connected
     if (!address) return;
 
     try {
+      // Send PUT request to mark update as read
       const response = await fetch(`https://bitsaveapi.vercel.app/updates/${updateId}/read`, {
         method: 'PUT',
         headers: {
@@ -195,12 +222,12 @@ export default function Dashboard() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          useraddress: address
+          useraddress: address // Associate read status with user's wallet
         })
       });
 
       if (response.ok) {
-        // Update local state to reflect the change
+        // Update local state to reflect the change immediately
         setUpdates(prevUpdates =>
           prevUpdates.map(update =>
             update.id === updateId ? { ...update, isNew: false } : update
@@ -208,106 +235,89 @@ export default function Dashboard() {
         );
       }
     } catch (error) {
-      console.error('Error marking update as read:', error);
+      console.error('Error marking update as read:', handleContractError(error));
     }
-  };
+  }, [address]);
 
 
-  const [savingsData, setSavingsData] = useState({
-    totalLocked: "0.00",
-    deposits: 0,
-    rewards: "0.00",
-    currentPlans: [] as Array<{
-      id: string;
-      address: string;
-      name: string;
-      currentAmount: string;
-      targetAmount: string;
-      progress: number;
-      isEth: boolean;
-      maturityTime?: number;
-      penaltyPercentage: number;
-      tokenName: string; // Add this property
-      tokenLogo?: string; // Add this property
-    }>,
-    completedPlans: [] as Array<{
-      id: string;
-      address: string;
-      name: string;
-      currentAmount: string;
-      targetAmount: string;
-      progress: number;
-      isEth: boolean;
-      maturityTime?: number;
-      penaltyPercentage: number;
-      tokenName: string; // Add this property
-      tokenLogo?: string; // Add this property
-    }>
-  });
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCorrectNetwork, setIsCorrectNetwork] = useState(true);
+  // Network switching state (still needed for manual network switching)
   const [switchingNetwork, setSwitchingNetwork] = useState(false);
 
-  // Add state for GoodDollar price
-  const [goodDollarPrice, setGoodDollarPrice] = useState<number>(0.00009189);
+  // GoodDollar token price state (for Celo network calculations)
+  const [goodDollarPrice, setGoodDollarPrice] = useState<number>(0.00009189); // Default fallback price
 
-  // Fetch GoodDollar price from Coingecko
+  // Withdrawal modal state
+  const [withdrawModal, setWithdrawModal] = useState({
+    isOpen: false,
+    planId: '',
+    planName: '',
+    isEth: false,
+    penaltyPercentage: 0,
+    tokenName: '',
+    isCompleted: false
+  });
+
+  // Leaderboard state
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(true);
+
+  // Fetch current GoodDollar price from CoinGecko API
   const fetchGoodDollarPrice = async () => {
     try {
+      // Request current USD price for GoodDollar token
       const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd');
       const data = await response.json();
-      console.log('GoodDollar API response:', data);
-      const price = data.gooddollar?.usd;
+      const price = data.gooddollar?.usd; // Extract USD price from response
       if (price && price > 0) {
-        console.log('Fetched GoodDollar price:', price);
         return price;
       } else {
-        console.log('Invalid price from API, using fallback');
-        return 0.00009189; // Updated fallback to current market price
+        return 0.00009189; // Fallback price if API returns invalid data
       }
     } catch (error) {
-      console.error('Error fetching GoodDollar price:', error);
-      return 0.00009189; // Updated fallback to current market price
+      console.error('Error fetching GoodDollar price:', handleContractError(error));
+      return 0.00009189; // Fallback price on network/API errors
     }
   };
 
-  const openUpdateModal = (update: Update) => {
+  // Open update modal and mark update as read
+  const openUpdateModal = useCallback((update: Update) => {
     setSelectedUpdate(update);
     setShowUpdateModal(true);
 
-    // Mark as read if it's new
+    // Automatically mark as read when user opens the update
     if (update.isNew) {
       markUpdateAsRead(update.id);
     }
-  };
+  }, [markUpdateAsRead]);
 
 
+  // Fetch updates when component mounts or wallet address changes
   useEffect(() => {
     if (mounted) {
-      // Fetch updates in parallel with other data
+      // Load user-specific updates from API
       fetchAllUpdates();
     }
   }, [mounted, address]);
 
-  // Fetch GoodDollar price on mount - run in parallel
+  // Fetch GoodDollar price on component mount
   useEffect(() => {
     if (mounted) {
       fetchGoodDollarPrice().then(setGoodDollarPrice);
     }
   }, [mounted]);
 
-  // Function to close update modal
-  const closeUpdateModal = () => {
+  // Close update modal
+  const closeUpdateModal = useCallback(() => {
     setShowUpdateModal(false);
-  };
+  }, []);
 
-  // Add useEffect to handle clicking outside the notifications dropdown
+  // Handle clicking outside notifications dropdown to close it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const notificationButton = document.getElementById('notification-button');
       const notificationDropdown = document.getElementById('notification-dropdown');
 
+      // Close dropdown if click is outside both button and dropdown
       if (
         showNotifications &&
         notificationButton &&
@@ -325,63 +335,46 @@ export default function Dashboard() {
     };
   }, [showNotifications]);
 
+  // Set component as mounted for client-side rendering
   useEffect(() => {
     setMounted(true);
   }, []);
 
   // Function to get signer
-  // const getSigner = async () => {
-  //   if (typeof window === 'undefined' || !window.ethereum) {
-  //     throw new Error('No wallet detected');
-  //   }
-
-  //   await window.ethereum.request({ method: 'eth_requestAccounts' });
-  //   const provider = new ethers.BrowserProvider(window.ethereum);
-
-  //   // Check if on Base network
-  //   const network = await provider.getNetwork();
-  //   const BASE_CHAIN_ID = 8453; // Base network chain ID
-
-  //   if (Number(network.chainId) !== BASE_CHAIN_ID) {
-  //     setIsCorrectNetwork(false);
-  //     return null;
-  //   }
-
-  //   setIsCorrectNetwork(true);
-  //   return provider.getSigner();
-  // };
 
 
-  // Function to switch to Base network
+
+  // Switch wallet to specified network (Base or Celo)
   const switchToNetwork = async (networkName: string) => {
     if (!window.ethereum) return;
 
     setSwitchingNetwork(true);
     try {
       if (networkName === 'Base') {
+        // Request switch to Base network
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: '0x2105' }], // Base chainId in hex (8453)
         });
 
-        // Refresh data after switching
-        setIsCorrectNetwork(true);
-        fetchSavingsData();
-        console.log(fetchSavingsData())
+        // Refresh savings data after successful switch
+        refetchSavingsData();
+        // Network switched to Base successfully
       } else if (networkName === 'Celo') {
+        // Request switch to Celo network
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: '0xA4EC' }], // Celo chainId in hex (42220)
         });
 
-        // Refresh data after switching
-        setIsCorrectNetwork(true);
-        fetchSavingsData();
+        // Refresh savings data after successful switch
+        refetchSavingsData();
       }
     } catch (error: unknown) {
-      // Type guard to check if error is an object with a code property
+      // Handle case where network is not added to wallet (error code 4902)
       if (error && typeof error === 'object' && 'code' in error && error.code === 4902) {
         try {
+          // Add network to wallet if it doesn't exist
           if (networkName === 'Base') {
             await window.ethereum.request({
               method: 'wallet_addEthereumChain',
@@ -418,14 +411,13 @@ export default function Dashboard() {
             });
           }
 
-          // Try switching again after adding
+          // Attempt to switch to the newly added network
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: networkName === 'Base' ? '0x2105' : '0xA4EC' }],
           });
 
-          setIsCorrectNetwork(true);
-          fetchSavingsData();
+          refetchSavingsData();
         } catch (addError) {
           console.error(`Error adding ${networkName} network:`, addError);
         }
@@ -438,294 +430,13 @@ export default function Dashboard() {
   };
 
 
-  const fetchEthPrice = async () => {
-    try {
-      const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-      );
-      return response.data.ethereum.usd; // ETH price in USD
-    } catch (error) {
-      console.error("Error fetching ETH price:", error);
-      return 3500; // Fallback price if API fails
-    }
-  };
-
-  const fetchSavingsData = async () => {
-    if (!isConnected || !address) return;
-  
-    try {
-      setIsLoading(true);
-  
-      // Fetch ETH price in parallel with wallet setup
-      const ethPricePromise = fetchEthPrice();
-  
-      if (!window.ethereum) {
-        throw new Error("No Ethereum wallet detected. Please install MetaMask.");
-      }
-  
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      
-      // Get network and ETH price in parallel
-      const [network, currentEthPrice] = await Promise.all([
-        provider.getNetwork(),
-        ethPricePromise
-      ]);
-      
-      console.log(`Current ETH price: ${currentEthPrice}`);
-      setEthPrice(currentEthPrice || 3500);
-  
-      const BASE_CHAIN_ID = BigInt(8453);
-      const CELO_CHAIN_ID = BigInt(42220);
-  
-      setCurrentNetwork(network);
-      setIsBaseNetwork(network.chainId === BASE_CHAIN_ID);
-  
-      if (network.chainId !== BASE_CHAIN_ID && network.chainId !== CELO_CHAIN_ID) {
-        setIsCorrectNetwork(false);
-        setIsLoading(false);
-        return;
-      }
-  
-      setIsCorrectNetwork(true);
-      const signer = await provider.getSigner();
-  
-      const contractAddress = (network.chainId === BASE_CHAIN_ID)
-        ? BASE_CONTRACT_ADDRESS
-        : CELO_CONTRACT_ADDRESS;
-  
-      const contract = new ethers.Contract(contractAddress, BitSaveABI, signer);
-  
-      // Get user's child contract with timeout
-      let userChildContractAddress;
-      try {
-        // Add timeout to prevent hanging
-        const contractPromise = contract.getUserChildContractAddress();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Contract call timeout')), 10000)
-        );
-        
-        userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
-        console.log("User child contract address:", userChildContractAddress);
-  
-        if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
-          console.log("User doesn't have a child contract yet");
-          setSavingsData({
-            totalLocked: "0.00",
-            deposits: 0,
-            rewards: "0.00",
-            currentPlans: [],
-            completedPlans: []
-          });
-          setIsLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.error("Error getting user child contract:", error);
-        setSavingsData({
-          totalLocked: "0.00",
-          deposits: 0,
-          rewards: "0.00",
-          currentPlans: [],
-          completedPlans: []
-        });
-        setIsLoading(false);
-        return;
-      }
-  
-      const childContract = new ethers.Contract(
-        userChildContractAddress,
-        childContractABI,
-        signer
-      );
-  
-      // Get savings names with timeout
-      const savingsNamesPromise = childContract.getSavingsNames();
-      const savingsTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Savings names timeout')), 8000)
-      );
-      
-      const savingsNamesObj = await Promise.race([savingsNamesPromise, savingsTimeoutPromise]);
-      const savingsNamesArray = savingsNamesObj?.savingsNames || [];
-      console.log("Savings names object:", savingsNamesObj);
-      
-      const currentPlans = [];
-      const completedPlans = [];
-      let totalDeposits = 0;
-      let totalUsdValue = 0;
-      const processedPlanNames = new Set();
-      
-      // Limit concurrent processing to prevent overwhelming the RPC
-      const BATCH_SIZE = 3;
-      const validSavingNames = savingsNamesArray.filter((savingName: string) => 
-        savingName && typeof savingName === "string" && savingName !== "" && !processedPlanNames.has(savingName)
-      );
-      console.log()
-      
-      for (let i = 0; i < validSavingNames.length; i += BATCH_SIZE) {
-        const batch = validSavingNames.slice(i, i + BATCH_SIZE);
-        
-        // Process batch in parallel
-        const batchPromises = batch.map(async (savingName: string) => {
-          try {
-            processedPlanNames.add(savingName);
-            console.log("Fetching data for:", savingName);
-            
-            // Add timeout for individual saving data calls
-            const savingDataPromise = childContract.getSaving(savingName);
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error(`Timeout for ${savingName}`)), 5000)
-            );
-            
-            const savingData = await Promise.race([savingDataPromise, timeoutPromise]);
-            console.log(savingData);
-            
-            return { savingName, savingData };
-          } catch (err) {
-            console.error(`Failed to fetch data for "${savingName}":`, err);
-            return null;
-          }
-        });
-        
-        const batchResults = await Promise.allSettled(batchPromises);
-        
-        // Process successful results
-        for (const result of batchResults) {
-          if (result.status === 'fulfilled' && result.value) {
-            const { savingName, savingData } = result.value;
-  
-            try {
-              if (!savingData?.isValid) continue;
-  
-          const tokenId = savingData.tokenId;
-          const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
-  
-          let tokenName = "USDC";
-          let decimals = 6;
-          let tokenLogo = '/usdc.png';
-          if (isEth) {
-            tokenName = "ETH";
-            decimals = 18;
-            tokenLogo = '/eth.png';
-          } else if (network.chainId === CELO_CHAIN_ID) {
-            const tokenInfo = CELO_TOKEN_MAP[(tokenId as string).toLowerCase()];
-            if (tokenInfo) {
-              tokenName = tokenInfo.name;
-              decimals = tokenInfo.decimals;
-              tokenLogo = tokenInfo.logo;
-            } else {
-              tokenName = 'USDGLO';
-              decimals = 6;
-              tokenLogo = '/usdglo.png';
-            }
-          } else if (network.chainId === BASE_CHAIN_ID) {
-            if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
-              tokenName = "USDC";
-              decimals = 6;
-              tokenLogo = '/usdc.png';
-            }
-          }
-          console.log('Savings Name Array:', savingsNamesArray)
-          console.log('Savings Name Object:', savingsNamesObj)
-  
-          const targetFormatted = ethers.formatUnits(savingData.amount, decimals);
-            // Use amount as the current deposited amount (not interestAccumulated)
-            const currentFormatted = ethers.formatUnits(savingData.amount, decimals);
-  
-          const now = Date.now();
-          const startTime = Number(savingData.startTime) * 1000;
-          const maturityTime = Number(savingData.maturityTime) * 1000;
-  
-          const progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
-          const penaltyPercentage = Number(savingData.penaltyPercentage);
-  
-          console.log(`Processing token: ${tokenName}, deposited: ${currentFormatted}, goodDollarPrice: ${goodDollarPrice}`);
-          
-          if (isEth) {
-            const ethAmount = parseFloat(currentFormatted);
-            const ethUsdValue = ethAmount * currentEthPrice;
-            console.log(`ETH: ${ethAmount} * ${currentEthPrice} = ${ethUsdValue}`);
-            totalUsdValue += ethUsdValue;
-          } else if (tokenName === 'Gooddollar') {
-            // GoodDollar: format using 18 decimals, then multiply by live price
-            const gAmount = parseFloat(currentFormatted);
-            const gUsdValue = gAmount * goodDollarPrice;
-            console.log(`GoodDollar: ${gAmount} * ${goodDollarPrice} = ${gUsdValue}`);
-            totalUsdValue += gUsdValue;
-          } else if (tokenName === 'USDGLO') {
-            const usdgloValue = parseFloat(currentFormatted);
-            console.log(`USDGLO: ${usdgloValue}`);
-            totalUsdValue += usdgloValue; // USDGLO is 6 decimals, already USD
-          } else if (tokenName === 'cUSD') {
-            const cusdValue = parseFloat(currentFormatted);
-            console.log(`cUSD: ${cusdValue}`);
-            totalUsdValue += cusdValue; // cUSD is 18 decimals, already USD
-          } else {
-            const otherValue = parseFloat(currentFormatted);
-            console.log(`Other token (${tokenName}): ${otherValue}`);
-            totalUsdValue += otherValue;
-          }
-  
-          totalDeposits++;
-  
-          const planData = {
-            id: savingName.trim(),
-            address: userChildContractAddress,
-            name: savingName.trim(),
-            currentAmount: currentFormatted,
-            targetAmount: targetFormatted,
-            progress,
-            isEth,
-            startTime: startTime / 1000,
-            maturityTime: maturityTime / 1000,
-            penaltyPercentage,
-            tokenName,
-            tokenLogo
-          };
-  
-          if (progress >= 100 || now >= maturityTime) {
-            completedPlans.push(planData);
-          } else {
-            currentPlans.push(planData);
-          }
-            } catch (err) {
-              console.error(`Failed to process plan "${savingName}":`, err);
-            }
-          }
-        }
-      }
-    
-  
-      // Sort by most recent
-      currentPlans.sort((a, b) => b.startTime - a.startTime);
-      completedPlans.sort((a, b) => b.startTime - a.startTime);
-  
-      // Calculate total BTS rewards (0.5% of total USD value times 1000)
-      const totalBtsRewards = (totalUsdValue * 0.005 * 1000).toFixed(2);
-      
-      setSavingsData({
-        totalLocked: totalUsdValue.toFixed(2),
-        deposits: totalDeposits,
-        rewards: totalBtsRewards,
-        currentPlans,
-        completedPlans
-      });
-  
-    } catch (error) {
-      console.error("Unhandled error in fetchSavingsData:", error);
-      // Set empty data on error to prevent infinite loading
-      setSavingsData({
-        totalLocked: "0.00",
-        deposits: 0,
-        rewards: "0.00",
-        currentPlans: [],
-        completedPlans: []
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Initialize cache system on component mount
+  useEffect(() => {
+    initializeSavingsCache();
+  }, []);
   
 
+  // Opens the top-up modal with plan details and token information
   const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '') => {
     setTopUpModal({ 
       isOpen: true, 
@@ -737,20 +448,12 @@ export default function Dashboard() {
     });
   };
 
+  // Closes the top-up modal and resets all modal state
   const closeTopUpModal = () => {
     setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '' });
   };
 
-  const [withdrawModal, setWithdrawModal] = useState({
-    isOpen: false,
-    planId: '',
-    planName: '',
-    isEth: false,
-    penaltyPercentage: 0,
-    tokenName: '',
-    isCompleted: false
-  });
-
+  // Opens the withdrawal modal with plan details, penalty information, and completion status
   const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false) => {
     setWithdrawModal({
       isOpen: true,
@@ -763,20 +466,20 @@ export default function Dashboard() {
     });
   };
 
+  // Closes the withdrawal modal and resets all modal state
   const closeWithdrawModal = () => {
     setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false });
   };
 
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
-  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(true);
-
+  // Fetches leaderboard data from the BitSave API and processes it for display
   const fetchLeaderboardData = async () => {
     setIsLeaderboardLoading(true);
     try {
-      // Add timeout to prevent hanging
+      // Set up request timeout to prevent hanging (8 second limit)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
       
+      // Fetch leaderboard data from BitSave API with authentication
       const response = await fetch('https://bitsaveapi.vercel.app/leaderboard', {
         method: 'GET',
         headers: {
@@ -794,6 +497,7 @@ export default function Dashboard() {
 
       const data = await response.json() as LeaderboardEntry[];
 
+      // Sort by total amount, take top 4 users, and add ranking information
       const rankedData = data
         .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.totalamount - a.totalamount)
         .slice(0, 4)
@@ -805,10 +509,11 @@ export default function Dashboard() {
 
       setLeaderboardData(rankedData);
     } catch (error) {
+      // Handle timeout and other errors gracefully
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Leaderboard fetch was aborted due to timeout');
+        // Leaderboard fetch was aborted due to timeout
       } else {
-        console.error('Error fetching leaderboard data:', error);
+        console.error('Error fetching leaderboard data:', handleContractError(error));
       }
       setLeaderboardData([]);
     } finally {
@@ -816,6 +521,7 @@ export default function Dashboard() {
     }
   };
 
+  // Fetch leaderboard data once the component is mounted
   useEffect(() => {
     if (mounted) {
       // Fetch leaderboard data in parallel
@@ -823,37 +529,56 @@ export default function Dashboard() {
     }
   }, [mounted]);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
 
+  // Fetch user savings data when component is mounted and wallet is connected
   useEffect(() => {
     if (mounted && address) {
       // Add a small delay to prevent immediate heavy loading
       const timer = setTimeout(() => {
-        fetchSavingsData();
+        refetchSavingsData();
       }, 100);
       return () => clearTimeout(timer);
     }
   }, [mounted, address]);
 
+  // Redirect to landing page if wallet is disconnected
   useEffect(() => {
     if (mounted && !isConnected) {
       router.push('/');
     }
   }, [isConnected, mounted, router]);
 
+  // Helper function to get the appropriate logo path for different tokens
+  // Returns custom logo if provided, otherwise maps token names to their logo files
+  const getTokenLogo = useCallback((tokenName: string, tokenLogo?: string) => {
+    if (tokenLogo) return tokenLogo;
+    if (tokenName === 'cUSD') return '/cusd.png';
+    if (tokenName === 'USDGLO') return '/usdglo.png';
+    if (tokenName === '$G' || tokenName === 'Gooddollar') return '/$g.png';
+    if (tokenName === 'USDC') return '/usdc.png';
+    return `/${tokenName.toLowerCase()}.png`;
+  }, []);
+
+  // Memoize filtered new updates for performance
+  const newUpdatesCount = useMemo(() => {
+    return updates.filter(update => update.isNew).length;
+  }, [updates]);
 
 
+
+  // Prevent hydration mismatch by showing consistent loading state
   if (!mounted) {
     return (
-      <div className={`${spaceGrotesk.variable} min-h-screen flex items-center justify-center bg-[#f2f2f2]`}>
-        <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+      <div className={`${spaceGrotesk.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#f2f2f2] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+        </div>
       </div>
     );
   }
 
+  // Component displayed when user has no active savings plans
   const EmptyCurrentSavings = () => (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -877,6 +602,7 @@ export default function Dashboard() {
     </motion.div>
   );
 
+  // Component displayed when user has no completed savings plans
   const EmptyCompletedSavings = () => (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -900,22 +626,7 @@ export default function Dashboard() {
     </motion.div>
   );
 
-  // Helper to get decimals for a token
-  // const getTokenDecimals = (tokenName: string) => {
-  //   if (tokenName === 'cUSD' || tokenName === '$G' || tokenName === 'Gooddollar') return 18;
-  //   if (tokenName === 'USDGLO') return 6;
-  //   return 6; // Default to 6 for USDC, etc.
-  // };
 
-  // Helper to get logo for a token
-  const getTokenLogo = (tokenName: string, tokenLogo?: string) => {
-    if (tokenLogo) return tokenLogo;
-    if (tokenName === 'cUSD') return '/cusd.png';
-    if (tokenName === 'USDGLO') return '/usdglo.png';
-    if (tokenName === '$G' || tokenName === 'Gooddollar') return '/$g.png';
-    if (tokenName === 'USDC') return '/usdc.png';
-    return `/${tokenName.toLowerCase()}.png`;
-  };
 
   return (
     <div className={`${spaceGrotesk.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#f2f2f2] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
@@ -962,7 +673,6 @@ export default function Dashboard() {
         isOpen={withdrawModal.isOpen}
         onClose={closeWithdrawModal}
         planName={withdrawModal.planName}
-        planId={withdrawModal.planId}
         isEth={withdrawModal.isEth}
         penaltyPercentage={withdrawModal.penaltyPercentage}
         tokenName={withdrawModal.tokenName}
@@ -1036,7 +746,7 @@ export default function Dashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 text-gray-600">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            {updates.some(update => update.isNew) && (
+            {newUpdatesCount > 0 && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#81D7B4] rounded-full border-2 border-white"></span>
             )}
           </button>
@@ -1277,13 +987,13 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between relative z-10">
                       <div className="flex items-center gap-3">
                         <div className="bg-[#81D7B4]/20 p-2 rounded-xl border border-[#81D7B4]/30 shadow-sm">
-                          <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName, plan.tokenLogo)} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-6 h-6" />
+                          <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight mb-0.5 truncate max-w-[180px] sm:max-w-[220px] md:max-w-[300px]">{plan.name}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 text-[#163239] text-xs font-medium shadow-sm">
-                              <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName, plan.tokenLogo)} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-4 h-4 mr-1" />
+                              <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-4 h-4 mr-1" />
                               {plan.isEth ? 'ETH' : plan.tokenName}
                               <span className="mx-1 text-gray-300">|</span>
                               <img src={isBaseNetwork ? '/base.svg' : '/celo.png'} alt={isBaseNetwork ? 'Base' : 'Celo'} className="w-4 h-4 mr-1" />
@@ -1428,13 +1138,13 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between relative z-10">
                       <div className="flex items-center gap-3">
                         <div className="bg-[#81D7B4]/20 p-2 rounded-xl border border-[#81D7B4]/30 shadow-sm">
-                          <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName, plan.tokenLogo)} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-6 h-6" />
+                          <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-6 h-6" />
                         </div>
                       <div>
                           <h3 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight mb-0.5 truncate max-w-[180px] sm:max-w-[220px] md:max-w-[300px]">{plan.name}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 text-[#163239] text-xs font-medium shadow-sm">
-                              <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName, plan.tokenLogo)} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-4 h-4 mr-1" />
+                              <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-4 h-4 mr-1" />
                               {plan.isEth ? 'ETH' : plan.tokenName}
                               <span className="mx-1 text-gray-300">|</span>
                               <img src={isBaseNetwork ? '/base.svg' : '/celo.png'} alt={isBaseNetwork ? 'Base' : 'Celo'} className="w-4 h-4 mr-1" />

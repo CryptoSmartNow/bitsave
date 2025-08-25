@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,7 +9,7 @@ interface UnsupportedWalletModalProps {
   onClose: () => void;
 }
 
-function UnsupportedWalletModal({ isOpen, onClose }: UnsupportedWalletModalProps) {
+const UnsupportedWalletModal = memo(function UnsupportedWalletModal({ isOpen, onClose }: UnsupportedWalletModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -36,62 +36,51 @@ function UnsupportedWalletModal({ isOpen, onClose }: UnsupportedWalletModalProps
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-[#81D7B4] to-[#66C4A3] rounded-full flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Wallet Not Supported
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Wallet Not Supported</h3>
                 </div>
                 <button
                   onClick={onClose}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              
+
               {/* Content */}
               <div className="mb-6">
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  BitSave currently supports the following wallets for the best experience:
+                  Your current wallet is not supported. BitSave works best with MetaMask for optimal security and functionality.
                 </p>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  {[
-                    { name: 'MetaMask', icon: '🦊' },
-                    { name: 'Coinbase Wallet', icon: '🔵' },
-                    { name: 'Rabby Wallet', icon: '🐰' },
-                    { name: 'Trust Wallet', icon: '🛡️' },
-                    { name: 'Zerion', icon: '⚡' }
-                  ].map((wallet) => (
-                    <div key={wallet.name} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <span className="text-xl">{wallet.icon}</span>
-                      <span className="text-gray-700 dark:text-gray-300 font-medium">{wallet.name}</span>
-                    </div>
-                  ))}
+                <div className="bg-gradient-to-r from-[#81D7B4]/10 to-[#66C4A3]/10 rounded-lg p-4 border border-[#81D7B4]/20">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Why MetaMask?</h4>
+                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                    <li>• Enhanced security features</li>
+                    <li>• Better transaction handling</li>
+                    <li>• Seamless DeFi integration</li>
+                    <li>• Wide ecosystem support</li>
+                  </ul>
                 </div>
-                
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                  Please install one of these wallets to connect to BitSave and start your savings journey.
-                </p>
               </div>
-              
+
               {/* Actions */}
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white rounded-lg font-medium hover:from-[#66C4A3] hover:to-[#4FB08C] transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex-1 px-4 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium transition-colors"
                 >
-                  Got it
+                  Continue Anyway
                 </button>
                 <a
                   href="https://metamask.io/download/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white rounded-xl font-medium transition-all duration-300 text-center shadow-lg hover:shadow-xl"
+                  onClick={onClose}
                 >
                   Get MetaMask
                 </a>
@@ -102,9 +91,9 @@ function UnsupportedWalletModal({ isOpen, onClose }: UnsupportedWalletModalProps
       )}
     </AnimatePresence>
   );
-}
+})
 
-export default function CustomConnectButton() {
+const CustomConnectButton = memo(function CustomConnectButton() {
   const [showUnsupportedModal, setShowUnsupportedModal] = useState(false);
 
   return (
@@ -143,28 +132,34 @@ export default function CustomConnectButton() {
                   return (
                     <button
                       onClick={() => {
-                        // Check if user has any of the supported wallets
-                        const hasMetaMask = typeof window !== 'undefined' && window.ethereum?.isMetaMask;
-                        const hasCoinbase = typeof window !== 'undefined' && window.ethereum?.isCoinbaseWallet;
-                        const hasRabby = typeof window !== 'undefined' && window.ethereum?.isRabby;
-                        const hasTrust = typeof window !== 'undefined' && window.ethereum?.isTrust;
-                        const hasZerion = typeof window !== 'undefined' && window.ethereum?.isZerion;
-                        
-                        const hasSupportedWallet = hasMetaMask || hasCoinbase || hasRabby || hasTrust || hasZerion;
-                        
-                        if (hasSupportedWallet || !window.ethereum) {
-                          openConnectModal();
-                        } else {
-                          setShowUnsupportedModal(true);
+                        // Check if user has an unsupported wallet
+                        if (typeof window !== 'undefined' && window.ethereum) {
+                          const isMetaMask = window.ethereum.isMetaMask;
+                          const isCoinbaseWallet = window.ethereum.isCoinbaseWallet;
+                          const isRabby = window.ethereum.isRabby;
+                          const isTrust = window.ethereum.isTrust;
+                          
+                          // If it's not a supported wallet, show modal
+                          if (!isMetaMask && !isCoinbaseWallet && !isRabby && !isTrust) {
+                            setShowUnsupportedModal(true);
+                            return;
+                          }
                         }
+                        
+                        openConnectModal();
                       }}
                       type="button"
-                      className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white px-6 py-2 rounded-lg font-medium hover:from-[#66C4A3] hover:to-[#4FB08C] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                      className="group relative bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                      <span>Connect Wallet</span>
+                      <span className="relative z-10 flex items-center justify-center space-x-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>Connect Wallet</span>
+                      </span>
+                      
+                      {/* Animated background */}
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#66C4A3] to-[#81D7B4] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </button>
                   );
                 }
@@ -174,7 +169,7 @@ export default function CustomConnectButton() {
                     <button
                       onClick={openChainModal}
                       type="button"
-                      className="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                      className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
                       Wrong network
                     </button>
@@ -185,36 +180,27 @@ export default function CustomConnectButton() {
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={openChainModal}
-                      className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm hover:bg-white/90 text-gray-800 font-medium py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg border border-gray-200/50"
                       type="button"
                     >
                       {chain.hasIcon && (
-                        <div
-                          style={{
-                            background: chain.iconBackground,
-                            width: 20,
-                            height: 20,
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                            marginRight: 4,
-                          }}
-                        >
+                        <div className="w-5 h-5 rounded-full overflow-hidden">
                           {chain.iconUrl && (
                             <img
                               alt={chain.name ?? 'Chain icon'}
                               src={chain.iconUrl}
-                              style={{ width: 20, height: 20 }}
+                              className="w-5 h-5"
                             />
                           )}
                         </div>
                       )}
-                      <span className="text-sm font-medium">{chain.name}</span>
+                      <span className="text-sm">{chain.name}</span>
                     </button>
 
                     <button
                       onClick={openAccountModal}
                       type="button"
-                      className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white px-4 py-2 rounded-lg font-medium hover:from-[#66C4A3] hover:to-[#4FB08C] transition-all duration-200 shadow-lg hover:shadow-xl"
+                      className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white font-semibold py-2 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
                       {account.displayName}
                       {account.displayBalance
@@ -235,4 +221,6 @@ export default function CustomConnectButton() {
       />
     </>
   );
-}
+})
+
+export default CustomConnectButton;

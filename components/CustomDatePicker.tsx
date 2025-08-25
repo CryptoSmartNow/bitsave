@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay } from 'date-fns'
-import { Space_Grotesk } from 'next/font/google'
+import { useState } from 'react';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay } from 'date-fns';
+import { Space_Grotesk } from 'next/font/google';
 
 // Initialize the Space Grotesk font
 const spaceGrotesk = Space_Grotesk({ 

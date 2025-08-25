@@ -1,9 +1,9 @@
 "use client"
-import { useState, ReactNode, lazy, Suspense, memo, useMemo, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Space_Grotesk } from 'next/font/google'
-import Link from 'next/link'
-import { useReferrals } from '@/lib/useReferrals'
+import { useState, ReactNode, lazy, Suspense, memo, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Space_Grotesk } from 'next/font/google';
+import Link from 'next/link';
+import { useReferrals } from '@/lib/useReferrals';
 
 // Lazy load heavy components
 const TwitterFeed = lazy(() => import('./components/TwitterFeed'))

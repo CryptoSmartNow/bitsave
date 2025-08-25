@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { useAccount } from 'wagmi'
-import { useReferrals } from '@/lib/useReferrals'
-import { motion } from 'framer-motion'
-import { Space_Grotesk } from 'next/font/google'
-import Link from 'next/link'
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useAccount } from 'wagmi';
+import { useReferrals } from '@/lib/useReferrals';
+import { motion } from 'framer-motion';
+import { Space_Grotesk } from 'next/font/google';
+import Link from 'next/link';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, ReactNode } from 'react'
+import { useRef, useEffect, ReactNode } from 'react';
 
 interface OptimizedSectionProps {
   children: ReactNode;

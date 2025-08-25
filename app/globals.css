@@ -287,6 +287,10 @@ body {
   animation: fade-in 0.7s ease-out forwards;
 }
 
+.animate-fadeIn {
+  animation: fade-in 0.7s ease-out forwards;
+}
+
 .animation-delay-300 {
   animation-delay: 300ms;
 }

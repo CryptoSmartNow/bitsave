@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { useOptimizedDisconnect } from '../../lib/useOptimizedDisconnect';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Space_Grotesk } from 'next/font/google';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -24,6 +25,7 @@ export default function DashboardLayout({
   const { disconnect, isDisconnecting } = useOptimizedDisconnect();
   const router = useRouter();
   const pathname = usePathname();
+  const connectButtonRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -31,9 +33,18 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (mounted && !isConnected) {
-      router.push('/');
+      // Auto-trigger the connect button after a short delay
+      const timer = setTimeout(() => {
+        if (connectButtonRef.current && !isConnected) {
+          const button = connectButtonRef.current.querySelector('button');
+          if (button) {
+            button.click();
+          }
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [isConnected, mounted, router]);
+  }, [isConnected, mounted]);
 
   useEffect(() => {
     const isMobile = window.innerWidth < 768; 
@@ -235,9 +246,57 @@ export default function DashboardLayout({
       </div>
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0 overflow-x-hidden`}>
-        {children}
+      <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0 overflow-x-hidden`}>
+        {mounted ? (
+          isConnected ? (
+            <div className="animate-fadeIn">
+              {children}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+            </div>
+          )
+        ) : (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+          </div>
+        )}
       </div>
+
+      {/* RainbowKit Connect Button - Hidden but available for modal triggering */}
+      {!isConnected && mounted && (
+        <div ref={connectButtonRef} className="fixed top-4 right-4 z-50 opacity-0 pointer-events-none">
+          <ConnectButton />
+        </div>
+      )}
+      
+      {/* Fallback UI for unconnected users */}
+      {!isConnected && mounted && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-600 mb-6">Connect your wallet to access your BitSave dashboard and manage your savings plans.</p>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  const button = connectButtonRef.current?.querySelector('button');
+                  if (button) button.click();
+                }}
+                className="w-full py-3 bg-[#81D7B4] hover:bg-[#66C4A3] text-white font-semibold rounded-xl transition-colors"
+              >
+                Connect Wallet
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+              >
+                Go Home
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
