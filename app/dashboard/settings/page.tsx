@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { Space_Grotesk } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 // Initialize Space Grotesk font
 const spaceGrotesk = Space_Grotesk({
@@ -20,6 +21,8 @@ export default function Settings() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isEmailConnected, setIsEmailConnected] = useState(false);
   
   // X/Twitter authentication state
   const [isXConnected, setIsXConnected] = useState(false);
@@ -44,11 +47,39 @@ export default function Settings() {
     }
   };
 
-  const handleConnectEmail = () => {
-    if (email.trim()) {
-      setShowOtpModal(true);
-      // Here you would typically send OTP to the email
+  const handleConnectEmail = async () => {
+    if (!email.trim()) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
 
+    setIsConnecting(true);
+    try {
+      const response = await fetch('/api/email/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          action: 'send_otp',
+          walletAddress: address
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('Verification code sent to your email!');
+        setShowOtpModal(true);
+      } else {
+        toast.error(data.error || 'Failed to send verification code');
+      }
+    } catch (error) {
+      console.error('Email connection error:', error);
+      toast.error('Failed to send verification code. Please try again.');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -74,15 +105,82 @@ export default function Settings() {
   };
 
   const handleVerifyOtp = async () => {
-    setIsVerifying(true);
-    // Simulate verification process
-    setTimeout(() => {
-      setIsVerifying(false);
-      setShowOtpModal(false);
-      setOtp(['', '', '', '', '', '']);
-      // Show success message or update UI
+    const otpString = otp.join('');
+    if (otpString.length !== 6) {
+      toast.error('Please enter the complete 6-digit code');
+      return;
+    }
 
-    }, 2000);
+    setIsVerifying(true);
+    try {
+      const response = await fetch('/api/email/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          action: 'verify_otp',
+          otp: otpString,
+          walletAddress: address
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setIsEmailConnected(true);
+        setShowOtpModal(false);
+        setOtp(['', '', '', '', '', '']);
+        localStorage.setItem('emailConnected', 'true');
+        localStorage.setItem('connectedEmail', email.trim());
+        toast.success('Email connected successfully!');
+      } else {
+        toast.error(data.error || 'Invalid verification code');
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      toast.error('Failed to verify code. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!email.trim()) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      const response = await fetch('/api/email/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          action: 'send_otp',
+          walletAddress: address
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('New verification code sent to your email!');
+        // Clear existing OTP inputs
+        setOtp(['', '', '', '', '', '']);
+      } else {
+        toast.error(data.error || 'Failed to resend verification code');
+      }
+    } catch (error) {
+      console.error('Resend code error:', error);
+      toast.error('Failed to resend verification code. Please try again.');
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   // X/Twitter authentication function
@@ -167,6 +265,15 @@ export default function Settings() {
     if (savedXUsername && savedXConnected === 'true') {
       setXUsername(savedXUsername);
       setIsXConnected(true);
+    }
+
+    // Load email connection status
+    const savedEmailConnected = localStorage.getItem('emailConnected');
+    const savedEmail = localStorage.getItem('connectedEmail');
+    
+    if (savedEmailConnected === 'true' && savedEmail) {
+      setIsEmailConnected(true);
+      setEmail(savedEmail);
     }
   }, []);
 
@@ -642,21 +749,40 @@ export default function Settings() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
-                  className="w-full bg-white/80 border-2 border-[#81D7B4]/30 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-lg sm:rounded-xl px-4 sm:px-5 py-3 sm:py-4 text-gray-900 shadow-lg transition-all placeholder:text-gray-400 font-medium text-sm sm:text-base outline-none"
+                  disabled={isEmailConnected}
+                  className="w-full bg-white/80 border-2 border-[#81D7B4]/30 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-lg sm:rounded-xl px-4 sm:px-5 py-3 sm:py-4 text-gray-900 shadow-lg transition-all placeholder:text-gray-400 font-medium text-sm sm:text-base outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
-              <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleConnectEmail}
-                disabled={!email.trim()}
-                className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                Connect Email
-              </motion.button>
+              {isEmailConnected ? (
+                <div className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Email Connected
+                </div>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleConnectEmail}
+                  disabled={!email.trim() || isConnecting}
+                  className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+                >
+                  {isConnecting ? (
+                    <>
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Sending Code...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      Connect Email
+                    </>
+                  )}
+                </motion.button>
+              )}
             </div>
           </div>
         </motion.div>
@@ -929,8 +1055,19 @@ export default function Settings() {
 
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-gray-500 mb-2">Didn&apos;t receive the code?</p>
-                <button className="text-[#81D7B4] text-xs sm:text-sm font-semibold hover:underline">
-                  Resend Code
+                <button 
+                  onClick={handleResendCode}
+                  disabled={isConnecting}
+                  className="text-[#81D7B4] text-xs sm:text-sm font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 mx-auto"
+                >
+                  {isConnecting ? (
+                    <>
+                      <div className="w-3 h-3 border border-[#81D7B4]/30 border-t-[#81D7B4] rounded-full animate-spin"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    'Resend Code'
+                  )}
                 </button>
               </div>
             </div>

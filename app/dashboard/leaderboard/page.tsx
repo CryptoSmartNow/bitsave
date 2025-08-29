@@ -72,9 +72,11 @@ export default function LeaderboardPage() {
         
         const data: LeaderboardUser[] = await response.json()
         
-        // Sort by total amount and add rank
+        // Filter users with savings >= $10, sort by total amount, limit to top 20, and add rank
         const rankedData = data
+          .filter(user => user.totalamount >= 10) // Exclude savings below $10
           .sort((a, b) => b.totalamount - a.totalamount)
+          .slice(0, 20) // Limit to top 20 users
           .map((user, index) => ({
             ...user,
             rank: index + 1

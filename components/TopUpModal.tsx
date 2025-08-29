@@ -91,6 +91,8 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           return '0x765DE816845861e75A25fCA122bb6898B8B1282a'; // cUSD on Celo
         case 'usdglo':
           return USDGLO_CELO_ADDRESS; // USDGLO on Celo
+        case 'usdc':
+          return '0xcebA9300f2b948710d2653dD7B07f33A8B32118C'; // USDC on Celo
         case 'gooddollar':
         case 'g$':
           return '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A'; // G$ on Celo
@@ -219,7 +221,18 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       let tokenAddress = isBase ? USDC_BASE_ADDRESS : USDGLO_CELO_ADDRESS;
       let decimals = 6;
       let tokenNameToUse = isBase ? "USDC" : "USDGLO";
-      if (!isBase && tokenName) {
+      
+      if (isBase && tokenName) {
+        if (tokenName === 'USDGLO') {
+          tokenAddress = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3";
+          decimals = 18;
+          tokenNameToUse = 'USDGLO';
+        } else if (tokenName === 'USDC') {
+          tokenAddress = USDC_BASE_ADDRESS;
+          decimals = 6;
+          tokenNameToUse = 'USDC';
+        }
+      } else if (!isBase && tokenName) {
         if (tokenName === 'cUSD') {
           tokenAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
           decimals = 18;
@@ -232,6 +245,10 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           tokenAddress = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3";
           decimals = 6;
           tokenNameToUse = 'USDGLO';
+        } else if (tokenName === 'USDC') {
+          tokenAddress = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
+          decimals = 6;
+          tokenNameToUse = 'USDC';
         }
       }
 
@@ -302,18 +319,6 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           type: 'top_up',
           amount: userEnteredAmount.toString(),
           currency: tokenNameToUse,
-          chain: isBase ? 'base' : 'celo',
-          planName: savingsPlanName,
-          txHash: receipt.hash
-        });
-      }
-      
-      // Track successful ETH transaction
-      if (address) {
-        trackTransaction(address, {
-          type: 'top_up',
-          amount: userEnteredAmount.toString(),
-          currency: 'ETH',
           chain: isBase ? 'base' : 'celo',
           planName: savingsPlanName,
           txHash: receipt.hash

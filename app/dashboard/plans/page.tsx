@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
 import WithdrawModal from '@/components/WithdrawModal';
@@ -53,9 +53,68 @@ export default function PlansPage() {
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false)
   const [topUpPlan, setTopUpPlan] = useState<Plan | null>(null)
   const [goodDollarPrice, setGoodDollarPrice] = useState(0.0001);
+  const [showActivityHistory, setShowActivityHistory] = useState(false);
+  const [activityData, setActivityData] = useState<Array<{
+    type: string;
+    description: string;
+    amount: string;
+    timestamp: string;
+    network: string;
+    txHash: string;
+  }>>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
 
   // Use the new caching hook for savings data
   const { savingsData, isLoading, isCorrectNetwork, ethPrice } = useSavingsData()
+
+  // Fetch user activity data
+  useEffect(() => {
+    const fetchActivityData = async () => {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        try {
+          setIsLoadingActivity(true);
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
+          if (accounts.length > 0) {
+            const response = await fetch(`/api/transactions?address=${accounts[0]}`);
+            if (response.ok) {
+              const data = await response.json();
+              const transactions = data.transactions || [];
+              
+              // Transform transaction data for display
+              const formattedActivity = transactions.map((tx: {
+                transaction_type: string;
+                savingsname: string;
+                amount: string;
+                currency?: string;
+                created_at: string;
+                txnhash: string;
+              }) => ({
+                type: tx.transaction_type,
+                description: `${tx.transaction_type === 'deposit' ? 'Deposited to' : 'Withdrew from'} ${tx.savingsname}`,
+                amount: `${tx.transaction_type === 'deposit' ? '+' : '-'}${tx.amount} ${tx.currency || 'ETH'}`,
+                timestamp: new Date(tx.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }),
+                network: 'Base',
+                txHash: tx.txnhash
+              }));
+              
+              setActivityData(formattedActivity);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching activity data:', error);
+        } finally {
+          setIsLoadingActivity(false);
+        }
+      }
+    };
+
+    fetchActivityData();
+  }, []);
 
   // Fetch GoodDollar price from Coingecko
   const fetchGoodDollarPrice = async () => {
@@ -419,6 +478,115 @@ export default function PlansPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Activity History Section */}
+        <div className="mt-12 mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Recent Activity</h2>
+            <button
+              onClick={() => setShowActivityHistory(!showActivityHistory)}
+              className="bg-white/70 backdrop-blur-sm text-gray-800 font-medium py-2 px-4 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 text-sm flex items-center"
+            >
+              {showActivityHistory ? 'Hide' : 'Show'} Activity
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className={`w-4 h-4 ml-2 transition-transform ${showActivityHistory ? 'rotate-180' : ''}`}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {showActivityHistory && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6">
+                  {isLoadingActivity ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="animate-pulse flex items-center space-x-4">
+                          <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : activityData.length > 0 ? (
+                    <div className="space-y-4">
+                      {activityData.slice(0, 5).map((activity, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-white/40"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className={`p-2 rounded-full ${
+                              activity.type === 'deposit' ? 'bg-green-100 text-green-600' :
+                              activity.type === 'withdrawal' ? 'bg-red-100 text-red-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {activity.type === 'deposit' ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                              ) : activity.type === 'withdrawal' ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800">{activity.description}</p>
+                              <p className="text-sm text-gray-500">{activity.timestamp}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className={`font-bold ${
+                              activity.type === 'deposit' ? 'text-green-600' :
+                              activity.type === 'withdrawal' ? 'text-red-600' :
+                              'text-gray-800'
+                            }`}>
+                              {activity.amount}
+                            </p>
+                            <p className="text-sm text-gray-500">{activity.network}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                      <div className="text-center pt-4">
+                        <Link href="/dashboard/activity">
+                          <button className="text-[#81D7B4] hover:text-[#81D7B4]/80 font-medium text-sm transition-colors">
+                            View All Activity →
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-gray-400">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-800 mb-2">No Activity Yet</h3>
+                      <p className="text-gray-500">Your savings activity will appear here once you start making deposits or withdrawals.</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Tips Section */}

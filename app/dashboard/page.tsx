@@ -497,8 +497,9 @@ export default function Dashboard() {
 
       const data = await response.json() as LeaderboardEntry[];
 
-      // Sort by total amount, take top 4 users, and add ranking information
+      // Filter users with savings >= $10, sort by total amount, take top 4 users, and add ranking information
       const rankedData = data
+        .filter((user: LeaderboardEntry) => user.totalamount >= 10) // Exclude savings below $10
         .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.totalamount - a.totalamount)
         .slice(0, 4)
         .map((user: LeaderboardEntry, index: number) => ({

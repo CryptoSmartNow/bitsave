@@ -1,8 +1,7 @@
 "use client"
-import { useState, ReactNode, lazy, Suspense, memo, useMemo, useEffect } from 'react';
+import { useState, ReactNode, lazy, Suspense, memo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Space_Grotesk } from 'next/font/google';
-import Link from 'next/link';
 import { useReferrals } from '@/lib/useReferrals';
 
 // Lazy load heavy components
@@ -82,15 +81,7 @@ const savvyFinanceVideos = [
   },
 ]
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  isCompleted: boolean;
-  href: string;
-  icon: string;
-}
+
 
 export default function SavvySpacePage() {
   const [userData] = useState(MOCK_USER_DATA)
@@ -116,90 +107,6 @@ export default function SavvySpacePage() {
   }, [referralData, referralLoading, generateReferralCode])
   
   const referralLink = referralData?.referralLink || 'https://bitsave.io'
-
-  const tasks: Task[] = useMemo(() => [
-    {
-      id: 'tweet_after_saving',
-      title: 'Tweet after Saving',
-      description: 'Get 1 point for the tweet you send after creating a new savings plan.',
-      points: 1,
-      isCompleted: false, // This would be tracked via backend
-      href: '/dashboard/create-savings',
-      icon: 'tweet',
-    },
-    {
-      id: 'connect_x',
-      title: 'Connect X (Twitter)',
-      description: 'Link your X account to earn points and unlock social features.',
-      points: 1,
-      isCompleted: false,
-      href: '/dashboard/settings',
-      icon: 'twitter',
-    },
-    {
-      id: 'connect_farcaster',
-      title: 'Connect Farcaster',
-      description: 'Link your Farcaster account for onchain perks and rewards.',
-      points: 1,
-      isCompleted: false,
-      href: '/dashboard/settings',
-      icon: 'farcaster',
-    },
-    {
-      id: 'add_email',
-      title: 'Add Email Address',
-      description: 'Secure your account and get important notifications.',
-      points: 1,
-      isCompleted: false,
-      href: '/dashboard/settings',
-      icon: 'email',
-    },
-    {
-      id: 'tweet_about_bitsave',
-      title: 'Tweet about BitSave',
-      description: 'Share your experience with BitSave on X.',
-      points: 5,
-      isCompleted: false, // This would be tracked via backend
-      href: `https://twitter.com/intent/tweet?text=Just%20started%20my%20crypto%20savings%20journey%20with%20@BitSaveApp!%20%F0%9F%9A%80%20Secure,%20transparent,%20and%20rewarding.%20Join%20me%20in%20building%20better%20financial%20habits!%20%23SaveFi%20%23Web3&url=${encodeURIComponent(referralLink)}`,
-      icon: 'tweet',
-    },
-    {
-      id: 'cast_about_bitsave',
-      title: 'Cast about BitSave',
-      description: 'Post about BitSave on Farcaster.',
-      points: 5,
-      isCompleted: false, // This would be tracked via backend
-      href: `https://warpcast.com/~/compose?text=Just%20started%20my%20crypto%20savings%20journey%20with%20BitSave!%20%F0%9F%9A%80%20Secure,%20transparent,%20and%20rewarding.%20Join%20me%20in%20building%20better%20financial%20habits!%20%23SaveFi%20%23Web3&embeds[]=${encodeURIComponent(referralLink)}`,
-      icon: 'cast',
-    },
-    {
-      id: 'referral_signup',
-      title: 'Refer a Friend',
-      description: 'Earn points for every friend who signs up using your link.',
-      points: 5,
-      isCompleted: false, // This is an ongoing task
-      href: '/dashboard/settings', // a dedicated referral page could be better
-      icon: 'referral',
-    },
-    {
-      id: 'complete_plan',
-      title: 'Complete a Savings Plan',
-      description: 'Reach your savings goal to earn a streak bonus.',
-      points: 10,
-      isCompleted: false, // Depends on plan completion
-      href: '/dashboard/plans',
-      icon: 'streak',
-    },
-    {
-      id: 'weekly_saving',
-      title: '4-Week Saving Streak',
-      description: 'Save consistently every week for a month.',
-      points: 10,
-      isCompleted: false, // Depends on saving history
-      href: '/dashboard/plans',
-      icon: 'calendar',
-    },
-  ], [referralLink])
 
   const TaskIcon = memo(({ icon }: { icon: string }) => {
     const icons: { [key: string]: ReactNode } = {
@@ -267,107 +174,7 @@ export default function SavvySpacePage() {
          </Suspense>
       </div>
 
-      {/* Earn More Points Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="mb-20"
-      >
-        {/* Neomorphic container with enhanced glassmorphism */}
-        <div className="relative bg-white/40 backdrop-blur-2xl rounded-[2rem] border border-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] overflow-hidden">
-          {/* Enhanced background patterns */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/3 via-blue-500/3 to-purple-500/3"></div>
-          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-[#81D7B4]/8 to-transparent rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-gradient-to-tr from-blue-400/6 to-transparent rounded-full blur-2xl"></div>
-          
-          {/* Inner shadow for neomorphism */}
-          <div className="absolute inset-[1px] rounded-[calc(2rem-1px)] bg-gradient-to-br from-white/20 to-white/5 pointer-events-none"></div>
-          
-          <div className="relative p-8 lg:p-16">
-            <div className="text-center mb-16">
-              <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 bg-clip-text text-transparent mb-6 tracking-tight"
-              >
-                Earn More Points
-              </motion.h2>
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="text-xl text-gray-600/80 max-w-3xl mx-auto leading-relaxed"
-              >
-                Complete these tasks to earn points and unlock exclusive rewards in the BitSave ecosystem
-              </motion.p>
-            </div>
 
-            {/* Enhanced Tasks Grid with Neomorphism */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {tasks.map((task, index) => (
-                <motion.div
-                  key={task.id}
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ 
-                    duration: 0.7, 
-                    delay: 0.1 * index,
-                    ease: "easeOut"
-                  }}
-                  className="group"
-                >
-                  <Link href={task.href || '#'} target={task.href?.startsWith('http') ? '_blank' : '_self'}>
-                    <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-lg hover:shadow-2xl p-6 h-full transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02]">
-                      {/* Gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 to-blue-500/5 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-500"></div>
-                      
-                      <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] rounded-xl p-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <TaskIcon icon={task.icon} />
-                          </div>
-                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                            task.isCompleted 
-                              ? 'text-[#4A9B7A] bg-[#81D7B4]/20 border border-[#81D7B4]/30' 
-                              : 'text-gray-400 bg-gray-100/80'
-                          }`}>
-                            {task.isCompleted ? 'Completed' : 'To Do'}
-                          </span>
-                        </div>
-                        
-                        <h3 className="font-bold text-gray-800 text-lg mb-2 group-hover:text-gray-900 transition-colors">{task.title}</h3>
-                        <p className="text-sm text-gray-600 mb-4 leading-relaxed">{task.description}</p>
-                        
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-200/50">
-                          <span className="text-sm font-bold bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] bg-clip-text text-transparent">
-                            +{task.points} {task.points > 1 ? 'Points' : 'Point'}
-                          </span>
-                          <div className="text-gray-400 group-hover:text-[#81D7B4] transition-colors duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-            
-            <div className="mt-12 text-center">
-              <Link href="/dashboard/activity" className="inline-flex items-center bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white font-semibold px-8 py-3 rounded-2xl shadow-lg hover:shadow-xl hover:from-[#6BC5A0] hover:to-[#5AB08A] transition-all duration-300 text-lg group">
-                View Activity
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </motion.div>
       
       {/* Savvy Talks - Twitter Feed */}
       <div>

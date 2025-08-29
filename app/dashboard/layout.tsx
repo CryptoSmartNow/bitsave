@@ -111,7 +111,8 @@ export default function DashboardLayout({
             {!sidebarCollapsed && <span className="ml-3">My Plans</span>}
           </Link>
           
-          <Link href="/dashboard/withdraw" className={`flex items-center px-4 py-3 mb-2 rounded-lg mx-2 ${
+          {/* Withdrawal tab hidden - route will return 404 */}
+          {/* <Link href="/dashboard/withdraw" className={`flex items-center px-4 py-3 mb-2 rounded-lg mx-2 ${
             isActive('/dashboard/withdraw') 
               ? 'bg-[#81D7B4]/20 text-[#81D7B4]' 
               : 'hover:bg-gray-100/60 text-gray-600 hover:text-gray-800 transition-colors'
@@ -120,7 +121,7 @@ export default function DashboardLayout({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
             {!sidebarCollapsed && <span className="ml-3">Withdraw</span>}
-          </Link>
+          </Link> */}
           
           <Link href="/dashboard/activity" className={`flex items-center px-4 py-3 mb-2 rounded-lg mx-2 ${
             isActive('/dashboard/activity') 
@@ -128,9 +129,9 @@ export default function DashboardLayout({
               : 'hover:bg-gray-100/60 text-gray-600 hover:text-gray-800 transition-colors'
           }`}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
-            {!sidebarCollapsed && <span className="ml-3">Activity</span>}
+            {!sidebarCollapsed && <span className="ml-3">Earn More Points</span>}
           </Link>
           
           <Link href="/dashboard/social" className={`flex items-center px-4 py-3 mb-2 rounded-lg mx-2 ${

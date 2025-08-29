@@ -15,6 +15,7 @@ import erc20ABI from '@/app/abi/erc20ABI.json';
 import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interactionTracker';
 import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
+import { useSavingsData } from '@/hooks/useSavingsData';
 
 const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -30,6 +31,7 @@ export default function CreateSavingsPage() {
   const router = useRouter()
   const { address } = useAccount()
   const { referralData, generateReferralCode, markReferralConversion } = useReferrals()
+  const { savingsData } = useSavingsData()
   const [step, setStep] = useState(1)
   const [mounted, setMounted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -141,8 +143,8 @@ export default function CreateSavingsPage() {
 
   // Define available currencies for each network
   const networkCurrencies: Record<string, string[]> = {
-    base: ['USDC'],
-    celo: ['cUSD', 'USDGLO', 'Gooddollar'],
+    base: ['USDC', 'USDGLO'],
+    celo: ['cUSD', 'USDGLO', 'USDC', 'Gooddollar'],
   };
 
   // Update currency options when chain changes
@@ -232,6 +234,16 @@ export default function CreateSavingsPage() {
       } else if (name !== name.trim()) {
         newErrors.name = 'Plan name cannot have leading or trailing spaces'
         valid = false
+      } else {
+        // Check for duplicate plan names
+        const existingPlanNames = [
+          ...savingsData.currentPlans.map(plan => plan.name.toLowerCase()),
+          ...savingsData.completedPlans.map(plan => plan.name.toLowerCase())
+        ]
+        if (existingPlanNames.includes(name.trim().toLowerCase())) {
+          newErrors.name = 'Plan name already exists. Please choose a different name.'
+          valid = false
+        }
       }
 
       if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -330,13 +342,22 @@ export default function CreateSavingsPage() {
   // Wallet balance checking utilities
   const getTokenAddress = (currency: string, chain: string) => {
     if (chain === 'base') {
-      return BASE_CONTRACT_ADDRESS; // USDC on Base
+      switch (currency) {
+        case 'USDC':
+          return BASE_CONTRACT_ADDRESS; // USDC on Base
+        case 'USDGLO':
+          return '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3'; // USDGLO on Base
+        default:
+          return BASE_CONTRACT_ADDRESS;
+      }
     } else if (chain === 'celo') {
       switch (currency) {
         case 'cUSD':
           return '0x765DE816845861e75A25fCA122bb6898B8B1282a'; // cUSD on Celo
         case 'USDGLO':
           return '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3'; // USDGLO on Celo
+        case 'USDC':
+          return '0xcebA9300f2b948710d2653dD7B07f33A8B32118C'; // USDC on Celo
         case 'Gooddollar':
           return '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A'; // G$ on Celo
         default:
@@ -539,10 +560,143 @@ export default function CreateSavingsPage() {
     }
   }
 
+  // Handle USDGLO savings on Base network
+  const handleUSDGLOBaseSavings = async () => {
+    if (!isConnected) {
+      setError("Please connect your wallet.")
+      return
+    }
+    setLoading(true)
+    setError(null)
+    setTxHash(null)
+    setSuccess(false)
+
+    try {
+      if (!window.ethereum) {
+        throw new Error("No Ethereum wallet detected. Please install MetaMask.")
+      }
+
+      const userEnteredAmount = parseFloat(amount)
+      if (isNaN(userEnteredAmount) || userEnteredAmount <= 0) {
+        throw new Error("Invalid amount. Please enter an amount greater than zero.")
+      }
+
+      const usdgloAmount = ethers.parseUnits(userEnteredAmount.toFixed(18), 18)
+
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      await provider.send("eth_requestAccounts", [])
+      const signer = await provider.getSigner()
+
+      const BASE_CHAIN_ID = 8453
+      const network = await provider.getNetwork()
+
+      if (Number(network.chainId) !== BASE_CHAIN_ID) {
+        throw new Error("Please switch your wallet to the Base network.")
+      }
+
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+      let userChildContractAddress = await contract.getUserChildContractAddress()
+
+      if (userChildContractAddress === ethers.ZeroAddress) {
+        // Get current ETH price for $1 fee
+        const ethPrice = await fetchEthPrice();
+        if (!ethPrice) throw new Error('Could not fetch ETH price for fee calculation.');
+        const feeInEth = (1 / ethPrice).toFixed(6); // $1 in ETH
+        
+        const joinTx = await contract.joinBitsave({
+          value: ethers.parseEther(feeInEth), 
+        })
+        await joinTx.wait()
+
+        userChildContractAddress = await contract.getUserChildContractAddress()
+      }
+
+      const maturityTime = selectedDayRange.to
+        ? Math.floor(
+          new Date(
+            selectedDayRange.to.year ?? 0,
+            (selectedDayRange.to.month ?? 1) - 1,
+            selectedDayRange.to.day ?? 1
+          ).getTime() / 1000
+        )
+        : 0
+
+      const safeMode = false
+      const tokenToSave = BASE_TOKENS.USDGLO.address
+
+      await approveERC20(tokenToSave, usdgloAmount, signer)
+
+      // Get current ETH price for $1 fee
+      const ethPrice = await fetchEthPrice();
+      if (!ethPrice) throw new Error('Could not fetch ETH price for fee calculation.');
+      const feeInEth = (1 / ethPrice).toFixed(6); // $1 in ETH
+
+      const txOptions = {
+        gasLimit: 2717330,
+        value: ethers.parseEther(feeInEth), 
+      }
+
+      const tx = await contract.createSaving(
+        name,
+        maturityTime,
+        selectedPenalty,
+        safeMode,
+        tokenToSave,
+        usdgloAmount,
+        txOptions
+      )
+
+      const receipt = await tx.wait()
+      setTxHash(receipt.hash)
+
+      try {
+        await axios.post(
+          "https://bitsaveapi.vercel.app/transactions/",
+          {
+            amount: parseFloat(amount),
+            txnhash: receipt.hash,
+            chain: "base", 
+            savingsname: name,
+            useraddress: walletAddress,
+            transaction_type: "deposit",
+            currency: currency
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": process.env.NEXT_PUBLIC_API_KEY
+            }
+          }
+        );
+      } catch (apiError) {
+        console.error("Error sending transaction data to API:", apiError);
+      }
+
+      setSuccess(true)
+
+    } catch (error) {
+      console.error("Error creating USDGLO savings plan:", error)
+      setSuccess(false)
+
+      const errorMessage = handleContractError(error, 'main');
+      setError(errorMessage);
+      throw error 
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Token addresses and decimals for Base
+  const BASE_TOKENS = {
+    USDC: { address: BASE_CONTRACT_ADDRESS, decimals: 6 },
+    USDGLO: { address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
+  };
+
   // Token addresses and decimals for Celo
   const CELO_TOKENS = {
     USDGLO: { address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
     cUSD: { address: '0x765DE816845861e75A25fCA122bb6898B8B1282a', decimals: 18 },
+    USDC: { address: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', decimals: 6 },
     Gooddollar: { address: '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A', decimals: 18 },
   };
 
@@ -729,24 +883,11 @@ export default function CreateSavingsPage() {
       // Send to API
       await sendTransactionToAPI(parsedAmount, receipt.hash, 'USDGLO');
       
-      // Track successful savings creation
-      if (address) {
-        trackSavingsCreated(address, {
-          planName: name,
-          amount: amount,
-          currency: currency,
-          chain: chain,
-          penalty: penalty,
-          endDate: endDate?.toISOString(),
-          txHash: txHash
-        });
-        
-        // Track referral conversion if user came from a referral link
-        const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
-        if (referralCode) {
-          markReferralConversion(referralCode);
-          localStorage.removeItem('referralCode'); // Remove after conversion
-        }
+      // Track referral conversion if user came from a referral link
+      const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
+      if (referralCode) {
+        markReferralConversion(referralCode);
+        localStorage.removeItem('referralCode'); // Remove after conversion
       }
       
       setSuccess(true);
@@ -833,6 +974,19 @@ export default function CreateSavingsPage() {
       
       // Send to API
       await sendTransactionToAPI(parsedAmount, receipt.hash, 'cUSD');
+      
+      // Track successful savings creation
+      if (address) {
+        trackSavingsCreated(address, {
+          planName: name,
+          amount: amount,
+          currency: currency,
+          chain: chain,
+          penalty: penalty,
+          endDate: endDate?.toISOString(),
+          txHash: receipt.hash
+        });
+      }
       
       setSuccess(true);
     } catch (error) {
@@ -941,6 +1095,102 @@ export default function CreateSavingsPage() {
     }
   };
 
+  // USDC specific savings function
+  const handleUSDCSavings = async () => {
+    if (!isConnected) {
+      setError("Please connect your wallet.");
+      throw new Error("Please connect your wallet.");
+    }
+    
+    setLoading(true);
+    setError(null);
+    setTxHash(null);
+    setSuccess(false);
+    
+    try {
+      // Validate amount
+      const cleanAmount = amount.replace(/[^0-9.]/g, '');
+      const parsedAmount = parseFloat(cleanAmount);
+      
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        throw new Error("Invalid amount. Please enter a valid number greater than zero.");
+      }
+      
+      // Setup provider and contract
+      const { signer } = await setupCeloProvider();
+      const contract = await setupBitsaveContract(signer);
+      const maturityTime = calculateMaturityTime();
+      
+      // USDC specific logic
+      const token = CELO_TOKENS.USDC;
+      const tokenAmount = ethers.parseUnits(parsedAmount.toString(), token.decimals);
+      
+      // Approve and create saving
+      await approveERC20(token.address, tokenAmount, signer);
+      
+      // Get current CELO price for $1 fee
+      const celoPrice = await fetchCeloPrice();
+      if (!celoPrice) throw new Error('Could not fetch CELO price for fee calculation.');
+      const feeInCelo = (1 / celoPrice).toFixed(6); // $1 in CELO
+      
+      const txOptions = { 
+        gasLimit: 2717330,
+        value: ethers.parseEther(feeInCelo)
+      };
+      const tx = await contract.createSaving(
+        name,
+        maturityTime,
+        selectedPenalty,
+        false, // safeMode
+        token.address,
+        tokenAmount,
+        txOptions
+      );
+    
+      const receipt = await tx.wait();
+      setTxHash(receipt.hash);
+      
+      // Track savings creation
+      if (address) {
+        trackSavingsCreated(address, {
+          planName: name,
+          amount: parsedAmount.toString(),
+          currency: 'USDC',
+          chain: 'celo',
+          maturityDate: selectedDayRange.to ? new Date(
+            selectedDayRange.to.year ?? 0,
+            (selectedDayRange.to.month ?? 1) - 1,
+            selectedDayRange.to.day ?? 1
+          ).toISOString() : '',
+          penalty: selectedPenalty.toString(),
+          txHash: receipt.hash
+        });
+      }
+      
+      // Send to API
+      await sendTransactionToAPI(parsedAmount, receipt.hash, 'USDC');
+      
+      setSuccess(true);
+    } catch (error) {
+      console.error("Error creating USDC savings plan:", error);
+      setSuccess(false);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('user rejected') ||
+          errorMessage.includes('User denied') ||
+          errorMessage.includes('user cancelled') ||
+          errorMessage.includes('ACTION_REJECTED') ||
+          errorMessage.includes('ethers-user-denied')) {
+        setError('Error creating savings user rejected');
+      } else {
+        setError(errorMessage);
+      }
+      throw error; // Re-throw the error so handleSubmit can catch it
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Main submit handler
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -952,33 +1202,26 @@ export default function CreateSavingsPage() {
           await handleUSDGLOSavings();
         } else if (currency === 'cUSD') {
           await handleCUSDSavings();
+        } else if (currency === 'USDC') {
+          await handleUSDCSavings();
         } else if (currency === 'Gooddollar') {
           await handleGooddollarSavings();
         } else {
           throw new Error('Unsupported currency for Celo network.');
         }
       } else {
-        await handleBaseSavingsCreate();
+        if (currency === 'USDGLO') {
+          await handleUSDGLOBaseSavings();
+        } else {
+          await handleBaseSavingsCreate();
+        }
       }
       
-      // Track successful savings creation
-      if (address) {
-        trackSavingsCreated(address, {
-          planName: name,
-          amount: amount,
-          currency: currency,
-          chain: chain,
-          penalty: penalty,
-          endDate: endDate?.toISOString(),
-          txHash: txHash
-        });
-        
-        // Track referral conversion if user came from a referral link
-        const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
-        if (referralCode) {
-          markReferralConversion(referralCode);
-          localStorage.removeItem('referralCode'); // Remove after conversion
-        }
+      // Track referral conversion if user came from a referral link
+      const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
+      if (referralCode) {
+        markReferralConversion(referralCode);
+        localStorage.removeItem('referralCode'); // Remove after conversion
       }
       
       setSuccess(true);
