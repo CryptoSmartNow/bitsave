@@ -98,6 +98,27 @@ export function useSavingsData(): UseSavingsDataReturn {
     };
   }, []);
   
+  // Update network states based on wagmi chainId
+  useEffect(() => {
+    if (!chainId) {
+      setIsBaseNetwork(false);
+      setIsCeloNetwork(false);
+      setIsLiskNetwork(false);
+      setIsCorrectNetwork(false);
+      return;
+    }
+    
+    const chainIdBigInt = BigInt(chainId);
+    const isBase = chainIdBigInt === BASE_CHAIN_ID;
+    const isCelo = chainIdBigInt === CELO_CHAIN_ID;
+    const isLisk = chainIdBigInt === LISK_CHAIN_ID;
+    
+    setIsBaseNetwork(isBase);
+    setIsCeloNetwork(isCelo);
+    setIsLiskNetwork(isLisk);
+    setIsCorrectNetwork(isBase || isCelo || isLisk);
+  }, [chainId]);
+  
   // Fetch ETH price from CoinGecko
   const fetchEthPrice = useCallback(async (): Promise<number> => {
     try {
@@ -166,17 +187,11 @@ export function useSavingsData(): UseSavingsDataReturn {
       
       // Update network state
       setCurrentNetwork(network);
-      setIsBaseNetwork(network.chainId === BASE_CHAIN_ID);
-      setIsCeloNetwork(network.chainId === CELO_CHAIN_ID);
-      setIsLiskNetwork(network.chainId === LISK_CHAIN_ID);
       
       // Validate network
       if (network.chainId !== BASE_CHAIN_ID && network.chainId !== CELO_CHAIN_ID && network.chainId !== LISK_CHAIN_ID) {
-        setIsCorrectNetwork(false);
         throw new Error("Please switch to Base, Celo, or Lisk network");
       }
-      
-      setIsCorrectNetwork(true);
       const signer = await provider.getSigner();
       
       // Select contract address based on network
