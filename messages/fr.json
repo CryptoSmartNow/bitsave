@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "submit": "Soumettre",
+    "continue": "Continuer",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "savings": "Épargnes",
+    "createSavings": "Créer une Épargne",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "createSavings": {
+    "title": "Créer une Nouvelle Épargne",
+    "amount": "Montant",
+    "currency": "Devise",
+    "network": "Réseau",
+    "duration": "Durée",
+    "maturityDate": "Date d'Échéance",
+    "estimatedReturns": "Rendements Estimés",
+    "createSaving": "Créer une Épargne",
+    "selectCurrency": "Sélectionner une Devise",
+    "selectNetwork": "Sélectionner un Réseau",
+    "enterAmount": "Saisir le Montant",
+    "selectDuration": "Sélectionner la Durée",
+    "minimumAmount": "Montant Minimum",
+    "maximumAmount": "Montant Maximum",
+    "processingFee": "Frais de Traitement",
+    "networkFee": "Frais de Réseau",
+    "totalFee": "Frais Total",
+    "youWillReceive": "Vous recevrez",
+    "atMaturity": "à l'Échéance"
+  },
+  "wallet": {
+    "connectWallet": "Connecter le Portefeuille",
+    "disconnectWallet": "Déconnecter le Portefeuille",
+    "walletConnected": "Portefeuille Connecté",
+    "walletNotConnected": "Portefeuille Non Connecté",
+    "balance": "Solde",
+    "insufficientBalance": "Solde Insuffisant",
+    "transactionPending": "Transaction en Attente",
+    "transactionConfirmed": "Transaction Confirmée",
+    "transactionFailed": "Transaction Échouée"
+  },
+  "currencies": {
+    "USDC": "USD Coin",
+    "cUSD": "Celo Dollar",
+    "USDGLO": "USD Global",
+    "Gooddollar": "GoodDollar"
+  },
+  "networks": {
+    "celo": "Celo",
+    "base": "Base",
+    "lisk": "Lisk"
+  },
+  "penalties": {
+    "earlyWithdrawal": "Retrait Anticipé",
+    "penaltyApplies": "Pénalité Applicable",
+    "penaltyAmount": "Montant de la Pénalité",
+    "penaltyPercentage": "Pourcentage de Pénalité"
+  },
+  "errors": {
+    "networkError": "Erreur de Réseau",
+    "transactionError": "Erreur de Transaction",
+    "validationError": "Erreur de Validation",
+    "unknownError": "Erreur Inconnue",
+    "walletError": "Erreur de Portefeuille",
+    "insufficientFunds": "Fonds Insuffisants",
+    "invalidAmount": "Montant Invalide",
+    "invalidAddress": "Adresse Invalide",
+    "transactionRejected": "Transaction Rejetée",
+    "networkNotSupported": "Réseau Non Supporté",
+    "currencyNotSupported": "Devise Non Supportée"
+  },
+  "success": {
+    "savingCreated": "Épargne Créée avec Succès",
+    "transactionSubmitted": "Transaction Soumise",
+    "walletConnected": "Portefeuille Connecté avec Succès",
+    "settingsSaved": "Paramètres Enregistrés"
+  }
+}

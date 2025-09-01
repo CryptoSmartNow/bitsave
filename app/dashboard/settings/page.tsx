@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import { Space_Grotesk } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import NetworkDetection from '@/components/NetworkDetection';
 
 // Initialize Space Grotesk font
 const spaceGrotesk = Space_Grotesk({
@@ -326,6 +327,9 @@ export default function Settings() {
 
   return (
     <div className={`${spaceGrotesk.variable} font-sans relative min-h-screen bg-gradient-to-br from-gray-50 via-[#81D7B4]/5 to-white overflow-hidden`}>
+      {/* Network Detection Component */}
+      <NetworkDetection />
+      
       {/* Enhanced Background Elements */}
       <div className="fixed inset-0 z-0 opacity-[0.08] pointer-events-none bg-[url('/noise.jpg')] mix-blend-overlay"></div>
       

@@ -1,6 +1,7 @@
 'use client'
 import { useState, memo } from 'react';
 import Link from 'next/link';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const Header = memo(function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,7 +23,7 @@ const Header = memo(function Header() {
         
         <nav className="hidden md:flex space-x-8">
           <Link href="/" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Home</Link>
-          <Link href="/#how-it-works" className="text-gray-700 hover:text-[#81D7B4] transition-colors"  >How It Works</Link>
+          <Link href="/#how-it-works" className="text-gray-700 hover:text-[#81D7B4] transition-colors">How It Works</Link>
           <Link href="/#security" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Security</Link>
           <Link href="/#features" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Features</Link>
           <Link href="/blog" className="text-gray-700 hover:text-[#81D7B4] transition-colors">Blog</Link>
@@ -30,6 +31,7 @@ const Header = memo(function Header() {
         </nav>
         
         <div className="flex items-center space-x-4">
+          <LanguageSelector />
           <Link 
             href="/dashboard"
             prefetch={true}

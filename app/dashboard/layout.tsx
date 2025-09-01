@@ -7,6 +7,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Space_Grotesk } from 'next/font/google';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import GoogleTranslate from '../../components/GoogleTranslate';
+import NetworkConnectionUI from '../../components/NetworkConnectionUI';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -248,6 +250,11 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0 overflow-x-hidden`}>
+        {/* Language Selector - Fixed position in top right */}
+        <div className="fixed top-4 right-4 z-40">
+          <GoogleTranslate />
+        </div>
+        
         {mounted ? (
           isConnected ? (
             <div className="animate-fadeIn">
@@ -272,28 +279,29 @@ export default function DashboardLayout({
         </div>
       )}
       
-      {/* Fallback UI for unconnected users */}
+      {/* Enhanced Network Connection UI for unconnected users */}
       {!isConnected && mounted && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Your Wallet</h2>
-            <p className="text-gray-600 mb-6">Connect your wallet to access your BitSave dashboard and manage your savings plans.</p>
-            <div className="space-y-4">
-              <button
-                onClick={() => {
-                  const button = connectButtonRef.current?.querySelector('button');
-                  if (button) button.click();
-                }}
-                className="w-full py-3 bg-[#81D7B4] hover:bg-[#66C4A3] text-white font-semibold rounded-xl transition-colors"
-              >
-                Connect Wallet
-              </button>
-              <button
-                onClick={() => router.push('/')}
-                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
-              >
-                Go Home
-              </button>
+        <div className="fixed inset-0 bg-white z-40 overflow-y-auto">
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="w-full max-w-4xl">
+              <NetworkConnectionUI
+                onDisconnect={() => disconnect()}
+                showNetworkInfo={true}
+                className=""
+              />
+              
+              {/* Navigation back to home */}
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => router.push('/')}
+                  className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span>Back to Home</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

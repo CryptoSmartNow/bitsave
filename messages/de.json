@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "close": "Schließen",
+    "submit": "Senden",
+    "continue": "Fortfahren",
+    "settings": "Einstellungen",
+    "help": "Hilfe",
+    "about": "Über",
+    "contact": "Kontakt"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "savings": "Ersparnisse",
+    "createSavings": "Ersparnis Erstellen",
+    "profile": "Profil",
+    "settings": "Einstellungen",
+    "logout": "Abmelden"
+  },
+  "createSavings": {
+    "title": "Neue Ersparnis Erstellen",
+    "amount": "Betrag",
+    "currency": "Währung",
+    "network": "Netzwerk",
+    "duration": "Laufzeit",
+    "maturityDate": "Fälligkeitsdatum",
+    "estimatedReturns": "Geschätzte Rendite",
+    "createSaving": "Ersparnis Erstellen",
+    "selectCurrency": "Währung Auswählen",
+    "selectNetwork": "Netzwerk Auswählen",
+    "enterAmount": "Betrag Eingeben",
+    "selectDuration": "Laufzeit Auswählen",
+    "minimumAmount": "Mindestbetrag",
+    "maximumAmount": "Höchstbetrag",
+    "processingFee": "Bearbeitungsgebühr",
+    "networkFee": "Netzwerkgebühr",
+    "totalFee": "Gesamtgebühr",
+    "youWillReceive": "Sie erhalten",
+    "atMaturity": "bei Fälligkeit"
+  },
+  "wallet": {
+    "connectWallet": "Wallet Verbinden",
+    "disconnectWallet": "Wallet Trennen",
+    "walletConnected": "Wallet Verbunden",
+    "walletNotConnected": "Wallet Nicht Verbunden",
+    "balance": "Guthaben",
+    "insufficientBalance": "Unzureichendes Guthaben",
+    "transactionPending": "Transaktion Ausstehend",
+    "transactionConfirmed": "Transaktion Bestätigt",
+    "transactionFailed": "Transaktion Fehlgeschlagen"
+  },
+  "currencies": {
+    "USDC": "USD Coin",
+    "cUSD": "Celo Dollar",
+    "USDGLO": "USD Global",
+    "Gooddollar": "GoodDollar"
+  },
+  "networks": {
+    "celo": "Celo",
+    "base": "Base",
+    "lisk": "Lisk"
+  },
+  "penalties": {
+    "earlyWithdrawal": "Vorzeitige Auszahlung",
+    "penaltyApplies": "Strafe Anwendbar",
+    "penaltyAmount": "Strafbetrag",
+    "penaltyPercentage": "Strafprozentsatz"
+  },
+  "errors": {
+    "networkError": "Netzwerkfehler",
+    "transactionError": "Transaktionsfehler",
+    "validationError": "Validierungsfehler",
+    "unknownError": "Unbekannter Fehler",
+    "walletError": "Wallet-Fehler",
+    "insufficientFunds": "Unzureichende Mittel",
+    "invalidAmount": "Ungültiger Betrag",
+    "invalidAddress": "Ungültige Adresse",
+    "transactionRejected": "Transaktion Abgelehnt",
+    "networkNotSupported": "Netzwerk Nicht Unterstützt",
+    "currencyNotSupported": "Währung Nicht Unterstützt"
+  },
+  "success": {
+    "savingCreated": "Ersparnis Erfolgreich Erstellt",
+    "transactionSubmitted": "Transaktion Gesendet",
+    "walletConnected": "Wallet Erfolgreich Verbunden",
+    "settingsSaved": "Einstellungen Gespeichert"
+  }
+}

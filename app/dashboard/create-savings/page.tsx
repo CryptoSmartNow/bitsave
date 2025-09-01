@@ -16,10 +16,13 @@ import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interacti
 import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { useSavingsData } from '@/hooks/useSavingsData';
+import NetworkDetection from '@/components/NetworkDetection';
 
 const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
+// TODO: Update with actual bridged USDC contract address for Lisk mainnet
+const LISK_CONTRACT_ADDRESS = "0x05D032ac25d322df992303dCa074EE7392C117b9"
 
 
 const spaceGrotesk = Space_Grotesk({
@@ -145,6 +148,7 @@ export default function CreateSavingsPage() {
   const networkCurrencies: Record<string, string[]> = {
     base: ['USDC', 'USDGLO'],
     celo: ['cUSD', 'USDGLO', 'USDC', 'Gooddollar'],
+    lisk: ['USDC'],
   };
 
   // Update currency options when chain changes
@@ -210,6 +214,30 @@ export default function CreateSavingsPage() {
               });
             }
           }
+        } else if (networkName === 'lisk') {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x46F' }], // Lisk chainId in hex (1135)
+            });
+          } catch (switchError: unknown) {
+        if ((switchError as { code: number }).code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x46F',
+                  chainName: 'Lisk',
+                  nativeCurrency: {
+                    name: 'ETH',
+                    symbol: 'ETH',
+                    decimals: 18,
+                  },
+                  rpcUrls: ['https://rpc.api.lisk.com'],
+                  blockExplorerUrls: ['https://blockscout.lisk.com'],
+                }],
+              });
+            }
+          }
         }
       }
     } catch (error) {
@@ -219,7 +247,8 @@ export default function CreateSavingsPage() {
 
   const chains = [
     { id: 'base', name: 'Base', logo: '/base.svg', color: 'bg-blue-900/10', textColor: 'text-blue-800' },
-    { id: 'celo', name: 'Celo', logo: '/celo.png', color: 'bg-green-100', textColor: 'text-green-600', active: true }
+    { id: 'celo', name: 'Celo', logo: '/celo.png', color: 'bg-green-100', textColor: 'text-green-600', active: true },
+    { id: 'lisk', name: 'Lisk', logo: '/lisk-logo.png', color: 'bg-purple-100', textColor: 'text-purple-600', active: true }
   ]
   const penalties = ['10%', '20%', '30%']
 
@@ -362,6 +391,13 @@ export default function CreateSavingsPage() {
           return '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A'; // G$ on Celo
         default:
           return '0x765DE816845861e75A25fCA122bb6898B8B1282a';
+      }
+    } else if (chain === 'lisk') {
+      switch (currency) {
+        case 'USDC':
+          return LISK_CONTRACT_ADDRESS; // Bridged USDC on Lisk
+        default:
+          return LISK_CONTRACT_ADDRESS;
       }
     }
     return BASE_CONTRACT_ADDRESS;
@@ -700,6 +736,11 @@ export default function CreateSavingsPage() {
     Gooddollar: { address: '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A', decimals: 18 },
   };
 
+  // Token addresses and decimals for Lisk
+  const LISK_TOKENS = {
+    USDC: { address: LISK_CONTRACT_ADDRESS, decimals: 6 },
+  };
+
   // Helper to fetch CELO price in USD
   const fetchCeloPrice = async () => {
     try {
@@ -738,6 +779,22 @@ export default function CreateSavingsPage() {
     const network = await provider.getNetwork();
     if (Number(network.chainId) !== CELO_CHAIN_ID) {
       throw new Error("Please switch your wallet to the Celo network.");
+    }
+    
+    return { provider, signer };
+  };
+
+  const setupLiskProvider = async () => {
+    if (!window.ethereum) throw new Error("No Ethereum wallet detected. Please install MetaMask.");
+    
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    
+    const LISK_CHAIN_ID = 1135;
+    const network = await provider.getNetwork();
+    if (Number(network.chainId) !== LISK_CHAIN_ID) {
+      throw new Error("Please switch your wallet to the Lisk network.");
     }
     
     return { provider, signer };
@@ -1191,6 +1248,99 @@ export default function CreateSavingsPage() {
     }
   };
 
+  const handleLiskUSDCSavings = async () => {
+    if (!isConnected) {
+      setError("Please connect your wallet.");
+      throw new Error("Please connect your wallet.");
+    }
+    
+    setLoading(true);
+    setError(null);
+    setTxHash(null);
+    setSuccess(false);
+    
+    try {
+      // Validate amount
+      const cleanAmount = amount.replace(/[^0-9.]/g, '');
+      const parsedAmount = parseFloat(cleanAmount);
+      
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        throw new Error("Invalid amount. Please enter a valid number greater than zero.");
+      }
+      
+      // Setup provider and contract
+      const { signer } = await setupLiskProvider();
+      const contract = new ethers.Contract(LISK_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const maturityTime = calculateMaturityTime();
+      
+      // USDC specific logic for Lisk
+      const token = LISK_TOKENS.USDC;
+      const tokenAmount = ethers.parseUnits(parsedAmount.toString(), token.decimals);
+      
+      // Approve and create saving
+      await approveERC20(token.address, tokenAmount, signer);
+      
+      // Use ETH for fee on Lisk (simplified fee structure)
+      const feeInEth = "0.001"; // $1 equivalent in ETH (approximate)
+      
+      const txOptions = { 
+        gasLimit: 2717330,
+        value: ethers.parseEther(feeInEth)
+      };
+      const tx = await contract.createSaving(
+        name,
+        maturityTime,
+        selectedPenalty,
+        false, // safeMode
+        token.address,
+        tokenAmount,
+        txOptions
+      );
+    
+      const receipt = await tx.wait();
+      setTxHash(receipt.hash);
+      
+      // Track savings creation
+      if (address) {
+        trackSavingsCreated(address, {
+          planName: name,
+          amount: parsedAmount.toString(),
+          currency: 'USDC',
+          chain: 'lisk',
+          maturityDate: selectedDayRange.to ? new Date(
+            selectedDayRange.to.year ?? 0,
+            (selectedDayRange.to.month ?? 1) - 1,
+            selectedDayRange.to.day ?? 1
+          ).toISOString() : '',
+          penalty: selectedPenalty.toString(),
+          txHash: receipt.hash
+        });
+      }
+      
+      // Send to API
+      await sendTransactionToAPI(parsedAmount, receipt.hash, 'USDC');
+      
+      setSuccess(true);
+    } catch (error) {
+      console.error("Error creating USDC savings plan on Lisk:", error);
+      setSuccess(false);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('user rejected') ||
+          errorMessage.includes('User denied') ||
+          errorMessage.includes('user cancelled') ||
+          errorMessage.includes('ACTION_REJECTED') ||
+          errorMessage.includes('ethers-user-denied')) {
+        setError('Error creating savings user rejected');
+      } else {
+        setError(errorMessage);
+      }
+      throw error; // Re-throw the error so handleSubmit can catch it
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Main submit handler
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -1208,6 +1358,12 @@ export default function CreateSavingsPage() {
           await handleGooddollarSavings();
         } else {
           throw new Error('Unsupported currency for Celo network.');
+        }
+      } else if (chain === 'lisk') {
+        if (currency === 'USDC') {
+          await handleLiskUSDCSavings();
+        } else {
+          throw new Error('Unsupported currency for Lisk network.');
         }
       } else {
         if (currency === 'USDGLO') {
@@ -1330,6 +1486,9 @@ export default function CreateSavingsPage() {
 
   return (
     <div className={`${spaceGrotesk.className} min-h-screen bg-gradient-to-b from-white to-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden`}>
+      {/* Network Detection Component */}
+      <NetworkDetection />
+      
       {/* Enhanced decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed top-1/4 -left-20 w-60 h-60 bg-[#81D7B4]/5 rounded-full blur-3xl"></div>

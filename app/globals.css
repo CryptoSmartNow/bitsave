@@ -2,7 +2,7 @@
 
 :root {
   --background: #f8fafc;
-  --foreground: #0f172a;
+  --foreground: #f8fafc;
   --primary: #3b82f6;
   --primary-dark: #2563eb;
   --secondary: #10b981;
@@ -26,28 +26,271 @@
   --font-mono: var(--font-space-grotesk);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --primary: #3b82f6;
-    --primary-dark: #60a5fa;
-    --secondary: #10b981;
-    --accent: #a78bfa;
-    --muted: #64748b;
-    --glass-bg: rgba(15, 23, 42, 0.3);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: rgba(0, 0, 0, 0.2);
-    --neo-bg: #1e293b;
-    --neo-shadow-light: rgba(255, 255, 255, 0.05);
-    --neo-shadow-dark: rgba(0, 0, 0, 0.3);
-  }
-}
+/* Dark mode removed to maintain consistent light theme */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Google Translate - Hide All Elements Completely */
+.goog-te-banner-frame,
+.goog-te-menu-frame,
+.goog-te-ftab,
+.goog-te-balloon-frame,
+.goog-te-menu2,
+.goog-te-menu-value,
+.goog-te-gadget,
+.goog-te-combo,
+.goog-te-spinner-pos,
+#google_translate_element,
+#google_translate_element *,
+.goog-text-highlight,
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  z-index: -9999 !important;
+}
+
+/* Prevent Google Translate from affecting body layout */
+body {
+  top: 0 !important;
+}
+
+body.goog-te-hl {
+  top: 0 !important;
+}
+
+/* Hide any remaining Google Translate elements */
+[id*="google"][id*="translate"],
+[class*="goog-te"],
+[class*="google-translate"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Dark mode support for Google Translate */
+@media (prefers-color-scheme: dark) {
+  .goog-te-menu-frame {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+  
+  .goog-te-menu2 {
+    background: #1f2937 !important;
+  }
+  
+  .goog-te-menu2-item {
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+    border-bottom-color: #374151 !important;
+  }
+  
+  .goog-te-menu2-item:hover {
+    background-color: #374151 !important;
+  }
+}
+
+/* RTL (Right-to-Left) Language Support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] body {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL specific adjustments for common elements */
+[dir="rtl"] .flex {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-right: calc(0.5rem * var(--tw-space-x-reverse));
+  margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-right: calc(1rem * var(--tw-space-x-reverse));
+  margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+[dir="rtl"] .space-x-6 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-right: calc(1.5rem * var(--tw-space-x-reverse));
+  margin-left: calc(1.5rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+/* RTL adjustments for margins and padding */
+[dir="rtl"] .ml-2 {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+[dir="rtl"] .ml-3 {
+  margin-left: 0;
+  margin-right: 0.75rem;
+}
+
+[dir="rtl"] .ml-4 {
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+[dir="rtl"] .mr-2 {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+[dir="rtl"] .mr-3 {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .mr-4 {
+  margin-right: 0;
+  margin-left: 1rem;
+}
+
+[dir="rtl"] .pl-4 {
+  padding-left: 0;
+  padding-right: 1rem;
+}
+
+[dir="rtl"] .pr-4 {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
+/* RTL adjustments for positioning */
+[dir="rtl"] .left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .left-4 {
+  left: auto;
+  right: 1rem;
+}
+
+[dir="rtl"] .right-4 {
+  right: auto;
+  left: 1rem;
+}
+
+/* RTL adjustments for borders */
+[dir="rtl"] .border-l {
+  border-left: none;
+  border-right: 1px solid;
+}
+
+[dir="rtl"] .border-r {
+  border-right: none;
+  border-left: 1px solid;
+}
+
+[dir="rtl"] .border-l-4 {
+  border-left: none;
+  border-right: 4px solid;
+}
+
+/* RTL adjustments for transforms */
+[dir="rtl"] .translate-x-full {
+  --tw-translate-x: -100%;
+}
+
+[dir="rtl"] .-translate-x-full {
+  --tw-translate-x: 100%;
+}
+
+/* RTL adjustments for text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* RTL adjustments for sidebar and navigation */
+[dir="rtl"] .fixed.h-full {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .md\:ml-20 {
+  margin-left: 0;
+  margin-right: 5rem;
+}
+
+[dir="rtl"] .md\:ml-64 {
+  margin-left: 0;
+  margin-right: 16rem;
+}
+
+/* RTL adjustments for icons and arrows */
+[dir="rtl"] svg[data-direction="arrow"] {
+  transform: scaleX(-1);
+}
+
+/* RTL font support for Arabic */
+[dir="rtl"][lang="ar"] {
+  font-family: 'Noto Sans Arabic', 'Arial Unicode MS', sans-serif;
+}
+
+[dir="rtl"][lang="ar"] .font-sans {
+  font-family: 'Noto Sans Arabic', 'Arial Unicode MS', sans-serif;
+}
+
+/* RTL adjustments for form elements */
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="password"],
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+  direction: rtl;
+}
+
+/* RTL adjustments for buttons with icons */
+[dir="rtl"] .btn-with-icon {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .btn-with-icon svg {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+/* RTL adjustments for dropdown menus */
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+/* RTL adjustments for tooltips */
+[dir="rtl"] .tooltip {
+  left: auto;
+  right: 0;
 }
 
 /* Markdown Content Styles */

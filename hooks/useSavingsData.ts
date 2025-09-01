@@ -32,10 +32,12 @@ import childContractABI from '../app/abi/childContractABI.js';
 // Contract addresses for different networks
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+const LISK_CONTRACT_ADDRESS = "0x05D032ac25d322df992303dCa074EE7392C117b9";
 
 // Network chain IDs
 const BASE_CHAIN_ID = BigInt(8453);
 const CELO_CHAIN_ID = BigInt(42220);
+const LISK_CHAIN_ID = BigInt(1135);
 
 // Token mapping for Celo network
 const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
@@ -53,6 +55,8 @@ interface UseSavingsDataReturn {
   ethPrice: number;
   currentNetwork: any;
   isBaseNetwork: boolean;
+  isCeloNetwork: boolean;
+  isLiskNetwork: boolean;
   isCorrectNetwork: boolean;
   refetch: () => Promise<void>;
   clearCache: () => void;
@@ -80,6 +84,8 @@ export function useSavingsData(): UseSavingsDataReturn {
   const [ethPrice, setEthPrice] = useState(3500);
   const [currentNetwork, setCurrentNetwork] = useState<any>(null);
   const [isBaseNetwork, setIsBaseNetwork] = useState(false);
+  const [isCeloNetwork, setIsCeloNetwork] = useState(false);
+  const [isLiskNetwork, setIsLiskNetwork] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   
   // Ref to track if component is mounted
@@ -161,11 +167,13 @@ export function useSavingsData(): UseSavingsDataReturn {
       // Update network state
       setCurrentNetwork(network);
       setIsBaseNetwork(network.chainId === BASE_CHAIN_ID);
+      setIsCeloNetwork(network.chainId === CELO_CHAIN_ID);
+      setIsLiskNetwork(network.chainId === LISK_CHAIN_ID);
       
       // Validate network
-      if (network.chainId !== BASE_CHAIN_ID && network.chainId !== CELO_CHAIN_ID) {
+      if (network.chainId !== BASE_CHAIN_ID && network.chainId !== CELO_CHAIN_ID && network.chainId !== LISK_CHAIN_ID) {
         setIsCorrectNetwork(false);
-        throw new Error("Please switch to Base or Celo network");
+        throw new Error("Please switch to Base, Celo, or Lisk network");
       }
       
       setIsCorrectNetwork(true);
@@ -174,7 +182,9 @@ export function useSavingsData(): UseSavingsDataReturn {
       // Select contract address based on network
       const contractAddress = (network.chainId === BASE_CHAIN_ID)
         ? BASE_CONTRACT_ADDRESS
-        : CELO_CONTRACT_ADDRESS;
+        : (network.chainId === CELO_CHAIN_ID)
+        ? CELO_CONTRACT_ADDRESS
+        : LISK_CONTRACT_ADDRESS;
       
       // Initialize contract
       const contract = new ethers.Contract(contractAddress, BitSaveABI, signer);
@@ -460,6 +470,8 @@ export function useSavingsData(): UseSavingsDataReturn {
     ethPrice,
     currentNetwork,
     isBaseNetwork,
+    isCeloNetwork,
+    isLiskNetwork,
     isCorrectNetwork,
     refetch,
     clearCache

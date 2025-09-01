@@ -11,6 +11,7 @@ import { Space_Grotesk } from 'next/font/google';
 // Custom modal components for savings operations
 import TopUpModal from '../../components/TopUpModal';
 import WithdrawModal from '../../components/WithdrawModal';
+import NetworkDetection from '../../components/NetworkDetection';
 // Animation library for smooth UI transitions
 import { motion } from 'framer-motion';
 // Custom error handling for contract operations
@@ -43,7 +44,8 @@ export default function Dashboard() {
     savingsData,
     isLoading,
     isBaseNetwork,
-    isCorrectNetwork,
+    isCeloNetwork,
+    isLiskNetwork,
     refetch: refetchSavingsData
   } = useSavingsData();
   
@@ -240,8 +242,7 @@ export default function Dashboard() {
   }, [address]);
 
 
-  // Network switching state (still needed for manual network switching)
-  const [switchingNetwork, setSwitchingNetwork] = useState(false);
+
 
   // GoodDollar token price state (for Celo network calculations)
   const [goodDollarPrice, setGoodDollarPrice] = useState<number>(0.00009189); // Default fallback price
@@ -344,11 +345,11 @@ export default function Dashboard() {
 
 
 
-  // Switch wallet to specified network (Base or Celo)
+  // Switch wallet to specified network (Base, Celo, or Lisk)
   const switchToNetwork = async (networkName: string) => {
     if (!window.ethereum) return;
 
-    setSwitchingNetwork(true);
+
     try {
       if (networkName === 'Base') {
         // Request switch to Base network
@@ -365,6 +366,15 @@ export default function Dashboard() {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: '0xA4EC' }], // Celo chainId in hex (42220)
+        });
+
+        // Refresh savings data after successful switch
+        refetchSavingsData();
+      } else if (networkName === 'Lisk') {
+        // Request switch to Lisk network
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x46F' }], // Lisk chainId in hex (1135)
         });
 
         // Refresh savings data after successful switch
@@ -409,12 +419,29 @@ export default function Dashboard() {
                 },
               ],
             });
+          } else if (networkName === 'Lisk') {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: '0x46F', // Lisk chainId in hex
+                  chainName: 'Lisk',
+                  nativeCurrency: {
+                    name: 'ETH',
+                    symbol: 'ETH',
+                    decimals: 18,
+                  },
+                  rpcUrls: ['https://rpc.api.lisk.com'],
+                  blockExplorerUrls: ['https://blockscout.lisk.com'],
+                },
+              ],
+            });
           }
 
           // Attempt to switch to the newly added network
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: networkName === 'Base' ? '0x2105' : '0xA4EC' }],
+            params: [{ chainId: networkName === 'Base' ? '0x2105' : networkName === 'Celo' ? '0xA4EC' : '0x46F' }],
           });
 
           refetchSavingsData();
@@ -425,7 +452,7 @@ export default function Dashboard() {
         console.error(`Error switching to ${networkName} network:`, error);
       }
     } finally {
-      setSwitchingNetwork(false);
+  
     }
   };
 
@@ -631,33 +658,8 @@ export default function Dashboard() {
 
   return (
     <div className={`${spaceGrotesk.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#f2f2f2] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
-      {/* Network Warning Banner - Only show if not on Base or Celo */}
-      {!isCorrectNetwork && address && (
-        <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b border-yellow-200 z-50 p-3 flex items-center justify-center">
-          <div className="flex items-center max-w-4xl mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            <span className="text-yellow-800 text-sm">Please switch to Base or Celo network to use BitSave</span>
-            <div className="ml-4 flex space-x-2">
-              <button
-                onClick={() => switchToNetwork('Base')}
-                disabled={switchingNetwork}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-1 px-3 rounded-full transition-colors disabled:opacity-70"
-              >
-                {switchingNetwork ? 'Switching...' : 'Switch to Base'}
-              </button>
-              <button
-                onClick={() => switchToNetwork('Celo')}
-                disabled={switchingNetwork}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-1 px-3 rounded-full transition-colors disabled:opacity-70"
-              >
-                {switchingNetwork ? 'Switching...' : 'Switch to Celo'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Network Detection Component */}
+      <NetworkDetection />
 
       {/* Top Up Modal */}
       <TopUpModal
@@ -817,12 +819,12 @@ export default function Dashboard() {
               >
                 <div className="bg-gray-100 rounded-full w-6 h-6 md:w-7 md:h-7 flex items-center justify-center mr-2 shadow-sm overflow-hidden">
                   <img
-                    src={`/${isBaseNetwork ? 'base.svg' : 'celo.png'}`}
-                    alt={isBaseNetwork ? 'Base' : 'Celo'}
+                    src={`/${isBaseNetwork ? 'base.svg' : isLiskNetwork ? 'lisk-logo.png' : 'celo.png'}`}
+                    alt={isBaseNetwork ? 'Base' : isLiskNetwork ? 'Lisk' : 'Celo'}
                     className="w-5 h-5 md:w-6 md:h-6 object-contain"
                   />
                 </div>
-                <span className="text-gray-700 font-medium text-sm md:text-base">{isBaseNetwork ? 'Base' : 'Celo'}</span>
+                <span className="text-gray-700 font-medium text-sm md:text-base">{isBaseNetwork ? 'Base' : isLiskNetwork ? 'Lisk' : 'Celo'}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5 ml-2 text-gray-500">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -830,21 +832,21 @@ export default function Dashboard() {
 
               {/* Dropdown menu */}
               <div id="chain-dropdown" className="absolute left-0 mt-2 w-48 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 z-10 hidden">
-                {['Base', 'Celo'].map((chain) => (
+                {['Base', 'Celo', 'Lisk'].map((chain) => (
                   <button
                     key={chain}
                     onClick={() => {
-                      if (chain === 'Base' || chain === 'Celo') {
+                      if (chain === 'Base' || chain === 'Celo' || chain === 'Lisk') {
                         document.getElementById('chain-dropdown')?.classList.add('hidden');
                         // Switch network when chain is selected
                         switchToNetwork(chain);
                       }
                     }}
-                    className={`flex items-center w-full px-4 py-2 hover:bg-gray-100/80 text-left text-sm ${chain === 'Arbitrum' ? 'opacity-50 pointer-events-none' : ''} ${(chain === 'Base' && isBaseNetwork) || (chain === 'Celo' && !isBaseNetwork) ? 'bg-gray-100/80' : ''}`}
+                    className={`flex items-center w-full px-4 py-2 hover:bg-gray-100/80 text-left text-sm ${(chain === 'Base' && isBaseNetwork) || (chain === 'Celo' && isCeloNetwork) || (chain === 'Lisk' && isLiskNetwork) ? 'bg-gray-100/80' : ''}`}
                   >
                     <div className="bg-gray-100 rounded-full w-5 h-5 flex items-center justify-center mr-2 overflow-hidden">
                       <img
-                        src={`/${chain.toLowerCase()}${chain === 'Arbitrum' || chain === 'Celo' ? '.png' : '.svg'}`}
+                        src={`/${chain === 'Lisk' ? 'lisk-logo.png' : chain.toLowerCase()}${chain === 'Arbitrum' || chain === 'Celo' ? '.png' : chain === 'Lisk' ? '' : '.svg'}`}
                         alt={chain}
                         className="w-4 h-4 object-contain"
                       />

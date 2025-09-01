@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "close": "关闭",
+    "submit": "提交",
+    "continue": "继续",
+    "settings": "设置",
+    "help": "帮助",
+    "about": "关于",
+    "contact": "联系"
+  },
+  "navigation": {
+    "dashboard": "仪表板",
+    "savings": "储蓄",
+    "createSavings": "创建储蓄",
+    "profile": "个人资料",
+    "settings": "设置",
+    "logout": "退出登录"
+  },
+  "createSavings": {
+    "title": "创建新储蓄",
+    "amount": "金额",
+    "currency": "货币",
+    "network": "网络",
+    "duration": "期限",
+    "maturityDate": "到期日期",
+    "estimatedReturns": "预估收益",
+    "createSaving": "创建储蓄",
+    "selectCurrency": "选择货币",
+    "selectNetwork": "选择网络",
+    "enterAmount": "输入金额",
+    "selectDuration": "选择期限",
+    "minimumAmount": "最小金额",
+    "maximumAmount": "最大金额",
+    "processingFee": "处理费用",
+    "networkFee": "网络费用",
+    "totalFee": "总费用",
+    "youWillReceive": "您将收到",
+    "atMaturity": "到期时"
+  },
+  "wallet": {
+    "connectWallet": "连接钱包",
+    "disconnectWallet": "断开钱包",
+    "walletConnected": "钱包已连接",
+    "walletNotConnected": "钱包未连接",
+    "balance": "余额",
+    "insufficientBalance": "余额不足",
+    "transactionPending": "交易待处理",
+    "transactionConfirmed": "交易已确认",
+    "transactionFailed": "交易失败"
+  },
+  "currencies": {
+    "USDC": "美元币",
+    "cUSD": "Celo美元",
+    "USDGLO": "全球美元",
+    "Gooddollar": "好美元"
+  },
+  "networks": {
+    "celo": "Celo",
+    "base": "Base",
+    "lisk": "Lisk"
+  },
+  "penalties": {
+    "earlyWithdrawal": "提前提取",
+    "penaltyApplies": "适用罚金",
+    "penaltyAmount": "罚金金额",
+    "penaltyPercentage": "罚金百分比"
+  },
+  "errors": {
+    "networkError": "网络错误",
+    "transactionError": "交易错误",
+    "validationError": "验证错误",
+    "unknownError": "未知错误",
+    "walletError": "钱包错误",
+    "insufficientFunds": "资金不足",
+    "invalidAmount": "无效金额",
+    "invalidAddress": "无效地址",
+    "transactionRejected": "交易被拒绝",
+    "networkNotSupported": "不支持的网络",
+    "currencyNotSupported": "不支持的货币"
+  },
+  "success": {
+    "savingCreated": "储蓄创建成功",
+    "transactionSubmitted": "交易已提交",
+    "walletConnected": "钱包连接成功",
+    "settingsSaved": "设置已保存"
+  }
+}

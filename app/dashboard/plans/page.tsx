@@ -6,6 +6,7 @@ import { Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
 import WithdrawModal from '@/components/WithdrawModal';
 import TopUpModal from '@/components/TopUpModal';
+import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
 
@@ -65,7 +66,7 @@ export default function PlansPage() {
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
 
   // Use the new caching hook for savings data
-  const { savingsData, isLoading, isCorrectNetwork, ethPrice } = useSavingsData()
+  const { savingsData, isLoading, ethPrice } = useSavingsData()
 
   // Fetch user activity data
   useEffect(() => {
@@ -147,6 +148,9 @@ export default function PlansPage() {
 
   return (
     <div className={`${spaceGrotesk.className} min-h-screen bg-gradient-to-b from-gray-50 to-gray-100`}>
+      {/* Network Detection Component */}
+      <NetworkDetection />
+      
       {/* Decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
@@ -161,18 +165,6 @@ export default function PlansPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Your Savings Plans</h1>
           <p className="text-gray-600 max-w-2xl">Track and manage your savings goals. Create new plans or contribute to existing ones to reach your financial targets faster.</p>
         </div>
-
-        {/* Network Warning */}
-        {!isCorrectNetwork && (
-          <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-yellow-800">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span className="font-medium">Please connect to Base or Celo network to view your savings plans.</span>
-            </div>
-          </div>
-        )}
 
         {/* Create New Plan Button */}
         <div className="mb-8">

@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "close": "閉じる",
+    "submit": "送信",
+    "continue": "続行",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "about": "について",
+    "contact": "お問い合わせ"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "savings": "貯蓄",
+    "createSavings": "貯蓄を作成",
+    "profile": "プロフィール",
+    "settings": "設定",
+    "logout": "ログアウト"
+  },
+  "createSavings": {
+    "title": "新しい貯蓄を作成",
+    "amount": "金額",
+    "currency": "通貨",
+    "network": "ネットワーク",
+    "duration": "期間",
+    "maturityDate": "満期日",
+    "estimatedReturns": "推定収益",
+    "createSaving": "貯蓄を作成",
+    "selectCurrency": "通貨を選択",
+    "selectNetwork": "ネットワークを選択",
+    "enterAmount": "金額を入力",
+    "selectDuration": "期間を選択",
+    "minimumAmount": "最小金額",
+    "maximumAmount": "最大金額",
+    "processingFee": "処理手数料",
+    "networkFee": "ネットワーク手数料",
+    "totalFee": "総手数料",
+    "youWillReceive": "受け取り予定額",
+    "atMaturity": "満期時"
+  },
+  "wallet": {
+    "connectWallet": "ウォレットを接続",
+    "disconnectWallet": "ウォレットを切断",
+    "walletConnected": "ウォレット接続済み",
+    "walletNotConnected": "ウォレット未接続",
+    "balance": "残高",
+    "insufficientBalance": "残高不足",
+    "transactionPending": "取引保留中",
+    "transactionConfirmed": "取引確認済み",
+    "transactionFailed": "取引失敗"
+  },
+  "currencies": {
+    "USDC": "USDコイン",
+    "cUSD": "Celoドル",
+    "USDGLO": "USDグローバル",
+    "Gooddollar": "グッドドル"
+  },
+  "networks": {
+    "celo": "Celo",
+    "base": "Base",
+    "lisk": "Lisk"
+  },
+  "penalties": {
+    "earlyWithdrawal": "早期引き出し",
+    "penaltyApplies": "ペナルティ適用",
+    "penaltyAmount": "ペナルティ金額",
+    "penaltyPercentage": "ペナルティ率"
+  },
+  "errors": {
+    "networkError": "ネットワークエラー",
+    "transactionError": "取引エラー",
+    "validationError": "検証エラー",
+    "unknownError": "不明なエラー",
+    "walletError": "ウォレットエラー",
+    "insufficientFunds": "資金不足",
+    "invalidAmount": "無効な金額",
+    "invalidAddress": "無効なアドレス",
+    "transactionRejected": "取引拒否",
+    "networkNotSupported": "サポートされていないネットワーク",
+    "currencyNotSupported": "サポートされていない通貨"
+  },
+  "success": {
+    "savingCreated": "貯蓄が正常に作成されました",
+    "transactionSubmitted": "取引が送信されました",
+    "walletConnected": "ウォレットが正常に接続されました",
+    "settingsSaved": "設定が保存されました"
+  }
+}

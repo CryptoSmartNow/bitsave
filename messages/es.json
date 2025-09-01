@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "submit": "Enviar",
+    "continue": "Continuar",
+    "settings": "Configuración",
+    "help": "Ayuda",
+    "about": "Acerca de",
+    "contact": "Contacto"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "savings": "Ahorros",
+    "createSavings": "Crear Ahorros",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "createSavings": {
+    "title": "Crear Nuevo Ahorro",
+    "amount": "Cantidad",
+    "currency": "Moneda",
+    "network": "Red",
+    "duration": "Duración",
+    "maturityDate": "Fecha de Vencimiento",
+    "estimatedReturns": "Retornos Estimados",
+    "createSaving": "Crear Ahorro",
+    "selectCurrency": "Seleccionar Moneda",
+    "selectNetwork": "Seleccionar Red",
+    "enterAmount": "Ingresar Cantidad",
+    "selectDuration": "Seleccionar Duración",
+    "minimumAmount": "Cantidad Mínima",
+    "maximumAmount": "Cantidad Máxima",
+    "processingFee": "Tarifa de Procesamiento",
+    "networkFee": "Tarifa de Red",
+    "totalFee": "Tarifa Total",
+    "youWillReceive": "Recibirás",
+    "atMaturity": "al Vencimiento"
+  },
+  "wallet": {
+    "connectWallet": "Conectar Billetera",
+    "disconnectWallet": "Desconectar Billetera",
+    "walletConnected": "Billetera Conectada",
+    "walletNotConnected": "Billetera No Conectada",
+    "balance": "Saldo",
+    "insufficientBalance": "Saldo Insuficiente",
+    "transactionPending": "Transacción Pendiente",
+    "transactionConfirmed": "Transacción Confirmada",
+    "transactionFailed": "Transacción Fallida"
+  },
+  "currencies": {
+    "USDC": "USD Coin",
+    "cUSD": "Celo Dollar",
+    "USDGLO": "USD Global",
+    "Gooddollar": "GoodDollar"
+  },
+  "networks": {
+    "celo": "Celo",
+    "base": "Base",
+    "lisk": "Lisk"
+  },
+  "penalties": {
+    "earlyWithdrawal": "Retiro Anticipado",
+    "penaltyApplies": "Se Aplica Penalización",
+    "penaltyAmount": "Cantidad de Penalización",
+    "penaltyPercentage": "Porcentaje de Penalización"
+  },
+  "errors": {
+    "networkError": "Error de Red",
+    "transactionError": "Error de Transacción",
+    "validationError": "Error de Validación",
+    "unknownError": "Error Desconocido",
+    "walletError": "Error de Billetera",
+    "insufficientFunds": "Fondos Insuficientes",
+    "invalidAmount": "Cantidad Inválida",
+    "invalidAddress": "Dirección Inválida",
+    "transactionRejected": "Transacción Rechazada",
+    "networkNotSupported": "Red No Soportada",
+    "currencyNotSupported": "Moneda No Soportada"
+  },
+  "success": {
+    "savingCreated": "Ahorro Creado Exitosamente",
+    "transactionSubmitted": "Transacción Enviada",
+    "walletConnected": "Billetera Conectada Exitosamente",
+    "settingsSaved": "Configuración Guardada"
+  }
+}

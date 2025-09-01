@@ -1,0 +1,124 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Succes",
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "save": "Opslaan",
+    "close": "Sluiten",
+    "submit": "Verzenden",
+    "continue": "Doorgaan",
+    "settings": "Instellingen",
+    "help": "Help",
+    "about": "Over ons",
+    "contact": "Contact"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "savings": "Spaargeld",
+    "createSavings": "Spaarplan Maken",
+    "plans": "Plannen",
+    "activity": "Activiteit",
+    "leaderboard": "Ranglijst",
+    "referrals": "Verwijzingen",
+    "social": "Sociaal",
+    "withdraw": "Opnemen",
+    "blog": "Blog",
+    "about": "Over ons",
+    "contact": "Contact",
+    "faq": "Veelgestelde vragen",
+    "terms": "Servicevoorwaarden",
+    "privacy": "Privacybeleid"
+  },
+  "createSavings": {
+    "title": "Spaarplan Maken",
+    "planName": "Plan Naam",
+    "planNamePlaceholder": "Voer een naam in voor uw spaarplan",
+    "amountToSave": "Te Sparen Bedrag",
+    "amountPlaceholder": "Voer bedrag in",
+    "currency": "Valuta",
+    "chain": "Keten",
+    "base": "Basis",
+    "otherNetworks": "Andere Netwerken",
+    "maturityDate": "Vervaldatum",
+    "selectDate": "Selecteer een datum",
+    "penalty": "Boete voor Vervroegde Opname",
+    "penaltyDescription": "Kies het boetepercentage voor vervroegde opname",
+    "createPlan": "Spaarplan Maken",
+    "connectWallet": "Wallet Verbinden",
+    "walletConnected": "Wallet Verbonden",
+    "transactionPending": "Transactie In Behandeling",
+    "transactionSuccess": "Transactie Succesvol",
+    "transactionFailed": "Transactie Mislukt",
+    "insufficientBalance": "Onvoldoende Saldo",
+    "minimumAmount": "Minimum bedrag is",
+    "maximumAmount": "Maximum bedrag is",
+    "invalidAmount": "Ongeldig bedrag",
+    "selectChain": "Selecteer een keten",
+    "selectCurrency": "Selecteer een valuta",
+    "planCreated": "Plan succesvol aangemaakt!",
+    "planCreationFailed": "Plan aanmaken mislukt",
+    "enterValidName": "Voer een geldige naam in",
+    "enterValidAmount": "Voer een geldig bedrag in",
+    "selectValidDate": "Selecteer een geldige datum",
+    "dateInPast": "Datum kan niet in het verleden zijn",
+    "minimumDuration": "Minimum duur is 1 dag",
+    "maximumDuration": "Maximum duur is 10 jaar"
+  },
+  "dashboard": {
+    "welcome": "Welkom terug",
+    "totalSavings": "Totaal Spaargeld",
+    "activePlans": "Actieve Plannen",
+    "totalEarned": "Totaal Verdiend",
+    "recentActivity": "Recente Activiteit",
+    "viewAll": "Alles Bekijken",
+    "noPlans": "Geen actieve plannen",
+    "createFirstPlan": "Maak uw eerste spaarplan",
+    "getStarted": "Aan de slag"
+  },
+  "plans": {
+    "title": "Mijn Plannen",
+    "active": "Actief",
+    "completed": "Voltooid",
+    "withdrawn": "Opgenomen",
+    "planName": "Plan Naam",
+    "amount": "Bedrag",
+    "maturity": "Vervaldatum",
+    "status": "Status",
+    "actions": "Acties",
+    "withdraw": "Opnemen",
+    "details": "Details",
+    "noPlans": "Geen plannen gevonden",
+    "createNew": "Nieuw Plan Maken"
+  },
+  "hero": {
+    "title": "Spaar Slim met Crypto",
+    "subtitle": "Verdien rente op uw cryptocurrency met onze veilige spaarplannen",
+    "cta": "Begin met Sparen",
+    "learnMore": "Meer Leren"
+  },
+  "features": {
+    "title": "Waarom Kiezen voor BitSave?",
+    "security": {
+      "title": "Veilig & Betrouwbaar",
+      "description": "Uw fondsen zijn beveiligd met smart contracts en gedecentraliseerde protocollen"
+    },
+    "yield": {
+      "title": "Hoge Rendementen",
+      "description": "Verdien competitieve rentes op uw cryptocurrency holdings"
+    },
+    "flexible": {
+      "title": "Flexibele Plannen",
+      "description": "Kies uit verschillende spaarplannen die passen bij uw doelen"
+    }
+  },
+  "footer": {
+    "description": "BitSave is een gedecentraliseerd spaarplatform dat u helpt uw cryptocurrency te laten groeien.",
+    "quickLinks": "Snelle Links",
+    "legal": "Juridisch",
+    "social": "Sociaal",
+    "copyright": "© 2024 BitSave. Alle rechten voorbehouden."
+  }
+}
