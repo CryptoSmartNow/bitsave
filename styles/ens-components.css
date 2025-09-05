@@ -1,0 +1,164 @@
+/* Unified ENS Name Display Styles */
+
+/* Base ENS Name Text Styling */
+.ens-name {
+  @apply font-mono text-base sm:text-lg lg:text-xl font-bold text-gray-800 break-all sm:break-normal;
+}
+
+.ens-name-large {
+  @apply font-mono text-lg sm:text-xl md:text-2xl font-bold text-gray-800 break-all sm:break-normal;
+}
+
+.ens-name-small {
+  @apply font-mono text-sm sm:text-base font-bold text-gray-700 break-all sm:break-normal;
+}
+
+/* Status Badge Base Styles */
+.status-badge {
+  @apply flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border w-fit transition-all duration-200;
+}
+
+/* Connected Status Badge */
+.status-badge-connected {
+  @apply bg-[#81D7B4]/10 border-[#81D7B4]/20;
+}
+
+.status-badge-connected .status-dot {
+  @apply w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#81D7B4] rounded-full mr-1.5 sm:mr-2 animate-pulse;
+}
+
+.status-badge-connected .status-text {
+  @apply text-xs sm:text-sm font-semibold text-[#81D7B4];
+}
+
+/* ENS Connected Badge */
+.status-badge-ens {
+  @apply bg-purple-50 border-purple-200;
+}
+
+.status-badge-ens .status-icon {
+  @apply text-purple-600 font-bold text-sm sm:text-lg mr-1.5 sm:mr-2;
+}
+
+.status-badge-ens .status-text {
+  @apply text-xs sm:text-sm font-semibold text-purple-600;
+}
+
+/* X/Twitter Connected Badge */
+.status-badge-x {
+  @apply bg-blue-50 border-blue-200;
+}
+
+.status-badge-x .status-icon {
+  @apply text-black font-bold text-sm sm:text-lg mr-1.5 sm:mr-2;
+}
+
+.status-badge-x .status-text {
+  @apply text-xs sm:text-sm font-semibold text-blue-600;
+}
+
+/* ENS Profile Card Container */
+.ens-profile-container {
+  @apply bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 sm:p-6;
+}
+
+.ens-profile-header {
+  @apply flex items-center space-x-3 mb-3;
+}
+
+.ens-profile-success-icon {
+  @apply w-8 h-8 bg-green-500 rounded-full flex items-center justify-center;
+}
+
+.ens-profile-title {
+  @apply font-semibold text-green-800;
+}
+
+.ens-profile-subtitle {
+  @apply text-green-600 text-sm;
+}
+
+.ens-profile-content {
+  @apply flex items-center space-x-3 mb-4;
+}
+
+.ens-avatar {
+  @apply w-12 h-12 rounded-full border-2 border-green-200;
+}
+
+.ens-profile-info {
+  @apply flex-1;
+}
+
+.ens-profile-name {
+  @apply font-mono text-lg font-bold text-green-800;
+}
+
+.ens-profile-description {
+  @apply text-green-600 text-sm;
+}
+
+/* ENS Error Modal Styles */
+.ens-error-highlight {
+  @apply relative bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#81D7B4]/20 shadow-sm;
+}
+
+.ens-error-highlight::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-[#81D7B4]/10 to-[#81D7B4]/5 rounded-2xl;
+}
+
+.ens-error-label {
+  @apply text-xs sm:text-sm font-medium text-[#81D7B4] mb-2;
+}
+
+.ens-error-value {
+  @apply font-mono text-sm sm:text-base md:text-lg text-gray-900 break-all bg-gray-50 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-200/50;
+}
+
+/* Responsive Badge Container */
+.badge-container {
+  @apply flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4;
+}
+
+/* Button Styles for ENS Components */
+.ens-button-primary {
+  @apply bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors;
+}
+
+.ens-button-secondary {
+  @apply bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors;
+}
+
+/* Utility Classes */
+.ens-flex-responsive {
+  @apply flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3;
+}
+
+.ens-text-responsive {
+  @apply text-sm sm:text-base lg:text-lg;
+}
+
+/* Animation Classes */
+.ens-fade-in {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.ens-scale-hover {
+  @apply hover:scale-105 transition-transform duration-200;
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .ens-name {
+    @apply text-gray-200;
+  }
+  
+  .ens-name-small {
+    @apply text-gray-300;
+  }
+  
+  .ens-error-value {
+    @apply bg-gray-800 text-gray-200 border-gray-700;
+  }
+}

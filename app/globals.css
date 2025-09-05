@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../styles/ens-components.css";
+@import "ethereum-identity-kit/css";
 
 :root {
   --background: #f8fafc;

@@ -162,34 +162,34 @@ export default function ENSLinking({ onENSLinked }: ENSLinkingProps) {
         {hasENS && !isLinking ? (
           // Display linked ENS
           <div className="space-y-4">
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 sm:p-6">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+            <div className="ens-profile-container">
+              <div className="ens-profile-header">
+                <div className="ens-profile-success-icon">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-green-800">ENS Domain Linked</h3>
-                  <p className="text-green-600 text-sm">Your domain is successfully connected</p>
+                  <h3 className="ens-profile-title">ENS Domain Linked</h3>
+                  <p className="ens-profile-subtitle">Your domain is successfully connected</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-3 mb-4">
+              <div className="ens-profile-content">
                 {avatar && (
                   <img 
                     src={avatar} 
                     alt="ENS Avatar" 
-                    className="w-12 h-12 rounded-full border-2 border-green-200"
+                    className="ens-avatar"
                   />
                 )}
-                <div className="flex-1">
-                  <p className="font-mono text-lg font-bold text-green-800">{ensName}</p>
-                  <p className="text-green-600 text-sm">Resolves to your wallet address</p>
+                <div className="ens-profile-info">
+                  <p className="ens-profile-name">{ensName}</p>
+                  <p className="ens-profile-description">Resolves to your wallet address</p>
                 </div>
                 <button
                   onClick={() => setShowProfileCard(!showProfileCard)}
-                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+                  className="ens-button-primary"
                 >
                   {showProfileCard ? 'Hide Profile' : 'Show Profile'}
                 </button>

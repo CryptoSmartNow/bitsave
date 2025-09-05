@@ -89,16 +89,13 @@ export default function ENSErrorModal({
               {/* Content Section - Responsive */}
               <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-5 md:pb-6 space-y-4 sm:space-y-5 md:space-y-6">
                 {ensName && (
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/10 to-[#81D7B4]/5 rounded-2xl"></div>
-                    <div className="relative bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#81D7B4]/20 shadow-sm">
-                      <p className="text-xs sm:text-sm font-medium text-[#81D7B4] mb-2">
-                        ENS Name Entered:
-                      </p>
-                      <p className="font-mono text-sm sm:text-base md:text-lg text-gray-900 break-all bg-gray-50 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-200/50">
-                        {ensName}
-                      </p>
-                    </div>
+                  <div className="ens-error-highlight">
+                    <p className="ens-error-label">
+                      ENS Name Entered:
+                    </p>
+                    <p className="ens-error-value">
+                      {ensName}
+                    </p>
                   </div>
                 )}
                 

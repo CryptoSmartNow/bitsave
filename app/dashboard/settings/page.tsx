@@ -637,24 +637,24 @@ export default function Settings() {
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-col gap-2 sm:gap-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                        <p className="font-mono text-base sm:text-lg lg:text-xl font-bold text-gray-800 break-all sm:break-normal">
+                      <div className="badge-container">
+                        <p className="ens-name">
                           {hasENS && ensName ? ensName : getDisplayName()}
                         </p>
-                        <div className="flex items-center bg-[#81D7B4]/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-[#81D7B4]/20 w-fit">
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#81D7B4] rounded-full mr-1.5 sm:mr-2 animate-pulse"></div>
-                          <span className="text-xs sm:text-sm font-semibold text-[#81D7B4]">Connected</span>
+                        <div className="status-badge status-badge-connected">
+                          <div className="status-dot"></div>
+                          <span className="status-text">Connected</span>
                         </div>
                         {hasENS && (
-                          <div className="flex items-center bg-purple-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-purple-200 w-fit">
-                            <span className="text-purple-600 font-bold text-sm sm:text-lg mr-1.5 sm:mr-2">⟠</span>
-                            <span className="text-xs sm:text-sm font-semibold text-purple-600">ENS Connected</span>
+                          <div className="status-badge status-badge-ens">
+                            <span className="status-icon">⟠</span>
+                            <span className="status-text">ENS Connected</span>
                           </div>
                         )}
                         {isXConnected && xUsername && (
-                          <div className="flex items-center bg-blue-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-blue-200 w-fit">
-                            <span className="text-black font-bold text-sm sm:text-lg mr-1.5 sm:mr-2">𝕏</span>
-                            <span className="text-xs sm:text-sm font-semibold text-blue-600">X Connected</span>
+                          <div className="status-badge status-badge-x">
+                            <span className="status-icon">𝕏</span>
+                            <span className="status-text">X Connected</span>
                           </div>
                         )}
                       </div>
