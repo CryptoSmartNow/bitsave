@@ -35,7 +35,6 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (mounted && !isConnected) {
-      // Auto-trigger the connect button after a short delay
       const timer = setTimeout(() => {
         if (connectButtonRef.current && !isConnected) {
           const button = connectButtonRef.current.querySelector('button');
