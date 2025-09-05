@@ -2,7 +2,7 @@
 
 /* Base ENS Name Text Styling */
 .ens-name {
-  @apply font-mono text-base sm:text-lg lg:text-xl font-bold text-gray-800 break-all sm:break-normal;
+  @apply font-mono text-base sm:text-lg lg:text-xl font-bold text-black break-all sm:break-normal;
 }
 
 .ens-name-large {

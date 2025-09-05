@@ -598,6 +598,9 @@ export default function Settings() {
           {/* ENS Domain */}
           <ENSLinking />
           
+          {/* Spacing between sections */}
+          <div className="h-6 sm:h-8 lg:h-10"></div>
+          
           {/* Wallet Address */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -617,7 +620,7 @@ export default function Settings() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
               </div>
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">Wallet Address</h3>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black">Wallet Address</h3>
             </div>
             
             <motion.div 
@@ -658,7 +661,7 @@ export default function Settings() {
                           </div>
                         )}
                       </div>
-                      <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
+                      <p className="text-black text-sm sm:text-base lg:text-lg font-semibold">
                         {hasENS ? 'Your ENS domain name' : (isXConnected && xUsername ? 'Your X/Twitter display name' : 'Your primary wallet address')}
                       </p>
                     </div>
@@ -684,7 +687,7 @@ export default function Settings() {
         </div>
         
         {/* Secondary Grid Layout for Additional Settings */}
-        <div className="space-y-6 sm:space-y-8 lg:space-y-10 mt-8 sm:mt-10 lg:mt-12">
+        <div className="space-y-6 sm:space-y-8 lg:space-y-10 mt-12 sm:mt-16 lg:mt-20">
           {/* Email Connect Card */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -882,12 +885,15 @@ export default function Settings() {
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-gray-50/80 rounded-lg sm:rounded-xl border border-gray-200/50 hover:bg-gray-50 transition-colors duration-200 gap-3 sm:gap-0">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Dark Mode</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Dark Mode</h3>
+                      <span className="px-2 py-1 text-xs font-medium text-orange-600 bg-orange-100 rounded-full border border-orange-200">Coming Soon</span>
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600 mt-1">Switch to dark theme for better viewing in low light</p>
                   </div>
-                  <div className="relative">
-                    <input type="checkbox" className="sr-only" />
-                    <div className="w-10 h-5 sm:w-12 sm:h-6 bg-gray-300 rounded-full shadow-inner cursor-pointer transition-colors duration-300 hover:bg-gray-400">
+                  <div className="relative opacity-50 cursor-not-allowed">
+                    <input type="checkbox" className="sr-only" disabled />
+                    <div className="w-10 h-5 sm:w-12 sm:h-6 bg-gray-300 rounded-full shadow-inner">
                       <div className="w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 translate-x-0.5 translate-y-0.5"></div>
                     </div>
                   </div>
