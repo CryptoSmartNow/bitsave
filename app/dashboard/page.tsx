@@ -20,6 +20,8 @@ import { handleContractError } from '../../lib/contractErrorHandler';
 import { useSavingsData } from '../../hooks/useSavingsData';
 // Cache initialization utility
 import { initializeSavingsCache } from '../../utils/savingsCache';
+// ENS data hook for identity resolution
+import { useENSData } from '../../hooks/useENSData';
 
 // Configure Space Grotesk font with optimal loading settings
 const spaceGrotesk = Space_Grotesk({
@@ -48,6 +50,9 @@ export default function Dashboard() {
     isLiskNetwork,
     refetch: refetchSavingsData
   } = useSavingsData();
+  
+  // ENS data hook for identity resolution
+  const { ensName, getDisplayName, hasENS } = useENSData();
   
   // UI state management
   const [activeTab, setActiveTab] = useState('current'); // Toggle between current/completed savings
@@ -81,24 +86,10 @@ export default function Dashboard() {
   // Effect hook to set user display name based on connected accounts
   useEffect(() => {
     if (mounted && address) {
-      // Check for Twitter username first (highest priority)
-      const xUsername = localStorage.getItem('xUsername');
-      const isXConnected = localStorage.getItem('isXConnected');
-      
-      if (xUsername && isXConnected === 'true') {
-        setDisplayName(`@${xUsername}`);
-      } else {
-        // Fall back to saved display name
-        const savedName = localStorage.getItem(`bitsave_displayname_${address}`);
-        if (savedName) {
-          setDisplayName(savedName);
-        } else {
-          // Default to truncated wallet address
-          setDisplayName(`${address.slice(0, 6)}...${address.slice(-4)}`);
-        }
-      }
+      // Use ENS hook's getDisplayName which prioritizes ENS > Twitter > saved name > truncated address
+      setDisplayName(getDisplayName());
     }
-  }, [mounted, address]);
+  }, [mounted, address, getDisplayName]);
 
   // TypeScript interfaces for type safety
   
@@ -737,6 +728,12 @@ export default function Dashboard() {
           <p className="text-sm md:text-base text-gray-500 flex items-center">
             <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
             Welcome back, {displayName || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User')}
+            {hasENS && ensName && (
+              <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
+                <span className="mr-1">⟠</span>
+                ENS: {ensName}
+              </span>
+            )}
           </p>
         </div>
         {/* Notification bell with responsive positioning - aligned with menu bar */}

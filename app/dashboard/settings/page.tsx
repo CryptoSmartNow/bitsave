@@ -5,6 +5,8 @@ import { Space_Grotesk } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import NetworkDetection from '@/components/NetworkDetection';
+import ENSLinking from '@/components/ENSLinking';
+import { useENSData } from '@/hooks/useENSData';
 
 // Initialize Space Grotesk font
 const spaceGrotesk = Space_Grotesk({
@@ -15,6 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export default function Settings() {
   const { address } = useAccount();
+  const { ensName, getDisplayName, hasENS } = useENSData();
   const [mounted, setMounted] = useState(false);
 
   const [showCopyNotification, setShowCopyNotification] = useState(false);
@@ -592,48 +595,8 @@ export default function Settings() {
             </div>
           </motion.div>
           
-          {/* ENS Option - Coming Soon */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mb-10"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6 gap-2 sm:gap-0">
-              <div className="flex items-center">
-                <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 text-white">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-              </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800">ENS Domain</h3>
-              </div>
-              <span className="ml-0 sm:ml-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white text-xs font-bold px-2 sm:px-3 py-1 rounded-full w-fit">COMING SOON</span>
-            </div>
-            
-            <div className="bg-gradient-to-br from-[#81D7B4]/8 to-[#6BC5A0]/8 backdrop-blur-sm p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
-            
-            <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0">
-              <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-0 sm:mr-6 shadow-lg w-fit">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Ethereum Name Service Integration</h4>
-                  <p className="text-gray-600 leading-relaxed mb-4 text-sm sm:text-base">
-                    Soon you&apos;ll be able to use your <span className="font-semibold text-[#81D7B4]">.eth domain</span> as your display name, 
-                    making your identity more memorable and professional across the decentralized web.
-                  </p>
-                  <div className="flex items-center text-sm text-[#81D7B4]">
-                   
-                    
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          {/* ENS Domain */}
+          <ENSLinking />
           
           {/* Wallet Address */}
           <motion.div 
@@ -676,12 +639,18 @@ export default function Settings() {
                     <div className="flex flex-col gap-2 sm:gap-3">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                         <p className="font-mono text-base sm:text-lg lg:text-xl font-bold text-gray-800 break-all sm:break-normal">
-                          {isXConnected && xUsername ? `@${xUsername}` : (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected')}
+                          {hasENS && ensName ? ensName : getDisplayName()}
                         </p>
                         <div className="flex items-center bg-[#81D7B4]/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-[#81D7B4]/20 w-fit">
                           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#81D7B4] rounded-full mr-1.5 sm:mr-2 animate-pulse"></div>
                           <span className="text-xs sm:text-sm font-semibold text-[#81D7B4]">Connected</span>
                         </div>
+                        {hasENS && (
+                          <div className="flex items-center bg-purple-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-purple-200 w-fit">
+                            <span className="text-purple-600 font-bold text-sm sm:text-lg mr-1.5 sm:mr-2">⟠</span>
+                            <span className="text-xs sm:text-sm font-semibold text-purple-600">ENS Connected</span>
+                          </div>
+                        )}
                         {isXConnected && xUsername && (
                           <div className="flex items-center bg-blue-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-blue-200 w-fit">
                             <span className="text-black font-bold text-sm sm:text-lg mr-1.5 sm:mr-2">𝕏</span>
@@ -690,7 +659,7 @@ export default function Settings() {
                         )}
                       </div>
                       <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
-                        {isXConnected && xUsername ? 'Your X/Twitter display name' : 'Your primary wallet address'}
+                        {hasENS ? 'Your ENS domain name' : (isXConnected && xUsername ? 'Your X/Twitter display name' : 'Your primary wallet address')}
                       </p>
                     </div>
                   </div>

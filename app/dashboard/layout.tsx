@@ -231,7 +231,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Mobile sidebar toggle button */}
-      <div className="fixed top-4 right-4 z-50 md:hidden">
+      <div className="fixed top-16 right-4 z-50 md:hidden">
         <button 
           onClick={toggleSidebar}
           className="p-2 bg-white/80 backdrop-blur-lg rounded-lg shadow-md border border-gray-200/50"
@@ -250,7 +250,7 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0 overflow-x-hidden`}>
-        {/* Language Selector - Fixed position in top right */}
+        {/* Language Selector - Fixed position in top right with proper spacing */}
         <div className="fixed top-4 right-4 z-40">
           <GoogleTranslate />
         </div>
