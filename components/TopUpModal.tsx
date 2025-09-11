@@ -18,6 +18,7 @@ const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDGLO_CELO_ADDRESS = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3"
 
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
+import CHILD_CONTRACT_ABI from '@/app/abi/childContractABI.js';
 import erc20ABI from '@/app/abi/erc20ABI.json';
 import { handleContractError } from '@/lib/contractErrorHandler';
 
@@ -185,6 +186,47 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     }
   }, [address, isConnected, isOpen]);
 
+  // Diagnostic function to check child contract state before transaction
+  const diagnoseChildContractIssues = async (childContractAddress: string, savingsPlanName: string, provider: ethers.BrowserProvider, signer: ethers.Signer) => {
+    try {
+      const childContract = new ethers.Contract(childContractAddress, CHILD_CONTRACT_ABI, signer)
+      
+      // Check if the saving exists and is valid
+      const savingData = await childContract.getSaving(savingsPlanName)
+      
+      if (!savingData.isValid) {
+        throw new Error(`InvalidSaving: The savings plan "${savingsPlanName}" does not exist or is invalid. Please check the plan name.`)
+      }
+      
+      // Check if the owner address matches
+      const ownerAddress = await childContract.ownerAddress()
+      const signerAddress = await signer.getAddress()
+      
+      if (ownerAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+        throw new Error(`CallNotFromBitsave: The connected wallet (${signerAddress}) does not match the savings plan owner (${ownerAddress}).`)
+      }
+      
+      // Check the stable coin address
+      const stableCoinAddress = await childContract.stableCoin()
+      console.log(`Child contract stable coin address: ${stableCoinAddress}`)
+      
+      // Return diagnostic info for logging
+      return {
+        isValid: savingData.isValid,
+        currentAmount: savingData.amount,
+        tokenId: savingData.tokenId,
+        ownerAddress,
+        stableCoinAddress,
+        startTime: savingData.startTime,
+        maturityTime: savingData.maturityTime,
+        isSafeMode: savingData.isSafeMode
+      }
+    } catch (error) {
+      console.error('Child contract diagnostic error:', error)
+      throw error
+    }
+  }
+
   const handleStablecoinTopUp = async (amount: string, savingsPlanName: string) => {
     if (!isConnected) {
       setError("Please connect your wallet.");
@@ -264,19 +306,47 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         throw new Error("You must join Bitsave before topping up.");
       }
 
+      // Run diagnostic checks on child contract before proceeding
+      console.log('Running pre-transaction diagnostics...');
+      const diagnosticInfo = await diagnoseChildContractIssues(userChildContractAddress, savingsPlanName, provider, signer);
+      console.log('Child contract diagnostic info:', diagnosticInfo);
+
       const tokenAmount = ethers.parseUnits(userEnteredAmount.toString(), decimals);
 
-
+      // Additional diagnostic checks for token balance and allowance
+      const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
+      const userAddress = await signer.getAddress();
+      
+      // Check user's token balance
+      const userBalance = await erc20Contract.balanceOf(userAddress);
+      console.log(`User ${tokenNameToUse} balance: ${ethers.formatUnits(userBalance, decimals)}`);
+      
+      if (userBalance < tokenAmount) {
+        throw new Error(`Insufficient ${tokenNameToUse} balance. You have ${ethers.formatUnits(userBalance, decimals)} ${tokenNameToUse}, but need ${userEnteredAmount} ${tokenNameToUse} for this transaction.`);
+      }
+      
+      // Check current allowance
+      const currentAllowance = await erc20Contract.allowance(userAddress, contractAddress);
+      console.log(`Current ${tokenNameToUse} allowance: ${ethers.formatUnits(currentAllowance, decimals)}`);
+      
+      // Verify token address matches what the child contract expects
+      if (diagnosticInfo.tokenId.toLowerCase() !== tokenAddress.toLowerCase()) {
+        throw new Error(`Token mismatch: The savings plan expects ${diagnosticInfo.tokenId} but you're trying to deposit ${tokenAddress}. Please use the correct token for this savings plan.`);
+      }
 
       const approveERC20 = async (tokenAddress: string, amount: ethers.BigNumberish, signer: ethers.Signer) => {
         const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
         const tx = await erc20Contract.approve(contractAddress, amount);
         await tx.wait();
-
+        console.log(`${tokenNameToUse} approval transaction completed`);
       };
 
+      console.log(`Approving ${ethers.formatUnits(tokenAmount, decimals)} ${tokenNameToUse}...`);
       await approveERC20(tokenAddress, tokenAmount, signer);
 
+      // Final check before incrementSaving
+      console.log(`Calling incrementSaving with plan: "${savingsPlanName}", token: ${tokenAddress}, amount: ${ethers.formatUnits(tokenAmount, decimals)}`);
+      
       const tx = await contract.incrementSaving(
         savingsPlanName, 
         tokenAddress, 
@@ -344,8 +414,22 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         });
       }
       
-      // Use the contract error handler to provide user-friendly error messages
-      const errorMessage = handleContractError(error, 'main');
+      // Enhanced error handling with child contract diagnostics
+      let errorMessage: string;
+      const errorString = error instanceof Error ? error.message : String(error);
+      
+      // Check if this is a diagnostic error (more specific)
+      if (errorString.includes('InvalidSaving:') || 
+          errorString.includes('CallNotFromBitsave:') || 
+          errorString.includes('Token mismatch:') ||
+          errorString.includes('Insufficient') && errorString.includes('balance')) {
+        // Use the specific diagnostic error message
+        errorMessage = errorString;
+      } else {
+        // Use the contract error handler for other errors, but try child contract first
+        errorMessage = handleContractError(error, 'child');
+      }
+      
       setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
@@ -381,6 +465,17 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
+      // Check if user has joined Bitsave
+      const userChildContractAddress = await contract.getUserChildContractAddress();
+      if (userChildContractAddress === ethers.ZeroAddress) {
+        throw new Error("You must join Bitsave before topping up.");
+      }
+
+      // Run diagnostic checks on child contract before proceeding
+      console.log('Running pre-transaction diagnostics for ETH top-up...');
+      const diagnosticInfo = await diagnoseChildContractIssues(userChildContractAddress, savingsPlanName, provider, signer);
+      console.log('Child contract diagnostic info:', diagnosticInfo);
+
       const ethPriceInUSD = await fetchEthPrice();
       if (!ethPriceInUSD || ethPriceInUSD <= 0) {
         throw new Error("Failed to fetch ETH price.");
@@ -392,9 +487,28 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       }
 
       const ethAmount = (usdAmount / ethPriceInUSD).toFixed(18); 
-
       const ethAmountInWei = ethers.parseUnits(ethAmount, 18);
 
+      // Check user's ETH balance
+      const userAddress = await signer.getAddress();
+      const userBalance = await provider.getBalance(userAddress);
+      console.log(`User ETH balance: ${ethers.formatEther(userBalance)} ETH`);
+      
+      // Account for gas fees (estimate ~0.01 ETH for gas)
+      const gasEstimate = ethers.parseEther("0.01");
+      const totalRequired = ethAmountInWei + gasEstimate;
+      
+      if (userBalance < totalRequired) {
+        throw new Error(`Insufficient ETH balance. You have ${ethers.formatEther(userBalance)} ETH, but need approximately ${ethers.formatEther(totalRequired)} ETH (including gas fees) for this transaction.`);
+      }
+      
+      // Verify token address matches what the child contract expects (ETH should be zero address)
+      if (diagnosticInfo.tokenId.toLowerCase() !== ETH_TOKEN_ADDRESS.toLowerCase()) {
+        throw new Error(`Token mismatch: The savings plan expects ${diagnosticInfo.tokenId} but you're trying to deposit ETH (${ETH_TOKEN_ADDRESS}). Please use the correct token for this savings plan.`);
+      }
+
+      console.log(`Calling incrementSaving with plan: "${savingsPlanName}", ETH amount: ${ethers.formatEther(ethAmountInWei)} ETH`);
+      
       const tx = await contract.incrementSaving(
         savingsPlanName,
         ETH_TOKEN_ADDRESS, 
@@ -451,8 +565,22 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         });
       }
       
-      // Use the contract error handler to provide user-friendly error messages
-      const errorMessage = handleContractError(error, 'main');
+      // Enhanced error handling with child contract diagnostics
+      let errorMessage: string;
+      const errorString = error instanceof Error ? error.message : String(error);
+      
+      // Check if this is a diagnostic error (more specific)
+      if (errorString.includes('InvalidSaving:') || 
+          errorString.includes('CallNotFromBitsave:') || 
+          errorString.includes('Token mismatch:') ||
+          errorString.includes('Insufficient') && errorString.includes('balance')) {
+        // Use the specific diagnostic error message
+        errorMessage = errorString;
+      } else {
+        // Use the contract error handler for other errors, but try child contract first
+        errorMessage = handleContractError(error, 'child');
+      }
+      
       setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
