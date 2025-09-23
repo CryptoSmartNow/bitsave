@@ -23,7 +23,7 @@ export default function ReferralTracker() {
       newUrl.searchParams.delete('ref')
       window.history.replaceState({}, '', newUrl.toString())
     }
-  }, [])
+  }, [trackReferralVisit])
 
   return null // This component doesn't render anything
 }

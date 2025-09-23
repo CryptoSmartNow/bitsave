@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blogDatabase';
-import OptimizedImage from './OptimizedImage';
+import BlogImage, { BlogImageSizes } from './BlogImage';
 
 interface BlogResponse {
   posts: BlogPost[];
@@ -104,10 +104,13 @@ export default function BlogSection() {
                       {/* Featured Image */}
                       {post.featuredImage ? (
                         <div className="h-48 overflow-hidden">
-                          <OptimizedImage
+                          <BlogImage
                             src={post.featuredImage}
                             alt={post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="group-hover:scale-105 transition-transform duration-300"
+                            aspectRatio="video"
+                            sizes={BlogImageSizes.thumbnail}
+                            priority={false}
                           />
                         </div>
                       ) : (

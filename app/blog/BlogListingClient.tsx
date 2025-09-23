@@ -1,8 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BlogPost, BlogCategory } from '@/lib/blogDatabase';
-import OptimizedImage from '@/app/components/OptimizedImage';
+import BlogImage, { BlogImageSizes } from '@/app/components/BlogImage';
 import ViewCounter from '@/components/ViewCounter';
 
 interface BlogResponse {
@@ -30,12 +30,7 @@ export default function BlogListingClient() {
   const [searchQuery, setSearchQuery] = useState('');
 
 
-  useEffect(() => {
-    fetchCategories();
-    fetchPosts(true);
-  }, [selectedCategory, searchQuery]);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/blog/categories');
       const data: CategoriesResponse = await response.json();
@@ -43,9 +38,9 @@ export default function BlogListingClient() {
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
-  };
+  }, []);
 
-  const fetchPosts = async (reset = false) => {
+  const fetchPosts = useCallback(async (reset = false) => {
     try {
       if (reset) {
         setLoading(true);
@@ -83,7 +78,12 @@ export default function BlogListingClient() {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [selectedCategory, searchQuery, posts.length]);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchPosts(true);
+  }, [fetchCategories, fetchPosts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,10 +230,13 @@ export default function BlogListingClient() {
                       {/* Featured Image */}
                       {post.featuredImage ? (
                         <div className="h-48 overflow-hidden">
-                          <OptimizedImage
+                          <BlogImage
                             src={post.featuredImage}
                             alt={post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="group-hover:scale-105 transition-transform duration-300"
+                            aspectRatio="video"
+                            sizes={BlogImageSizes.featured}
+                            priority={false}
                           />
                         </div>
                       ) : (

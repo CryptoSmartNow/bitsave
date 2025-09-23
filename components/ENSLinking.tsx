@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi'
 import { ProfileCard } from 'ethereum-identity-kit'
 import { useENSData } from '@/hooks/useENSData'
 import toast from 'react-hot-toast'
+import Image from 'next/image'
 import ENSErrorModal from './ENSErrorModal'
 
 interface ENSLinkingProps {
@@ -177,9 +178,11 @@ export default function ENSLinking({ onENSLinked }: ENSLinkingProps) {
               
               <div className="ens-profile-content">
                 {avatar && (
-                  <img 
+                  <Image 
                     src={avatar} 
                     alt="ENS Avatar" 
+                    width={64}
+                    height={64}
                     className="ens-avatar"
                   />
                 )}

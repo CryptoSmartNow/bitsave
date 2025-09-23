@@ -19,6 +19,7 @@
     "@types/react-datepicker": "^6.2.0",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "ethereum-identity-kit": "^0.2.53",

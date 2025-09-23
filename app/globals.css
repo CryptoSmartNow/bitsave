@@ -806,3 +806,32 @@ body.goog-te-hl {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Carousel conveyor belt animation */
+@keyframes carousel {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes carousel-smooth {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-carousel {
+  animation: carousel 20s linear infinite;
+}
+
+.animate-carousel-smooth {
+  animation: carousel-smooth 30s linear infinite;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

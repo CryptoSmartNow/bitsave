@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import CustomDatePicker from '@/components/CustomDatePicker';
 import { format } from 'date-fns';
 import { Space_Grotesk } from 'next/font/google';
@@ -53,13 +54,9 @@ export default function CreateSavingsPage() {
   const [txHash, setTxHash] = useState<string | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [termsAgreed, setTermsAgreed] = useState(false)
+  const [penaltiesExpanded, setPenaltiesExpanded] = useState(false)
   
-  // Wallet balance checking states
-  const [walletBalance, setWalletBalance] = useState<string>('0')
-  const [tokenBalance, setTokenBalance] = useState<string>('0')
-  const [estimatedGasFee, setEstimatedGasFee] = useState<string>('0')
-  const [balanceWarning, setBalanceWarning] = useState<string | null>(null)
-  const [isCheckingBalance, setIsCheckingBalance] = useState(false)
+
 
   interface DayRange {
     from: {
@@ -124,32 +121,16 @@ export default function CreateSavingsPage() {
     }
   }, [address, referralData, generateReferralCode])
 
-  // Check wallet balances when relevant values change
-  useEffect(() => {
-    if (address && amount && parseFloat(amount) > 0) {
-      const timeoutId = setTimeout(() => {
-        checkWalletBalances();
-      }, 500); // Debounce to avoid too many calls
-      
-      return () => clearTimeout(timeoutId);
-    } else {
-      setBalanceWarning(null);
-    }
-  }, [amount, currency, chain, address]);
 
-  // Initial balance check when wallet connects
-  useEffect(() => {
-    if (address && isConnected) {
-      checkWalletBalances();
-    }
-  }, [address, isConnected]);
+
+
 
   // Define available currencies for each network
-  const networkCurrencies: Record<string, string[]> = {
+  const networkCurrencies: Record<string, string[]> = useMemo(() => ({
     base: ['USDC', 'USDGLO'],
     celo: ['cUSD', 'USDGLO', 'USDC', 'Gooddollar'],
     lisk: ['USDC'],
-  };
+  }), []);
 
   // Update currency options when chain changes
   useEffect(() => {
@@ -157,7 +138,7 @@ export default function CreateSavingsPage() {
     if (!available.includes(currency)) {
       setCurrency(available[0]);
     }
-  }, [chain]);
+  }, [chain, currency, networkCurrencies]);
 
   const currencies = networkCurrencies[chain];
 
@@ -368,92 +349,9 @@ export default function CreateSavingsPage() {
     }
   };
 
-  // Wallet balance checking utilities
-  const getTokenAddress = (currency: string, chain: string) => {
-    if (chain === 'base') {
-      switch (currency) {
-        case 'USDC':
-          return BASE_CONTRACT_ADDRESS; // USDC on Base
-        case 'USDGLO':
-          return '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3'; // USDGLO on Base
-        default:
-          return BASE_CONTRACT_ADDRESS;
-      }
-    } else if (chain === 'celo') {
-      switch (currency) {
-        case 'cUSD':
-          return '0x765DE816845861e75A25fCA122bb6898B8B1282a'; // cUSD on Celo
-        case 'USDGLO':
-          return '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3'; // USDGLO on Celo
-        case 'USDC':
-          return '0xcebA9300f2b948710d2653dD7B07f33A8B32118C'; // USDC on Celo
-        case 'Gooddollar':
-          return '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A'; // G$ on Celo
-        default:
-          return '0x765DE816845861e75A25fCA122bb6898B8B1282a';
-      }
-    } else if (chain === 'lisk') {
-      switch (currency) {
-        case 'USDC':
-          return LISK_CONTRACT_ADDRESS; // Bridged USDC on Lisk
-        default:
-          return LISK_CONTRACT_ADDRESS;
-      }
-    }
-    return BASE_CONTRACT_ADDRESS;
-  };
 
-  const checkWalletBalances = async () => {
-    if (!address || !window.ethereum) return;
-    
-    setIsCheckingBalance(true);
-    setBalanceWarning(null);
-    
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      
-      // Get native token balance (ETH)
-      const nativeBalance = await provider.getBalance(address);
-      const nativeBalanceFormatted = ethers.formatEther(nativeBalance);
-      setWalletBalance(nativeBalanceFormatted);
-      
-      // Get token balance for selected currency
-      const tokenAddress = getTokenAddress(currency, chain);
-      const tokenContract = new ethers.Contract(tokenAddress, erc20ABI.abi, provider);
-      const tokenBalance = await tokenContract.balanceOf(address);
-      const decimals = await tokenContract.decimals();
-      const tokenBalanceFormatted = ethers.formatUnits(tokenBalance, decimals);
-      setTokenBalance(tokenBalanceFormatted);
-      
-      // Estimate gas fee
-      const gasPrice = await provider.getFeeData();
-      const estimatedGasLimit = ethers.getBigInt(2717330); // Estimated gas limit for savings creation (0.000027 ETH)
-      const estimatedGasCost = gasPrice.gasPrice ? gasPrice.gasPrice * estimatedGasLimit : ethers.getBigInt(0);
-      const gasFeeFormatted = ethers.formatEther(estimatedGasCost);
-      setEstimatedGasFee(gasFeeFormatted);
-      
-      // Check for warnings
-      const amountNum = parseFloat(amount || '0');
-      const tokenBalanceNum = parseFloat(tokenBalanceFormatted);
-      const nativeBalanceNum = parseFloat(nativeBalanceFormatted);
-      const gasFeeNum = parseFloat(gasFeeFormatted);
-      
-      if (amountNum > 0) {
-        if (tokenBalanceNum < amountNum) {
-          setBalanceWarning(`Insufficient ${currency} balance. You have ${tokenBalanceNum.toFixed(4)} ${currency} but need ${amountNum} ${currency}.`);
-        } else if (nativeBalanceNum < gasFeeNum * 1.5) { // 1.5x buffer for gas
-          setBalanceWarning(`Low ETH balance for gas fees. You have ${nativeBalanceNum.toFixed(6)} ETH but may need ~${(gasFeeNum * 1.5).toFixed(6)} ETH for transaction fees.`);
-        } else if (tokenBalanceNum < amountNum * 1.1) { // Warning if balance is close
-          setBalanceWarning(`Your ${currency} balance (${tokenBalanceNum.toFixed(4)}) is close to the savings amount. Consider keeping some buffer for future transactions.`);
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error checking wallet balances:', error);
-    } finally {
-      setIsCheckingBalance(false);
-    }
-  };
+
+
 
 
 
@@ -1661,7 +1559,7 @@ export default function CreateSavingsPage() {
       >
         {/* Enhanced Header */}
         <div className="text-center mb-8">
-          <Link href="/dashboard" className="inline-flex items-center text-gray-500 hover:text-gray-700 mb-6 transition-colors bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-white/60 hover:bg-white/80">
+          <Link href="/dashboard" className="inline-flex items-center text-gray-500 hover:text-gray-700 mb-6 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 mr-2">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -1671,33 +1569,56 @@ export default function CreateSavingsPage() {
           <p className="text-gray-600 max-w-xl mx-auto text-sm sm:text-base">Set up a new savings plan to help you reach your financial goals with automated savings and rewards.</p>
         </div>
 
-        {/* Enhanced Progress bar - Modern, Fluid, Visually Stunning, Brand Color Only */}
+        {/* Modern Step Navigation */}
         <div className="mb-8 sm:mb-10 px-2 sm:px-0">
-          <div className="relative flex items-center justify-between mb-2">
-            {/* Connecting line with single-color gradient and glow */}
-            <div className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 z-0 bg-gradient-to-r from-[#81D7B4]/60 via-[#81D7B4]/30 to-[#81D7B4]/60 rounded-full blur-[2px] shadow-[0_0_24px_#81D7B4aa]" style={{ height: '10px' }}></div>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="relative z-10 flex flex-col items-center flex-1">
-                {/* Animated step circle - single brand color, glassy/neomorphic */}
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-4 transition-all duration-500 shadow-[0_4px_24px_rgba(129,215,180,0.18),0_2px_8px_rgba(129,215,180,0.10)] bg-white/80 backdrop-blur-md ${step === i
-                  ? 'border-[#81D7B4] scale-110 animate-pulse bg-gradient-to-br from-[#81D7B4]/90 to-[#81D7B4]/60'
-                  : step > i
-                    ? 'border-[#81D7B4]/60 bg-gradient-to-br from-[#81D7B4]/60 to-[#81D7B4]/30'
-                    : 'border-gray-200/60'} `}>
-                  {step > i ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <span className={`font-bold text-lg ${step === i ? 'text-white drop-shadow' : 'text-[#81D7B4]'}`}>{i}</span>
-                  )}
+          <div className="relative">
+            {/* Progress Line */}
+            <div className="absolute left-0 right-0 top-6 h-0.5 bg-gray-200 z-0">
+              <div 
+                className="h-full bg-[#81D7B4] transition-all duration-500 ease-out"
+                style={{ width: `${((step - 1) / 2) * 100}%` }}
+              />
+            </div>
+            
+            {/* Step Items */}
+            <div className="relative flex items-start justify-between">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col items-center flex-1 relative z-10">
+                  {/* Step Circle */}
+                  <div className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                    step === i
+                      ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg'
+                      : step > i
+                        ? 'bg-[#81D7B4] border-[#81D7B4] text-white'
+                        : 'bg-white border-gray-300 text-gray-400'
+                  }`}>
+                    {step > i ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <span className="font-semibold text-sm">{i}</span>
+                    )}
+                  </div>
+                  
+                  {/* Step Label */}
+                  <div className="mt-3 text-center">
+                    <div className={`text-sm font-medium transition-colors duration-300 ${
+                      step === i ? 'text-[#81D7B4]' : step > i ? 'text-[#81D7B4]' : 'text-gray-500'
+                    }`}>
+                      {i === 1 ? 'Plan Details' : i === 2 ? 'Duration & Penalties' : 'Review & Create'}
+                    </div>
+                    <div className={`text-xs mt-1 transition-colors duration-300 ${
+                      step === i ? 'text-gray-600' : step > i ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
+                      {i === 1 ? 'Basic information' : i === 2 ? 'Set timeline' : 'Confirm details'}
+                    </div>
+                  </div>
                 </div>
-                {/* Step label */}
-                <span className={`mt-3 text-xs sm:text-sm font-semibold transition-colors duration-300 ${step === i ? 'text-[#81D7B4]' : step > i ? 'text-[#81D7B4]/80' : 'text-gray-400'} hidden sm:block tracking-wide`}>{i === 1 ? 'Plan Details' : i === 2 ? 'Duration & Penalties' : 'Review & Create'}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          {/* Mobile step labels */}
+          {/* Mobile step indicator */}
           <div className="flex justify-between text-xs sm:hidden mt-3">
             <span className={step >= 1 ? 'text-[#81D7B4] font-medium' : 'text-gray-500'}>Details</span>
             <span className={step >= 2 ? 'text-[#81D7B4] font-medium' : 'text-gray-500'}>Duration</span>
@@ -1705,9 +1626,8 @@ export default function CreateSavingsPage() {
           </div>
         </div>
 
-        {/* Enhanced Card container */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden relative">
-          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+        {/* Card container */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden relative">
 
           <AnimatePresence mode="wait">
             {success ? (
@@ -1755,39 +1675,35 @@ export default function CreateSavingsPage() {
                       initial="hidden"
                       animate="visible"
                     >
-                      {/* Plan name - enhanced */}
+                      {/* Plan name */}
                       <motion.div variants={itemVariants}>
-                        <label htmlFor="planName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="planName" className="block text-sm font-medium text-gray-700 mb-2">
                           Plan Name
                         </label>
-                        <div className="relative group">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-[#81D7B4]/30 to-blue-400/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                          <input
-                            type="text"
-                            id="planName"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Vacation Fund, Emergency Savings"
-                            className={`relative w-full px-4 py-3 bg-white/70 backdrop-blur-sm rounded-xl border text-gray-900 ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200/50 focus:ring-[#81D7B4]/50 focus:border-[#81D7B4]/50'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
-                          />
-                        </div>
+                        <input
+                          type="text"
+                          id="planName"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="e.g. Vacation Fund, Emergency Savings"
+                          className={`w-full px-4 py-3 bg-white rounded-xl border text-gray-900 ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
+                        />
                         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                       </motion.div>
 
-                      {/* Amount - enhanced */}
+                      {/* Amount */}
                       <motion.div variants={itemVariants}>
-                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
                           Amount to Save
                         </label>
-                        <div className="relative group">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-[#81D7B4]/30 to-blue-400/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                        <div className="relative">
                           <input
                             type="text"
                             id="amount"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="0.00"
-                            className={`relative w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-sm rounded-xl border text-gray-900 ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200/50 focus:ring-[#81D7B4]/50 focus:border-[#81D7B4]/50'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
+                            className={`w-full pl-12 pr-4 py-3 bg-white rounded-xl border text-gray-900 ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
                           />
                           <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                             <span className="text-gray-500">$</span>
@@ -1804,7 +1720,7 @@ export default function CreateSavingsPage() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">
-                                <img src="/$g.png" alt="GoodDollar" className="w-5 h-5 mr-2" />
+                                <Image src="/$g.png" alt="GoodDollar" width={20} height={20} className="w-5 h-5 mr-2" />
                                 <span className="text-sm font-medium text-gray-700">Equivalent in GoodDollar:</span>
                               </div>
                               <div className="flex items-center">
@@ -1828,7 +1744,7 @@ export default function CreateSavingsPage() {
 
                       </motion.div>
 
-                      {/* Currency - enhanced, responsive, DeFi style */}
+                      {/* Currency */}
                       <motion.div variants={itemVariants}>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
                           Currency
@@ -1839,12 +1755,12 @@ export default function CreateSavingsPage() {
                               key={curr}
                               type="button"
                               onClick={() => setCurrency(curr)}
-                              className={`flex items-center justify-center px-4 py-3 rounded-2xl border transition-all duration-300 flex-1 min-w-0 text-base sm:text-sm ${currency === curr
-                                ? 'bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 border-[#81D7B4]/30 text-[#81D7B4] shadow-[0_4px_16px_rgba(129,215,180,0.18)] scale-105'
-                                : 'bg-white/80 border-gray-200/50 text-gray-700 hover:bg-gray-50 shadow-[0_2px_8px_rgba(129,215,180,0.06)]'} font-medium`}
+                              className={`flex items-center justify-center px-4 py-3 rounded-xl border transition-all duration-200 flex-1 min-w-0 text-base sm:text-sm ${currency === curr
+                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4] shadow-sm'
+                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm'} font-medium`}
                               style={{ minWidth: 0 }}
                             >
-                              <img
+                              <Image
                                 src={
                                   curr === 'Gooddollar' ? '/$g.png'
                                   : curr === 'cUSD' ? '/cusd.png'
@@ -1853,6 +1769,8 @@ export default function CreateSavingsPage() {
                                   : `/${curr.toLowerCase().replace('$', '')}.png`
                                 }
                                 alt={curr}
+                                width={20}
+                                height={20}
                                 className="w-5 h-5 mr-2"
                               />
                               <span>{curr}</span>
@@ -1874,20 +1792,20 @@ export default function CreateSavingsPage() {
                               await switchToNetwork('base');
                               setChain('base');
                             }}
-                            className={`flex items-center justify-center px-5 py-3 rounded-2xl border transition-all duration-300 flex-1 text-base sm:text-sm ${chain === 'base'
-                              ? 'bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 border-[#81D7B4]/30 text-[#81D7B4] shadow-[0_4px_16px_rgba(129,215,180,0.18)] scale-105'
-                              : 'bg-white/80 border-gray-200/50 text-gray-700 hover:bg-gray-50 shadow-[0_2px_8px_rgba(129,215,180,0.06)]'} font-medium`}
+                            className={`flex items-center justify-center px-5 py-3 rounded-xl border transition-all duration-200 flex-1 text-base sm:text-sm ${chain === 'base'
+                              ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4] shadow-sm'
+                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm'} font-medium`}
                           >
-                            <img src="/base.svg" alt="Base" className="w-5 h-5 mr-2" />
+                            <Image src="/base.svg" alt="Base" width={20} height={20} className="w-5 h-5 mr-2" />
                             Base
                           </button>
                           {/* Dropdown for other networks - show selected network if not base */}
                           <div className="relative flex-1">
                             <button
                               type="button"
-                              className={`flex items-center justify-center px-5 py-3 rounded-2xl border transition-all duration-300 w-full text-base sm:text-sm font-medium group shadow-[0_2px_8px_rgba(129,215,180,0.06)] ${chain !== 'base'
-                                ? 'bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 border-[#81D7B4]/30 text-[#81D7B4] shadow-[0_4px_16px_rgba(129,215,180,0.18)] scale-105'
-                                : 'bg-white/80 border-gray-200/50 text-gray-700 hover:bg-gray-50'}`}
+                              className={`flex items-center justify-center px-5 py-3 rounded-xl border transition-all duration-200 w-full text-base sm:text-sm font-medium group shadow-sm ${chain !== 'base'
+                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4]'
+                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                               onClick={() => {
                                 const el = document.getElementById('network-dropdown');
                                 if (el) el.classList.toggle('hidden');
@@ -1895,14 +1813,14 @@ export default function CreateSavingsPage() {
                             >
                               {chain !== 'base' ? (
                                 <>
-                                  <img src={chains.find(c => c.id === chain)?.logo || ''} alt={chains.find(c => c.id === chain)?.name || ''} className="w-5 h-5 mr-2" />
+                                  <Image src={chains.find(c => c.id === chain)?.logo || ''} alt={chains.find(c => c.id === chain)?.name || ''} width={20} height={20} className="w-5 h-5 mr-2" />
                                   {chains.find(c => c.id === chain)?.name || 'Other Networks'}
                                 </>
                               ) : (
                                 <>Other Networks<svg className="w-4 h-4 ml-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></>
                               )}
                             </button>
-                            <div id="network-dropdown" className="hidden absolute left-0 mt-2 w-full bg-white/95 backdrop-blur-xl rounded-xl shadow-lg border border-gray-200/50 z-10">
+                            <div id="network-dropdown" className="hidden absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-300 z-10">
                               {chains.filter(c => c.id !== 'base').map((c) => (
                                 <button
                                   key={c.id}
@@ -1914,7 +1832,7 @@ export default function CreateSavingsPage() {
                                   }}
                                   className={`flex items-center w-full px-4 py-2 rounded-xl border-b border-gray-100 last:border-b-0 text-base sm:text-sm ${chain === c.id ? 'bg-[#81D7B4]/10 text-[#81D7B4]' : 'hover:bg-gray-100/80 text-gray-700'} font-medium`}
                                 >
-                                  <img src={c.logo} alt={c.name} className="w-5 h-5 mr-2" />
+                                  <Image src={c.logo} alt={c.name} width={20} height={20} className="w-5 h-5 mr-2" />
                                   {c.name}
                                 </button>
                               ))}
@@ -1931,7 +1849,7 @@ export default function CreateSavingsPage() {
                       <button
                         type="button"
                         onClick={handleNext}
-                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-[0_4px_10px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_15px_rgba(129,215,180,0.4)] transition-all duration-300 transform hover:translate-y-[-2px]"
+                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
                       >
                         Next Step
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
@@ -2032,31 +1950,21 @@ export default function CreateSavingsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
                       >
-                        <div className="flex justify-between items-center mb-3">
+                        <div className="mb-3">
                           <label className="block text-sm font-medium text-gray-700 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Early Withdrawal Penalty
                           </label>
-                          <div className="bg-gray-100 rounded-full px-3 py-1 text-xs font-medium text-gray-600">
-                            <span className="flex items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Optional
-                            </span>
-                          </div>
                         </div>
 
-                        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm p-4 sm:p-5 relative overflow-hidden group">
-                          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-                          <p className="text-sm text-gray-600 mb-4 relative z-10">
+                        <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-4 sm:p-5">
+                          <p className="text-sm text-gray-600 mb-4">
                             Setting a penalty helps you stay committed to your savings goal. If you withdraw funds before the end date, this percentage will be deducted.
                           </p>
 
-                          <div className="flex gap-2 relative z-10">
+                          <div className="flex gap-2">
                             {penalties.map((p, index) => (
                               <motion.button
                                 key={p}
@@ -2066,8 +1974,8 @@ export default function CreateSavingsPage() {
                                 type="button"
                                 onClick={() => setPenalty(p)}
                                 className={`flex-1 py-3 rounded-xl border ${penalty === p
-                                  ? 'bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 border-[#81D7B4]/30 text-[#81D7B4] shadow-[0_4px_10px_rgba(129,215,180,0.15)]'
-                                  : 'bg-white border-gray-200/50 text-gray-700 hover:bg-gray-50'
+                                  ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4] shadow-sm'
+                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                                   } transition-all font-medium text-center`}
                               >
                                 {p}
@@ -2075,7 +1983,7 @@ export default function CreateSavingsPage() {
                             ))}
                           </div>
 
-                          <div className="mt-4 flex items-center text-sm text-gray-600 bg-amber-50/50 p-3 rounded-lg border border-amber-100/50 relative z-10">
+                          <div className="mt-4 flex items-center text-sm text-gray-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
@@ -2088,7 +1996,7 @@ export default function CreateSavingsPage() {
                     </motion.div>
 
                     <motion.div
-                      className="mt-8 sm:mt-10 flex justify-between"
+                      className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.6 }}
@@ -2096,7 +2004,7 @@ export default function CreateSavingsPage() {
                       <button
                         type="button"
                         onClick={handlePrevious}
-                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-all duration-300 transform hover:translate-y-[-2px]"
+                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-300 shadow-sm hover:bg-gray-50 transition-all duration-200"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -2106,7 +2014,7 @@ export default function CreateSavingsPage() {
                       <button
                         type="button"
                         onClick={handleNext}
-                        className="inline-flex items-center px-5 sm:px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-[0_4px_10px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_15px_rgba(129,215,180,0.4)] transition-all duration-300 transform hover:translate-y-[-2px]"
+                        className="inline-flex items-center px-5 sm:px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
                       >
                         Next Step
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
@@ -2160,7 +2068,7 @@ export default function CreateSavingsPage() {
                           </div>
                           <div className="mt-3 sm:mt-0 flex items-center bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/60 shadow-sm">
                             <div className="bg-white rounded-full p-1 mr-2 shadow-sm">
-                              <img
+                              <Image
                                 src={
                                   currency === 'Gooddollar' ? '/$g.png'
                                   : currency === 'cUSD' ? '/cusd.png'
@@ -2169,6 +2077,8 @@ export default function CreateSavingsPage() {
                                   : `/${currency.toLowerCase().replace('$', '')}.png`
                                 }
                                 alt={currency}
+                                width={16}
+                                height={16}
                                 className="w-4 h-4"
                               />
                             </div>
@@ -2177,7 +2087,7 @@ export default function CreateSavingsPage() {
                             {chains.map(c => c.id === chain && (
                               <div key={c.id} className="flex items-center">
                                 <div className="bg-white rounded-full p-1 mr-1.5 shadow-sm">
-                                  <img src={c.logo} alt={c.name} className="w-4 h-4" />
+                                  <Image src={c.logo} alt={c.name} width={16} height={16} className="w-4 h-4" />
                                 </div>
                                 <span className="text-sm font-medium text-gray-700">{c.name}</span>
                               </div>
@@ -2244,84 +2154,183 @@ export default function CreateSavingsPage() {
                         </div>
                       </motion.div>
 
-                      {/* Balance Warning */}
-                      <AnimatePresence>
-                        {balanceWarning && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10, height: 0 }}
-                            animate={{ opacity: 1, y: 0, height: 'auto' }}
-                            exit={{ opacity: 0, y: -10, height: 0 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 relative overflow-hidden"
+                      {/* Comprehensive Penalties Information Section - Collapsible */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.45 }}
+                        className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc4a1]/10 rounded-xl border border-[#81D7B4]/30 relative overflow-hidden"
+                      >
+                        {/* Background decorative elements */}
+                        <div className="absolute -top-10 -right-10 w-20 h-20 bg-[#81D7B4]/20 rounded-full blur-2xl"></div>
+                        <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-[#6bc4a1]/20 rounded-full blur-2xl"></div>
+                        
+                        <div className="relative z-10">
+                          {/* Collapsible Header */}
+                          <button
+                            onClick={() => setPenaltiesExpanded(!penaltiesExpanded)}
+                            className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-[#81D7B4]/5 transition-colors duration-200 rounded-xl"
                           >
-                            <div className="absolute -top-10 -right-10 w-20 h-20 bg-amber-200/20 rounded-full blur-2xl"></div>
-                            <div className="flex items-start space-x-3 relative z-10">
-                              <div className="flex-shrink-0 mt-0.5">
-                                <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#81D7B4] to-[#6bc4a1] rounded-lg flex items-center justify-center shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                               </div>
-                              <div className="flex-1">
-                                <h4 className="text-sm font-semibold text-amber-800 mb-1">Wallet Balance Warning</h4>
-                                <p className="text-sm text-amber-700 leading-relaxed">{balanceWarning}</p>
-                                {isCheckingBalance && (
-                                  <div className="flex items-center mt-2 text-xs text-amber-600">
-                                    <svg className="animate-spin w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Checking balances...
-                                  </div>
-                                )}
+                              <div className="text-left">
+                                <h3 className="text-lg font-bold text-[#2D5A4A]">Early Withdrawal Penalties</h3>
+                                <p className="text-sm text-[#4A7C59]">Understanding the costs of breaking your savings commitment</p>
                               </div>
-                              <button
-                                onClick={() => setBalanceWarning(null)}
-                                className="flex-shrink-0 text-amber-500 hover:text-amber-700 transition-colors"
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-flex items-center bg-[#81D7B4]/20 text-[#2D5A4A] rounded-full px-3 py-1 text-sm font-bold border border-[#81D7B4]/30">
+                                {penalty}
+                              </span>
+                              <motion.div
+                                animate={{ rotate: penaltiesExpanded ? 180 : 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="w-6 h-6 text-[#4A7C59]"
                               >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
-                              </button>
+                              </motion.div>
+                            </div>
+                          </button>
+
+                          {/* Collapsible Content */}
+                          <motion.div
+                            initial={false}
+                            animate={{
+                              height: penaltiesExpanded ? "auto" : 0,
+                              opacity: penaltiesExpanded ? 1 : 0
+                            }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
+                              {/* Current Plan Penalty Highlight */}
+                              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-[#81D7B4]/30 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-[#4A7C59]">Your Selected Penalty Rate</span>
+                                  <span className="inline-flex items-center bg-[#81D7B4]/20 text-[#2D5A4A] rounded-full px-3 py-1 text-sm font-bold">
+                                    {penalty}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Penalty Amount:</span>
+                                    <span className="font-semibold text-[#6bc4a1]">
+                                      ${(Number(amount || '0') * parseFloat(penalty) / 100).toFixed(2)} {currency}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">You&apos;ll Receive:</span>
+                                    <span className="font-semibold text-green-700">
+                                      ${(Number(amount || '0') * (100 - parseFloat(penalty)) / 100).toFixed(2)} {currency}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* How Penalties Work */}
+                              <div className="space-y-4">
+                                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-[#81D7B4]/20">
+                                  <div className="flex items-start space-x-3">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-[#81D7B4]/20 rounded-full flex items-center justify-center mt-0.5">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#4A7C59]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-semibold text-gray-800 mb-1">How Penalties Work</h4>
+                                      <p className="text-xs text-gray-600 leading-relaxed">
+                                        Penalties are deducted from your principal amount when you withdraw before the maturity date. 
+                                        This encourages commitment to your savings goals and helps maintain the protocol&apos;s stability.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-[#81D7B4]/20">
+                                  <div className="flex items-start space-x-3">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-semibold text-gray-800 mb-1">No Penalty After Maturity</h4>
+                                      <p className="text-xs text-gray-600 leading-relaxed">
+                                        Once your savings plan reaches its maturity date ({endDate ? format(endDate, 'MMMM d, yyyy') : 'your selected end date'}), 
+                                        you can withdraw your full amount plus any earned rewards without any penalties.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-[#81D7B4]/20">
+                                  <div className="flex items-start space-x-3">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-[#6bc4a1]/20 rounded-full flex items-center justify-center mt-0.5">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#4A7C59]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                      </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-semibold text-gray-800 mb-1">Penalty Distribution</h4>
+                                      <p className="text-xs text-gray-600 leading-relaxed">
+                                        Penalty fees are distributed to other savers in the protocol as rewards, creating a 
+                                        community-driven incentive system that benefits committed savers.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Example Scenarios */}
+                                <div className="bg-gradient-to-r from-[#81D7B4]/10 to-[#6bc4a1]/10 rounded-lg p-4 border border-[#81D7B4]/20">
+                                  <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#4A7C59] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                    </svg>
+                                    Example Scenarios
+                                  </h4>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <div className="bg-white rounded-md p-3 border border-[#81D7B4]/20">
+                                      <div className="font-medium text-red-700 mb-1">❌ Early Withdrawal</div>
+                                      <div className="space-y-1 text-gray-600">
+                                        <div>Withdraw before: {endDate ? format(endDate, 'MMM d, yyyy') : 'maturity'}</div>
+                                        <div>Penalty: <span className="font-semibold text-red-600">${(Number(amount || '0') * parseFloat(penalty) / 100).toFixed(2)}</span></div>
+                                        <div>You receive: <span className="font-semibold">${(Number(amount || '0') * (100 - parseFloat(penalty)) / 100).toFixed(2)}</span></div>
+                                      </div>
+                                    </div>
+                                    <div className="bg-white rounded-md p-3 border border-[#81D7B4]/20">
+                                      <div className="font-medium text-green-700 mb-1">✅ Maturity Withdrawal</div>
+                                      <div className="space-y-1 text-gray-600">
+                                        <div>Withdraw after: {endDate ? format(endDate, 'MMM d, yyyy') : 'maturity'}</div>
+                                        <div>Penalty: <span className="font-semibold text-green-600">$0.00</span></div>
+                                        <div>You receive: <span className="font-semibold">${amount || '0.00'} + rewards</span></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Important Notice */}
+                                <div className="bg-gradient-to-r from-[#81D7B4]/15 to-[#6bc4a1]/15 rounded-lg p-3 border border-[#81D7B4]/30">
+                                  <div className="flex items-start space-x-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#4A7C59] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="text-xs text-[#2D5A4A]">
+                                      <span className="font-semibold">Important:</span> Penalties are automatically calculated and deducted by the smart contract. 
+                                      This process is transparent and cannot be reversed once a withdrawal is initiated.
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Wallet Balance Info */}
-                      {address && !balanceWarning && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.4 }}
-                          className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 relative overflow-hidden"
-                        >
-                          <div className="absolute -top-10 -right-10 w-20 h-20 bg-green-200/20 rounded-full blur-2xl"></div>
-                          <div className="flex items-center space-x-3 relative z-10">
-                            <div className="flex-shrink-0">
-                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-semibold text-green-800 mb-1">Wallet Ready</h4>
-                              <div className="text-xs text-green-700 space-y-1">
-                                <div className="flex justify-between">
-                                  <span>{currency} Balance:</span>
-                                  <span className="font-medium">{parseFloat(tokenBalance).toFixed(4)} {currency}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>ETH Balance:</span>
-                                  <span className="font-medium">{parseFloat(walletBalance).toFixed(6)} ETH</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Est. Gas Fee:</span>
-                                  <span className="font-medium">~{parseFloat(estimatedGasFee).toFixed(6)} ETH</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
+                        </div>
+                      </motion.div>
 
                       {/* Terms and conditions */}
                       <motion.div
@@ -2347,7 +2356,7 @@ export default function CreateSavingsPage() {
                     </motion.div>
 
                     <motion.div
-                      className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0"
+                      className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-between space-y-6 sm:space-y-0"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.6 }}

@@ -12,7 +12,8 @@ export default function OptimizedSection({ children, id, className = '' }: Optim
   const sectionRef = useRef<HTMLElement>(null);
   
   useEffect(() => {
-    if (!sectionRef.current) return;
+    const currentRef = sectionRef.current;
+    if (!currentRef) return;
     
     // Use Intersection Observer to optimize rendering
     const observer = new IntersectionObserver(
@@ -37,11 +38,11 @@ export default function OptimizedSection({ children, id, className = '' }: Optim
       }
     );
     
-    observer.observe(sectionRef.current);
+    observer.observe(currentRef);
     
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);

@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogCategory } from '@/lib/blogDatabase';
-import SuccessNotification from '@/app/components/SuccessNotification';
+
 import ImageUpload from '@/app/components/ImageUpload';
 import RichTextEditor from '@/components/RichTextEditor';
+import SuccessModal from '@/app/components/SuccessModal';
 
 interface FormData {
   title: string;
@@ -20,8 +21,11 @@ interface FormData {
 export default function NewPostPage() {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
+  const [successModal, setSuccessModal] = useState({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
   const [formData, setFormData] = useState<FormData>({
     title: '',
     content: '',
@@ -75,13 +79,27 @@ export default function NewPostPage() {
       if (response.ok) {
         await response.json();
         const isPublished = postData.published;
-        setSuccessMessage({
+        
+        // Show success modal
+        setSuccessModal({
+          isOpen: true,
           title: isPublished ? '🎉 Post Published!' : '📝 Draft Saved!',
           message: isPublished 
             ? `Your post "${formData.title}" has been successfully published and is now live on your blog.`
             : `Your post "${formData.title}" has been saved as a draft. You can continue editing it later.`
         });
-        setShowSuccessModal(true);
+
+        // Reset form after successful submission
+        setFormData({
+          title: '',
+          content: '',
+          excerpt: '',
+          category: '',
+          tags: '',
+          author: 'Admin',
+          published: false,
+          featuredImage: ''
+        });
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create post');
@@ -305,15 +323,14 @@ export default function NewPostPage() {
         </div>
       </form>
 
-      {/* Success Notification */}
-      <SuccessNotification
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title={successMessage.title}
-        message={successMessage.message}
-        redirectPath="/admin/posts"
-        redirectDelay={5000}
-        showCountdown={true}
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+        title={successModal.title}
+        message={successModal.message}
+        autoClose={true}
+        autoCloseDelay={4000}
       />
     </div>
   );

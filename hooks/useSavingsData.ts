@@ -60,6 +60,7 @@ interface UseSavingsDataReturn {
   isCorrectNetwork: boolean;
   refetch: () => Promise<void>;
   clearCache: () => void;
+  forceRefreshNetworkState: () => void;
 }
 
 // Default empty savings data
@@ -75,6 +76,11 @@ export function useSavingsData(): UseSavingsDataReturn {
   // Wagmi hooks for wallet connection
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  
+  // Add debugging for account and connection state
+  useEffect(() => {
+    console.log('👤 Account state:', { address, isConnected, chainId });
+  }, [address, isConnected, chainId]);
   
   // State management
   const [savingsData, setSavingsData] = useState<SavingsData>(defaultSavingsData);
@@ -100,7 +106,10 @@ export function useSavingsData(): UseSavingsDataReturn {
   
   // Update network states based on wagmi chainId
   useEffect(() => {
+    console.log('🔍 Network state update - chainId:', chainId);
+    
     if (!chainId) {
+      console.log('❌ No chainId, setting all networks to false');
       setIsBaseNetwork(false);
       setIsCeloNetwork(false);
       setIsLiskNetwork(false);
@@ -113,11 +122,42 @@ export function useSavingsData(): UseSavingsDataReturn {
     const isCelo = chainIdBigInt === CELO_CHAIN_ID;
     const isLisk = chainIdBigInt === LISK_CHAIN_ID;
     
+    console.log('🌐 Network detection:', {
+      chainId,
+      chainIdBigInt: chainIdBigInt.toString(),
+      isBase,
+      isCelo,
+      isLisk,
+      BASE_CHAIN_ID: BASE_CHAIN_ID.toString(),
+      CELO_CHAIN_ID: CELO_CHAIN_ID.toString(),
+      LISK_CHAIN_ID: LISK_CHAIN_ID.toString()
+    });
+    
+    // Force immediate state updates
     setIsBaseNetwork(isBase);
     setIsCeloNetwork(isCelo);
     setIsLiskNetwork(isLisk);
     setIsCorrectNetwork(isBase || isCelo || isLisk);
+    
+    // Log the state changes
+    console.log('✅ Network flags updated:', {
+      isBaseNetwork: isBase,
+      isCeloNetwork: isCelo,
+      isLiskNetwork: isLisk,
+      isCorrectNetwork: isBase || isCelo || isLisk
+    });
   }, [chainId]);
+
+  // Handle initial loading state when wallet connection changes
+  useEffect(() => {
+    if (!isConnected || !address || !chainId) {
+      console.log('👤 Wallet disconnected or missing data - resetting to default state');
+      setSavingsData(defaultSavingsData);
+      setIsLoading(false);
+      setIsBackgroundLoading(false);
+      setError(null);
+    }
+  }, [isConnected, address, chainId]);
   
   // Fetch ETH price from CoinGecko
   const fetchEthPrice = useCallback(async (): Promise<number> => {
@@ -216,11 +256,27 @@ export function useSavingsData(): UseSavingsDataReturn {
         
         // Handle case where user hasn't created a savings plan yet
         if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
-  
+          console.log('👤 User has no child contract address - returning default data');
+          
+          // Reset loading states before returning
+          if (isBackgroundFetch) {
+            setIsBackgroundLoading(false);
+          } else {
+            setIsLoading(false);
+          }
+          
           return defaultSavingsData;
         }
       } catch (error) {
         console.error("Error getting user child contract:", handleContractError(error));
+        
+        // Reset loading states before returning
+        if (isBackgroundFetch) {
+          setIsBackgroundLoading(false);
+        } else {
+          setIsLoading(false);
+        }
+        
         return defaultSavingsData;
       }
       
@@ -414,7 +470,11 @@ export function useSavingsData(): UseSavingsDataReturn {
   // Main fetch function with caching logic
   const fetchSavingsData = useCallback(async (forceRefresh = false) => {
     if (!isConnected || !address || !chainId) {
+      console.log('👤 User not connected or missing address/chainId - setting default data');
       setSavingsData(defaultSavingsData);
+      setIsLoading(false);
+      setIsBackgroundLoading(false);
+      setError(null);
       return;
     }
     
@@ -472,6 +532,29 @@ export function useSavingsData(): UseSavingsDataReturn {
     await fetchSavingsData(true);
   }, [fetchSavingsData]);
   
+  // Force refresh network state by manually triggering network detection
+  const forceRefreshNetworkState = useCallback(() => {
+    console.log('🔄 Force refreshing network state...');
+    if (chainId) {
+      const chainIdBigInt = BigInt(chainId);
+      const isBase = chainIdBigInt === BASE_CHAIN_ID;
+      const isCelo = chainIdBigInt === CELO_CHAIN_ID;
+      const isLisk = chainIdBigInt === LISK_CHAIN_ID;
+      
+      console.log('🔄 Force refresh - Network detection:', {
+        chainId,
+        isBase,
+        isCelo,
+        isLisk
+      });
+      
+      setIsBaseNetwork(isBase);
+      setIsCeloNetwork(isCelo);
+      setIsLiskNetwork(isLisk);
+      setIsCorrectNetwork(isBase || isCelo || isLisk);
+    }
+  }, [chainId]);
+  
   // Initial data fetch on mount or when dependencies change
   useEffect(() => {
     fetchSavingsData();
@@ -489,6 +572,7 @@ export function useSavingsData(): UseSavingsDataReturn {
     isLiskNetwork,
     isCorrectNetwork,
     refetch,
-    clearCache
+    clearCache,
+    forceRefreshNetworkState
   };
 }

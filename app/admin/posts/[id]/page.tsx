@@ -1,12 +1,13 @@
 'use client';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BlogPost, BlogCategory } from '@/lib/blogDatabase';
-import SuccessNotification from '@/app/components/SuccessNotification';
+
 import ImageUpload from '@/app/components/ImageUpload';
 import RichTextEditor from '@/components/RichTextEditor';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import SuccessModal from '@/app/components/SuccessModal';
 
 
 interface FormData {
@@ -43,16 +44,15 @@ export default function EditPostPage({ params }: EditPostPageProps) {
     published: false,
     featuredImage: ''
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [successModal, setSuccessModal] = useState({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
 
-  useEffect(() => {
-    fetchPost();
-    fetchCategories();
-  }, [id]);
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
       const response = await fetch(`/api/blog/posts/${id}`);
       if (response.ok) {
@@ -78,7 +78,12 @@ export default function EditPostPage({ params }: EditPostPageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    fetchPost();
+    fetchCategories();
+  }, [fetchPost]);
 
   const fetchCategories = async () => {
     try {
@@ -119,13 +124,15 @@ export default function EditPostPage({ params }: EditPostPageProps) {
         const data = await response.json();
         setPost(data.post);
         const isPublished = postData.published;
-        setSuccessMessage({
+        
+        // Show success modal
+        setSuccessModal({
+          isOpen: true,
           title: isPublished ? '🎉 Post Updated & Published!' : '📝 Post Updated!',
           message: isPublished 
             ? `Your post "${formData.title}" has been successfully updated and is now live on your blog.`
             : `Your post "${formData.title}" has been updated and saved as a draft.`
         });
-        setShowSuccessModal(true);
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to update post');
@@ -421,16 +428,7 @@ export default function EditPostPage({ params }: EditPostPageProps) {
         </div>
       </form>
 
-      {/* Success Notification */}
-      <SuccessNotification
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title={successMessage.title}
-        message={successMessage.message}
-        redirectPath="/admin/posts"
-        redirectDelay={5000}
-        showCountdown={true}
-      />
+
 
       {/* Delete Confirmation Modal */}
        <ConfirmationModal
@@ -442,6 +440,16 @@ export default function EditPostPage({ params }: EditPostPageProps) {
          confirmText="Delete"
          isDestructive={true}
        />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+        title={successModal.title}
+        message={successModal.message}
+        autoClose={true}
+        autoCloseDelay={4000}
+      />
     </div>
   );
 }

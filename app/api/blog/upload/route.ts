@@ -1,49 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import sharp from 'sharp';
+import { uploadImage } from '@/lib/imageStorage';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'blog');
-
-// Ensure upload directory exists
-async function ensureUploadDir() {
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  }
-}
-
-// Generate unique filename
-function generateFileName(originalName: string): string {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 15);
-  const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
-  return `${timestamp}-${random}.${extension}`;
-}
-
-// Optimize image using Sharp
-async function optimizeImage(buffer: Buffer, filename: string): Promise<Buffer> {
-  const extension = filename.split('.').pop()?.toLowerCase();
-  
-  let sharpInstance = sharp(buffer)
-    .resize(1200, 800, { 
-      fit: 'inside',
-      withoutEnlargement: true 
-    })
-    .jpeg({ 
-      quality: 85,
-      progressive: true 
-    });
-
-  // Convert to WebP for better compression if not already WebP
-  if (extension !== 'webp') {
-    sharpInstance = sharpInstance.webp({ quality: 85 });
-  }
-
-  return await sharpInstance.toBuffer();
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,34 +32,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure upload directory exists
-    await ensureUploadDir();
-
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Generate filename and optimize image
-    const originalFileName = generateFileName(file.name);
-    const optimizedBuffer = await optimizeImage(buffer, originalFileName);
-    
-    // Use .webp extension for optimized images
-    const finalFileName = originalFileName.replace(/\.[^/.]+$/, '.webp');
-    const filePath = join(UPLOAD_DIR, finalFileName);
+    // Upload to MongoDB with optimization
+    const result = await uploadImage(
+      buffer,
+      file.name,
+      file.type,
+      'blog', // category
+      true    // optimize
+    );
 
-    // Save optimized image
-    await writeFile(filePath, optimizedBuffer);
+    if (!result.success) {
+      console.error('MongoDB upload error:', result.error);
+      return NextResponse.json(
+        { error: result.error || 'Failed to upload image to database' },
+        { status: 500 }
+      );
+    }
 
-    // Return the public URL
-    const publicUrl = `/uploads/blog/${finalFileName}`;
+    // Calculate compression ratio if metadata is available
+    const compressionRatio = result.metadata 
+      ? Math.round((1 - result.metadata.size / file.size) * 100)
+      : 0;
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      filename: finalFileName,
+      url: result.url,
+      filename: result.fileId,
+      fileId: result.fileId,
       originalSize: file.size,
-      optimizedSize: optimizedBuffer.length,
-      compressionRatio: Math.round((1 - optimizedBuffer.length / file.size) * 100)
+      optimizedSize: result.metadata?.size || file.size,
+      compressionRatio,
+      metadata: {
+        width: result.metadata?.width,
+        height: result.metadata?.height,
+        mimeType: result.metadata?.mimeType,
+        uploadedAt: result.metadata?.uploadedAt
+      }
     });
 
   } catch (error) {

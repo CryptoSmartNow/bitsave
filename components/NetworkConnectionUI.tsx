@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useState } from 'react';
+import Image from 'next/image';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 
@@ -17,7 +18,7 @@ const SUPPORTED_NETWORKS = [
     id: 'base',
     name: 'Base',
     chainId: 8453,
-    icon: '/base-logo.svg',
+    icon: '/base.svg',
     fallbackIcon: '/base.svg',
     description: 'Low-cost Ethereum L2 by Coinbase',
     color: 'bg-blue-50',
@@ -36,7 +37,7 @@ const SUPPORTED_NETWORKS = [
     id: 'lisk',
     name: 'Lisk',
     chainId: 1135,
-    icon: '/lisk-logo.svg',
+    icon: '/lisk-logo.png',
     fallbackIcon: '/lisk-logo.png',
     description: 'Ethereum-compatible sidechain',
     color: 'bg-purple-50',
@@ -51,12 +52,6 @@ const NetworkInfo = memo(function NetworkInfo() {
   const { switchChain } = useSwitchChain();
   const currentNetwork = SUPPORTED_NETWORKS.find(network => network.chainId === chainId);
   const isUnsupportedNetwork = chainId && !currentNetwork;
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, fallbackIcon?: string) => {
-    if (fallbackIcon) {
-      e.currentTarget.src = fallbackIcon;
-    }
-  };
 
   const handleSwitchNetwork = async (targetChainId: number) => {
     try {
@@ -111,11 +106,12 @@ const NetworkInfo = memo(function NetworkInfo() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className={`w-10 h-10 rounded-full ${network.color} flex items-center justify-center border ${network.borderColor || 'border-gray-200'}`}>
-                    <img 
+                    <Image 
                       src={network.icon} 
                       alt={network.name} 
+                      width={24}
+                      height={24}
                       className="w-6 h-6"
-                      onError={(e) => handleImageError(e, network.fallbackIcon)}
                     />
                   </div>
                   <div className="flex-1">
@@ -320,7 +316,7 @@ const NetworkConnectionUI = memo(function NetworkConnectionUI({
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Connect to BitSave</h3>
-                  <p className="text-gray-600">Click the &quot;Connect Wallet&quot; button above and select your wallet from the list. Approve the connection request in your wallet.</p>
+                  <p className="text-gray-600">Click the &ldquo;Connect Wallet&rdquo; button above and select your wallet from the list. Approve the connection request in your wallet.</p>
                 </div>
               </div>
               

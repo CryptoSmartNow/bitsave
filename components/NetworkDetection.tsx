@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSavingsData } from '../hooks/useSavingsData';
 import { useAccount } from 'wagmi';
+import { useNetworkSync } from '../hooks/useNetworkSync';
 
 interface NetworkDetectionProps {
   className?: string;
@@ -12,90 +13,19 @@ export default function NetworkDetection({ className = '' }: NetworkDetectionPro
   const [switchingNetwork, setSwitchingNetwork] = useState(false);
   const { isCorrectNetwork } = useSavingsData();
   const { address } = useAccount();
+  const { switchToNetwork, isNetworkSwitching } = useNetworkSync();
 
-  // Function to switch to a specific network
-  const switchToNetwork = async (networkName: string) => {
-    if (!window.ethereum) {
-      alert('Please install MetaMask to switch networks');
-      return;
-    }
-
+  // Function to switch to a specific network using the proper hook
+  const handleSwitchToNetwork = async (networkName: string) => {
     setSwitchingNetwork(true);
     try {
-      // First try to switch to the network
-      const chainId = networkName === 'Base' ? '0x2105' : networkName === 'Celo' ? '0xA4EC' : '0x46F';
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId }],
-      });
-    } catch (error: unknown) {
-      // If the network is not added to the wallet, add it
-      if (error && typeof error === 'object' && 'code' in error && (error as { code: number }).code === 4902) {
-        try {
-          if (networkName === 'Base') {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: '0x2105', // Base chainId in hex
-                  chainName: 'Base',
-                  nativeCurrency: {
-                    name: 'ETH',
-                    symbol: 'ETH',
-                    decimals: 18,
-                  },
-                  rpcUrls: ['https://mainnet.base.org'],
-                  blockExplorerUrls: ['https://basescan.org'],
-                },
-              ],
-            });
-          } else if (networkName === 'Celo') {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: '0xA4EC', // Celo chainId in hex
-                  chainName: 'Celo',
-                  nativeCurrency: {
-                    name: 'CELO',
-                    symbol: 'CELO',
-                    decimals: 18,
-                  },
-                  rpcUrls: ['https://forno.celo.org'],
-                  blockExplorerUrls: ['https://explorer.celo.org'],
-                },
-              ],
-            });
-          } else if (networkName === 'Lisk') {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: '0x46F', // Lisk chainId in hex
-                  chainName: 'Lisk',
-                  nativeCurrency: {
-                    name: 'ETH',
-                    symbol: 'ETH',
-                    decimals: 18,
-                  },
-                  rpcUrls: ['https://rpc.api.lisk.com'],
-                  blockExplorerUrls: ['https://blockscout.lisk.com'],
-                },
-              ],
-            });
-          }
-
-          // Attempt to switch to the newly added network
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: networkName === 'Base' ? '0x2105' : networkName === 'Celo' ? '0xA4EC' : '0x46F' }],
-          });
-        } catch (addError) {
-          console.error(`Error adding ${networkName} network:`, addError);
-        }
-      } else {
-        console.error(`Error switching to ${networkName} network:`, error);
+      const success = await switchToNetwork(networkName);
+      if (!success) {
+        // The hook already shows appropriate error notifications
+        console.log(`Network switch to ${networkName} failed or was cancelled`);
       }
+    } catch (error) {
+      console.error(`Unexpected error switching to ${networkName}:`, error);
     } finally {
       setSwitchingNetwork(false);
     }
@@ -106,6 +36,8 @@ export default function NetworkDetection({ className = '' }: NetworkDetectionPro
     return null;
   }
 
+  const isLoading = switchingNetwork || isNetworkSwitching;
+
   return (
     <div className={`fixed top-0 left-0 right-0 bg-yellow-100 border-b border-yellow-200 z-50 p-3 flex items-center justify-center ${className}`}>
       <div className="flex items-center max-w-4xl mx-auto">
@@ -115,25 +47,25 @@ export default function NetworkDetection({ className = '' }: NetworkDetectionPro
         <span className="text-yellow-800 text-sm">Please switch to Base, Celo, or Lisk network to use BitSave</span>
         <div className="ml-4 flex space-x-2">
           <button
-            onClick={() => switchToNetwork('Base')}
-            disabled={switchingNetwork}
+            onClick={() => handleSwitchToNetwork('Base')}
+            disabled={isLoading}
             className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-1 px-3 rounded-full transition-colors disabled:opacity-70"
           >
-            {switchingNetwork ? 'Switching...' : 'Switch to Base'}
+            {isLoading ? 'Switching...' : 'Switch to Base'}
           </button>
           <button
-            onClick={() => switchToNetwork('Celo')}
-            disabled={switchingNetwork}
+            onClick={() => handleSwitchToNetwork('Celo')}
+            disabled={isLoading}
             className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-1 px-3 rounded-full transition-colors disabled:opacity-70"
           >
-            {switchingNetwork ? 'Switching...' : 'Switch to Celo'}
+            {isLoading ? 'Switching...' : 'Switch to Celo'}
           </button>
           <button
-            onClick={() => switchToNetwork('Lisk')}
-            disabled={switchingNetwork}
+            onClick={() => handleSwitchToNetwork('Lisk')}
+            disabled={isLoading}
             className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-1 px-3 rounded-full transition-colors disabled:opacity-70"
           >
-            {switchingNetwork ? 'Switching...' : 'Switch to Lisk'}
+            {isLoading ? 'Switching...' : 'Switch to Lisk'}
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Globe } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -41,7 +41,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
   const LANGUAGE_STORAGE_KEY = 'bitsave_preferred_language';
 
   // Language options with country mappings
-  const languages = [
+  const languages = useMemo(() => [
     { code: 'en', name: 'English', country: 'US' },
     { code: 'es', name: 'Español', country: 'ES' },
     { code: 'fr', name: 'Français', country: 'FR' },
@@ -57,10 +57,10 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
     { code: 'nl', name: 'Nederlands', country: 'NL' },
     { code: 'sv', name: 'Svenska', country: 'SE' },
     { code: 'tr', name: 'Türkçe', country: 'TR' }
-  ];
+  ], []);
 
   // Country to language mapping
-  const countryToLanguage: { [key: string]: string } = {
+  const countryToLanguage: { [key: string]: string } = useMemo(() => ({
     'US': 'en', 'GB': 'en', 'AU': 'en', 'CA': 'en', 'NZ': 'en',
     'ES': 'es', 'MX': 'es', 'AR': 'es', 'CO': 'es', 'PE': 'es',
     'FR': 'fr', 'BE': 'fr', 'CH': 'fr', 'LU': 'fr',
@@ -76,16 +76,16 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
     'NL': 'nl',
     'SE': 'sv',
     'TR': 'tr'
-  };
+  }), []);
 
   // Get supported locales from the languages array
-  const supportedLocales = languages.map(lang => lang.code);
+  const supportedLocales = useMemo(() => languages.map(lang => lang.code), [languages]);
   
   // RTL languages list
-  const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+  const RTL_LANGUAGES = useMemo(() => ['ar', 'he', 'fa', 'ur'], []);
 
   // Get language from cookie or localStorage
-  const getStoredLanguage = (): string => {
+  const getStoredLanguage = useCallback((): string => {
     if (typeof window !== 'undefined') {
       // First check for cookie (set by middleware redirect)
       const cookies = document.cookie.split(';');
@@ -102,7 +102,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
       return stored && supportedLocales.includes(stored) ? stored : 'en';
     }
     return 'en';
-  };
+  }, [supportedLocales]);
 
   // Save language to localStorage and cookie
   const saveLanguageToStorage = (languageCode: string) => {
@@ -114,7 +114,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
   };
 
   // Detect user's location and set language
-  const detectLocationAndSetLanguage = async () => {
+  const detectLocationAndSetLanguage = useCallback(async () => {
     try {
       // First check if user has a stored preference
       const storedLanguage = getStoredLanguage();
@@ -230,7 +230,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
     } finally {
       setIsDetectingLocation(false);
     }
-  };
+  }, [getStoredLanguage, supportedLocales, pathname, router, RTL_LANGUAGES, countryToLanguage]);
 
   useEffect(() => {
     // First, check if there's a locale in the current URL path
@@ -314,7 +314,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
         script.remove();
       }
     };
-  }, []);
+  }, [languages, RTL_LANGUAGES, getStoredLanguage, detectLocationAndSetLanguage, pathname, router]);
 
   const handleLanguageChange = (languageCode: string) => {
     setSelectedLanguage(languageCode);
@@ -351,7 +351,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
         // Reset Google Translate widget to original language
         const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
         if (selectElement) {
-          selectElement.value = 'en';
+          selectElement.value = '';
           selectElement.dispatchEvent(new Event('change'));
         }
       } else {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Clock, Users, BarChart3 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -31,13 +31,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const { getAnalytics } = useAnalytics();
 
-  useEffect(() => {
-    if (isOpen && postId) {
-      fetchAnalytics();
-    }
-  }, [isOpen, postId]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getAnalytics(postId);
@@ -47,7 +41,13 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAnalytics, postId]);
+
+  useEffect(() => {
+    if (isOpen && postId) {
+      fetchAnalytics();
+    }
+  }, [isOpen, postId, fetchAnalytics]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blogDatabase';
-import OptimizedImage from '@/app/components/OptimizedImage';
+import BlogImage, { BlogImageSizes } from '@/app/components/BlogImage';
 import { marked } from 'marked';
 
 import Comments from '@/components/Comments';
@@ -215,10 +215,14 @@ export default function BlogPostClient({ slug }: BlogPostClientProps) {
         {/* Featured Image */}
         {post.featuredImage && (
           <div className="mb-12">
-            <OptimizedImage
+            <BlogImage
               src={post.featuredImage}
               alt={post.title}
-              className="w-full h-64 md:h-96 object-cover rounded-2xl shadow-lg"
+              className="rounded-2xl shadow-lg"
+              aspectRatio="wide"
+              sizes={BlogImageSizes.hero}
+              priority={true}
+              showCaption={false}
             />
           </div>
         )}

@@ -16,7 +16,7 @@ import {
   Eye,
   Edit3
 } from 'lucide-react';
-import NotificationModal from './NotificationModal';
+
 
 interface RichTextEditorProps {
   value: string;
@@ -29,12 +29,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const [cursorPosition, setCursorPosition] = useState({ start: 0, end: 0 });
-  const [notificationModal, setNotificationModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    type: 'success' | 'error' | 'info';
-  }>({ isOpen: false, title: '', message: '', type: 'info' });
+
   const [isUploading, setIsUploading] = useState(false);
 
   // Update cursor position when selection changes
@@ -115,23 +110,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        setNotificationModal({
-          isOpen: true,
-          title: 'Invalid File Type',
-          message: 'Please select a valid image file (JPEG, PNG, or WebP)',
-          type: 'error'
-        });
+        alert('Invalid File Type: Please select a valid image file (JPEG, PNG, or WebP)');
         return;
       }
       
       // Validate file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setNotificationModal({
-          isOpen: true,
-          title: 'File Too Large',
-          message: 'File size must be less than 5MB',
-          type: 'error'
-        });
+        alert('File Too Large: File size must be less than 5MB');
         return;
       }
       
@@ -166,23 +151,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           const newValue = newValueWithPlaceholder.replace(uploadingText, imageMarkdown);
           onChange(newValue);
           
-          setNotificationModal({
-            isOpen: true,
-            title: 'Upload Successful',
-            message: 'Image has been uploaded and inserted successfully!',
-            type: 'success'
-          });
+          console.log('Upload Successful: Image has been uploaded and inserted successfully!');
         } else {
           // Remove the uploading text on error
           const newValue = newValueWithPlaceholder.replace(uploadingText, '');
           onChange(newValue);
           
-          setNotificationModal({
-            isOpen: true,
-            title: 'Upload Failed',
-            message: result.error || 'Failed to upload image. Please try again.',
-            type: 'error'
-          });
+          alert('Upload Failed: ' + (result.error || 'Failed to upload image. Please try again.'));
         }
       } catch (error) {
         // Remove the uploading text on error
@@ -190,12 +165,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         onChange(newValue);
         
         console.error('Upload error:', error);
-        setNotificationModal({
-          isOpen: true,
-          title: 'Upload Error',
-          message: 'Failed to upload image. Please check your connection and try again.',
-          type: 'error'
-        });
+        alert('Upload Error: Failed to upload image. Please check your connection and try again.');
       } finally {
         setIsUploading(false);
       }
@@ -352,14 +322,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         </div>
       </div>
 
-      {/* Notification Modal */}
-      <NotificationModal
-        isOpen={notificationModal.isOpen}
-        onClose={() => setNotificationModal(prev => ({ ...prev, isOpen: false }))}
-        title={notificationModal.title}
-        message={notificationModal.message}
-        type={notificationModal.type}
-      />
+
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Space_Grotesk } from 'next/font/google';
 import { ethers } from 'ethers';
@@ -103,7 +103,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     }
   };
 
-  const checkWalletBalances = async () => {
+  const checkWalletBalances = useCallback(async () => {
     if (!address || !window.ethereum) return;
     
     setIsCheckingBalance(true);
@@ -164,7 +164,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     } finally {
       setIsCheckingBalance(false);
     }
-  };
+  }, [address, amount, isEth, tokenName, isBaseNetwork, tokenBalance]);
 
   // Check balances when amount changes
   useEffect(() => {
@@ -177,14 +177,14 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     } else {
       setBalanceWarning(null);
     }
-  }, [amount, address, isOpen, isEth, tokenName, isBaseNetwork]);
+  }, [amount, address, isOpen, isEth, tokenName, isBaseNetwork, checkWalletBalances]);
 
   // Initial balance check when modal opens
   useEffect(() => {
     if (address && isConnected && isOpen) {
       checkWalletBalances();
     }
-  }, [address, isConnected, isOpen]);
+  }, [address, isConnected, isOpen, checkWalletBalances]);
 
   // Diagnostic function to check child contract state before transaction
   const diagnoseChildContractIssues = async (childContractAddress: string, savingsPlanName: string, provider: ethers.BrowserProvider, signer: ethers.Signer) => {

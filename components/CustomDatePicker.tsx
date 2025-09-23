@@ -112,7 +112,7 @@ export default function CustomDatePicker({
                     ? 'text-gray-400 bg-gray-100/50'
                   : isSelected
                     ? 'bg-gradient-to-br from-[#81D7B4] to-[#81D7B4]/80 text-white shadow-[0_4px_10px_rgba(129,215,180,0.4)]'
-                    : 'text-gray-700 bg-white/40 hover:bg-white/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] font-medium'
+                    : 'text-gray-700 bg-white/70 hover:bg-white/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] font-medium'
                 }
               `}
             >
@@ -122,7 +122,7 @@ export default function CustomDatePicker({
               
               {/* Enhanced hover effect for selectable dates */}
               {isCurrentMonth && !isSelected && isSelectable && (
-                <div className="absolute inset-0 rounded-lg sm:rounded-xl opacity-0 group-hover:opacity-100 bg-white/60 border border-[#81D7B4]/20 shadow-[0_2px_8px_rgba(129,215,180,0.15)] transition-all duration-300"></div>
+                <div className="absolute inset-0 rounded-lg sm:rounded-xl opacity-0 group-hover:opacity-100 bg-white/80 border border-[#81D7B4]/30 shadow-[0_2px_8px_rgba(129,215,180,0.2)] transition-all duration-300"></div>
               )}
             </div>
             

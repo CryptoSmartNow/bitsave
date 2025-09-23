@@ -452,8 +452,9 @@ const WithdrawModal = memo(function WithdrawModal({
           
           <div className="text-center mb-6">
             <div className="mx-auto w-16 h-16 bg-[#81D7B4]/10 rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#81D7B4]" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5 4a1 1 0 011-1h8a1 1 0 011 1v4h1a1 1 0 01.7 1.7l-4 4a1 1 0 01-1.4 0l-4-4A1 1 0 018 8h1V4h2v4h1l-3 3-3-3h1V4h2v4H7V4a1 1 0 011-1z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#81D7B4]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l-5 5-5-5"/>
               </svg>
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">Withdraw Funds</h3>
@@ -473,28 +474,55 @@ const WithdrawModal = memo(function WithdrawModal({
           </div>
           
           <div className="space-y-6">
-            <div className="bg-yellow-50 backdrop-blur-md rounded-2xl p-5 border border-yellow-200 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_4px_16px_rgba(255,204,0,0.1)] mb-4">
-              <div className="flex items-center mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <span className="font-bold text-yellow-800">Early Withdrawal Warning</span>
+            {!isCompleted && (
+              <div className="bg-yellow-50 backdrop-blur-md rounded-2xl p-5 border border-yellow-200 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_4px_16px_rgba(255,204,0,0.1)] mb-4">
+                <div className="flex items-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-bold text-yellow-800">Early Withdrawal Warning</span>
+                </div>
+                <ul className="text-sm text-yellow-700 space-y-2">
+                  <li className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <span><strong>Penalty Fee:</strong> You will lose {penaltyPercentage}% of your savings as the early withdrawal penalty fee you selected when creating this plan.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <span><strong>Lost Rewards:</strong> You will forfeit any potential rewards that would have been earned at maturity.</span>
+                  </li>
+                </ul>
               </div>
-              <ul className="text-sm text-yellow-700 space-y-2">
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            )}
+            
+            {isCompleted && (
+              <div className="bg-green-50 backdrop-blur-md rounded-2xl p-5 border border-green-200 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_4px_16px_rgba(34,197,94,0.1)] mb-4">
+                <div className="flex items-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span><strong>Penalty Fee:</strong> You will lose {penaltyPercentage}% of your savings as the early withdrawal penalty fee you selected when creating this plan.</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <span><strong>Lost Rewards:</strong> You will forfeit any potential rewards that would have been earned at maturity.</span>
-                </li>
-              </ul>
-            </div>
+                  <span className="font-bold text-green-800">Savings Plan Completed! 🎉</span>
+                </div>
+                <ul className="text-sm text-green-700 space-y-2">
+                  <li className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span><strong>No Penalties:</strong> Your savings plan has reached maturity - withdraw without any penalty fees!</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span><strong>Goal Achieved:</strong> Congratulations on successfully completing your savings goal!</span>
+                  </li>
+                </ul>
+              </div>
+            )}
             
             <div className="flex flex-col space-y-4">
               <button

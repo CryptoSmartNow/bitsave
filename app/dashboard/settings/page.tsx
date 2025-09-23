@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import NetworkDetection from '@/components/NetworkDetection';
 import ENSLinking from '@/components/ENSLinking';
 import { useENSData } from '@/hooks/useENSData';
+import LanguageSelector from '@/components/LanguageSelector';
 
 // Initialize Space Grotesk font
 const spaceGrotesk = Space_Grotesk({
@@ -463,6 +464,50 @@ export default function Settings() {
       <div className="max-w-6xl mx-auto px-2 sm:px-0">
         {/* Modern Layout */}
         <div className="space-y-6 sm:space-y-8 lg:space-y-10">
+          {/* Language Settings Card - Full Width */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
+          >
+            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-[#81D7B4]/8 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-[#81D7B4]/5 rounded-full blur-2xl"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center mb-6 sm:mb-8">
+                <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-4 sm:mr-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                    <path d="M2 12h20"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Language Settings</h2>
+                  <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Choose your preferred language for the interface</p>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-4 sm:p-6 rounded-xl border border-[#81D7B4]/20 mb-6">
+                <p className="text-gray-700 font-medium leading-relaxed text-sm sm:text-base">
+                  Select your preferred language to customize the interface. Changes will be applied immediately across the entire application.
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-gray-50/80 rounded-lg sm:rounded-xl border border-gray-200/50 hover:bg-gray-50 transition-colors duration-200 gap-3 sm:gap-0">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Interface Language</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Choose your preferred language for the interface</p>
+                </div>
+                <div className="w-full sm:w-64">
+                  <LanguageSelector />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Profile Settings Card - Full Width */}
           <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500">
           <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
@@ -849,7 +894,7 @@ export default function Settings() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.7 }}
-            className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
+            className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-visible group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
           >
             <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
             <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
@@ -899,6 +944,7 @@ export default function Settings() {
                   </div>
                 </div>
                 
+
               
               </div>
             </div>

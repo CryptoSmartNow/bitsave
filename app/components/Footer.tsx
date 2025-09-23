@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 const footerLinks = {
   product: [
@@ -184,14 +185,14 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-[#81D7B4]/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs leading-5 text-gray-500">
-              &copy; {new Date().getFullYear()} BitSave. All rights reserved.
+              © {new Date().getFullYear()} BitSave. All rights reserved.
             </p>
             <div className="flex gap-4 text-xs text-gray-500">
-              <a href="#privacy" className="hover:text-[#81D7B4] transition-colors duration-300">Privacy Policy</a>
+              <Link href="#privacy" className="hover:text-[#81D7B4] transition-colors duration-300">Privacy Policy</Link>
               <span className="select-none">·</span>
-              <a href="#terms" className="hover:text-[#81D7B4] transition-colors duration-300">Terms of Service</a>
+              <Link href="#terms" className="hover:text-[#81D7B4] transition-colors duration-300">Terms of Service</Link>
               <span className="select-none">·</span>
-              <a href="#cookies" className="hover:text-[#81D7B4] transition-colors duration-300">Cookie Policy</a>
+              <Link href="#cookies" className="hover:text-[#81D7B4] transition-colors duration-300">Cookie Policy</Link>
             </div>
           </div>
         </div>

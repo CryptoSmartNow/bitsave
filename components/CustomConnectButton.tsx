@@ -4,6 +4,7 @@ import { useState, memo } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwitchChain } from 'wagmi';
+import Image from 'next/image';
 
 const SUPPORTED_NETWORKS = [
   {
@@ -49,12 +50,6 @@ interface UnsupportedNetworkModalProps {
 
 const UnsupportedNetworkModal = memo(function UnsupportedNetworkModal({ isOpen, onClose }: UnsupportedNetworkModalProps) {
   const { switchChain } = useSwitchChain();
-  
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, fallbackIcon?: string) => {
-    if (fallbackIcon) {
-      e.currentTarget.src = fallbackIcon;
-    }
-  };
   
   const handleSwitchNetwork = async (chainId: number) => {
     try {
@@ -122,11 +117,12 @@ const UnsupportedNetworkModal = memo(function UnsupportedNetworkModal({ isOpen, 
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
-                          <img
+                          <Image
                             src={network.icon}
                             alt={`${network.name} logo`}
+                            width={32}
+                            height={32}
                             className="w-8 h-8 object-contain"
-                            onError={(e) => handleImageError(e, network.fallbackIcon)}
                           />
                         </div>
                         <div>
@@ -333,9 +329,11 @@ const CustomConnectButton = memo(function CustomConnectButton() {
                       {chain.hasIcon && (
                         <div className="w-5 h-5 rounded-full overflow-hidden">
                           {chain.iconUrl && (
-                            <img
+                            <Image
                               alt={chain.name ?? 'Chain icon'}
                               src={chain.iconUrl}
+                              width={20}
+                              height={20}
                               className="w-5 h-5"
                             />
                           )}

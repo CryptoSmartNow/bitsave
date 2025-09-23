@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import OptimizedSection from './OptimizedSection';
 
 export default function Security() {
@@ -181,9 +182,11 @@ export default function Security() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
                     <div className="relative group shrink-0">
                       <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                      <img 
+                      <Image 
                         src="/images/savings-problems/ifeanyi-avatar.svg" 
                         alt="Ifeanyi" 
+                        width={80}
+                        height={80}
                         className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg relative transform group-hover:scale-105 transition-all duration-300"
                       />
               </div>
@@ -250,9 +253,11 @@ export default function Security() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
                     <div className="relative group shrink-0">
                       <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                      <img 
+                      <Image 
                         src="/images/savings-problems/rukevwe-avatar.svg" 
                         alt="Rukevwe" 
+                        width={80}
+                        height={80}
                         className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg relative transform group-hover:scale-105 transition-all duration-300"
                       />
                     </div>

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blogDatabase';
 import ViewCounter from '@/components/ViewCounter';
@@ -26,11 +26,7 @@ export default function AdminPostsPage() {
   const [analyticsModal, setAnalyticsModal] = useState<{ isOpen: boolean; postId: string; postTitle: string }>({ isOpen: false, postId: '', postTitle: '' });
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; postId: string; postTitle: string }>({ isOpen: false, postId: '', postTitle: '' });
 
-  useEffect(() => {
-    fetchPosts();
-  }, [filter]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -53,7 +49,11 @@ export default function AdminPostsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, searchTerm]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Space_Grotesk } from 'next/font/google';
 import Link from 'next/link';
+import Image from 'next/image';
 import WithdrawModal from '@/components/WithdrawModal';
 import TopUpModal from '@/components/TopUpModal';
 import NetworkDetection from '@/components/NetworkDetection';
@@ -153,8 +154,8 @@ export default function PlansPage() {
       
       {/* Decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
-      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div className="fixed top-1/4 left-1/3 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl"></div>
+      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-[#6bc4a1]/10 rounded-full blur-3xl"></div>
+      <div className="fixed top-1/4 left-1/3 w-64 h-64 bg-[#81D7B4]/5 rounded-full blur-3xl"></div>
 
       {/* Noise texture */}
       <div className="fixed inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
@@ -225,10 +226,10 @@ export default function PlansPage() {
                       </div>
                       <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/60 shadow-sm">
                         <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 text-[#163239] text-xs font-medium shadow-sm">
-                          <img src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : plan.tokenName} className="w-4 h-4 mr-1" />
+                          <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-1" />
                           {plan.isEth ? 'ETH' : plan.tokenName === 'cUSD' ? 'cUSD' : plan.tokenName === 'Gooddollar' ? '$G' : plan.tokenName}
                           <span className="mx-1 text-gray-400">|</span>
-                          <img src={plan.network === 'Base' ? '/base.svg' : '/celo.png'} alt={plan.network} className="w-4 h-4 mr-1" />
+                          <Image src={plan.network === 'Base' ? '/base.svg' : '/celo.png'} alt={plan.network || 'Network'} width={16} height={16} className="w-4 h-4 mr-1" />
                           {plan.network}
                         </span>
                       </div>
@@ -308,7 +309,7 @@ export default function PlansPage() {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="group"
               >
-                <Link href="dashboard/create-savings">
+                <Link href="/dashboard/create-savings">
                   <div className="relative bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-gray-300/80 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-300 group-hover:shadow-[0_15px_35px_-15px_rgba(0,0,0,0.15)] h-full flex flex-col items-center justify-center p-6 text-center">
                     <div className="bg-[#81D7B4]/10 rounded-full p-4 mb-4">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-[#81D7B4]">
@@ -361,7 +362,7 @@ export default function PlansPage() {
                           </div>
                         </div>
                         <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/60 shadow-sm">
-                          <img src={plan.isEth ? '/eth.svg' : '/usdc.svg'} alt={plan.isEth ? 'Ethereum' : 'USDC'} className="w-3.5 h-3.5 mr-1.5" />
+                          <Image src={plan.isEth ? '/eth.svg' : '/usdc.svg'} alt={plan.isEth ? 'Ethereum' : 'USDC'} width={14} height={14} className="w-3.5 h-3.5 mr-1.5" />
                           <span className="text-xs font-medium text-gray-700">{plan.isEth ? 'ETH' : 'USDC'}</span>
                         </div>
                       </div>
@@ -400,54 +401,8 @@ export default function PlansPage() {
         {/* Stats Section with Neomorphism */}
         <div className="mt-12 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Savings Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Total Saved Card */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl"></div>
-
-              <div className="flex items-center mb-4">
-                <div className="bg-blue-100 rounded-full p-2.5 mr-3 border border-blue-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-blue-500">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-gray-800">Total Saved</h3>
-              </div>
-
-              <p className="text-3xl font-bold text-gray-800 mb-1">${savingsData.totalLocked}</p>
-              <p className="text-sm text-blue-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-                Across all savings plans
-              </p>
-            </div>
-
-            {/* Total Goals Card */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-              <div className="flex items-center mb-4">
-                <div className="bg-purple-100 rounded-full p-2.5 mr-3 border border-purple-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-purple-500">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-gray-800">Active Goals</h3>
-              </div>
-
-              <p className="text-3xl font-bold text-gray-800 mb-1">{savingsData.currentPlans.length}</p>
-              <p className="text-sm text-purple-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                {savingsData.currentPlans.length > 0 ? `${savingsData.currentPlans.length} active plans` : 'No active plans'}
-              </p>
-            </div>
-
-            {/* Rewards Card */}
             <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
@@ -458,15 +413,38 @@ export default function PlansPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="font-bold text-gray-800">Total Deposits</h3>
+                <h3 className="font-bold text-gray-800">Total Saved</h3>
               </div>
 
-              <p className="text-3xl font-bold text-gray-800 mb-1">{savingsData.deposits}</p>
+              <p className="text-3xl font-bold text-gray-800 mb-1">${savingsData.totalLocked}</p>
               <p className="text-sm text-[#81D7B4] flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                Across all savings plans
+              </p>
+            </div>
+
+            {/* Total Goals Card */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#6bc4a1]/10 rounded-full blur-2xl"></div>
+
+              <div className="flex items-center mb-4">
+                <div className="bg-[#6bc4a1]/20 rounded-full p-2.5 mr-3 border border-[#6bc4a1]/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-[#6bc4a1]">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-800">Active Goals</h3>
+              </div>
+
+              <p className="text-3xl font-bold text-gray-800 mb-1">{savingsData.currentPlans.length}</p>
+              <p className="text-sm text-[#6bc4a1] flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
-                {savingsData.deposits > 0 ? `${savingsData.deposits} total deposits` : 'No deposits yet'}
+                {savingsData.currentPlans.length > 0 ? `${savingsData.currentPlans.length} active plans` : 'No active plans'}
               </p>
             </div>
           </div>
@@ -523,7 +501,7 @@ export default function PlansPage() {
                             <div className={`p-2 rounded-full ${
                               activity.type === 'deposit' ? 'bg-green-100 text-green-600' :
                               activity.type === 'withdrawal' ? 'bg-red-100 text-red-600' :
-                              'bg-blue-100 text-blue-600'
+                              'bg-[#81D7B4]/20 text-[#81D7B4]'
                             }`}>
                               {activity.type === 'deposit' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
@@ -581,35 +559,7 @@ export default function PlansPage() {
           </AnimatePresence>
         </div>
 
-        {/* Tips Section */}
-        <div className="mt-12 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Savings Tips</h2>
-          <div className="bg-gradient-to-br from-[#81D7B4]/10 to-blue-500/5 backdrop-blur-sm rounded-2xl p-6 border border-white/60 shadow-sm">
-            <div className="flex items-start mb-4">
-              <div className="bg-[#81D7B4]/20 rounded-full p-2.5 mr-4 border border-[#81D7B4]/30 flex-shrink-0 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-[#81D7B4]">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-800 text-lg mb-2">Build Your Financial Safety Net</h3>
-                <p className="text-gray-600">Every dollar saved today is peace of mind for tomorrow. Consistent saving creates a buffer against life&apos;s uncertainties while helping you achieve your most important goals.</p>
-              </div>
-            </div>
 
-            <div className="flex items-start">
-              <div className="bg-blue-100 rounded-full p-2.5 mr-4 border border-blue-200 flex-shrink-0 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-blue-500">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-800 text-lg mb-2">Spread Your Financial Wings</h3>
-                <p className="text-gray-600">Diversifying across assets and networks reduces risk while maximizing potential returns. A balanced savings portfolio protects you against market volatility.</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Plan Details Modal */}

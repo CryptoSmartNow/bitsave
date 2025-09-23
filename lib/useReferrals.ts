@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 
 interface ReferralData {
@@ -64,7 +64,7 @@ export function useReferrals(): UseReferralsReturn {
     }
   };
 
-  const trackReferralVisit = async (referralCode: string) => {
+  const trackReferralVisit = useCallback(async (referralCode: string) => {
     try {
       const response = await fetch('/api/referrals/track', {
         method: 'POST',
@@ -85,9 +85,9 @@ export function useReferrals(): UseReferralsReturn {
     } catch (err) {
       console.warn('Error tracking referral visit:', err);
     }
-  };
+  }, [address]);
 
-  const markReferralConversion = async (referralCode: string) => {
+  const markReferralConversion = useCallback(async (referralCode: string) => {
     if (!address) {
       console.warn('Wallet not connected for referral conversion');
       return;
@@ -111,9 +111,9 @@ export function useReferrals(): UseReferralsReturn {
     } catch (err) {
       console.warn('Error marking referral conversion:', err);
     }
-  };
+  }, [address]);
 
-  const refreshReferralData = async () => {
+  const refreshReferralData = useCallback(async () => {
     if (!address) {
       setReferralData(null);
       return;
@@ -141,7 +141,7 @@ export function useReferrals(): UseReferralsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [address]);
 
   // Auto-fetch referral data when wallet connects
   useEffect(() => {
@@ -151,7 +151,7 @@ export function useReferrals(): UseReferralsReturn {
       setReferralData(null);
       setError(null);
     }
-  }, [address]);
+  }, [address, refreshReferralData]);
 
   // Handle referral tracking on page load
   useEffect(() => {
@@ -169,7 +169,7 @@ export function useReferrals(): UseReferralsReturn {
       newUrl.searchParams.delete('ref');
       window.history.replaceState({}, '', newUrl.toString());
     }
-  }, []);
+  }, [trackReferralVisit]);
 
   // Handle referral conversion when wallet connects
   useEffect(() => {
@@ -180,7 +180,7 @@ export function useReferrals(): UseReferralsReturn {
         localStorage.removeItem('pendingReferralCode');
       }
     }
-  }, [address]);
+  }, [address, markReferralConversion]);
 
   return {
     referralData,

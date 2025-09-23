@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface ImageUploadProps {
   onChange: (url: string) => void;
@@ -171,9 +172,11 @@ export default function ImageUpload({
             >
               {previewUrl && (
                 <div className="mx-auto w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
-                  <img 
+                  <Image 
                     src={previewUrl} 
                     alt="Preview" 
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover"
                   />
                 </div>

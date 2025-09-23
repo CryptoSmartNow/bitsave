@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 // Utility function to generate YouTube thumbnail URL with fallback
 const getYouTubeThumbnail = (videoId: string, quality: 'maxresdefault' | 'hqdefault' | 'mqdefault' | 'sddefault' = 'maxresdefault') => {
@@ -109,10 +110,11 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
         ) : (
           <div className="relative aspect-video cursor-pointer" onClick={handlePlayClick}>
             {isInView && (
-              <img
+              <Image
                 src={thumbnailError ? fallbackThumbnailUrl : thumbnailUrl}
                 alt={actualTitle}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
                 loading="lazy"
                 onLoad={() => setIsLoaded(true)}
                 onError={() => {
