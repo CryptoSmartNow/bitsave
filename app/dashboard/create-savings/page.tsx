@@ -18,11 +18,13 @@ import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { useSavingsData } from '@/hooks/useSavingsData';
 import NetworkDetection from '@/components/NetworkDetection';
+import { getTweetButtonProps } from '@/utils/tweetUtils';
+import { getSavingFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
 
 const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
-// TODO: Update with actual bridged USDC contract address for Lisk mainnet
+
 const LISK_CONTRACT_ADDRESS = "0x05D032ac25d322df992303dCa074EE7392C117b9"
 
 
@@ -401,13 +403,12 @@ export default function CreateSavingsPage() {
 
 
       if (userChildContractAddress === ethers.ZeroAddress) {
-        // Get current ETH price for $1 fee
-        const ethPrice = await fetchEthPrice();
-        if (!ethPrice) throw new Error('Could not fetch ETH price for fee calculation.');
-        const feeInEth = (1 / ethPrice).toFixed(6); // $1 in ETH
+        // Get saving fee from contract
+        const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
+        if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
         
         const joinTx = await contract.joinBitsave({
-          value: ethers.parseEther(feeInEth), 
+          value: feeInWei, 
         })
         await joinTx.wait()
 
@@ -430,16 +431,21 @@ export default function CreateSavingsPage() {
 
       await approveERC20(tokenToSave, usdcEquivalentAmount, signer)
 
-      // Get current ETH price for $1 fee
-      const ethPrice = await fetchEthPrice();
-      if (!ethPrice) throw new Error('Could not fetch ETH price for fee calculation.');
-      const feeInEth = (1 / ethPrice).toFixed(6); // $1 in ETH
+      // Get saving fee from contract
+      const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
+      if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
 
-      
+      // Estimate gas for createSaving transaction
+      const estimatedGas = await estimateGasForTransaction(
+        contract,
+        'createSaving',
+        [name, maturityTime, selectedPenalty, safeMode, tokenToSave, usdcEquivalentAmount],
+        { value: feeInWei }
+      );
 
       const txOptions = {
-        gasLimit: 2717330,
-        value: ethers.parseEther(feeInEth), 
+        gasLimit: estimatedGas,
+        value: feeInWei, 
       }
 
       const tx = await contract.createSaving(
@@ -532,13 +538,12 @@ export default function CreateSavingsPage() {
       let userChildContractAddress = await contract.getUserChildContractAddress()
 
       if (userChildContractAddress === ethers.ZeroAddress) {
-        // Get current ETH price for $1 fee
-        const ethPrice = await fetchEthPrice();
-        if (!ethPrice) throw new Error('Could not fetch ETH price for fee calculation.');
-        const feeInEth = (1 / ethPrice).toFixed(6); // $1 in ETH
+        // Get saving fee from contract
+        const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
+        if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
         
         const joinTx = await contract.joinBitsave({
-          value: ethers.parseEther(feeInEth), 
+          value: feeInWei, 
         })
         await joinTx.wait()
 
@@ -560,14 +565,21 @@ export default function CreateSavingsPage() {
 
       await approveERC20(tokenToSave, usdgloAmount, signer)
 
-      // Get current ETH price for $1 fee
-      const ethPrice = await fetchEthPrice();
-      if (!ethPrice) throw new Error('Could not fetch ETH price for fee calculation.');
-      const feeInEth = (1 / ethPrice).toFixed(6); // $1 in ETH
+      // Get saving fee from contract
+      const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
+      if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
+
+      // Estimate gas for createSaving transaction
+      const estimatedGas = await estimateGasForTransaction(
+        contract,
+        'createSaving',
+        [name, maturityTime, selectedPenalty, safeMode, tokenToSave, usdgloAmount],
+        { value: feeInWei }
+      );
 
       const txOptions = {
-        gasLimit: 2717330,
-        value: ethers.parseEther(feeInEth), 
+        gasLimit: estimatedGas,
+        value: feeInWei, 
       }
 
       const tx = await contract.createSaving(
@@ -651,14 +663,13 @@ export default function CreateSavingsPage() {
     }
   };
 
-  // Helper to fetch ETH price in USD
-  const fetchEthPrice = async () => {
+  // Helper to fetch saving fee from contract
+  const fetchSavingFee = async (provider: ethers.Provider, contractAddress: string) => {
     try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-      const data = await response.json();
-      return data.ethereum.usd;
+      const feeInWei = await getSavingFeeFromContract(contractAddress, provider);
+      return feeInWei;
     } catch (error) {
-      console.error('Error fetching ETH price:', error);
+      console.error('Error fetching saving fee from contract:', error);
       return null;
     }
   };
@@ -1516,11 +1527,21 @@ export default function CreateSavingsPage() {
               {/* Tweet Button (only on success) */}
               {success && (() => {
                 const referralLink = referralData?.referralLink || 'https://bitsave.io';
-                const tweetText = `Just locked up some ${currency} for my future self on @bitsaveprotocol, no degen plays today, web3 savings never looked this good 💰\n\nYou should be doing #SaveFi → ${referralLink}`;
-                const encodedTweetText = encodeURIComponent(tweetText);
+                // Determine if this is first-time savings based on current deposits count
+                // Since we just created a new savings, the count would be the previous count
+                const isFirstTime = savingsData.deposits === 0;
+                const transactionType = isFirstTime ? 'first-time-saving' : 'subsequent-saving';
+                
+                const tweetProps = getTweetButtonProps(transactionType, {
+                  currency: currency,
+                  amount: amount,
+                  referralLink: referralLink,
+                  userTransactionCount: savingsData.deposits
+                });
+                
                 return (
                   <a
-                    href={`https://twitter.com/intent/tweet?text=${encodedTweetText}`}
+                    href={tweetProps.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => {

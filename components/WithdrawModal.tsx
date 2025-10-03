@@ -8,6 +8,7 @@ import childContractABI from '../app/abi/childContractABI.js';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
 import { handleContractError } from '@/lib/contractErrorHandler';
+import { getTweetButtonProps } from '@/utils/tweetUtils';
 
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
@@ -410,6 +411,25 @@ const WithdrawModal = memo(function WithdrawModal({
             >
               View Transaction ID
             </button>
+            
+            {/* Tweet Button (only for successful withdrawals) */}
+            {success && (
+              <button 
+                className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 rounded-full text-white text-sm sm:text-base font-medium mb-3 sm:mb-4 hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                onClick={() => {
+                  const tweetProps = getTweetButtonProps('withdrawal', {
+                    planName: planName,
+                    isCompleted: isCompleted
+                  });
+                  window.open(tweetProps.href, '_blank');
+                }}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+                {isCompleted ? 'Share Achievement on X' : 'Share on X'}
+              </button>
+            )}
             
             {/* Action Buttons */}
             <div className="flex w-full gap-3 sm:gap-4 flex-col sm:flex-row">

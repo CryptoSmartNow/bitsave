@@ -21,6 +21,8 @@ import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import CHILD_CONTRACT_ABI from '@/app/abi/childContractABI.js';
 import erc20ABI from '@/app/abi/erc20ABI.json';
 import { handleContractError } from '@/lib/contractErrorHandler';
+import { getTweetButtonProps } from '@/utils/tweetUtils';
+import { getSavingFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'],
@@ -69,14 +71,11 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     }
   }, [isOpen]);
 
-  const fetchEthPrice = async () => {
+  const fetchSavingFee = async (contractAddress: string, provider: ethers.BrowserProvider) => {
     try {
-      const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-      );
-      return response.data.ethereum.usd; 
+      return await getSavingFeeFromContract(contractAddress, provider);
     } catch (error) {
-      console.error("Error fetching ETH price:", error);
+      console.error("Error fetching saving fee from contract:", error);
       return null;
     }
   };
@@ -285,7 +284,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           tokenNameToUse = 'Gooddollar';
         } else if (tokenName === 'USDGLO') {
           tokenAddress = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3";
-          decimals = 6;
+          decimals = 18;
           tokenNameToUse = 'USDGLO';
         } else if (tokenName === 'USDC') {
           tokenAddress = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
@@ -347,12 +346,20 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       // Final check before incrementSaving
       console.log(`Calling incrementSaving with plan: "${savingsPlanName}", token: ${tokenAddress}, amount: ${ethers.formatUnits(tokenAmount, decimals)}`);
       
+      // Estimate gas for incrementSaving transaction
+      const estimatedGas = await estimateGasForTransaction(
+        contract,
+        'incrementSaving',
+        [savingsPlanName, tokenAddress, tokenAmount],
+        {}
+      );
+      
       const tx = await contract.incrementSaving(
         savingsPlanName, 
         tokenAddress, 
         tokenAmount,
         {
-          gasLimit: 2717330,
+          gasLimit: estimatedGas,
         }
       );
 
@@ -476,18 +483,18 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       const diagnosticInfo = await diagnoseChildContractIssues(userChildContractAddress, savingsPlanName, provider, signer);
       console.log('Child contract diagnostic info:', diagnosticInfo);
 
-      const ethPriceInUSD = await fetchEthPrice();
-      if (!ethPriceInUSD || ethPriceInUSD <= 0) {
-        throw new Error("Failed to fetch ETH price.");
+      // Get saving fee from contract (this is the fee required for the transaction)
+      const savingFeeWei = await fetchSavingFee(contractAddress, provider);
+      if (!savingFeeWei) {
+        throw new Error("Failed to fetch saving fee from contract.");
       }
 
-      const usdAmount = parseFloat(amount);
-      if (isNaN(usdAmount) || usdAmount <= 0) {
+      const ethAmount = parseFloat(amount);
+      if (isNaN(ethAmount) || ethAmount <= 0) {
         throw new Error("Invalid amount entered.");
       }
 
-      const ethAmount = (usdAmount / ethPriceInUSD).toFixed(18); 
-      const ethAmountInWei = ethers.parseUnits(ethAmount, 18);
+      const ethAmountInWei = ethers.parseEther(ethAmount.toString());
 
       // Check user's ETH balance
       const userAddress = await signer.getAddress();
@@ -509,13 +516,21 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
       console.log(`Calling incrementSaving with plan: "${savingsPlanName}", ETH amount: ${ethers.formatEther(ethAmountInWei)} ETH`);
       
+      // Estimate gas for incrementSaving transaction
+      const estimatedGas = await estimateGasForTransaction(
+        contract,
+        'incrementSaving',
+        [savingsPlanName, ETH_TOKEN_ADDRESS, ethAmountInWei],
+        { value: ethAmountInWei }
+      );
+      
       const tx = await contract.incrementSaving(
         savingsPlanName,
         ETH_TOKEN_ADDRESS, 
         ethAmountInWei,
         {
           value: ethAmountInWei, 
-          gasLimit: 2717330, 
+          gasLimit: estimatedGas, 
         }
       );
 
@@ -526,7 +541,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         await axios.post(
           "https://bitsaveapi.vercel.app/transactions/",
           {
-            amount: usdAmount,
+            amount: ethAmount,
             txnhash: receipt.hash,
             chain: isBase ? "base" : "celo",
             savingsname: savingsPlanName,
@@ -764,6 +779,26 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
               >
                 View Transaction ID
               </button>
+              
+              {/* Tweet Button */}
+               {success && (
+                 <button 
+                   className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white text-sm sm:text-base font-medium mb-3 sm:mb-4 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                   onClick={() => {
+                     const tweetProps = getTweetButtonProps('top-up', {
+                       amount: amount,
+                       currency: getTokenNameDisplay(),
+                       planName: planName
+                     });
+                     window.open(tweetProps.href, '_blank');
+                   }}
+                 >
+                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                     <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                   </svg>
+                   Share Success on X
+                 </button>
+               )}
               
               {/* Action Buttons */}
               <div className="flex w-full gap-3 sm:gap-4 flex-col sm:flex-row">

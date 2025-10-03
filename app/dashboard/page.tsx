@@ -25,6 +25,8 @@ import { useNetworkSync } from '../../hooks/useNetworkSync';
 import { initializeSavingsCache } from '../../utils/savingsCache';
 // ENS data hook for identity resolution
 import { useENSData } from '../../hooks/useENSData';
+// Date utility functions for formatting timestamps
+import { formatTimestamp } from '../../utils/dateUtils';
 
 // Configure Space Grotesk font with optimal loading settings
 const spaceGrotesk = Space_Grotesk({
@@ -1546,42 +1548,61 @@ export default function Dashboard() {
                     </div>
 
                     {/* Info Row */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mt-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 font-medium">Current Amount:</span>
-                        <span className="text-base font-bold text-gray-900">
-                          {plan.isEth ? (
-                            <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-xs font-medium text-gray-500 ml-1">ETH</span></>
-                          ) : plan.tokenName === 'Gooddollar' ? (
-                            <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-xs font-medium text-gray-500 ml-1">$G</span> <span className="text-xs text-gray-400 ml-2">(${(parseFloat(plan.currentAmount) * goodDollarPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span></>
-                          ) : plan.tokenName === 'USDGLO' ? (
-                            <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">USDGLO</span></>
-                          ) : plan.tokenName === 'cUSD' ? (
-                            <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">cUSD</span></>
-                          ) : (
-                            <>{parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">{plan.tokenName}</span></>
-                          )}
-                        </span>
+                    <div className="flex flex-col gap-2 mt-2">
+                      {/* Current Amount and Time Left Row */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 font-medium">Current Amount:</span>
+                          <span className="text-base font-bold text-gray-900">
+                            {plan.isEth ? (
+                              <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-xs font-medium text-gray-500 ml-1">ETH</span></>
+                            ) : plan.tokenName === 'Gooddollar' ? (
+                              <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-xs font-medium text-gray-500 ml-1">$G</span> <span className="text-xs text-gray-400 ml-2">(${(parseFloat(plan.currentAmount) * goodDollarPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span></>
+                            ) : plan.tokenName === 'USDGLO' ? (
+                              <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">USDGLO</span></>
+                            ) : plan.tokenName === 'cUSD' ? (
+                              <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">cUSD</span></>
+                            ) : (
+                              <>{parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">{plan.tokenName}</span></>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 font-medium">Time Left:</span>
+                          <span className="text-sm font-semibold text-gray-800">
+                            {(() => {
+                              const currentDate = new Date();
+                              const maturityTimestamp = Number(plan.maturityTime || 0);
+                              const maturityDate = new Date(maturityTimestamp * 1000);
+                              if (isNaN(maturityDate.getTime())) return '';
+                              const remainingTime = maturityDate.getTime() - currentDate.getTime();
+                              const remainingDays = Math.max(0, Math.ceil(remainingTime / (1000 * 60 * 60 * 24)));
+                              if (remainingDays === 0) return 'Completed';
+                              if (remainingDays === 1) return '1 day';
+                              if (remainingDays < 30) return `${remainingDays} days`;
+                              const remainingMonths = Math.ceil(remainingDays / 30);
+                              if (remainingMonths === 1) return '1 month';
+                              if (remainingMonths > 1) return `${remainingMonths} months`;
+                              return '';
+                            })()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 font-medium">Time Left:</span>
-                        <span className="text-sm font-semibold text-gray-800">
-                          {(() => {
-                            const currentDate = new Date();
-                            const maturityTimestamp = Number(plan.maturityTime || 0);
-                            const maturityDate = new Date(maturityTimestamp * 1000);
-                            if (isNaN(maturityDate.getTime())) return '';
-                            const remainingTime = maturityDate.getTime() - currentDate.getTime();
-                            const remainingDays = Math.max(0, Math.ceil(remainingTime / (1000 * 60 * 60 * 24)));
-                            if (remainingDays === 0) return 'Completed';
-                            if (remainingDays === 1) return '1 day';
-                            if (remainingDays < 30) return `${remainingDays} days`;
-                            const remainingMonths = Math.ceil(remainingDays / 30);
-                            if (remainingMonths === 1) return '1 month';
-                            if (remainingMonths > 1) return `${remainingMonths} months`;
-                            return '';
-                          })()}
-                        </span>
+                      
+                      {/* Start and End Dates Row */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 font-medium">Start Date:</span>
+                          <span className="text-sm font-semibold text-gray-800">
+                            {formatTimestamp(Number(plan.startTime || 0))}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 font-medium">End Date:</span>
+                          <span className="text-sm font-semibold text-gray-800">
+                            {formatTimestamp(Number(plan.maturityTime || 0))}
+                          </span>
+                        </div>
                       </div>
                     </div>
 

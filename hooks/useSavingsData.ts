@@ -42,7 +42,7 @@ const LISK_CHAIN_ID = BigInt(1135);
 // Token mapping for Celo network
 const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
   "0x765de816845861e75a25fca122bb6898b8b1282a": { name: "cUSD", decimals: 18, logo: "/cusd.png" },
-  "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3": { name: "USDGLO", decimals: 6, logo: "/usdglo.png" },
+  "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3": { name: "USDGLO", decimals: 18, logo: "/usdglo.png" },
   "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdc.png" },
   "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" }
 };

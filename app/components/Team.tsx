@@ -16,7 +16,7 @@ const teamMembers = [
   },
   {
     name: "Primidac",
-    role: "Full Stack Developer",
+    role: "Product Engineer",
     avatar: "/images/primidac.png",
     socials: {
       twitter: "https://twitter.com/primidac",
@@ -58,8 +58,8 @@ const teamMembers = [
     }
   },
   {
-    name: "Richard Essangabasi",
-    role: "Marketing Lead",
+    name: "Emmanuel Nwafor ",
+    role: "Software Engineer",
     avatar: "/images/emma.jpeg",
     socials: {
       twitter: "https://x.com/emmo0x00",

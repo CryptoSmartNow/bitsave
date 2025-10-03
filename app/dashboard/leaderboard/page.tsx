@@ -35,6 +35,7 @@ interface LeaderboardUser {
   chain: string;
   id: string;
   rank?: number; // Added during processing
+  points?: number; // Calculated points based on total amount
 }
 
 export default function LeaderboardPage() {
@@ -89,11 +90,15 @@ export default function LeaderboardPage() {
         
         const data: LeaderboardUser[] = await response.json()
         
-        // Filter users with savings >= $10, sort by total amount, limit to top 10, and add rank
+        // Filter users with savings >= $10, calculate points, sort by points, limit to top 20, and add rank
         const rankedData = data
           .filter(user => user.totalamount >= 10) // Exclude savings below $10
-          .sort((a, b) => b.totalamount - a.totalamount)
-          .slice(0, 10) // Limit to top 10 users
+          .map(user => ({
+            ...user,
+            points: Math.floor(user.totalamount * 0.005 * 1000) // Calculate points based on total amount
+          }))
+          .sort((a, b) => b.points - a.points) // Sort by points instead of amount
+          .slice(0, 20) // Limit to top 20 users
           .map((user, index) => ({
             ...user,
             rank: index + 1
@@ -260,27 +265,27 @@ export default function LeaderboardPage() {
       
       {/* Header with glassmorphism */}
       <motion.div 
-        className="relative mb-8 md:mb-12"
+        className="relative mb-6 md:mb-12"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 border border-white/20 shadow-2xl">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div className="flex items-center space-x-4 mb-4 md:mb-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4 md:mb-0 w-full">
               <motion.div 
-                className="p-4 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC4A0]/20 rounded-2xl backdrop-blur-sm border border-[#81D7B4]/30"
+                className="p-3 md:p-4 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC4A0]/20 rounded-xl md:rounded-2xl backdrop-blur-sm border border-[#81D7B4]/30 self-start sm:self-auto"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Trophy className="w-8 h-8 text-[#81D7B4]" />
+                <Trophy className="w-6 h-6 md:w-8 md:h-8 text-[#81D7B4]" />
               </motion.div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight mb-2 bg-gradient-to-r from-gray-800 to-[#4A9B7A] bg-clip-text text-transparent">
+              <div className="flex-1">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 tracking-tight mb-1 md:mb-2 bg-gradient-to-r from-gray-800 to-[#4A9B7A] bg-clip-text text-transparent leading-tight">
                   Leaderboard
                 </h1>
-                <p className="text-sm md:text-base text-gray-600 max-w-2xl">
-                  Top 10 savers on BitSave. Earn rewards and climb the ranks by saving more.
+                <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-2xl leading-relaxed">
+                  Top 20 savers on BitSave ranked by points. Earn rewards and climb the ranks by saving more.
                 </p>
               </div>
             </div>
@@ -289,14 +294,57 @@ export default function LeaderboardPage() {
         </div>
       </motion.div>
       
-      {/* Top 3 Winners Podium - Desktop Only */}
+      {/* Top 3 Winners Podium */}
       {leaderboardData.length > 0 && (
-        <motion.div 
-          className="hidden md:flex justify-center items-end mb-12 relative z-10"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
+        <>
+          {/* Mobile Top 3 Winners */}
+          <motion.div 
+            className="md:hidden mb-6 relative z-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 shadow-xl">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 text-center flex items-center justify-center space-x-2">
+                <Trophy className="w-5 h-5 text-[#81D7B4]" />
+                <span>Top 3 Savers</span>
+              </h3>
+              <div className="space-y-3">
+                {leaderboardData.slice(0, Math.min(3, leaderboardData.length)).map((user, index) => (
+                  <motion.div 
+                    key={user.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
+                    className="bg-white/40 backdrop-blur-sm rounded-xl p-3 border border-[#81D7B4]/30 flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {getRankBadge(index + 1)}
+                      <UserIcon rank={index + 1} />
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">
+                          {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
+                        </p>
+                        <p className="text-xs text-gray-600">{user.points || 0} points</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-[#4A9B7A] text-sm">${user.totalamount.toFixed(2)}</p>
+                      <p className="text-xs text-[#6BC4A0]">{(user.points || 0).toFixed(2)} $BTS</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Desktop Top 3 Winners Podium */}
+          <motion.div 
+            className="hidden md:flex justify-center items-end mb-12 relative z-10"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
           {leaderboardData.slice(0, Math.min(3, leaderboardData.length)).map((user, index) => {
             const position = index === 0 ? 1 : index === 1 ? 0 : 2; // Reorder for podium (2nd, 1st, 3rd)
             const user2 = leaderboardData[position < leaderboardData.length ? position : 0];
@@ -387,7 +435,8 @@ export default function LeaderboardPage() {
               </motion.div>
             )
           })}
-        </motion.div>
+          </motion.div>
+        </>
       )}
       
       {/* Enhanced Leaderboard Table */}
@@ -461,110 +510,139 @@ export default function LeaderboardPage() {
             </div>
           </motion.div>
         ) : (
-          <div className="divide-y divide-[#81D7B4]/20">
+          <div className="space-y-3 md:space-y-0 md:divide-y md:divide-[#81D7B4]/20">
             {leaderboardData.map((user, index) => (
               <motion.div 
                 key={user.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="p-6 md:grid md:grid-cols-7 flex flex-wrap items-center hover:bg-white/30 transition-all duration-300 group cursor-pointer"
+                className="md:p-6 md:grid md:grid-cols-7 md:items-center md:hover:bg-white/30 transition-all duration-300 group cursor-pointer"
                 whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.5)" }}
                 whileTap={{ scale: 0.99 }}
               >
-                {/* Rank */}
-                <div className="col-span-1 flex items-center mb-2 md:mb-0">
-                  {getRankBadge(user.rank || index + 1)}
-                </div>
-                
-                {/* User */}
-                <div className="col-span-2 flex items-center mb-2 md:mb-0">
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <UserIcon rank={user.rank || index + 1} />
-                  </motion.div>
-                  <div className="ml-4">
-                    <p className="font-semibold text-gray-800 group-hover:text-[#4A9B7A] transition-colors">
-                      {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
-                    </p>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <div className="w-2 h-2 bg-[#81D7B4] rounded-full"></div>
-                      <p className="text-xs text-gray-600">Chain: {user.chain}</p>
+                {/* Mobile Card Layout */}
+                <div className="md:hidden bg-white/40 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/30 p-4 shadow-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      {getRankBadge(user.rank || index + 1)}
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      >
+                        <UserIcon rank={user.rank || index + 1} />
+                      </motion.div>
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">
+                          {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
+                        </p>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <div className="w-2 h-2 bg-[#81D7B4] rounded-full"></div>
+                          <p className="text-xs text-gray-600">{user.chain}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Mobile view card */}
-                  <div className="md:hidden bg-white/40 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/30 p-4 space-y-3 shadow-lg ml-auto">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <UserIcon rank={user.rank || index + 1} />
-                        <div>
-                          <p className="font-semibold text-gray-800">{user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}</p>
-                          <p className="text-xs text-gray-600">Rank #{user.rank}</p>
-                        </div>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="bg-white/50 rounded-xl p-3">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Coins className="w-4 h-4 text-[#4A9B7A]" />
+                        <span className="text-xs text-gray-600">Saved</span>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-[#4A9B7A]">${user.totalamount.toFixed(2)}</p>
-                        <p className="text-xs text-gray-600">{Math.floor(user.totalamount * 0.005 * 1000)} pts</p>
-                      </div>
+                      <p className="font-bold text-[#4A9B7A] text-sm">${user.totalamount.toFixed(2)}</p>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-[#81D7B4]/30">
-                      <div className="flex items-center space-x-2">
-                        <Gift className="w-4 h-4 text-[#4A9B7A]" />
-                        <span className="text-sm text-gray-700">{(user.totalamount * 0.005 * 1000).toFixed(2)} $BTS</span>
+                    
+                    <div className="bg-white/50 rounded-xl p-3">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Star className="w-4 h-4 text-[#81D7B4]" />
+                        <span className="text-xs text-gray-600">Points</span>
                       </div>
-                      <button 
-                        onClick={() => openUserDetails(user)}
-                        className="bg-[#81D7B4] hover:bg-[#6BC4A0] text-white px-3 py-1 rounded-lg text-sm transition-colors"
-                      >
-                        View
-                      </button>
+                      <p className="font-bold text-[#81D7B4] text-sm">{user.points || 0}</p>
                     </div>
                   </div>
-                </div>
-                
-                {/* Total Saved */}
-                <div className="col-span-1 mb-2 md:mb-0 w-1/2 md:w-auto">
-                  <p className="text-sm text-gray-600 md:hidden">Amount</p>
-                  <div className="flex items-center space-x-2">
-                    <Coins className="w-4 h-4 text-[#4A9B7A]" />
-                    <p className="font-bold text-[#4A9B7A] text-lg">${user.totalamount.toFixed(2)}</p>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-[#81D7B4]/30">
+                    <div className="flex items-center space-x-2">
+                      <Gift className="w-4 h-4 text-[#6BC4A0]" />
+                      <span className="text-sm text-gray-700 font-medium">{(user.points || 0).toFixed(2)} $BTS</span>
+                    </div>
+                    <motion.button 
+                      onClick={() => openUserDetails(user)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-[#81D7B4] hover:bg-[#6BC4A0] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>View</span>
+                    </motion.button>
                   </div>
                 </div>
-                
-                {/* Points */}
-                <div className="col-span-1 mb-2 md:mb-0">
-                  <p className="text-xs text-gray-600 md:hidden">Points</p>
-                  <div className="flex items-center space-x-2">
-                    <Star className="w-4 h-4 text-[#81D7B4]" />
-                    <p className="font-bold text-[#81D7B4]">{Math.floor(user.totalamount * 0.005 * 1000)}</p>
+
+                {/* Desktop Grid Layout */}
+                <div className="hidden md:contents">
+                  {/* Rank */}
+                  <div className="col-span-1 flex items-center">
+                    {getRankBadge(user.rank || index + 1)}
                   </div>
-                </div>
-                
-                {/* $BTS */}
-                <div className="col-span-1 mb-2 md:mb-0">
-                  <p className="text-xs text-gray-600 md:hidden">$BTS</p>
-                  <div className="flex items-center space-x-2">
-                    <Gift className="w-4 h-4 text-[#6BC4A0]" />
-                    <p className="font-bold text-[#6BC4A0]">{(user.totalamount * 0.005 * 1000).toFixed(2)}</p>
+                  
+                  {/* User */}
+                  <div className="col-span-2 flex items-center">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <UserIcon rank={user.rank || index + 1} />
+                    </motion.div>
+                    <div className="ml-4">
+                      <p className="font-semibold text-gray-800 group-hover:text-[#4A9B7A] transition-colors">
+                        {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
+                      </p>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <div className="w-2 h-2 bg-[#81D7B4] rounded-full"></div>
+                        <p className="text-xs text-gray-600">Chain: {user.chain}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Details Button */}
-                <div className="col-span-1 flex justify-end w-full md:w-auto">
-                  <motion.button
-                    onClick={() => openUserDetails(user)}
-                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className="bg-white/60 backdrop-blur-md text-gray-700 font-medium py-2 px-4 rounded-xl border border-[#81D7B4]/50 shadow-lg hover:shadow-xl transition-all duration-300 text-sm flex items-center group"
-                  >
-                    <Eye className="w-4 h-4 mr-2 text-[#4A9B7A] group-hover:text-[#4A9B7A] transition-colors" />
-                    View Details
-                    <ChevronRight className="w-4 h-4 ml-2 text-gray-500 group-hover:text-gray-700 group-hover:translate-x-1 transition-all duration-200" />
-                  </motion.button>
+                  
+                  {/* Total Saved */}
+                  <div className="col-span-1">
+                    <div className="flex items-center space-x-2">
+                      <Coins className="w-4 h-4 text-[#4A9B7A]" />
+                      <p className="font-bold text-[#4A9B7A] text-lg">${user.totalamount.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Points */}
+                  <div className="col-span-1">
+                    <div className="flex items-center space-x-2">
+                      <Star className="w-4 h-4 text-[#81D7B4]" />
+                      <p className="font-bold text-[#81D7B4]">{user.points || 0}</p>
+                    </div>
+                  </div>
+                  
+                  {/* $BTS */}
+                  <div className="col-span-1">
+                    <div className="flex items-center space-x-2">
+                      <Gift className="w-4 h-4 text-[#6BC4A0]" />
+                      <p className="font-bold text-[#6BC4A0]">{(user.points || 0).toFixed(2)}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Details Button */}
+                  <div className="col-span-1 flex justify-end">
+                    <motion.button
+                      onClick={() => openUserDetails(user)}
+                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      className="bg-white/60 backdrop-blur-md text-gray-700 font-medium py-2 px-4 rounded-xl border border-[#81D7B4]/50 shadow-lg hover:shadow-xl transition-all duration-300 text-sm flex items-center group"
+                    >
+                      <Eye className="w-4 h-4 mr-2 text-[#4A9B7A] group-hover:text-[#4A9B7A] transition-colors" />
+                      View Details
+                      <ChevronRight className="w-4 h-4 ml-2 text-gray-500 group-hover:text-gray-700 group-hover:translate-x-1 transition-all duration-200" />
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -573,13 +651,13 @@ export default function LeaderboardPage() {
       </motion.div>
       
       {/* Your Position Card */}
-      <div className="mt-8 bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC4A0]/20 backdrop-blur-xl rounded-2xl border border-[#81D7B4]/40 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 relative z-10 overflow-hidden">
+      <div className="mt-6 md:mt-8 bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC4A0]/20 backdrop-blur-xl rounded-2xl border border-[#81D7B4]/40 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-4 sm:p-6 relative z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/20 rounded-full blur-3xl"></div>
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <div className="mb-4 md:mb-0">
-            <h3 className="text-lg font-bold text-gray-800 mb-1">Your Position</h3>
+        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center justify-between">
+          <div className="text-center md:text-left">
+            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-1">Your Position</h3>
             <p className="text-gray-600 text-sm">
               {currentUserPosition 
                 ? `You're ranked #${currentUserPosition.rank} on the leaderboard!` 
@@ -587,7 +665,45 @@ export default function LeaderboardPage() {
             </p>
           </div>
           
-          <div className="flex items-center">
+          {/* Mobile Layout */}
+          <div className="md:hidden grid grid-cols-2 gap-3">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Current Rank</p>
+              <p className="font-bold text-xl text-gray-800 flex items-center justify-center">
+                {currentUserPosition ? `#${currentUserPosition.rank}` : "-"}
+              </p>
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Points</p>
+              <p className="font-bold text-xl text-gray-800 text-center">
+                {currentUserPosition 
+                  ? currentUserPosition.points || 0
+                  : "0"}
+              </p>
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">$BTS</p>
+              <p className="font-bold text-xl text-gray-800 text-center">
+                {currentUserPosition 
+                  ? (currentUserPosition.points || 0).toFixed(2)
+                  : "0.00"}
+              </p>
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Total Saved</p>
+              <p className="font-bold text-xl text-gray-800 text-center">
+                {currentUserPosition 
+                  ? `$${currentUserPosition.totalamount.toFixed(2)}` 
+                  : "$0.00"}
+              </p>
+            </div>
+          </div>
+          
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm mr-4">
               <p className="text-xs text-gray-500 mb-1">Current Rank</p>
               <p className="font-bold text-2xl text-gray-800 flex items-center">
@@ -599,7 +715,7 @@ export default function LeaderboardPage() {
               <p className="text-xs text-gray-500 mb-1">Points</p>
               <p className="font-bold text-2xl text-gray-800">
                 {currentUserPosition 
-                  ? Math.floor(currentUserPosition.totalamount * 0.005 * 1000)
+                  ? currentUserPosition.points || 0
                   : "0"}
               </p>
             </div>
@@ -608,7 +724,7 @@ export default function LeaderboardPage() {
               <p className="text-xs text-gray-500 mb-1">$BTS</p>
               <p className="font-bold text-2xl text-gray-800">
                 {currentUserPosition 
-                  ? (currentUserPosition.totalamount * 0.005 * 1000).toFixed(2)
+                  ? (currentUserPosition.points || 0).toFixed(2)
                   : "0.00"}
               </p>
             </div>
@@ -750,7 +866,7 @@ export default function LeaderboardPage() {
                 <Sparkles className="w-4 h-4 mr-2 text-[#4A9B7A]" />
                 How is the leaderboard calculated?
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed">The leaderboard ranks users based on their total savings amount across all plans. The more you save, the higher your rank!</p>
+              <p className="text-sm text-gray-600 leading-relaxed">The leaderboard ranks users based on points calculated from their total savings amount. Points are earned at a rate of 5 points per $1 saved. Only users with $10+ in savings are eligible for the leaderboard.</p>
             </motion.div>
             
             <motion.div 

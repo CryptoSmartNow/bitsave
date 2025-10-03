@@ -10,6 +10,7 @@ import TopUpModal from '@/components/TopUpModal';
 import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
+import { formatTimestamp } from '@/utils/dateUtils';
 
 // Initialize the Space Grotesk font
 const spaceGrotesk = Space_Grotesk({
@@ -245,7 +246,7 @@ export default function PlansPage() {
                             ) : plan.isGToken ? (
                               <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-xs font-medium text-gray-500 ml-1">$G</span> <span className="text-xs text-gray-400 ml-2">(${(parseFloat(plan.currentAmount) * goodDollarPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span></>
                             ) : plan.isUSDGLO ? (
-                              <>${Number(ethers.formatUnits(plan.currentAmount.split('.')[0], 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xs font-medium text-gray-500 ml-1">USDGLO</span></>
+                              <>${Number(ethers.formatUnits(plan.currentAmount.split('.')[0], 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xs font-medium text-gray-500 ml-1">USDGLO</span></>
                             ) : plan.tokenName === 'cUSD' ? (
                               <>
                                 ${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">cUSD</span>
@@ -271,9 +272,21 @@ export default function PlansPage() {
                         ></div>
                       </div>
 
-                      <div className="flex justify-between text-xs">
+                      <div className="flex justify-between text-xs mb-2">
                         <span className="text-gray-500">{plan.progress}% Complete</span>
-                        <span className="text-[#81D7B4] font-medium">Matures: {new Date(plan.maturityTime * 1000).toLocaleDateString()}</span>
+                        <span className="text-[#81D7B4] font-medium">Progress</span>
+                      </div>
+
+                      {/* Start and End Dates */}
+                      <div className="flex justify-between text-xs pt-2 border-t border-gray-100">
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 mb-1">Start Date</span>
+                          <span className="text-gray-700 font-medium">{formatTimestamp(plan.startTime)}</span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-gray-400 mb-1">End Date</span>
+                          <span className="text-[#81D7B4] font-medium">{formatTimestamp(plan.maturityTime)}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -358,7 +371,10 @@ export default function PlansPage() {
                           </div>
                           <div>
                             <h3 className="font-bold text-gray-800 text-lg">{plan.name}</h3>
-                            <p className="text-xs text-gray-500">Completed on {new Date(plan.maturityTime * 1000).toLocaleDateString()}</p>
+                            <div className="flex gap-4 text-xs text-gray-500">
+                              <span>Started: {formatTimestamp(plan.startTime)}</span>
+                              <span>Completed: {formatTimestamp(plan.maturityTime)}</span>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/60 shadow-sm">
