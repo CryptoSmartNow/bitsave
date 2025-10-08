@@ -20,7 +20,7 @@ export default async function LocaleLayout({
   params
 }: Props) {
   const { locale } = await params;
-  
+
   // Ensure that the incoming `locale` is valid
   if (!routing.locales.includes(locale as Locale)) {
     notFound();
@@ -35,12 +35,10 @@ export default async function LocaleLayout({
   const direction = isRTL ? 'rtl' : 'ltr';
 
   return (
-    <html lang={locale} dir={direction}>
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      <div dir={direction}>
+        {children}
+      </div>
+    </NextIntlClientProvider>
   );
 }
