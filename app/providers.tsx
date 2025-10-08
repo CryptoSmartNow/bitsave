@@ -18,6 +18,7 @@ import { ThemeProvider, useTheme } from 'next-themes';
 
 // Import Rainbow Kit styles
 import '@rainbow-me/rainbowkit/styles.css';
+import { SuiteProviderWrapper } from './SuiteProvider';
 
 // Define the project ID for WalletConnect
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
@@ -83,15 +84,15 @@ function ThemedRainbowKit({ children }: { children: ReactNode }) {
       theme={
         theme === 'dark'
           ? darkTheme({
-              accentColor: '#66C4A3',
-              accentColorForeground: 'white',
-              borderRadius: 'large',
-            })
+            accentColor: '#66C4A3',
+            accentColorForeground: 'white',
+            borderRadius: 'large',
+          })
           : lightTheme({
-              accentColor: '#81D7B4',
-              accentColorForeground: 'white',
-              borderRadius: 'large',
-            })
+            accentColor: '#81D7B4',
+            accentColorForeground: 'white',
+            borderRadius: 'large',
+          })
       }
     >
       {children}
@@ -104,7 +105,11 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <WagmiProvider config={config} reconnectOnMount={true}>
         <QueryClientProvider client={queryClient}>
-          <ThemedRainbowKit>{children}</ThemedRainbowKit>
+          <ThemedRainbowKit>
+            <SuiteProviderWrapper>
+              {children}
+            </SuiteProviderWrapper>
+          </ThemedRainbowKit>
         </QueryClientProvider>
       </WagmiProvider>
     </ThemeProvider>
