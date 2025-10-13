@@ -648,7 +648,7 @@ export default function CreateSavingsPage() {
 
   // Token addresses and decimals for Lisk
   const LISK_TOKENS = {
-    USDC: { address: LISK_CONTRACT_ADDRESS, decimals: 6 },
+    USDC: { address: '0x1a326a8635D5291cCdf7977D6375764D6D8175ba', decimals: 6 },
   };
 
   // Helper to fetch CELO price in USD

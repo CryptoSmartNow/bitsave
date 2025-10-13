@@ -260,7 +260,7 @@ const SavvyFinanceVideos = ({ videos }: { videos: Video[] }) => {
             className="flex justify-center mt-8"
           >
             <motion.a
-              href="https://www.youtube.com/@SavvyFinance"
+              href="https://www.youtube.com/@cryptosmartnow"
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.02 }}

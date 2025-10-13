@@ -13,8 +13,10 @@ import { trackTransaction, trackError } from '@/lib/interactionTracker';
 // Contract addresses and ABIs
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
+const LISK_CONTRACT_ADDRESS = "0x05D032ac25d322df992303dCa074EE7392C117b9"
 const ETH_TOKEN_ADDRESS = "0x0000000000000000000000000000000000000000"
 const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+const USDC_LISK_ADDRESS = "0x1a326a8635D5291cCdf7977D6375764D6D8175ba"
 const USDGLO_CELO_ADDRESS = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3"
 
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
@@ -45,7 +47,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
-  const [isBaseNetwork, setIsBaseNetwork] = useState(true)
+  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base')
   const modalRef = useRef<HTMLDivElement>(null)
   const { address, isConnected } = useAccount()
   
@@ -62,7 +64,18 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         const provider = new ethers.BrowserProvider(window.ethereum);
         const network = await provider.getNetwork();
         const BASE_CHAIN_ID = BigInt(8453);
-        setIsBaseNetwork(network.chainId === BASE_CHAIN_ID);
+        const CELO_CHAIN_ID = BigInt(42220);
+        const LISK_CHAIN_ID = BigInt(1135);
+        
+        if (network.chainId === BASE_CHAIN_ID) {
+          setCurrentNetwork('base');
+        } else if (network.chainId === CELO_CHAIN_ID) {
+          setCurrentNetwork('celo');
+        } else if (network.chainId === LISK_CHAIN_ID) {
+          setCurrentNetwork('lisk');
+        } else {
+          setCurrentNetwork('base'); // default fallback
+        }
       }
     };
     
@@ -81,9 +94,12 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   };
 
   // Wallet balance checking utilities
-  const getTokenAddress = (tokenName: string, isBaseNetwork: boolean) => {
-    if (isBaseNetwork) {
+  const getTokenAddress = (tokenName: string, network: 'base' | 'celo' | 'lisk') => {
+    if (network === 'base') {
       return USDC_BASE_ADDRESS; // USDC on Base
+    } else if (network === 'lisk') {
+      // Lisk network - only USDC supported
+      return USDC_LISK_ADDRESS; // USDC on Lisk
     } else {
       // Celo network
       switch (tokenName?.toLowerCase()) {
@@ -118,7 +134,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       
       // Get token balance for selected currency
       if (!isEth && tokenName) {
-        const tokenAddress = getTokenAddress(tokenName, isBaseNetwork);
+        const tokenAddress = getTokenAddress(tokenName, currentNetwork);
         const tokenContract = new ethers.Contract(tokenAddress, erc20ABI.abi, provider);
         const tokenBalance = await tokenContract.balanceOf(address);
         const decimals = await tokenContract.decimals();
@@ -163,7 +179,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     } finally {
       setIsCheckingBalance(false);
     }
-  }, [address, amount, isEth, tokenName, isBaseNetwork, tokenBalance]);
+  }, [address, amount, isEth, tokenName, currentNetwork, tokenBalance]);
 
   // Check balances when amount changes
   useEffect(() => {
@@ -176,7 +192,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     } else {
       setBalanceWarning(null);
     }
-  }, [amount, address, isOpen, isEth, tokenName, isBaseNetwork, checkWalletBalances]);
+  }, [amount, address, isOpen, isEth, tokenName, currentNetwork, checkWalletBalances]);
 
   // Initial balance check when modal opens
   useEffect(() => {
@@ -256,14 +272,40 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       
       const network = await provider.getNetwork();
       const BASE_CHAIN_ID = BigInt(8453);
-      const isBase = network.chainId === BASE_CHAIN_ID;
+      const CELO_CHAIN_ID = BigInt(42220);
+      const LISK_CHAIN_ID = BigInt(1135);
       
-      const contractAddress = isBase ? BASE_CONTRACT_ADDRESS : CELO_CONTRACT_ADDRESS;
-      let tokenAddress = isBase ? USDC_BASE_ADDRESS : USDGLO_CELO_ADDRESS;
+      let networkType = 'celo'; // default
+      if (network.chainId === BASE_CHAIN_ID) {
+        networkType = 'base';
+      } else if (network.chainId === LISK_CHAIN_ID) {
+        networkType = 'lisk';
+      } else if (network.chainId === CELO_CHAIN_ID) {
+        networkType = 'celo';
+      } else if (network.chainId === CELO_CHAIN_ID) {
+        networkType = 'celo';
+      }
+      
+      let contractAddress;
+      let tokenAddress;
       let decimals = 6;
-      let tokenNameToUse = isBase ? "USDC" : "USDGLO";
+      let tokenNameToUse;
       
-      if (isBase && tokenName) {
+      if (networkType === 'base') {
+        contractAddress = BASE_CONTRACT_ADDRESS;
+        tokenAddress = USDC_BASE_ADDRESS;
+        tokenNameToUse = "USDC";
+      } else if (networkType === 'lisk') {
+        contractAddress = LISK_CONTRACT_ADDRESS;
+        tokenAddress = USDC_LISK_ADDRESS;
+        tokenNameToUse = "USDC";
+      } else {
+        contractAddress = CELO_CONTRACT_ADDRESS;
+        tokenAddress = USDGLO_CELO_ADDRESS;
+        tokenNameToUse = "USDGLO";
+      }
+      
+      if (networkType === 'base' && tokenName) {
         if (tokenName === 'USDGLO') {
           tokenAddress = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3";
           decimals = 18;
@@ -273,7 +315,13 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           decimals = 6;
           tokenNameToUse = 'USDC';
         }
-      } else if (!isBase && tokenName) {
+      } else if (networkType === 'lisk' && tokenName) {
+        if (tokenName === 'USDC') {
+          tokenAddress = USDC_LISK_ADDRESS;
+          decimals = 6;
+          tokenNameToUse = 'USDC';
+        }
+      } else if (networkType === 'celo' && tokenName) {
         if (tokenName === 'cUSD') {
           tokenAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
           decimals = 18;
@@ -372,7 +420,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           {
             amount: userEnteredAmount,
             txnhash: receipt.hash,
-            chain: isBase ? "base" : "celo",
+            chain: currentNetwork,
             savingsname: savingsPlanName,
             useraddress: address,
             transaction_type: "deposit",
@@ -396,7 +444,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           type: 'top_up',
           amount: userEnteredAmount.toString(),
           currency: tokenNameToUse,
-          chain: isBase ? 'base' : 'celo',
+          chain: currentNetwork,
           planName: savingsPlanName,
           txHash: receipt.hash
         });
@@ -466,9 +514,26 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       
       const network = await provider.getNetwork();
       const BASE_CHAIN_ID = BigInt(8453);
-      const isBase = network.chainId === BASE_CHAIN_ID;
+      const CELO_CHAIN_ID = BigInt(42220);
+      const LISK_CHAIN_ID = BigInt(1135);
       
-      const contractAddress = isBase ? BASE_CONTRACT_ADDRESS : CELO_CONTRACT_ADDRESS;
+      let networkType = 'celo'; // default
+      if (network.chainId === BASE_CHAIN_ID) {
+        networkType = 'base';
+      } else if (network.chainId === LISK_CHAIN_ID) {
+        networkType = 'lisk';
+      } else if (network.chainId === CELO_CHAIN_ID) {
+        networkType = 'celo';
+      }
+      
+      let contractAddress;
+      if (networkType === 'base') {
+        contractAddress = BASE_CONTRACT_ADDRESS;
+      } else if (networkType === 'lisk') {
+        contractAddress = LISK_CONTRACT_ADDRESS;
+      } else {
+        contractAddress = CELO_CONTRACT_ADDRESS;
+      }
       
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
@@ -543,7 +608,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           {
             amount: ethAmount,
             txnhash: receipt.hash,
-            chain: isBase ? "base" : "celo",
+            chain: currentNetwork,
             savingsname: savingsPlanName,
             useraddress: address,
             transaction_type: "deposit",
@@ -674,15 +739,21 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       if (tokenName === 'Gooddollar' || tokenName === '$G') return '$G';
       return tokenName;
     }
-    return isBaseNetwork ? "USDC" : "USDGLO";
+    if (currentNetwork === 'base') return "USDC";
+    if (currentNetwork === 'lisk') return "USDC";
+    return "USDGLO"; // Celo default
   }
   
   const getNetworkName = () => {
-    return isBaseNetwork ? "Base" : "Celo";
+    if (currentNetwork === 'base') return "Base";
+    if (currentNetwork === 'lisk') return "Lisk";
+    return "Celo";
   }
   
   const getExplorerUrl = () => {
-    return isBaseNetwork ? "https://basescan.org/tx/" : "https://explorer.celo.org/mainnet/tx/";
+    if (currentNetwork === 'base') return "https://basescan.org/tx/";
+    if (currentNetwork === 'lisk') return "https://blockscout.lisk.com/tx/";
+    return "https://explorer.celo.org/mainnet/tx/";
   }
   
   if (!isOpen) return null
@@ -874,7 +945,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                       </>
                     ) : (
                       <>
-                        <Image src={isBaseNetwork ? "/base.svg" : "/celo.png"} alt={getNetworkName()} width={16} height={16} className="mr-2" />
+                        <Image src={currentNetwork === 'base' ? "/base.svg" : currentNetwork === 'lisk' ? "/lisk.png" : "/celo.png"} alt={getNetworkName()} width={16} height={16} className="mr-2" />
                         <span className="text-xs font-medium text-gray-700">{getTokenNameDisplay()} on {getNetworkName()}</span>
                       </>
                     )}

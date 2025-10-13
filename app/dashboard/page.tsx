@@ -760,11 +760,9 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1, duration: 0.3 }}
                     onClick={async () => {
-                      // Enhanced click behavior with verification and sync
                       console.log(`Network tab clicked: ${network.name}, isActive: ${network.isActive}, isNetworkSynced: ${isNetworkSynced}`);
                       
                       if (network.isActive && isNetworkSynced) {
-                        // Already on correct network and synced, just refresh data
                         console.log(`Already synced to ${network.name}, refreshing data...`);
                         await refetchSavingsData();
                       } else if (network.isActive && !isNetworkSynced) {

@@ -373,6 +373,12 @@ export function useSavingsData(): UseSavingsDataReturn {
                   decimals = 18;
                   tokenLogo = '/usdglo.png';
                 }
+              } else if (network.chainId === LISK_CHAIN_ID) {
+                if (tokenId.toLowerCase() === "0x1a326a8635d5291ccdf7977d6375764d6d8175ba") {
+                  tokenName = "USDC";
+                  decimals = 6;
+                  tokenLogo = '/usdc.png';
+                }
               }
               
               // Format amounts

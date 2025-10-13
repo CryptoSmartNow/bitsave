@@ -122,7 +122,7 @@ const Hero = memo(function Hero() {
               {/* Protocol Description */}
               <div className="text-center mb-6 xs:mb-8 sm:mb-10 md:mb-12 lg:mb-14 px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
                 <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 leading-relaxed max-w-4xl mx-auto font-light px-1 xs:px-2 sm:px-4" style={{ overflowWrap: 'break-word', wordBreak: 'break-word', hyphens: 'auto' }}>
-                  Your <span className="text-[#81D7B4] font-semibold">Onchain Savings Nest</span>. The <span className="text-[#81D7B4] font-semibold">SaveFi tool</span> helping <span className="text-[#81D7B4] font-semibold">income earners</span> save onchain
+                  Your <span className="text-[#81D7B4] font-semibold">Onchain Savings Nest</span>. The <span className="text-[#81D7B4] font-semibold">SaveFi Protocol</span> helping <span className="text-[#81D7B4] font-semibold">income earners</span> save onchain
                 </p>
               </div>
               

@@ -41,7 +41,6 @@ const twitterLinks = [
   'https://x.com/gloorry_/status/1974768248001286249?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
   'https://x.com/FranciscaChiso3/status/1974575891515850862?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
   'https://x.com/0xK3llyy/status/1974928974041035080?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
-  'https://x.com/be_kindplss/status/1974471156020441454?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
   'https://x.com/mamin_xyz/status/1974961667646935062?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
   'https://x.com/Elisha__Sunday/status/1974739002113642661?t=V0JknyQ_5P8rVUX3hFEKYg&s=19',
   'https://x.com/theweb3athlete/status/1974799128485113995?t=V0JknyQ_5P8rVUX3hFEKYg&s=19',
