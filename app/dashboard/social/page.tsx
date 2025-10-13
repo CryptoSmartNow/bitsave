@@ -24,6 +24,7 @@ declare global {
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-space-grotesk'
 })
 
 // Mock data for demonstration
@@ -36,6 +37,17 @@ const MOCK_USER_DATA = {
 }
 
 const twitterLinks = [
+  'https://x.com/0xK3llyy/status/1975477383592616411?t=ROFvnL-WZedP4ofxq65eSA&s=19',
+  'https://x.com/gloorry_/status/1974768248001286249?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
+  'https://x.com/FranciscaChiso3/status/1974575891515850862?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
+  'https://x.com/0xK3llyy/status/1974928974041035080?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
+  'https://x.com/be_kindplss/status/1974471156020441454?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
+  'https://x.com/mamin_xyz/status/1974961667646935062?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
+  'https://x.com/Elisha__Sunday/status/1974739002113642661?t=V0JknyQ_5P8rVUX3hFEKYg&s=19',
+  'https://x.com/theweb3athlete/status/1974799128485113995?t=V0JknyQ_5P8rVUX3hFEKYg&s=19',
+  'https://x.com/Celestina_crypt/status/1974571442814468483?t=hiLnCQaYv_UQNcO2Q5nlHg&s=19',
+  'https://x.com/Heslinmariolar/status/1974215922039587272?t=hiLnCQaYv_UQNcO2Q5nlHg&s=19',
+  'https://x.com/0xmillysmith/status/1974630660296847530?t=hiLnCQaYv_UQNcO2Q5nlHg&s=19',
   'https://x.com/bitsaveprotocol/status/1937769440806076921?s=46',
   'https://x.com/benedictfrank_/status/1923176035505344973?s=46',
   'https://x.com/mamin_xyz/status/1933100118766416048?s=46',
@@ -79,9 +91,8 @@ const savvyFinanceVideos = [
     embedUrl: 'https://www.youtube.com/embed/2QzgDb-27BQ',
     url: 'https://youtube.com/shorts/2QzgDb-27BQ?si=zcTRpALVASP_WcSl',
   },
+
 ]
-
-
 
 export default function SavvySpacePage() {
   const [userData] = useState(MOCK_USER_DATA)
@@ -125,108 +136,234 @@ export default function SavvySpacePage() {
 
   TaskIcon.displayName = 'TaskIcon'
 
-  // TwitterCard component moved to separate file for lazy loading
-
-  // TwitterFeed component moved to separate file for lazy loading
-
-  // SavvyFinanceVideos component moved to separate file for lazy loading
-
   const SavvySpace = () => (
-    <div className="space-y-12">
-      {/* User points and referral link section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-lg p-6 flex-1 relative overflow-hidden">
-          <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
-          <div className="relative z-10">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Your Points</h3>
-            <p className="text-4xl font-bold text-gray-800 tracking-tight">{userData.userPoints.toLocaleString()}</p>
-            <p className="text-sm text-[#81D7B4] font-medium mt-1">{userData.userPoints} $BTS</p>
-          </div>
-        </div>
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-lg p-6 flex-1 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-          <div className="relative z-10">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Your Referral Link</h3>
-            <div className="flex items-center mt-2">
-              <input
-                type="text"
-                readOnly
-                value={referralLink}
-                className="w-full bg-gray-100/50 rounded-l-lg px-3 py-2 border-y border-l border-gray-200/50 text-sm focus:outline-none"
-              />
-              <button
-                onClick={() => copyToClipboard(referralLink)}
-                className="bg-[#81D7B4] text-white px-3 py-2 rounded-r-lg hover:bg-[#6bc4a1] transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">Share this link to earn 5 points for every sign-up!</p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-8">
+      {/* Enhanced User Points and Referral Section with Dashboard Styling */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative"
+      >
+        {/* Background decorative elements */}
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#81D7B4]/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-[#81D7B4]/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        
+        {/* Main Container with Dashboard Glassmorphism */}
+        <div className="relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(22,50,57,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] p-8 md:p-12 overflow-hidden group hover:shadow-[0_25px_80px_-15px_rgba(129,215,180,0.4),0_12px_40px_-8px_rgba(22,50,57,0.3)] transition-all duration-700">
+          {/* Noise texture overlay */}
+          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+          
+          {/* Container decorative elements */}
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#81D7B4]/30 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
+            <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-[#81D7B4]/25 rounded-full blur-3xl group-hover:scale-105 transition-transform duration-1000" style={{animationDelay: '500ms'}}></div>
+          
+          {/* Content Grid */}
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Points Card */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="relative bg-white/40 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(129,215,180,0.15)] p-6 overflow-hidden group/card"
+            >
+              {/* Card background layers */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-[#81D7B4]/10 opacity-80"></div>
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl group-hover/card:scale-110 transition-transform duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center mb-4">
+                  <div className="w-3 h-3 bg-[#81D7B4] rounded-full mr-3 animate-pulse"></div>
+                  <h3 className="text-sm font-semibold text-gray-600/80 tracking-wide uppercase">Your Points</h3>
+                </div>
+                <div className="flex items-baseline space-x-2 mb-2">
+                  <p className="text-4xl md:text-5xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight">
+                    {userData.userPoints.toLocaleString()}
+                  </p>
+                  <span className="text-sm font-bold text-gray-500">PTS</span>
+                </div>
+                <p className="text-sm text-[#81D7B4] font-semibold">{userData.userPoints} $BTS</p>
+              </div>
+            </motion.div>
 
-      {/* Savvy Finance Videos */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Savvy Finance Videos</h2>
+            {/* Referral Link Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="relative bg-white/40 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(129,215,180,0.15)] p-6 overflow-hidden group/card"
+            >
+              {/* Card background layers */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-[#81D7B4]/10 opacity-80"></div>
+            <div className="absolute -top-8 -left-8 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl group-hover/card:scale-110 transition-transform duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center mb-4">
+                  <div className="w-3 h-3 bg-[#81D7B4] rounded-full mr-3 animate-pulse"></div>
+                  <h3 className="text-sm font-semibold text-gray-600/80 tracking-wide uppercase">Your Referral Link</h3>
+                </div>
+                <div className="flex items-center mt-3 mb-3">
+                  <input
+                    type="text"
+                    readOnly
+                    value={referralLink}
+                    className="flex-1 bg-white/60 backdrop-blur-sm rounded-l-xl px-4 py-3 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/50 text-gray-700 font-medium"
+                  />
+                  <motion.button
+                    onClick={() => copyToClipboard(referralLink)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white px-4 py-3 rounded-r-xl shadow-[0_4px_12px_rgba(129,215,180,0.4)] hover:shadow-[0_8px_20px_rgba(129,215,180,0.5)] transition-all duration-300 font-semibold"
+                  >
+                    Copy
+                  </motion.button>
+                </div>
+                <p className="text-xs text-gray-600/80 font-medium">Share this link to earn 5 points for every sign-up!</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Enhanced Savvy Finance Videos Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+        className="relative"
+      >
+        {/* Section Header with Dashboard Styling */}
+        <div className="relative mb-8">
+          <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-[#81D7B4] rounded-full shadow-[0_0_20px_rgba(129,215,180,0.6)]"></div>
+          <div className="pl-6">
+            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight mb-2">
+              Savvy Finance Videos
+            </h2>
+            <p className="text-gray-600/80 font-medium">Learn SaveFi fundamentals and advanced strategies</p>
+          </div>
+        </div>
+        
         <Suspense fallback={<LoadingSpinner />}>
            <SavvyFinanceVideos videos={savvyFinanceVideos} />
          </Suspense>
-      </div>
+      </motion.div>
 
-
-      
-      {/* Savvy Talks - Twitter Feed */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Savvy Talks</h2>
+      {/* Enhanced Savvy Talks - Twitter Feed Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="relative"
+      >
+        {/* Section Header with Dashboard Styling */}
+        <div className="relative mb-8">
+          <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-[#81D7B4] rounded-full shadow-[0_0_20px_rgba(129,215,180,0.6)]"></div>
+          <div className="pl-6">
+            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight mb-2">
+              Savvy Talks
+            </h2>
+            <p className="text-gray-600/80 font-medium">Community discussions and insights</p>
+          </div>
+        </div>
+        
         <Suspense fallback={<LoadingSpinner />}>
            <TwitterFeed links={twitterLinks} />
          </Suspense>
-      </div>
+      </motion.div>
     </div>
   )
 
   return (
     <div className={`${spaceGrotesk.className} min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-800`}>
+      {/* Enhanced background layers */}
       <div className="fixed inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
       <div className="fixed top-0 -left-1/4 w-full h-full bg-gradient-to-br from-[#81D7B4]/20 via-transparent to-transparent -z-10 blur-3xl"></div>
       <div className="fixed top-0 -right-1/4 w-full h-full bg-gradient-to-tl from-blue-500/10 via-transparent to-transparent -z-10 blur-3xl"></div>
+      
+      {/* Floating decorative elements */}
+      <div className="fixed top-20 left-10 w-32 h-32 bg-[#81D7B4]/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="fixed bottom-20 right-10 w-40 h-40 bg-[#81D7B4]/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '3s'}}></div>
 
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <header className="mb-10">
-          <h1 className="text-4xl font-bold text-gray-800 tracking-tight">Savvy Space</h1>
-          <p className="text-gray-600 mt-2 max-w-2xl">Engage with the community, complete tasks to earn points, and climb the leaderboard!</p>
-        </header>
+      <div className="container mx-auto px-4 py-12 relative z-10 max-w-7xl">
+        {/* Enhanced header section */}
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-16 text-center relative"
+        >
+          {/* Header background with glassmorphism */}
+          <div className="relative bg-white/30 backdrop-blur-xl rounded-3xl border border-white/40 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.2)] p-12 overflow-hidden">
+            {/* Header decorative elements */}
+            <div className="absolute -top-6 -left-6 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[#81D7B4]/15 rounded-full blur-2xl"></div>
+            
+            <div className="relative z-10">
+              {/* Main title with enhanced typography */}
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-transparent bg-gradient-to-r from-[#81D7B4] via-[#6BC4A0] to-[#81D7B4] bg-clip-text tracking-tight mb-6 leading-tight">
+                Savvy Space
+              </h1>
+              
+              {/* Subtitle with better spacing */}
+              <p className="text-lg md:text-xl text-gray-600/90 font-medium max-w-3xl mx-auto leading-relaxed mb-8">
+                Engage with the community, complete tasks to earn points, and climb the leaderboard while mastering SaveFi fundamentals!
+              </p>
+              
+              {/* Status indicators */}
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <div className="flex items-center bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                  <span className="font-semibold text-gray-700">Community Active</span>
+                </div>
+                <div className="flex items-center bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                  <div className="w-2 h-2 bg-[#81D7B4] rounded-full mr-2 animate-pulse"></div>
+                  <span className="font-semibold text-gray-700">New Content Daily</span>
+                </div>
+                <div className="flex items-center bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                  <div className="w-2 h-2 bg-[#81D7B4] rounded-full mr-2 animate-pulse"></div>
+                  <span className="font-semibold text-gray-700">Live Updates</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.header>
 
         <SavvySpace />
       </div>
-      
+
       {/* Success Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-white/20 backdrop-blur-sm flex items-center justify-center z-50">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowModal(false)}
+        >
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="bg-white rounded-lg p-6 max-w-sm mx-4 transform transition-all duration-300 shadow-xl"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-white/90 backdrop-blur-xl rounded-3xl border border-white/50 shadow-[0_20px_60px_rgba(129,215,180,0.3)] p-8 max-w-md mx-4 text-center"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Link Copied!</h3>
-              <p className="text-gray-600 mb-4">Your referral link has been copied to clipboard</p>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-[#81D7B4] text-white rounded-lg hover:bg-[#6BC49F] transition-colors"
-              >
-                Got it
-              </button>
+            <div className="w-16 h-16 bg-[#81D7B4] rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">Link Copied!</h3>
+            <p className="text-gray-600/80 font-medium mb-6">Your referral link has been copied to clipboard. Share it to earn points!</p>
+            <motion.button
+              onClick={() => setShowModal(false)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-[0_8px_32px_rgba(129,215,180,0.4)] transition-all duration-300"
+            >
+              Got it!
+            </motion.button>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </div>
   )

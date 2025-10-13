@@ -752,7 +752,7 @@ export default function Dashboard() {
                 {[
                   { name: 'Base', desc: 'Ethereum L2', icon: 'base.svg', isActive: isBaseNetwork },
                   { name: 'Celo', desc: 'Mobile-First', icon: 'celo.png', isActive: isCeloNetwork },
-                  { name: 'Lisk', desc: 'Sidechain', icon: 'lisk-logo.png', isActive: isLiskNetwork }
+                  { name: 'Lisk', desc: 'Ethereum L2', icon: 'lisk-logo.png', isActive: isLiskNetwork }
                 ].map((network, index) => (
                   <motion.button
                     key={`${network.name}-${network.isActive}-${hookNetworkSwitching}-${isNetworkSynced}`}
