@@ -374,7 +374,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                   tokenLogo = '/usdglo.png';
                 }
               } else if (network.chainId === LISK_CHAIN_ID) {
-                if (tokenId.toLowerCase() === "0x1a326a8635d5291ccdf7977d6375764d6d8175ba") {
+                if (tokenId.toLowerCase() === "0xf242275d3a6527d877f2c927a82d9b057609cc71") {
                   tokenName = "USDC";
                   decimals = 6;
                   tokenLogo = '/usdc.png';
