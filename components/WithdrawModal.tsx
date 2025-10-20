@@ -12,6 +12,7 @@ import { getTweetButtonProps } from '@/utils/tweetUtils';
 
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ const WithdrawModal = memo(function WithdrawModal({
   const [success, setSuccess] = useState(false);
   const [txHash, setTxHash] = useState('');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [isBaseNetwork, setIsBaseNetwork] = useState(true);
+  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base');
   const [currentTokenName, setCurrentTokenName] = useState(isEth ? 'ETH' : 'USDC');
   const { address } = useAccount();
 
@@ -47,8 +48,18 @@ const WithdrawModal = memo(function WithdrawModal({
         const provider = new ethers.BrowserProvider(window.ethereum);
         const network = await provider.getNetwork();
         const BASE_CHAIN_ID = BigInt(8453);
-        const isBase = network.chainId === BASE_CHAIN_ID;
-        setIsBaseNetwork(isBase);
+        const CELO_CHAIN_ID = BigInt(42220);
+        const LISK_CHAIN_ID = BigInt(1135);
+        
+        if (network.chainId === BASE_CHAIN_ID) {
+          setCurrentNetwork('base');
+        } else if (network.chainId === CELO_CHAIN_ID) {
+          setCurrentNetwork('celo');
+        } else if (network.chainId === LISK_CHAIN_ID) {
+          setCurrentNetwork('lisk');
+        } else {
+          setCurrentNetwork('base'); // default fallback
+        }
         
         if (isEth) {
           setCurrentTokenName('ETH');
@@ -60,7 +71,14 @@ const WithdrawModal = memo(function WithdrawModal({
             setCurrentTokenName(tokenName);
           }
         } else {
-          setCurrentTokenName(isBase ? 'USDC' : 'USDGLO');
+          // Set default token based on network
+          if (currentNetwork === 'base') {
+            setCurrentTokenName('USDC');
+          } else if (currentNetwork === 'lisk') {
+            setCurrentTokenName('USDC');
+          } else {
+            setCurrentTokenName('USDGLO'); // Celo default
+          }
         }
       }
     };
@@ -68,19 +86,37 @@ const WithdrawModal = memo(function WithdrawModal({
     if (isOpen) {
       detectNetwork();
     }
-  }, [isOpen, isEth, tokenName]);
+  }, [isOpen, isEth, tokenName, currentNetwork]);
 
   const getContractAddress = () => {
-    return isBaseNetwork ? BASE_CONTRACT_ADDRESS : CELO_CONTRACT_ADDRESS;
+    if (currentNetwork === 'base') {
+      return BASE_CONTRACT_ADDRESS;
+    } else if (currentNetwork === 'lisk') {
+      return LISK_CONTRACT_ADDRESS;
+    } else {
+      return CELO_CONTRACT_ADDRESS;
+    }
   };
 
   const getExplorerUrl = () => {
-    return isBaseNetwork ? 'https://basescan.org/tx/' : 'https://explorer.celo.org/mainnet/tx/';
+    if (currentNetwork === 'base') {
+      return 'https://basescan.org/tx/';
+    } else if (currentNetwork === 'lisk') {
+      return 'https://blockscout.lisk.com/tx/';
+    } else {
+      return 'https://explorer.celo.org/mainnet/tx/';
+    }
   };
 
   // Get the network name
   const getNetworkName = () => {
-    return isBaseNetwork ? 'Base' : 'Celo';
+    if (currentNetwork === 'base') {
+      return 'Base';
+    } else if (currentNetwork === 'lisk') {
+      return 'Lisk';
+    } else {
+      return 'Celo';
+    }
   };
 
   const handleWithdraw = async () => {
@@ -483,7 +519,7 @@ const WithdrawModal = memo(function WithdrawModal({
             </p>
             <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-gray-50/80 to-gray-100/80 backdrop-blur-sm rounded-full border border-gray-200/40 shadow-sm mb-4">
               <Image 
-                src={isEth ? '/eth.png' : isBaseNetwork ? '/base.svg' : '/celo.png'} 
+                src={isEth ? '/eth.png' : currentNetwork === 'base' ? '/base.svg' : currentNetwork === 'lisk' ? '/lisk.png' : '/celo.png'} 
                 alt={isEth ? 'ETH' : getNetworkName()} 
                 width={16}
                 height={16}
