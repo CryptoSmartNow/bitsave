@@ -32,7 +32,7 @@ import childContractABI from '../app/abi/childContractABI.js';
 // Contract addresses for different networks
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
-const LISK_CONTRACT_ADDRESS = "0x05D032ac25d322df992303dCa074EE7392C117b9";
+const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 
 // Network chain IDs
 const BASE_CHAIN_ID = BigInt(8453);
