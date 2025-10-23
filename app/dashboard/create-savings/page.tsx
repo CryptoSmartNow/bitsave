@@ -739,6 +739,39 @@ export default function CreateSavingsPage() {
     return contract;
   };
 
+  // Common helper function for Lisk Bitsave contract setup
+  const setupLiskBitsaveContract = async (signer: ethers.Signer) => {
+    const provider = signer.provider;
+    if (!provider) throw new Error('Provider not available from signer.');
+    
+    const contract = new ethers.Contract(LISK_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    let userChildContractAddress;
+    
+    try {
+      userChildContractAddress = await contract.getUserChildContractAddress();
+    } catch (error) {
+      console.error(error);
+      throw new Error("Failed to interact with the Bitsave contract. Please try again.");
+    }
+    
+    if (userChildContractAddress === ethers.ZeroAddress) {
+      try {
+        // Get saving fee from contract (same as Base implementation)
+        const feeInWei = await fetchSavingFee(provider, LISK_CONTRACT_ADDRESS);
+        if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
+        
+        const joinTx = await contract.joinBitsave({ value: feeInWei });
+        await joinTx.wait();
+        userChildContractAddress = await contract.getUserChildContractAddress();
+      } catch (joinError) {
+        console.error(joinError);
+        throw new Error("Failed to join Bitsave. Please check your wallet has enough ETH for gas fees.");
+      }
+    }
+    
+    return contract;
+  };
+
   // Common helper function for maturity time calculation
   const calculateMaturityTime = () => {
     const maturityTime = selectedDayRange.to
@@ -1177,9 +1210,9 @@ export default function CreateSavingsPage() {
         throw new Error("Invalid amount. Please enter a valid number greater than zero.");
       }
       
-      // Setup provider and contract
+      // Setup provider and contract with joinBitsave functionality
       const { signer } = await setupLiskProvider();
-      const contract = new ethers.Contract(LISK_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const contract = await setupLiskBitsaveContract(signer);
       const maturityTime = calculateMaturityTime();
       
       // USDC specific logic for Lisk
@@ -1189,12 +1222,25 @@ export default function CreateSavingsPage() {
       // Approve and create saving
       await approveERC20(token.address, tokenAmount, signer);
       
-      // Use ETH for fee on Lisk (simplified fee structure)
-      const feeInEth = "0.001"; // $1 equivalent in ETH (approximate)
+      // Get saving fee from contract (same as Base implementation)
+      const { signer: contractSigner } = await setupLiskProvider();
+      const provider = contractSigner.provider;
+      if (!provider) throw new Error('Provider not available.');
+      
+      const feeInWei = await fetchSavingFee(provider, LISK_CONTRACT_ADDRESS);
+      if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
+      
+      // Estimate gas for createSaving transaction
+      const estimatedGas = await estimateGasForTransaction(
+        contract,
+        'createSaving',
+        [name, maturityTime, selectedPenalty, false, token.address, tokenAmount],
+        { value: feeInWei }
+      );
       
       const txOptions = { 
-        gasLimit: 2717330,
-        value: ethers.parseEther(feeInEth)
+        gasLimit: estimatedGas,
+        value: feeInWei
       };
       const tx = await contract.createSaving(
         name,
