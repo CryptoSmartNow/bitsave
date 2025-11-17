@@ -7,6 +7,7 @@ import BlogSection from './components/BlogSection';
 import Team from './components/Team';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
         <FAQ />
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }

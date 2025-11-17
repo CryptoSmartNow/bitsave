@@ -118,7 +118,7 @@ const TwitterCard = ({ url, index }: { url: string; index: number }) => {
       className="flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px] lg:w-[450px] relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(22,50,57,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] overflow-hidden group hover:shadow-[0_25px_80px_-15px_rgba(129,215,180,0.4),0_12px_40px_-8px_rgba(22,50,57,0.3)] transition-all duration-700"
     >
       {/* Noise texture overlay */}
-      <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
       
       {/* Decorative elements */}
             <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#81D7B4]/30 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
@@ -295,7 +295,7 @@ const TwitterFeed = ({ links }: { links: string[] }) => {
       {/* Enhanced container with dashboard styling */}
       <div className="relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(22,50,57,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] p-8 overflow-hidden">
         {/* Noise texture overlay */}
-        <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
         
         {/* Background decorative elements */}
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#81D7B4]/20 rounded-full blur-3xl animate-pulse"></div>

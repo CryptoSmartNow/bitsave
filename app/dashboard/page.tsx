@@ -8,13 +8,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 // Google Fonts integration
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 // Custom modal components for savings operations
 import TopUpModal from '../../components/TopUpModal';
 import WithdrawModal from '../../components/WithdrawModal';
 import NetworkDetection from '../../components/NetworkDetection';
+import NetworkSelectionModal from '../../components/NetworkSelectionModal';
 // Animation library for smooth UI transitions
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 // Custom error handling for contract operations
 import { handleContractError } from '../../lib/contractErrorHandler';
 // Custom hook for savings data with caching
@@ -27,11 +28,27 @@ import { initializeSavingsCache } from '../../utils/savingsCache';
 import { useENSData } from '../../hooks/useENSData';
 // Date utility functions for formatting timestamps
 import { formatTimestamp } from '../../utils/dateUtils';
+import { HiOutlineArrowRight, HiOutlineCheckCircle, HiOutlineArrowDown, HiOutlineBell, HiOutlineChevronDown, HiOutlineCheck, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlinePlus, HiOutlineXMark } from 'react-icons/hi2';
+import { fetchMultipleNetworkLogos, NetworkLogoData } from '../../utils/networkLogos';
+
+// Helper function to ensure image URLs are properly formatted for Next.js Image
+const ensureImageUrl = (url: string | undefined): string => {
+  if (!url) return '/default-network.png'
+  // If it's a relative path starting with /, it's fine
+  if (url.startsWith('/')) return url
+  // If it starts with // (protocol-relative), convert to https
+  if (url.startsWith('//')) return `https:${url}`
+  // If it doesn't start with http/https and doesn't start with /, add /
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `/${url}`
+  }
+  return url
+}
 
 // Configure Space Grotesk font with optimal loading settings
-const spaceGrotesk = Space_Grotesk({
+const exo = Exo({
   subsets: ['latin'],
-  display: 'swap', // Improves font loading performance
+  display: 'swap', 
   variable: '--font-space-grotesk'
 });
 
@@ -53,6 +70,7 @@ export default function Dashboard() {
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
+    isAvalancheNetwork,
     refetch: refetchSavingsData
   } = useSavingsData();
   
@@ -70,6 +88,7 @@ export default function Dashboard() {
   
   // UI state management
   const [activeTab, setActiveTab] = useState('current'); // Toggle between current/completed savings
+  const [activeMode, setActiveMode] = useState<'savefi' | 'tradfi'>('savefi'); // Toggle between SaveFi and TradFi
   
   // Modal state for top-up operations
   const [topUpModal, setTopUpModal] = useState({
@@ -87,6 +106,8 @@ export default function Dashboard() {
   const [showUpdateModal, setShowUpdateModal] = useState(false); // Update modal visibility
   const [selectedUpdate, setSelectedUpdate] = useState<{ title: string, content: string, date: string } | null>(null); // Selected update for modal
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false); // Network dropdown visibility
+  const [showNetworkModal, setShowNetworkModal] = useState(false); // Network modal visibility (for mobile)
+  const [isMobile, setIsMobile] = useState(false); // Detect mobile device
 
 
   // Platform updates state - stores announcements and news
@@ -246,6 +267,10 @@ export default function Dashboard() {
   // GoodDollar token price state (for Celo network calculations)
   const [goodDollarPrice, setGoodDollarPrice] = useState<number>(0.00009189); // Default fallback price
 
+  // Network logos state
+  const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  const [isLoadingLogos, setIsLoadingLogos] = useState(true);
+
   // Withdrawal modal state
   const [withdrawModal, setWithdrawModal] = useState({
     isOpen: false,
@@ -304,6 +329,25 @@ export default function Dashboard() {
     }
   }, [mounted]);
 
+  // Fetch network logos from CoinGecko
+  useEffect(() => {
+    const loadNetworkLogos = async () => {
+      try {
+        setIsLoadingLogos(true);
+        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'solana']);
+        setNetworkLogos(logos);
+      } catch (error) {
+        console.error('Error loading network logos:', error);
+      } finally {
+        setIsLoadingLogos(false);
+      }
+    };
+
+    if (mounted) {
+      loadNetworkLogos();
+    }
+  }, [mounted]);
+
   // Close update modal
   const closeUpdateModal = useCallback(() => {
     setShowUpdateModal(false);
@@ -328,8 +372,9 @@ export default function Dashboard() {
         setShowNotifications(false);
       }
 
-      // Close network dropdown if click is outside both button and dropdown
+      // Close network dropdown if click is outside both button and dropdown (desktop only)
       if (
+        !isMobile &&
         showNetworkDropdown &&
         networkButton &&
         networkDropdown &&
@@ -344,11 +389,23 @@ export default function Dashboard() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showNotifications, showNetworkDropdown]);
+  }, [showNotifications, showNetworkDropdown, isMobile]);
 
   // Set component as mounted for client-side rendering
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    if (typeof window !== 'undefined') {
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }
   }, []);
 
   // Function to get signer
@@ -369,20 +426,35 @@ export default function Dashboard() {
     }
   };
 
+  // Handle network selection (used by both modal and dropdown)
+  const handleNetworkSelect = async (network: { name: string; isActive: boolean }) => {
+    if (network.isActive && isNetworkSynced) {
+      await refetchSavingsData();
+    } else if (network.isActive && !isNetworkSynced) {
+      await syncToWalletNetwork();
+    } else {
+      await switchToNetwork(network.name);
+    }
+  };
+
+  // Network options with dynamic logos (CoinGecko first, then local fallback)
+  const networkOptions = useMemo(() => [
+    { name: 'Base', desc: 'Ethereum L2', icon: networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg', isActive: isBaseNetwork },
+    { name: 'Celo', desc: 'Mobile-First', icon: networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png', isActive: isCeloNetwork },
+    { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
+    { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png', isActive: isAvalancheNetwork },
+    { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: false, isComingSoon: true }
+  ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
+
 
   // Initialize cache system on component mount
   useEffect(() => {
     initializeSavingsCache();
   }, []);
 
-  // Track network state changes for debugging
+  // Network state tracking
   useEffect(() => {
-    console.log('Network state update:', {
-      isBaseNetwork,
-      isCeloNetwork,
-      isLiskNetwork,
-      isNetworkSwitching: hookNetworkSwitching
-    });
+    // Network state monitoring
   }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, hookNetworkSwitching]);
   
 
@@ -464,7 +536,7 @@ export default function Dashboard() {
   // Prevent hydration mismatch by showing consistent loading state
   if (!mounted) {
     return (
-      <div className={`${spaceGrotesk.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#f2f2f2] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
+      <div className={`${exo.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#F7FCFA] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
         </div>
@@ -491,9 +563,7 @@ export default function Dashboard() {
       <div className="relative z-10">
         {/* Neomorphic icon container */}
         <div className="mx-auto w-28 h-28 bg-white/40 backdrop-blur-xl rounded-full flex items-center justify-center mb-8 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-2px_4px_rgba(0,0,0,0.1),0_8px_32px_rgba(129,215,180,0.2)] border border-white/50 group-hover:shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(0,0,0,0.05),0_12px_40px_rgba(129,215,180,0.3)] transition-all duration-500">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-14 h-14 text-[#81D7B4] drop-shadow-sm">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m-8-6h16" />
-          </svg>
+          <HiOutlinePlus className="w-14 h-14 text-[#81D7B4] drop-shadow-sm" />
         </div>
         
         <h3 className="text-2xl font-bold text-gray-800 mb-3 tracking-tight">No Savings Plans Yet</h3>
@@ -502,9 +572,7 @@ export default function Dashboard() {
         {/* Liquid glass button */}
         <Link href="/dashboard/create-savings" className="group/btn inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-[#81D7B4] via-[#81D7B4] to-[#81D7B4]/90 text-white font-semibold rounded-2xl shadow-[0_8px_32px_rgba(129,215,180,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] transition-all duration-500 transform hover:translate-y-[-3px] hover:scale-105 backdrop-blur-sm border border-[#81D7B4]/30">
           <span className="relative z-10">Create Your First Plan</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-3 transition-transform duration-300 group-hover/btn:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
+          <HiOutlineArrowRight className="h-5 w-5 ml-3 transition-transform duration-300 group-hover/btn:translate-x-1" />
           {/* Button shine effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
         </Link>
@@ -531,9 +599,7 @@ export default function Dashboard() {
       <div className="relative z-10">
         {/* Neomorphic icon container */}
         <div className="mx-auto w-28 h-28 bg-white/40 backdrop-blur-xl rounded-full flex items-center justify-center mb-8 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-2px_4px_rgba(0,0,0,0.1),0_8px_32px_rgba(129,215,180,0.2)] border border-white/50 group-hover:shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(0,0,0,0.05),0_12px_40px_rgba(129,215,180,0.3)] transition-all duration-500">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-14 h-14 text-[#81D7B4] drop-shadow-sm">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <HiOutlineCheckCircle className="w-14 h-14 text-[#81D7B4] drop-shadow-sm" />
         </div>
         
         <h3 className="text-2xl font-bold text-gray-800 mb-3 tracking-tight">No Completed Plans Yet</h3>
@@ -541,9 +607,7 @@ export default function Dashboard() {
         
         {/* Liquid glass status indicator */}
         <div className="group/indicator inline-flex items-center justify-center px-8 py-4 bg-white/30 backdrop-blur-xl text-gray-700 font-semibold rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.7)] transition-all duration-500 transform hover:scale-105">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-[#81D7B4] transition-transform duration-300 group-hover/indicator:rotate-12" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-          </svg>
+          <HiOutlineArrowDown className="h-6 w-6 mr-3 text-[#81D7B4] transition-transform duration-300 group-hover/indicator:rotate-12" />
           <span className="relative z-10">Keep Building Wealth</span>
           {/* Subtle shine effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover/indicator:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
@@ -555,7 +619,8 @@ export default function Dashboard() {
 
 
   return (
-    <div className={`${spaceGrotesk.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#f2f2f2] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
+    <div className={`${exo.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#F7FCFA] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
+
       {/* Network Detection Component */}
       <NetworkDetection />
 
@@ -567,6 +632,7 @@ export default function Dashboard() {
         planId={topUpModal.planId}
         isEth={topUpModal.isEth}
         tokenName={topUpModal.tokenName}
+        networkLogos={networkLogos}
       />
 
       {/* Withdraw Modal */}
@@ -578,6 +644,22 @@ export default function Dashboard() {
         penaltyPercentage={withdrawModal.penaltyPercentage}
         tokenName={withdrawModal.tokenName}
         isCompleted={withdrawModal.isCompleted}
+        networkLogos={networkLogos}
+      />
+
+      {/* Network Selection Modal (Mobile) */}
+      <NetworkSelectionModal
+        isOpen={showNetworkModal}
+        onClose={() => {
+          setShowNetworkModal(false);
+        }}
+        networks={networkOptions}
+        onSelectNetwork={async (network) => {
+          await handleNetworkSelect(network);
+          setShowNetworkModal(false);
+        }}
+        isNetworkSwitching={hookNetworkSwitching}
+        isLoadingLogos={isLoadingLogos}
       />
 
       {/* Update Modal */}
@@ -591,9 +673,7 @@ export default function Dashboard() {
                   onClick={closeUpdateModal}
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <HiOutlineXMark className="w-5 h-5" />
                 </button>
               </div>
 
@@ -621,7 +701,7 @@ export default function Dashboard() {
       )}
 
       {/* Grain overlay */}
-      <div className="fixed inset-0 z-0 opacity-30 pointer-events-none bg-[url('/noise.jpg')] mix-blend-overlay" ></div>
+      {/* Noise background removed per redesign spec */}
 
       {/* Decorative elements - adjusted for mobile */}
       <div className="absolute top-20 right-10 md:right-20 w-40 md:w-64 h-40 md:h-64 bg-[#81D7B4]/20 rounded-full blur-3xl -z-10"></div>
@@ -629,242 +709,317 @@ export default function Dashboard() {
 
 
       {/* Header - responsive adjustments */}
-      <div className="flex justify-between items-center mb-6 md:mb-8 overflow-x-hidden">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
-          <p className="text-sm md:text-base text-gray-500 flex items-center">
-            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-            Welcome back, {displayName || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User')}
-            {hasENS && ensName && (
-              <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
-                <span className="mr-1">⟠</span>
-                ENS: {ensName}
-              </span>
-            )}
-          </p>
+      <div className="mb-4 sm:mb-6 md:mb-8 overflow-x-hidden">
+        {/* Welcome back and Notification on same line */}
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full flex-shrink-0"></span>
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight truncate">
+              Welcome back 👋
+            </h1>
+          </div>
+          {/* Notification bell - far right on same line */}
+          <div className="flex items-center justify-end flex-shrink-0">
+            <button
+              id="notification-button"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="bg-white/80 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 hover:shadow-md transition-all duration-300 relative"
+            >
+              <HiOutlineBell className="w-5 h-5 text-gray-600" />
+              {newUpdatesCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#81D7B4] rounded-full border-2 border-white"></span>
+              )}
+            </button>
+          </div>
         </div>
-        {/* Notification bell with responsive positioning - aligned with menu bar */}
-        <div className="flex items-center space-x-3 relative mr-12 md:mr-0 mb-10 px-3 py-3">
-          <button
-            id="notification-button"
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="bg-white/80 backdrop-blur-sm p-2.5 rounded-full shadow-sm border border-white/50 hover:shadow-md transition-all duration-300 relative"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 text-gray-600">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            {newUpdatesCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#81D7B4] rounded-full border-2 border-white"></span>
-            )}
-          </button>
+        
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="ml-3 sm:ml-4 text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 font-medium break-words">
+              {displayName || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User')}
+              {hasENS && ensName && (
+                <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap">
+                  <span className="mr-1">⟠</span>
+                  ENS: {ensName}
+                </span>
+              )}
+            </p>
 
-
-          {/* Notifications dropdown - improved positioning for mobile */}
-          {showNotifications && (
-            <div className="fixed right-4 md:right-4 top-20 w-[calc(100vw-2rem)] md:w-80 max-w-sm bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 z-[9999] overflow-hidden">
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-800">Updates</h3>
-              </div>
-
-              <div className="max-h-80 overflow-y-auto">
-                {updates.length > 0 ? (
-                  updates.map(update => (
-                    <button
-                      key={update.id}
-                      onClick={() => openUpdateModal(update)}
-                      className="w-full text-left p-4 hover:bg-[#81D7B4]/5 border-b border-gray-100 last:border-b-0 transition-colors relative"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-gray-800 text-sm">{update.title}</h4>
-                          <p className="text-gray-500 text-xs mt-1 line-clamp-2">{update.content}</p>
-                          <span className="text-gray-400 text-xs mt-2 block">
-                            {new Date(update.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                        {update.isNew && (
-                          <span className="bg-[#81D7B4] text-white text-xs px-2 py-0.5 rounded-full">New</span>
-                        )}
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="p-4 text-center text-gray-500 text-sm">
-                    No new updates
-                  </div>
-                )}
-              </div>
-
-              <div className="p-3 bg-gray-50/80 border-t border-gray-100">
+            {/* SaveFi / TradFi Pill Tabs */}
+            <div className="mt-3 sm:mt-4">
+              <div className="inline-flex items-center bg-gray-50 border border-gray-200 rounded-full p-1.5 sm:p-2 gap-2 sm:gap-3 md:gap-4">
                 <button
-                  onClick={() => setShowNotifications(false)}
-                  className="w-full py-2 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                  onClick={() => setActiveMode('savefi')}
+                  className={`px-4 sm:px-5 md:px-6 lg:px-7 py-1.5 sm:py-2 md:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-semibold transition-colors duration-200 hover:bg-gray-100 ${activeMode === 'savefi' ? 'bg-white text-[#4A9B7A]' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                  Close
+                  SaveFi
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMode('tradfi');
+                    setTimeout(() => {
+                      try {
+                        router.push('/dashboard/tradfi');
+                      } catch (error) {
+                        console.error('Navigation failed:', error);
+                        setActiveMode('savefi'); // Revert on failure
+                        alert('Failed to navigate to TradFi page. Please try again.');
+                      }
+                    }, 250);
+                  }}
+                  className={`px-4 sm:px-5 md:px-6 lg:px-7 py-1.5 sm:py-2 md:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-semibold transition-colors duration-200 hover:bg-gray-100 ${activeMode === 'tradfi' ? 'bg-white text-[#4A9B7A]' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  TradFi
                 </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
+      {/* Notifications dropdown - improved positioning for mobile */}
+      {showNotifications && (
+        <div className="fixed right-4 md:right-4 top-20 w-[calc(100vw-2rem)] md:w-80 max-w-sm bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 z-[9999] overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-800">Updates</h3>
+          </div>
+
+          <div className="max-h-80 overflow-y-auto">
+            {updates.length > 0 ? (
+              updates.map(update => (
+                <button
+                  key={update.id}
+                  onClick={() => openUpdateModal(update)}
+                  className="w-full text-left p-4 hover:bg-[#81D7B4]/5 border-b border-gray-100 last:border-b-0 transition-colors relative"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium text-gray-800 text-sm">{update.title}</h4>
+                      <p className="text-gray-500 text-xs mt-1 line-clamp-2">{update.content}</p>
+                      <span className="text-gray-400 text-xs mt-2 block">
+                        {new Date(update.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {update.isNew && (
+                      <span className="bg-[#81D7B4] text-white text-xs px-2 py-0.5 rounded-full">New</span>
+                    )}
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="p-4 text-center text-gray-500 text-sm">
+                No new updates
+              </div>
+            )}
+          </div>
+
+          <div className="p-3 bg-gray-50/80 border-t border-gray-100">
+            <button
+              onClick={() => setShowNotifications(false)}
+              className="w-full py-2 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TradFi inline overlay removed; navigation goes to /dashboard/tradfi */}
+
       {/* Modern Network & Balance Section with Glassmorphism */}
+      <AnimatePresence mode="wait">
+      {activeMode === 'savefi' && (
+        <motion.div
+          key="savefi-network"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+        >
       <div className="relative">
         {/* Floating decorative elements */}
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-[#81D7B4]/20 via-[#229ED9]/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-[#229ED9]/15 via-[#81D7B4]/10 to-transparent rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         
         {/* Main Balance & Network Container */}
-        <div className="relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(34,158,217,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] p-8 md:p-12 overflow-hidden group hover:shadow-[0_25px_80px_-15px_rgba(129,215,180,0.4),0_12px_40px_-8px_rgba(34,158,217,0.3)] transition-all duration-700">
+        <div className="relative bg-white/20 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(34,158,217,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] p-4 sm:p-6 md:p-8 lg:p-12 overflow-hidden group hover:shadow-[0_25px_80px_-15px_rgba(129,215,180,0.4),0_12px_40px_-8px_rgba(34,158,217,0.3)] transition-all duration-700">
           {/* Noise texture overlay */}
-          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+            {/* Noise background removed per redesign spec */}
           
           {/* Animated gradient orbs */}
           <div className="absolute -top-16 -right-16 w-64 h-64 bg-gradient-to-br from-[#81D7B4]/30 to-[#229ED9]/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
           <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-gradient-to-tr from-[#229ED9]/25 to-[#81D7B4]/15 rounded-full blur-3xl group-hover:scale-105 transition-transform duration-1000" style={{animationDelay: '500ms'}}></div>
           
-          {/* Network Selector - Tab-based Interface */}
-          <div className="relative mb-8 md:mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  isNetworkSynced ? 'bg-[#81D7B4] animate-pulse' : 'bg-orange-400 animate-bounce'
-                }`}></div>
-                <span className="text-sm font-medium text-gray-600/80 tracking-wide uppercase">
-                  {isNetworkSynced ? 'Select Network' : 'Syncing Network...'}
-                </span>
-              </div>
-              {currentNetworkName && (
-                <div className="flex items-center space-x-2 px-3 py-1 bg-white/40 backdrop-blur-sm rounded-lg border border-white/50">
-                  <div className="w-1.5 h-1.5 bg-[#81D7B4] rounded-full"></div>
-                  <span className="text-xs font-medium text-gray-700">{currentNetworkName}</span>
+          {/* Enhanced Balance Display with Integrated Network Dropdown */}
+          <div className="relative">
+            {/* Balance header with dropdown on right */}
+            <div className="flex flex-row items-start justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <div className="relative flex-1 min-w-0">
+                <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-0.5 sm:w-1 h-12 sm:h-16 bg-gradient-to-b from-[#81D7B4] to-[#81D7B4] rounded-full shadow-[0_0_20px_rgba(129,215,180,0.6)]"></div>
+                <div className="pl-4 sm:pl-6">
+                  <span className="block text-gray-600/80 text-xs sm:text-sm font-medium tracking-wide uppercase mb-1 sm:mb-2">Portfolio Value</span>
+                  <div className="flex items-baseline space-x-2 sm:space-x-3 flex-wrap">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight break-words">
+                      ${parseFloat(savingsData.totalLocked).toFixed(2)}
+                    </h2>
+                    <div className="flex flex-col">
+                      <span className="text-xs sm:text-sm font-bold text-gray-500 tracking-wider">USD</span>
+                      <div className="flex items-center mt-0.5 sm:mt-1">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#81D7B4] rounded-full mr-1 sm:mr-2 animate-pulse"></div>
+                        <span className="text-[10px] sm:text-xs text-[#81D7B4] font-medium">Real-time</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Network Tab Interface */}
-            <div className="relative bg-white/20 backdrop-blur-xl rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.15)] p-2 overflow-hidden">
-              {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/5 via-transparent to-[#229ED9]/5"></div>
-              
-              {/* Network Tabs */}
-              <div className="relative flex space-x-2" key={`network-tabs-${isBaseNetwork}-${isCeloNetwork}-${isLiskNetwork}`}>
-                {[
-                  { name: 'Base', desc: 'Ethereum L2', icon: 'base.svg', isActive: isBaseNetwork },
-                  { name: 'Celo', desc: 'Mobile-First', icon: 'celo.png', isActive: isCeloNetwork },
-                  { name: 'Lisk', desc: 'Ethereum L2', icon: 'lisk-logo.png', isActive: isLiskNetwork }
-                ].map((network, index) => (
-                  <motion.button
-                    key={`${network.name}-${network.isActive}-${hookNetworkSwitching}-${isNetworkSynced}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.3 }}
-                    onClick={async () => {
-                      console.log(`Network tab clicked: ${network.name}, isActive: ${network.isActive}, isNetworkSynced: ${isNetworkSynced}`);
-                      
-                      if (network.isActive && isNetworkSynced) {
-                        console.log(`Already synced to ${network.name}, refreshing data...`);
-                        await refetchSavingsData();
-                      } else if (network.isActive && !isNetworkSynced) {
-                        // On correct network but not synced, sync UI
-                        console.log(`On ${network.name} network but not synced, syncing UI...`);
-                        await syncToWalletNetwork();
-                      } else {
-                        // Need to switch networks
-                        console.log(`Switching to ${network.name} network...`);
-                        await switchToNetwork(network.name);
-                      }
-                    }}
-                    disabled={hookNetworkSwitching}
-                    className={`group relative flex-1 flex flex-col items-center p-4 md:p-6 rounded-xl transition-all duration-500 transform ${
-                      network.isActive && isNetworkSynced
-                        ? 'bg-white/60 backdrop-blur-sm border-2 border-[#81D7B4]/60 shadow-[0_8px_32px_rgba(129,215,180,0.3)] scale-[1.02]'
-                        : network.isActive && !isNetworkSynced
-                        ? 'bg-white/50 backdrop-blur-sm border-2 border-orange-400/60 shadow-[0_8px_32px_rgba(255,165,0,0.3)] scale-[1.01]'
-                        : 'bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/40 hover:border-white/50 hover:shadow-[0_4px_16px_rgba(255,255,255,0.2)] hover:scale-[1.01]'
-                    } ${hookNetworkSwitching ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    {/* Enhanced Active indicator with sync status */}
-                    {network.isActive && (
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${
-                          isNetworkSynced 
-                            ? 'bg-[#81D7B4] shadow-[0_2px_8px_rgba(129,215,180,0.4)]'
-                            : 'bg-orange-400 shadow-[0_2px_8px_rgba(255,165,0,0.4)] animate-pulse'
-                        }`}
-                      >
-                        {isNetworkSynced ? (
-                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg className="w-2.5 h-2.5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
+              </div>
+
+              {/* Compact Network Dropdown/Modal Button */}
+              <div className="relative flex-shrink-0">
+                {/* Dropdown/Modal Button - Responsive size */}
+                <button
+                  id="network-button"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowNetworkModal(true);
+                  }}
+                  disabled={hookNetworkSwitching}
+                  className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 rounded-xl transition-all duration-300 bg-white/40 backdrop-blur-sm border border-white/50 hover:bg-white/50 hover:border-white/60 hover:shadow-[0_4px_16px_rgba(255,255,255,0.2)] ${
+                    hookNetworkSwitching ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                >
+                  {/* Current Network Icon - Responsive size */}
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full blur-md bg-[#81D7B4]/30 scale-110"></div>
+                    <div className="relative rounded-full w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex items-center justify-center bg-white/90 backdrop-blur-sm border-2 border-[#81D7B4]/40 shadow-[0_2px_10px_rgba(129,215,180,0.3)]">
+                      <Image
+                        src={ensureImageUrl(
+                          isBaseNetwork
+                            ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg')
+                            : isCeloNetwork
+                            ? (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png')
+                            : isLiskNetwork
+                            ? (networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png')
+                            : isAvalancheNetwork
+                            ? (networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png')
+                            : (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg')
                         )}
+                        alt={currentNetworkName || 'Network'}
+                        width={20}
+                        height={20}
+                        className="object-contain w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Network Name - Responsive, hidden on very small screens */}
+                  <span className="hidden xs:inline text-xs sm:text-sm font-medium text-gray-900">
+                    {currentNetworkName || 'Network'}
+                  </span>
+                  
+                  {/* Sync Status & Arrow */}
+                  <div className="flex items-center space-x-1">
+                    {isNetworkSynced ? (
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#81D7B4] flex items-center justify-center">
+                        <HiOutlineCheck className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" />
+                      </div>
+                    ) : (
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-400 animate-pulse"></div>
+                    )}
+                    {!isMobile && (
+                      <HiOutlineChevronDown 
+                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 transition-transform duration-200 ${
+                          showNetworkDropdown ? 'rotate-180' : ''
+                        }`} 
+                      />
+                    )}
+                  </div>
+                </button>
+                
+                {/* Dropdown Menu - Desktop only */}
+                {!isMobile && (
+                  <AnimatePresence>
+                    {showNetworkDropdown && (
+                      <motion.div
+                        id="network-dropdown"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full mt-2 right-0 w-[280px] md:w-[320px] bg-white/90 backdrop-blur-xl rounded-xl border border-white/60 shadow-[0_10px_40px_rgba(129,215,180,0.2)] overflow-hidden z-50"
+                      >
+                        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 p-2">
+                        {networkOptions.map((network, index) => (
+                          <motion.button
+                            key={`${network.name}-${network.isActive}`}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05, duration: 0.2 }}
+                            onClick={async () => {
+                              setShowNetworkDropdown(false);
+                              await handleNetworkSelect(network);
+                            }}
+                            disabled={hookNetworkSwitching || network.isActive || network.isComingSoon}
+                            className={`w-full flex flex-col items-center justify-center p-2 sm:p-3 transition-all duration-200 text-center space-y-1 sm:space-y-2 rounded-lg ${
+                              network.isActive
+                                ? 'bg-[#81D7B4]/20 cursor-default'
+                                : network.isComingSoon
+                                ? 'bg-gray-100/40 cursor-not-allowed opacity-75'
+                                : 'hover:bg-white/60 cursor-pointer'
+                            }`}
+                          >
+                            {/* Network Icon - Grid Layout */}
+                            <div className="relative flex-shrink-0">
+                              <div className={`absolute inset-0 rounded-full blur-md transition-all duration-300 ${
+                                network.isActive ? 'bg-[#81D7B4]/40 scale-110' : 'bg-gray-400/20'
+                              }`}></div>
+                              <div className={`relative rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-all duration-300 ${
+                                network.isActive
+                                  ? 'bg-white/90 border-2 border-[#81D7B4]/40 shadow-[0_2px_10px_rgba(129,215,180,0.3)]'
+                                  : network.isComingSoon
+                                  ? 'bg-gray-200/50 border border-gray-300/50 opacity-60'
+                                  : 'bg-white/70 border border-white/60'
+                              }`}>
+                                <Image
+                                  src={ensureImageUrl(network.icon)}
+                                  alt={network.name}
+                                  width={20}
+                                  height={20}
+                                  className="object-contain w-5 h-5 sm:w-6 sm:h-6"
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Network Info - Grid Layout */}
+                            <div className="flex-1 min-w-0 text-center">
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <h4 className={`font-semibold text-xs flex-1 min-w-0 truncate transition-all duration-300 ${
+                                  network.isActive ? 'text-gray-900' : network.isComingSoon ? 'text-gray-500' : 'text-gray-700'
+                                }`}>
+                                  {network.name}
+                                </h4>
+                                {network.isComingSoon && (
+                                  <span className="px-2 py-0.5 sm:px-2.5 sm:py-0.5 bg-gradient-to-r from-gray-400 to-gray-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-md whitespace-nowrap flex-shrink-0">
+                                    Soon
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Active Indicator */}
+                            {network.isActive && (
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#81D7B4] flex items-center justify-center">
+                                <HiOutlineCheck className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                          </motion.button>
+                        ))}
+                        </div>
                       </motion.div>
                     )}
-                    
-                    {/* Network icon with enhanced glow */}
-                    <div className="relative mb-3">
-                      <div className={`absolute inset-0 rounded-full blur-lg transition-all duration-500 ${
-                        network.isActive 
-                          ? 'bg-[#81D7B4]/50 scale-110' 
-                          : 'bg-gray-400/20 group-hover:bg-[#81D7B4]/30 group-hover:scale-105'
-                      }`}></div>
-                      <div className={`relative rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center transition-all duration-500 ${
-                        network.isActive
-                          ? 'bg-white/90 backdrop-blur-sm border-2 border-[#81D7B4]/40 shadow-[0_4px_20px_rgba(129,215,180,0.3)]'
-                          : 'bg-white/70 backdrop-blur-sm border border-white/60 group-hover:bg-white/80 group-hover:border-white/80'
-                      }`}>
-                        <Image
-                          src={`/${network.icon}`}
-                          alt={network.name}
-                          width={36}
-                          height={36}
-                          className={`object-contain transition-all duration-300 ${
-                            network.isActive ? 'w-7 h-7 md:w-9 md:h-9' : 'w-6 h-6 md:w-8 md:h-8 group-hover:scale-110'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Network name and description */}
-                    <div className="text-center">
-                      <h3 className={`font-bold text-sm md:text-base transition-all duration-300 ${
-                        network.isActive 
-                          ? 'text-gray-900' 
-                          : 'text-gray-700 group-hover:text-gray-900'
-                      }`}>
-                        {network.name}
-                      </h3>
-                      <p className={`text-xs font-medium mt-1 transition-all duration-300 ${
-                        network.isActive 
-                          ? 'text-gray-600' 
-                          : 'text-gray-500 group-hover:text-gray-600'
-                      }`}>
-                        {network.desc}
-                      </p>
-                    </div>
-                    
-                    {/* Loading indicator for switching network */}
-                    {hookNetworkSwitching && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl">
-                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#81D7B4] border-t-transparent"></div>
-                      </div>
-                    )}
-                    
-                    {/* Hover effect overlay */}
-                    <div className={`absolute inset-0 rounded-xl transition-opacity duration-300 ${
-                      network.isActive
-                        ? 'bg-gradient-to-br from-[#81D7B4]/10 via-transparent to-[#229ED9]/5 opacity-100'
-                        : 'bg-gradient-to-br from-[#81D7B4]/5 via-transparent to-[#229ED9]/5 opacity-0 group-hover:opacity-100'
-                    }`}></div>
-                  </motion.button>
-                ))}
+                  </AnimatePresence>
+                )}
               </div>
             </div>
           </div>
@@ -872,103 +1027,100 @@ export default function Dashboard() {
           {/* Enhanced Balance Display */}
           <div className="relative">
             {/* Balance header */}
-            <div className="flex items-center mb-6">
-              <div className="relative">
-                <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-16 bg-gradient-to-b from-[#81D7B4] via-[#229ED9] to-[#81D7B4] rounded-full shadow-[0_0_20px_rgba(129,215,180,0.6)]"></div>
-                <div className="pl-6">
-                  <span className="block text-gray-600/80 text-sm font-medium tracking-wide uppercase mb-2">Portfolio Value</span>
-                  <div className="flex items-baseline space-x-3">
-                    <h2 className="text-5xl md:text-7xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight">
-                      ${parseFloat(savingsData.totalLocked).toFixed(2)}
-                    </h2>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-500 tracking-wider">USD</span>
-                      <div className="flex items-center mt-1">
-                        <div className="w-2 h-2 bg-[#81D7B4] rounded-full mr-2 animate-pulse"></div>
-                        <span className="text-xs text-[#81D7B4] font-medium">Real-time</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          
 
             {/* Enhanced Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {/* Savings Plans Card */}
-              <div className="group/card relative bg-white/30 backdrop-blur-xl rounded-2xl p-3 sm:p-6 border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.5)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.2)] transition-all duration-500 overflow-hidden">
+              <div className="group/card relative bg-white/30 backdrop-blur-xl rounded-xl sm:rounded-2xl p-2.5 sm:p-4 md:p-5 lg:p-6 border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.5)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.2)] transition-all duration-500 overflow-hidden">
                 {/* Card background effects */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 via-transparent to-[#229ED9]/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl group-hover/card:bg-[#81D7B4]/30 transition-all duration-500"></div>
                 
                 <div className="relative">
-                  <div className="flex items-center justify-between mb-2 sm:mb-4">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#81D7B4]/20 rounded-xl flex items-center justify-center border border-[#81D7B4]/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2 md:mb-4">
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-[#81D7B4]/20 rounded-lg sm:rounded-xl flex items-center justify-center border border-[#81D7B4]/30">
+                        <HiOutlineClipboardDocumentList className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-[#81D7B4]" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-gray-600 tracking-wide">Active Plans</span>
+                      <span className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 tracking-wide">Active Plans</span>
                     </div>
                   </div>
-                  <div className="text-xl sm:text-3xl font-black text-gray-900 mb-1 sm:mb-2">{savingsData.deposits}</div>
-                  <div className="text-xs text-gray-500 font-medium">Savings Plans</div>
+                  <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal text-gray-900 mb-0.5 sm:mb-1 md:mb-2">{savingsData.deposits}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 font-medium">Savings Plans</div>
                 </div>
               </div>
 
               {/* Rewards Card */}
-              <div className="group/card relative bg-white/30 backdrop-blur-xl rounded-2xl p-3 sm:p-6 border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.5)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.2)] transition-all duration-500 overflow-hidden">
+              <div className="group/card relative bg-white/30 backdrop-blur-xl rounded-xl sm:rounded-2xl p-2.5 sm:p-4 md:p-5 lg:p-6 border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.5)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.2)] transition-all duration-500 overflow-hidden">
                 {/* Card background effects */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 via-transparent to-[#81D7B4]/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl group-hover/card:bg-[#81D7B4]/30 transition-all duration-500"></div>
                 
                 <div className="relative">
-                  <div className="flex items-center justify-between mb-2 sm:mb-4">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#81D7B4]/20 rounded-xl flex items-center justify-center border border-[#81D7B4]/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                        </svg>
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2 md:mb-4">
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 bg-[#81D7B4]/20 rounded-lg sm:rounded-xl flex items-center justify-center border border-[#81D7B4]/30">
+                        <HiOutlineCurrencyDollar className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-[#81D7B4]" />
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-gray-600 tracking-wide">$BTS Earned</span>
+                      <span className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 tracking-wide">$BTS Earned</span>
                     </div>
                   </div>
-                  <div className="flex items-baseline space-x-1 sm:space-x-2 mb-1 sm:mb-2">
-                    <span className="text-xl sm:text-3xl font-black text-gray-900">{savingsData.rewards}</span>
-                    <span className="text-sm sm:text-lg font-bold text-[#81D7B4]">$BTS</span>
+                  <div className="flex items-baseline space-x-1 sm:space-x-2 mb-0.5 sm:mb-1 md:mb-2 flex-wrap">
+                    <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal text-gray-900">{savingsData.rewards}</span>
+                    <span className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-[#81D7B4]">$BTS</span>
                   </div>
-                  <div className="text-xs text-gray-500 font-medium">Loyalty rewards</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 font-medium">Loyalty rewards</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+        </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Add Savings Button - responsive padding */}
-      <div className="mt-4 md:mt-6 bg-white/70 backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.2)] transition-all duration-500 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.04] mix-blend-overlay pointer-events-none"></div>
+      <AnimatePresence mode="wait">
+      {activeMode === 'savefi' && (
+      <motion.div
+        key="savefi-add"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25 }}
+        className="mt-3 sm:mt-4 md:mt-6 bg-white/70 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.2)] transition-all duration-500 relative overflow-hidden group"
+      >
         <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-gradient-to-tl from-[#81D7B4]/20 to-blue-300/10 rounded-full blur-3xl group-hover:bg-[#81D7B4]/30 transition-all duration-700"></div>
         <div className="absolute -left-20 -top-20 w-60 h-60 bg-gradient-to-br from-purple-300/10 to-transparent rounded-full blur-3xl opacity-70"></div>
 
         <Link href="/dashboard/create-savings" className="flex items-center justify-center text-gray-700 hover:text-gray-900 transition-all duration-300">
-          <div className="bg-gradient-to-br from-[#81D7B4] to-[#81D7B4]/90 rounded-full p-3.5 mr-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_10px_rgba(129,215,180,0.4),0_1px_2px_rgba(0,0,0,0.3)] group-hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_6px_15px_rgba(129,215,180,0.5),0_1px_2px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:scale-110">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" className="w-6 h-6 drop-shadow-sm">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+          <div className="bg-gradient-to-br from-[#81D7B4] to-[#81D7B4]/90 rounded-full p-2.5 sm:p-3 md:p-3.5 mr-3 sm:mr-4 md:mr-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_10px_rgba(129,215,180,0.4),0_1px_2px_rgba(0,0,0,0.3)] group-hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_6px_15px_rgba(129,215,180,0.5),0_1px_2px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:scale-110">
+            <HiOutlinePlus className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-sm text-white" />
           </div>
-          <span className="text-xl font-medium bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent drop-shadow-sm group-hover:drop-shadow-md transition-all duration-300">Create Savings</span>
+          <span className="text-base sm:text-lg md:text-xl font-medium bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent drop-shadow-sm group-hover:drop-shadow-md transition-all duration-300">Create Savings</span>
         </Link>
-      </div>
+      </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Savings Plans - responsive spacing */}
-      <div className="mt-6 md:mt-8 mb-8">
+      <AnimatePresence mode="wait">
+      {activeMode === 'savefi' && (
+      <motion.div
+        key="savefi-plans"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25 }}
+        className="mt-6 md:mt-8 mb-8"
+      >
 
         {/* Enhanced Modern Tabs */}
-        <div className="relative mb-6 md:mb-8">
+        <div className="relative mb-4 sm:mb-6 md:mb-8">
           {/* Tab container with glassmorphism */}
-          <div className="relative bg-white/30 backdrop-blur-xl rounded-2xl p-1.5 border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] overflow-hidden">
+          <div className="relative bg-white/30 backdrop-blur-xl rounded-xl sm:rounded-2xl p-1 sm:p-1.5 border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] overflow-hidden">
             {/* Background gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/5 via-transparent to-[#81D7B4]/5 opacity-50"></div>
             
@@ -976,7 +1128,7 @@ export default function Dashboard() {
             <div className="relative flex">
               {/* Active tab indicator */}
               <motion.div
-                className="absolute top-0 bottom-0 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 rounded-xl shadow-[0_4px_20px_rgba(129,215,180,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] border border-[#81D7B4]/20"
+                className="absolute top-0 bottom-0 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 rounded-lg sm:rounded-xl shadow-[0_4px_20px_rgba(129,215,180,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] border border-[#81D7B4]/20"
                 initial={false}
                 animate={{
                   x: activeTab === 'current' ? 0 : '100%',
@@ -991,50 +1143,38 @@ export default function Dashboard() {
               
               {/* Current Tab */}
               <button
-                className={`relative z-10 flex-1 px-4 md:px-6 py-3 md:py-4 font-semibold text-sm md:text-base transition-all duration-300 rounded-xl group ${
+                className={`relative z-10 flex-1 px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-4 font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 rounded-lg sm:rounded-xl group ${
                   activeTab === 'current' 
                     ? 'text-white shadow-sm' 
                     : 'text-gray-600 hover:text-gray-800 hover:bg-white/20'
                 }`}
                 onClick={() => setActiveTab('current')}
               >
-                <div className="flex items-center justify-center space-x-2">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className={`w-4 h-4 md:w-5 md:h-5 transition-all duration-300 ${
+                <div className="flex items-center justify-center space-x-1 sm:space-x-2">
+                  <HiOutlineClipboardDocumentList 
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 transition-all duration-300 ${
                       activeTab === 'current' ? 'text-white' : 'text-[#81D7B4] group-hover:scale-110'
                     }`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  />
                   <span className="tracking-wide">Active Plans</span>
                 </div>
               </button>
               
               {/* Completed Tab */}
               <button
-                className={`relative z-10 flex-1 px-4 md:px-6 py-3 md:py-4 font-semibold text-sm md:text-base transition-all duration-300 rounded-xl group ${
+                className={`relative z-10 flex-1 px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-4 font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 rounded-lg sm:rounded-xl group ${
                   activeTab === 'completed' 
                     ? 'text-white shadow-sm' 
                     : 'text-gray-600 hover:text-gray-800 hover:bg-white/20'
                 }`}
                 onClick={() => setActiveTab('completed')}
               >
-                <div className="flex items-center justify-center space-x-2">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className={`w-4 h-4 md:w-5 md:h-5 transition-all duration-300 ${
+                <div className="flex items-center justify-center space-x-1 sm:space-x-2">
+                  <HiOutlineCheckCircle 
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 transition-all duration-300 ${
                       activeTab === 'completed' ? 'text-white' : 'text-[#81D7B4] group-hover:scale-110'
                     }`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  />
                   <span className="tracking-wide">Completed</span>
                 </div>
               </button>
@@ -1042,16 +1182,16 @@ export default function Dashboard() {
           </div>
           
           {/* Tab content indicator */}
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-2 sm:mt-3 md:mt-4">
             <div className="flex space-x-2">
               <motion.div 
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${
                   activeTab === 'current' ? 'bg-[#81D7B4] scale-125' : 'bg-gray-300'
                 }`}
                 animate={{ scale: activeTab === 'current' ? 1.25 : 1 }}
               />
               <motion.div 
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${
                   activeTab === 'completed' ? 'bg-[#81D7B4] scale-125' : 'bg-gray-300'
                 }`}
                 animate={{ scale: activeTab === 'completed' ? 1.25 : 1 }}
@@ -1062,7 +1202,7 @@ export default function Dashboard() {
 
         {/* Savings plan cards with empty states */}
         {activeTab === 'current' && (
-          <div className="flex flex-col gap-4 md:gap-6">
+          <div className="flex flex-col gap-3 sm:gap-4 md:gap-6">
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
@@ -1080,12 +1220,12 @@ export default function Dashboard() {
                       y: -8,
                       transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
                     }}
-                    className="relative group overflow-hidden flex flex-col gap-6"
+                    className="relative group overflow-hidden flex flex-col gap-3 sm:gap-4 md:gap-6"
                     style={{
                       background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 30%, rgba(255,255,255,0.6) 70%, rgba(129,215,180,0.12) 100%)',
                       backdropFilter: 'blur(50px) saturate(200%) brightness(110%)',
                       WebkitBackdropFilter: 'blur(50px) saturate(200%) brightness(110%)',
-                      borderRadius: '32px',
+                      borderRadius: '24px',
                       border: '2px solid rgba(255,255,255,0.5)',
                       boxShadow: `
                         0 12px 40px rgba(129,215,180,0.15),
@@ -1095,14 +1235,14 @@ export default function Dashboard() {
                         inset 0 -2px 0 rgba(129,215,180,0.15),
                         inset 0 0 60px rgba(255,255,255,0.3)
                       `,
-                      padding: '36px'
+                      padding: '20px'
                     }}
                   >
                     {/* Advanced liquid glass background layers */}
-                    <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white/70 via-white/40 to-[#81D7B4]/8 opacity-85"></div>
-                    <div className="absolute inset-0 rounded-[32px] bg-gradient-to-tl from-[#81D7B4]/12 via-blue-400/4 to-white/25 opacity-70"></div>
-                    <div className="absolute inset-0 rounded-[32px] bg-gradient-to-tr from-purple-500/3 via-transparent to-cyan-400/5 opacity-60"></div>
-                    <div className="absolute inset-0 rounded-[32px] bg-radial-gradient from-white/30 via-transparent to-transparent opacity-50"></div>
+                    <div className="absolute inset-0 rounded-[24px] bg-gradient-to-br from-white/70 via-white/40 to-[#81D7B4]/8 opacity-85"></div>
+                    <div className="absolute inset-0 rounded-[24px] bg-gradient-to-tl from-[#81D7B4]/12 via-blue-400/4 to-white/25 opacity-70"></div>
+                    <div className="absolute inset-0 rounded-[24px] bg-gradient-to-tr from-purple-500/3 via-transparent to-cyan-400/5 opacity-60"></div>
+                    <div className="absolute inset-0 rounded-[24px] bg-radial-gradient from-white/30 via-transparent to-transparent opacity-50"></div>
                     
                     {/* Enhanced floating orbs with advanced liquid motion */}
                     <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#81D7B4]/30 via-blue-400/15 to-purple-500/10 rounded-full blur-3xl opacity-70 group-hover:opacity-95 group-hover:scale-110 transition-all duration-1000 animate-pulse"></div>
@@ -1110,26 +1250,25 @@ export default function Dashboard() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-[#81D7B4]/8 via-[#81D7B4]/4 to-transparent rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-all duration-800"></div>
                     <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-pink-400/8 via-orange-400/6 to-transparent rounded-full blur-xl opacity-30 animate-bounce group-hover:animate-pulse transition-all duration-500"></div>
                     
-                    {/* Enhanced noise texture for premium finish */}
-                    <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.04] mix-blend-overlay pointer-events-none rounded-[32px]"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#81D7B4]/3 opacity-60 mix-blend-soft-light pointer-events-none rounded-[32px]"></div>
+                    {/* Noise texture removed per redesign spec */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#81D7B4]/3 opacity-60 mix-blend-soft-light pointer-events-none rounded-[24px]"></div>
                     
                     {/* Premium neomorphic highlight edges */}
-                    <div className="absolute inset-0 rounded-[32px] border-2 border-white/60 opacity-90"></div>
-                    <div className="absolute inset-[2px] rounded-[30px] border border-white/40 opacity-70"></div>
-                    <div className="absolute inset-[4px] rounded-[28px] border border-white/20 opacity-50"></div>
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/90 to-transparent rounded-t-[32px]"></div>
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#81D7B4]/40 to-transparent rounded-b-[32px]"></div>
-                    <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-white/60 via-transparent to-[#81D7B4]/20 rounded-l-[32px]"></div>
-                    <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-white/40 via-transparent to-[#81D7B4]/30 rounded-r-[32px]"></div>
-                    <div className="absolute inset-0 rounded-[32px] shadow-[inset_0_3px_6px_rgba(255,255,255,0.7),inset_0_-2px_4px_rgba(129,215,180,0.15)] pointer-events-none"></div>
+                    <div className="absolute inset-0 rounded-[24px] border-2 border-white/60 opacity-90"></div>
+                    <div className="absolute inset-[2px] rounded-[22px] border border-white/40 opacity-70"></div>
+                    <div className="absolute inset-[4px] rounded-[20px] border border-white/20 opacity-50"></div>
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/90 to-transparent rounded-t-[24px]"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#81D7B4]/40 to-transparent rounded-b-[24px]"></div>
+                    <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-white/60 via-transparent to-[#81D7B4]/20 rounded-l-[24px]"></div>
+                    <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-white/40 via-transparent to-[#81D7B4]/30 rounded-r-[24px]"></div>
+                    <div className="absolute inset-0 rounded-[24px] shadow-[inset_0_3px_6px_rgba(255,255,255,0.7),inset_0_-2px_4px_rgba(129,215,180,0.15)] pointer-events-none"></div>
 
                     {/* Header Row with enhanced neomorphic design */}
-                    <div className="flex items-center justify-between relative z-10">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 relative z-10">
+                      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
                         {/* Neomorphic token icon container */}
                         <div 
-                          className="relative p-3 rounded-2xl group/icon"
+                          className="relative p-2 sm:p-2.5 md:p-3 rounded-xl sm:rounded-2xl group/icon flex-shrink-0"
                           style={{
                             background: 'linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))',
                             boxShadow: `
@@ -1145,34 +1284,44 @@ export default function Dashboard() {
                             alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} 
                             width={28}
                             height={28}
-                            className="w-7 h-7 relative z-10 group-hover/icon:scale-110 transition-transform duration-300" 
+                            className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 relative z-10 group-hover/icon:scale-110 transition-transform duration-300" 
                           />
-                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#81D7B4]/10 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#81D7B4]/10 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300"></div>
                         </div>
                         
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0 flex-1">
                           {/* Enhanced typography with better hierarchy */}
-                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-1 truncate max-w-[180px] sm:max-w-[220px] md:max-w-[300px]" style={{ fontWeight: 700, letterSpacing: '-0.02em' }}>
+                          <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 tracking-tight mb-0.5 sm:mb-1 truncate" style={{ fontWeight: 700, letterSpacing: '-0.02em' }}>
                             {plan.name}
                           </h3>
                           
                           {/* Liquid glass network badge */}
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
                             <span 
-                              className="inline-flex items-center px-3 py-2 text-xs font-semibold text-[#163239] relative overflow-hidden"
+                              className="inline-flex items-center px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 md:py-2 text-[10px] sm:text-xs font-semibold text-[#163239] relative overflow-hidden"
                               style={{
                                 background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%)',
                                 backdropFilter: 'blur(20px)',
-                                borderRadius: '12px',
+                                borderRadius: '10px',
                                 border: '1px solid rgba(129,215,180,0.3)',
                                 boxShadow: '0 2px 8px rgba(129,215,180,0.1), inset 0 1px 0 rgba(255,255,255,0.7)'
                               }}
                             >
-                              <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-2" />
-                              {plan.isEth ? 'ETH' : plan.tokenName}
-                              <span className="mx-2 text-gray-400">•</span>
-                              <Image src={isBaseNetwork ? '/base.svg' : '/celo.png'} alt={isBaseNetwork ? 'Base' : 'Celo'} width={16} height={16} className="w-4 h-4 mr-1" />
-                              {isBaseNetwork ? 'Base' : 'Celo'}
+                              <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 mr-1 sm:mr-1.5 md:mr-2" />
+                              <span className="hidden xs:inline">{plan.isEth ? 'ETH' : plan.tokenName}</span>
+                              <span className="mx-1 sm:mx-1.5 md:mx-2 text-gray-400 hidden sm:inline">•</span>
+                              <Image
+                                src={ensureImageUrl(
+                                  isBaseNetwork
+                                    ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg')
+                                    : (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png')
+                                )}
+                                alt={isBaseNetwork ? 'Base' : 'Celo'}
+                                width={16}
+                                height={16}
+                                className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 mr-0.5 sm:mr-1"
+                              />
+                              <span className="hidden xs:inline">{isBaseNetwork ? 'Base' : 'Celo'}</span>
                             </span>
                           </div>
                         </div>
@@ -1183,10 +1332,10 @@ export default function Dashboard() {
                         onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="relative px-6 py-3 text-sm font-bold text-white overflow-hidden group/button"
+                        className="relative px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-bold text-white overflow-hidden group/button w-full sm:w-auto"
                         style={{
                           background: 'linear-gradient(135deg, #81D7B4 0%, #6BC4A0 100%)',
-                          borderRadius: '16px',
+                          borderRadius: '12px',
                           border: '1px solid rgba(255,255,255,0.3)',
                           boxShadow: `
                             0 4px 16px rgba(129,215,180,0.3),
@@ -1195,11 +1344,9 @@ export default function Dashboard() {
                           `
                         }}
                       >
-                        <span className="relative z-10 flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Top Up
+                        <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
+                          <HiOutlinePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <span>Top Up</span>
                         </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></div>
                       </motion.button>
@@ -1207,11 +1354,11 @@ export default function Dashboard() {
 
                     {/* Enhanced Progress Bars with Liquid Glass Design */}
                     <div 
-                      className="flex flex-col md:flex-row md:items-end md:space-x-6 px-6 py-5 gap-6 md:gap-4 relative overflow-hidden"
+                      className="flex flex-col md:flex-row md:items-end md:space-x-6 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5 gap-4 sm:gap-5 md:gap-6 relative overflow-hidden"
                       style={{
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 50%, rgba(129,215,180,0.05) 100%)',
                         backdropFilter: 'blur(30px) saturate(150%)',
-                        borderRadius: '20px',
+                        borderRadius: '16px',
                         border: '1px solid rgba(255,255,255,0.5)',
                         boxShadow: `
                           0 4px 20px rgba(129,215,180,0.08),
@@ -1221,7 +1368,7 @@ export default function Dashboard() {
                       }}
                     >
                       {/* Subtle background pattern */}
-                      <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none rounded-[20px]"></div>
+                    {/* Noise background removed per redesign spec */}
                       
                       {/* Progress to Completion */}
                       <div className="flex-1 relative">
@@ -1312,7 +1459,7 @@ export default function Dashboard() {
                       }}
                     >
                       {/* Subtle background pattern */}
-                      <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.015] mix-blend-overlay pointer-events-none rounded-[16px]"></div>
+                    {/* Noise background removed per redesign spec */}
                       
                       <motion.div 
                         className="flex items-center gap-3"
@@ -1386,7 +1533,7 @@ export default function Dashboard() {
                       transition={{ duration: 0.6, delay: 0.3 }}
                     >
                       {/* Subtle background pattern */}
-                      <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.01] mix-blend-overlay pointer-events-none rounded-[12px]"></div>
+                    {/* Noise background removed per redesign spec */}
                       
                       <div 
                         className="inline-flex items-center justify-center w-6 h-6 rounded-full cursor-pointer group relative transition-all duration-200 hover:scale-110"
@@ -1457,9 +1604,7 @@ export default function Dashboard() {
                       <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[16px]"></div>
                       
                       <span className="flex items-center justify-center gap-3 relative z-10">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <HiOutlineChevronDown className="h-5 w-5 text-white transition-transform duration-200 group-hover:scale-110" />
                         <span style={{ letterSpacing: '-0.01em' }}>Withdraw</span>
                       </span>
                     </motion.button>
@@ -1486,7 +1631,7 @@ export default function Dashboard() {
                     {/* Decorative gradients */}
                     <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-[#81D7B4]/30 to-[#229ED9]/20 rounded-full blur-3xl z-0"></div>
                     <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-gradient-to-tr from-[#229ED9]/20 to-[#81D7B4]/30 rounded-full blur-3xl z-0"></div>
-                    <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.05] mix-blend-overlay pointer-events-none z-0"></div>
+            {/* Noise background removed per redesign spec */}
 
                     {/* Header Row */}
                     <div className="flex items-center justify-between relative z-10">
@@ -1501,7 +1646,17 @@ export default function Dashboard() {
                               <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-1" />
                               {plan.isEth ? 'ETH' : plan.tokenName}
                               <span className="mx-1 text-gray-300">|</span>
-                              <Image src={isBaseNetwork ? '/base.svg' : '/celo.png'} alt={isBaseNetwork ? 'Base' : 'Celo'} width={16} height={16} className="w-4 h-4 mr-1" />
+                              <Image
+                                src={ensureImageUrl(
+                                  isBaseNetwork
+                                    ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg')
+                                    : (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png')
+                                )}
+                                alt={isBaseNetwork ? 'Base' : 'Celo'}
+                                width={16}
+                                height={16}
+                                className="w-4 h-4 mr-1"
+                              />
                               {isBaseNetwork ? 'Base' : 'Celo'}
                           </span>
                           </div>
@@ -1627,9 +1782,7 @@ export default function Dashboard() {
                       className="w-full py-3 text-center text-sm font-bold text-white bg-[#81D7B4] rounded-xl shadow-[0_4px_12px_rgba(129,215,180,0.15)] hover:shadow-[0_8px_20px_rgba(129,215,180,0.18)] transition-all duration-300 transform hover:scale-[1.02] relative overflow-hidden group mt-2"
                     >
                       <span className="flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <HiOutlineChevronDown className="h-4 w-4 text-white" />
                         Withdraw
                       </span>
                     </button>
@@ -1641,7 +1794,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
-      </div>
+      </motion.div>
+      )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client"
 import { useState, ReactNode, lazy, Suspense, memo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import { useReferrals } from '@/lib/useReferrals';
 
 // Lazy load heavy components
@@ -21,10 +21,10 @@ declare global {
   }
 }
 
-const spaceGrotesk = Space_Grotesk({
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-space-grotesk'
+  variable: '--font-exo'
 })
 
 // Mock data for demonstration
@@ -144,18 +144,13 @@ export default function SavvySpacePage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="relative"
       >
-        {/* Background decorative elements */}
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#81D7B4]/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-[#81D7B4]/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        
-        {/* Main Container with Dashboard Glassmorphism */}
-        <div className="relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(22,50,57,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] p-8 md:p-12 overflow-hidden group hover:shadow-[0_25px_80px_-15px_rgba(129,215,180,0.4),0_12px_40px_-8px_rgba(22,50,57,0.3)] transition-all duration-700">
+        {/* Simplified main container without decorative backgrounds */}
+        <div className="relative p-0 md:p-0 overflow-visible">
           {/* Noise texture overlay */}
-          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
           
           {/* Container decorative elements */}
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#81D7B4]/30 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
-            <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-[#81D7B4]/25 rounded-full blur-3xl group-hover:scale-105 transition-transform duration-1000" style={{animationDelay: '500ms'}}></div>
+            {/* Decorative elements removed for performance */}
           
           {/* Content Grid */}
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -164,24 +159,22 @@ export default function SavvySpacePage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative bg-white/40 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(129,215,180,0.15)] p-6 overflow-hidden group/card"
+              className="relative bg-white rounded-2xl border border-gray-200 shadow-sm p-6 overflow-hidden"
             >
-              {/* Card background layers */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-[#81D7B4]/10 opacity-80"></div>
-              <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl group-hover/card:scale-110 transition-transform duration-500"></div>
+              {/* Card background layers removed for performance */}
               
               <div className="relative z-10">
                 <div className="flex items-center mb-4">
                   <div className="w-3 h-3 bg-[#81D7B4] rounded-full mr-3 animate-pulse"></div>
-                  <h3 className="text-sm font-semibold text-gray-600/80 tracking-wide uppercase">Your Points</h3>
+                  <h3 className="text-sm font-medium text-gray-700 tracking-wide uppercase">Your Points</h3>
                 </div>
                 <div className="flex items-baseline space-x-2 mb-2">
-                  <p className="text-4xl md:text-5xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight">
+                  <p className="text-4xl md:text-5xl font-semibold text-[#2D5A4A] tracking-tight">
                     {userData.userPoints.toLocaleString()}
                   </p>
-                  <span className="text-sm font-bold text-gray-500">PTS</span>
+                  <span className="text-sm font-medium text-gray-500">PTS</span>
                 </div>
-                <p className="text-sm text-[#81D7B4] font-semibold">{userData.userPoints} $BTS</p>
+                <p className="text-sm text-[#2D5A4A] font-medium">{userData.userPoints} $BTS</p>
               </div>
             </motion.div>
 
@@ -190,34 +183,32 @@ export default function SavvySpacePage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="relative bg-white/40 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(129,215,180,0.15)] p-6 overflow-hidden group/card"
+              className="relative bg-white rounded-2xl border border-gray-200 shadow-sm p-6 overflow-hidden"
             >
-              {/* Card background layers */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-[#81D7B4]/10 opacity-80"></div>
-            <div className="absolute -top-8 -left-8 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl group-hover/card:scale-110 transition-transform duration-500"></div>
+              {/* Card background layers removed for performance */}
               
               <div className="relative z-10">
                 <div className="flex items-center mb-4">
                   <div className="w-3 h-3 bg-[#81D7B4] rounded-full mr-3 animate-pulse"></div>
-                  <h3 className="text-sm font-semibold text-gray-600/80 tracking-wide uppercase">Your Referral Link</h3>
+                  <h3 className="text-sm font-medium text-gray-700 tracking-wide uppercase">Your Referral Link</h3>
                 </div>
                 <div className="flex items-center mt-3 mb-3">
                   <input
                     type="text"
                     readOnly
                     value={referralLink}
-                    className="flex-1 bg-white/60 backdrop-blur-sm rounded-l-xl px-4 py-3 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/50 text-gray-700 font-medium"
+                    className="flex-1 bg-white rounded-l-xl px-4 py-3 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/40 text-gray-700 font-normal"
                   />
                   <motion.button
                     onClick={() => copyToClipboard(referralLink)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white px-4 py-3 rounded-r-xl shadow-[0_4px_12px_rgba(129,215,180,0.4)] hover:shadow-[0_8px_20px_rgba(129,215,180,0.5)] transition-all duration-300 font-semibold"
+                    className="bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white px-4 py-3 rounded-r-xl shadow-sm hover:shadow-md transition-all duration-300 font-medium"
                   >
                     Copy
                   </motion.button>
                 </div>
-                <p className="text-xs text-gray-600/80 font-medium">Share this link to earn 5 points for every sign-up!</p>
+                <p className="text-xs text-gray-600/80 font-normal">Share this link to earn 5 points for every sign-up!</p>
               </div>
             </motion.div>
           </div>
@@ -235,10 +226,10 @@ export default function SavvySpacePage() {
         <div className="relative mb-8">
           <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-[#81D7B4] rounded-full shadow-[0_0_20px_rgba(129,215,180,0.6)]"></div>
           <div className="pl-6">
-            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight mb-2">
+            <h2 className="text-3xl md:text-4xl font-semibold text-[#2D5A4A] tracking-tight mb-2">
               Savvy Finance Videos
             </h2>
-            <p className="text-gray-600/80 font-medium">Learn SaveFi fundamentals and advanced strategies</p>
+            <p className="text-gray-600/80 font-normal">Learn SaveFi fundamentals and advanced strategies</p>
           </div>
         </div>
         
@@ -258,10 +249,10 @@ export default function SavvySpacePage() {
         <div className="relative mb-8">
           <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-[#81D7B4] rounded-full shadow-[0_0_20px_rgba(129,215,180,0.6)]"></div>
           <div className="pl-6">
-            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text tracking-tight mb-2">
+            <h2 className="text-3xl md:text-4xl font-semibold text-black tracking-tight mb-2">
               Savvy Talks
             </h2>
-            <p className="text-gray-600/80 font-medium">Community discussions and insights</p>
+            <p className="text-gray-600/80 font-normal">Community discussions and insights</p>
           </div>
         </div>
         
@@ -273,9 +264,9 @@ export default function SavvySpacePage() {
   )
 
   return (
-    <div className={`${spaceGrotesk.className} min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-800`}>
+    <div className={`${exo.className} min-h-screen bg-white text-gray-800`}>
       {/* Enhanced background layers */}
-      <div className="fixed inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
       <div className="fixed top-0 -left-1/4 w-full h-full bg-gradient-to-br from-[#81D7B4]/20 via-transparent to-transparent -z-10 blur-3xl"></div>
       <div className="fixed top-0 -right-1/4 w-full h-full bg-gradient-to-tl from-blue-500/10 via-transparent to-transparent -z-10 blur-3xl"></div>
       
@@ -291,20 +282,17 @@ export default function SavvySpacePage() {
           transition={{ duration: 0.6 }}
           className="mb-16 text-center relative"
         >
-          {/* Header background with glassmorphism */}
-          <div className="relative bg-white/30 backdrop-blur-xl rounded-3xl border border-white/40 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.2)] p-12 overflow-hidden">
-            {/* Header decorative elements */}
-            <div className="absolute -top-6 -left-6 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[#81D7B4]/15 rounded-full blur-2xl"></div>
+          {/* Simplified header without background card */}
+          <div className="relative px-2">
             
             <div className="relative z-10">
               {/* Main title with enhanced typography */}
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-transparent bg-gradient-to-r from-[#81D7B4] via-[#6BC4A0] to-[#81D7B4] bg-clip-text tracking-tight mb-6 leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-[#81D7B4] tracking-tight mb-6 leading-tight">
                 Savvy Space
               </h1>
               
               {/* Subtitle with better spacing */}
-              <p className="text-lg md:text-xl text-gray-600/90 font-medium max-w-3xl mx-auto leading-relaxed mb-8">
+              <p className="text-lg md:text-xl text-gray-600/90 font-normal max-w-3xl mx-auto leading-relaxed mb-8">
                 Engage with the community, complete tasks to earn points, and climb the leaderboard while mastering SaveFi fundamentals!
               </p>
               
@@ -312,15 +300,15 @@ export default function SavvySpacePage() {
               <div className="flex flex-wrap justify-center gap-6 text-sm">
                 <div className="flex items-center bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                  <span className="font-semibold text-gray-700">Community Active</span>
+                  <span className="font-medium text-gray-700">Community Active</span>
                 </div>
                 <div className="flex items-center bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
                   <div className="w-2 h-2 bg-[#81D7B4] rounded-full mr-2 animate-pulse"></div>
-                  <span className="font-semibold text-gray-700">New Content Daily</span>
+                  <span className="font-medium text-gray-700">New Content Daily</span>
                 </div>
                 <div className="flex items-center bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
                   <div className="w-2 h-2 bg-[#81D7B4] rounded-full mr-2 animate-pulse"></div>
-                  <span className="font-semibold text-gray-700">Live Updates</span>
+                  <span className="font-medium text-gray-700">Live Updates</span>
                 </div>
               </div>
             </div>

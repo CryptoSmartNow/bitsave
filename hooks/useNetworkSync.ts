@@ -22,7 +22,9 @@ import { useSavingsData } from './useSavingsData';
 const SUPPORTED_NETWORKS = {
   BASE: { chainId: 8453, name: 'Base' },
   CELO: { chainId: 42220, name: 'Celo' },
-  LISK: { chainId: 1135, name: 'Lisk' }
+  LISK: { chainId: 1135, name: 'Lisk' },
+  AVALANCHE: { chainId: 43114, name: 'Avalanche' },
+  HEDERA: { chainId: 296, name: 'Hedera Testnet' }
 } as const;
 
 // Helper function to get network parameters for adding to wallet
@@ -52,6 +54,14 @@ const getNetworkParams = (networkName: string) => {
         rpcUrls: ['https://rpc.api.lisk.com'],
         blockExplorerUrls: ['https://blockscout.lisk.com'],
       };
+    case 'Avalanche':
+      return {
+        chainIdHex: `0x${SUPPORTED_NETWORKS.AVALANCHE.chainId.toString(16)}`,
+        chainName: 'Avalanche',
+        nativeCurrency: { name: 'Avalanche', symbol: 'AVAX', decimals: 18 },
+        rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
+        blockExplorerUrls: ['https://snowtrace.io'],
+      };
     default:
       throw new Error(`Unsupported network: ${networkName}`);
   }
@@ -74,7 +84,8 @@ export function useNetworkSync(): UseNetworkSyncReturn {
   const { 
     isBaseNetwork, 
     isCeloNetwork, 
-    isLiskNetwork, 
+    isLiskNetwork,
+    isAvalancheNetwork,
     refetch: refetchSavingsData,
     forceRefreshNetworkState
   } = useSavingsData();
@@ -110,10 +121,12 @@ export function useNetworkSync(): UseNetworkSyncReturn {
         return isCeloNetwork;
       case SUPPORTED_NETWORKS.LISK.chainId:
         return isLiskNetwork;
+      case SUPPORTED_NETWORKS.AVALANCHE.chainId:
+        return isAvalancheNetwork;
       default:
         return false;
     }
-  }, [chainId, isBaseNetwork, isCeloNetwork, isLiskNetwork]);
+  }, [chainId, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
   
   // Get current network name
   const currentNetworkName = getCurrentNetworkName(chainId);

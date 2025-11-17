@@ -1,5 +1,7 @@
 'use client'
 import { useRef, useEffect } from 'react';
+import { FiMail } from 'react-icons/fi';
+import { FaTelegramPlane } from 'react-icons/fa';
 
 // Combine all cards into one array
 const allCards = [
@@ -141,10 +143,7 @@ export default function FAQ() {
                         disabled
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                          <polyline points="22,6 12,13 2,6"></polyline>
-                        </svg>
+                        <FiMail className="w-5 h-5" />
                         <span>Email Support</span>
                       </button>
                       
@@ -153,10 +152,7 @@ export default function FAQ() {
                         className="flex items-center justify-center gap-2 px-6 py-3 bg-white/80 text-gray-800 rounded-xl border border-[#81D7B4]/20 hover:bg-white hover:border-[#81D7B4]/40 transition-all duration-300 group/button relative overflow-hidden flex-1"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/0 via-[#81D7B4]/10 to-[#81D7B4]/0 -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#81D7B4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21.2 5L2.5 12.3c-1.2.5-1.2 1.7 0 2.1l4.7 1.5L17.5 8"></path>
-                          <path d="M7.2 15.9l1.5 4.7c.4 1.2 1.6 1.2 2.1 0L18 2.5"></path>
-                    </svg>
+                        <FaTelegramPlane className="w-5 h-5 text-[#81D7B4]" />
                         <span>Join Telegram</span>
                       </a>
                   </div>

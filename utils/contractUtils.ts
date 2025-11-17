@@ -22,6 +22,26 @@ export async function getSavingFeeFromContract(
 }
 
 /**
+ * Fetches the join fee from the contract
+ * @param contractAddress - The contract address
+ * @param provider - The ethers provider
+ * @returns The join fee in wei as a string
+ */
+export async function getJoinFeeFromContract(
+  contractAddress: string,
+  provider: ethers.Provider
+): Promise<string> {
+  try {
+    const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, provider);
+    const joinFee = await contract.JoinLimitFee();
+    return joinFee.toString();
+  } catch (error) {
+    console.error('Error fetching join fee from contract:', error);
+    throw new Error('Failed to fetch join fee from contract');
+  }
+}
+
+/**
  * Estimates gas for a contract transaction
  * @param contract - The contract instance
  * @param methodName - The method name to estimate gas for

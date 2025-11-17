@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-space-grotesk)', 'sans-serif'],
+        sans: ['var(--font-exo)', 'sans-serif'],
       },
       // Add smooth scrolling configuration
       animation: {

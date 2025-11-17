@@ -1,10 +1,25 @@
 'use client'
 
-import { useState, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwitchChain } from 'wagmi';
 import Image from 'next/image';
+import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
+
+// Helper function to ensure image URLs are properly formatted for Next.js Image
+const ensureImageUrl = (url: string | undefined): string => {
+  if (!url) return '/default-network.png'
+  // If it's a relative path starting with /, it's fine
+  if (url.startsWith('/')) return url
+  // If it starts with // (protocol-relative), convert to https
+  if (url.startsWith('//')) return `https:${url}`
+  // If it doesn't start with http/https and doesn't start with /, add /
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `/${url}`
+  }
+  return url
+}
 
 const SUPPORTED_NETWORKS = [
   {
@@ -35,6 +50,16 @@ const SUPPORTED_NETWORKS = [
     description: 'Ethereum-compatible sidechain',
     color: 'bg-purple-50',
     borderColor: 'border-purple-200'
+  },
+  {
+    id: 'hedera',
+    name: 'Hedera Testnet',
+    chainId: 296,
+    icon: '/hedera-logo.svg',
+    fallbackIcon: '/hedera-logo.png',
+    description: 'High-performance hashgraph network',
+    color: 'bg-indigo-50',
+    borderColor: 'border-indigo-200'
   }
 ];
 
@@ -50,6 +75,14 @@ interface UnsupportedNetworkModalProps {
 
 const UnsupportedNetworkModal = memo(function UnsupportedNetworkModal({ isOpen, onClose }: UnsupportedNetworkModalProps) {
   const { switchChain } = useSwitchChain();
+  const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  
+  useEffect(() => {
+    // Fetch dynamic logos for supported networks
+    fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'solana'])
+      .then(setNetworkLogos)
+      .catch(() => {});
+  }, []);
   
   const handleSwitchNetwork = async (chainId: number) => {
     try {
@@ -118,7 +151,11 @@ const UnsupportedNetworkModal = memo(function UnsupportedNetworkModal({ isOpen, 
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
                           <Image
-                            src={network.icon}
+                            src={ensureImageUrl(
+                              networkLogos[network.id]?.logoUrl ||
+                              networkLogos[network.id]?.fallbackUrl ||
+                              network.icon
+                            )}
                             alt={`${network.name} logo`}
                             width={32}
                             height={32}

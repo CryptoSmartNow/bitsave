@@ -1,7 +1,9 @@
 'use client'
 import { useState, memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import LanguageSelector from '@/components/LanguageSelector';
+import { FiMenu, FiX } from 'react-icons/fi';
 
 const Header = memo(function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -18,7 +20,14 @@ const Header = memo(function Header() {
     <header className="fixed top-4 left-4 right-4 z-50 bg-white/30 backdrop-blur-md px-6 py-4 mx-auto max-w-6xl rounded-xl shadow-sm border border-[#81D7B4]/10">      
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/80">BitSave</span>
+          <Image
+            src="/bitsavelogo.png"
+            alt="BitSave logo"
+            width={120}
+            height={32}
+            className="h-8 w-auto"
+            priority={false}
+          />
         </Link>
         
         <nav className="hidden md:flex space-x-8">
@@ -34,22 +43,17 @@ const Header = memo(function Header() {
           <LanguageSelector />
           <Link 
             href="/dashboard"
-            prefetch={true}
+            prefetch={false}
             className="bg-[#81D7B4] text-white hidden md:flex items-center justify-center rounded-lg px-6 py-2.5 font-medium transition-all duration-300 hover:shadow-lg"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 mr-2">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
             Open App
           </Link>
           <button className="md:hidden text-gray-700" onClick={toggleMobileMenu}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            {mobileMenuOpen ? (
+              <FiX className="w-6 h-6" />
+            ) : (
+              <FiMenu className="w-6 h-6" />
+            )}
           </button>
         </div>
       </div>
@@ -107,9 +111,6 @@ const Header = memo(function Header() {
                  onClick={() => setMobileMenuOpen(false)}
                  className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white flex items-center justify-center rounded-lg px-6 py-2.5 font-medium transition-all duration-300 hover:shadow-lg w-full"
                >
-                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 mr-2">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                 </svg>
                  Open App
                </Link>
              </div>

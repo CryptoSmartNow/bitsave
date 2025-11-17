@@ -1,10 +1,10 @@
 "use client";
 
-import { ReactNode } from 'react';
+ import { ReactNode, useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { base, celo } from 'wagmi/chains';
-import { RainbowKitProvider, lightTheme, darkTheme } from '@rainbow-me/rainbowkit';
+import { base, celo, avalanche } from 'wagmi/chains';
+import { RainbowKitProvider, lightTheme, darkTheme, useConnectModal, useAccountModal, useChainModal } from '@rainbow-me/rainbowkit';
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import {
   walletConnectWallet,
@@ -15,6 +15,7 @@ import {
   trustWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { ThemeProvider, useTheme } from 'next-themes';
+// import { HashConnectProvider } from './providers/HashConnectProvider';
 
 // Import Rainbow Kit styles
 import '@rainbow-me/rainbowkit/styles.css';
@@ -37,8 +38,24 @@ const lisk = {
   },
 } as const;
 
+// Define custom Hedera chain
+const hedera = {
+  id: 296,
+  name: 'Hedera Testnet',
+  network: 'hedera',
+  nativeCurrency: { name: 'HBAR', symbol: 'HBAR', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://testnet.hashio.io/api'] },
+    public: { http: ['https://testnet.hashio.io/api'] },
+  },
+  blockExplorers: {
+    default: { name: 'HashScan Testnet', url: 'https://hashscan.io/testnet' },
+  },
+  testnet: true,
+} as const;
+
 // Define the supported chains
-const chains = [base, celo, lisk] as const;
+const chains = [base, celo, avalanche, lisk, hedera] as const;
 
 // Create wallet groups with connectorsForWallets - Only supported wallets
 const connectors = connectorsForWallets(
@@ -67,7 +84,9 @@ const config = createConfig({
   transports: {
     [base.id]: http(),
     [celo.id]: http(),
+    [avalanche.id]: http(),
     [lisk.id]: http(),
+    [hedera.id]: http(),
   },
   connectors,
 });
@@ -79,7 +98,7 @@ function ThemedRainbowKit({ children }: { children: ReactNode }) {
 
   return (
     <RainbowKitProvider
-      modalSize="compact"
+      modalSize="wide"
       theme={
         theme === 'dark'
           ? darkTheme({

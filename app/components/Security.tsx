@@ -2,43 +2,28 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import OptimizedSection from './OptimizedSection';
+import { FiMonitor, FiLock, FiTrendingUp, FiLink, FiGlobe, FiUser } from 'react-icons/fi';
 
 export default function Security() {
   const securityFeatures = [
     {
       title: "Simple UX Design",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-7 h-7 text-primary">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
-        </svg>
-      ),
+      icon: <FiMonitor className="w-7 h-7 text-primary" />,
       description: "Intuitive interface designed for both Web3 natives and newcomers."
     },
     {
       title: "Goal-Based Locked Savings",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-7 h-7 text-secondary">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-        </svg>
-      ),
+      icon: <FiLock className="w-7 h-7 text-secondary" />,
       description: "Set savings goals and lock your funds until you reach them."
     },
     {
       title: "Earn $BTS Tokens on Savings",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-7 h-7 text-primary">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.171-.879-1.171-2.303 0-3.182C10.582 7.72 11.35 7.5 12 7.5c.725 0 1.45.22 2.003.659" />
-        </svg>
-      ),
+      icon: <FiTrendingUp className="w-7 h-7 text-primary" />,
       description: "Get rewarded with $BTS tokens for consistent saving habits."
     },
     {
       title: "Secured with Child-Parent Contract",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-7 h-7 text-secondary">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-        </svg>
-      ),
+      icon: <FiLink className="w-7 h-7 text-secondary" />,
       description: "Enhanced security through our innovative contract structure."
     }
   ];
@@ -180,16 +165,13 @@ export default function Security() {
                 <div className="relative p-6 sm:p-8 rounded-2xl bg-white/40 backdrop-blur-sm border border-[#81D7B4]/20 group/section hover:bg-white/50 transition-all duration-500">
                   {/* Header */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
+                    
                     <div className="relative group shrink-0">
                       <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                      <Image 
-                        src="/images/savings-problems/ifeanyi-avatar.svg" 
-                        alt="Ifeanyi" 
-                        width={80}
-                        height={80}
-                        className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg relative transform group-hover:scale-105 transition-all duration-300"
-                      />
-              </div>
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg relative transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-[#f5fdfa] border border-[#81D7B4]/30 flex items-center justify-center">
+                        <FiUser className="w-8 h-8 text-[#81D7B4]" />
+                      </div>
+                      </div>
                     <div>
                       <h3 className="text-base sm:text-lg md:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">Ifeanyi is a</h3>
                       <span className="inline-block mt-2 sm:mt-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#81D7B4]/10 rounded-full text-[#81D7B4] font-medium text-sm sm:text-base border border-[#81D7B4]/20 shadow-sm transform hover:scale-105 transition-all duration-300">
@@ -251,15 +233,12 @@ export default function Security() {
                 <div className="relative p-6 sm:p-8 rounded-2xl bg-white/40 backdrop-blur-sm border border-[#81D7B4]/20 group/section hover:bg-white/50 transition-all duration-500">
                   {/* Header */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
+                    
                     <div className="relative group shrink-0">
                       <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/5 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                      <Image 
-                        src="/images/savings-problems/rukevwe-avatar.svg" 
-                        alt="Rukevwe" 
-                        width={80}
-                        height={80}
-                        className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg relative transform group-hover:scale-105 transition-all duration-300"
-                      />
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg relative transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-[#f5fdfa] border border-[#81D7B4]/30 flex items-center justify-center">
+                        <FiUser className="w-8 h-8 text-[#81D7B4]" />
+                      </div>
                     </div>
                   <div>
                       <h3 className="text-base sm:text-lg md:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">Rukevwe</h3>
@@ -587,9 +566,7 @@ export default function Security() {
                   <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                        </svg>
+                        <FiGlobe className="w-6 h-6 text-[#81D7B4]" />
                       </div>
                       <h3 className="text-xl font-semibold text-gray-800">Market Size</h3>
                     </div>
@@ -605,9 +582,7 @@ export default function Security() {
                   <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
+                        <FiTrendingUp className="w-6 h-6 text-[#81D7B4]" />
                       </div>
                       <h3 className="text-xl font-semibold text-gray-800">Stablecoin Adoption</h3>
                     </div>

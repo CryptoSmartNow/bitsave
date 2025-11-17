@@ -1,13 +1,13 @@
-import type { Metadata } from 'next'
-import { Space_Grotesk } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Exo } from 'next/font/google'
 import './globals.css'
 
-// Configure Space Grotesk font with all weights
-const spaceGrotesk = Space_Grotesk({
+// Configure Exo font with all weights
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-space-grotesk',
+  variable: '--font-exo',
 })
 
 import { Providers } from './providers';
@@ -19,6 +19,7 @@ import ReferralTracker from '@/components/ReferralTracker';
 export const metadata: Metadata = {
   title: 'BitSave - Simplified Crypto Savings',
   description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
+  themeColor: '#ffffff',
   openGraph: {
     title: 'BitSave - Simplified Crypto Savings',
     description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
@@ -53,14 +54,20 @@ export const metadata: Metadata = {
   manifest: '/favicon_io/site.webmanifest'
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover'
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable}`}>
-      <body className={`${spaceGrotesk.className}`}>
+    <html lang="en" className={`${exo.variable}`}>
+      <body className={`${exo.className}`}>
         <Providers>
           <ReferralTracker />
           {children}

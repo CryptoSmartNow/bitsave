@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blogDatabase';
 import BlogImage, { BlogImageSizes } from './BlogImage';
+import { FiArrowRight, FiFileText } from 'react-icons/fi';
 
 interface BlogResponse {
   posts: BlogPost[];
@@ -115,7 +116,7 @@ export default function BlogSection() {
                         </div>
                       ) : (
                         <div className="h-48 bg-gradient-to-br from-[#81D7B4]/20 to-[#66C4A3]/20 flex items-center justify-center">
-                          <div className="text-6xl text-[#81D7B4]/40">📝</div>
+                          <FiFileText className="w-14 h-14 text-[#81D7B4]/40" />
                         </div>
                       )}
                       
@@ -160,16 +161,14 @@ export default function BlogSection() {
                 className="inline-flex items-center px-8 py-4 bg-[#81D7B4] text-white rounded-2xl hover:bg-[#66C4A3] transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 View All Posts
-                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+                <FiArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </div>
           </>
         ) : (
           /* No Posts State */
           <div className="text-center py-16">
-            <div className="text-8xl mb-6">📝</div>
+            <FiFileText className="w-20 h-20 mx-auto mb-6 text-[#81D7B4]/40" />
             <h3 className="text-2xl font-bold text-gray-800 mb-4">
               Coming Soon!
             </h3>

@@ -92,14 +92,13 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px] lg:w-[450px] relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(22,50,57,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] overflow-hidden group hover:shadow-[0_25px_80px_-15px_rgba(129,215,180,0.4),0_12px_40px_-8px_rgba(22,50,57,0.3)] transition-all duration-700"
+      className="flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px] lg:w-[450px] relative bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden group transition-all duration-300"
     >
       {/* Noise texture overlay */}
-      <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
       
       {/* Decorative elements */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#81D7B4]/30 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
-            <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-[#81D7B4]/25 rounded-full blur-3xl group-hover:scale-105 transition-transform duration-1000"></div>
+            {/* Decorative elements removed for performance */}
       
       <div className="relative z-10">
         {showPlayer ? (
@@ -137,7 +136,7 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
               whileTap={{ scale: 0.95 }}
               className="absolute inset-0 flex items-center justify-center z-30 group/play"
             >
-              <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center justify-center group-hover/play:bg-white/30 transition-all duration-300">
+              <div className="w-16 h-16 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center transition-all duration-300">
                 <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
@@ -155,20 +154,19 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
 
         {/* Enhanced content section */}
         <div className="p-6 relative">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-[#81D7B4]/10 opacity-80 rounded-b-3xl"></div>
+          {/* Background gradient removed for performance */}
           
           <div className="relative z-10">
             {/* Creator badge */}
             <div className="flex items-center mb-3">
               <div className="w-2 h-2 bg-[#81D7B4] rounded-full mr-2 animate-pulse"></div>
-              <span className="text-xs font-semibold text-gray-600/80 tracking-wide uppercase">
+              <span className="text-xs font-medium text-gray-600/80 tracking-wide uppercase">
                 {video.creator || 'Savvy Finance'}
               </span>
             </div>
             
             {/* Title */}
-            <h3 className="text-lg font-bold text-gray-900 mb-4 line-clamp-2 leading-tight tracking-tight">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 line-clamp-2 leading-tight tracking-tight">
               {titleLoading ? (
                 <div className="space-y-2">
                   <div className="h-4 bg-gray-300/50 rounded animate-pulse"></div>
@@ -184,7 +182,7 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
               onClick={() => window.open(video.url, '_blank')}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white py-3 px-4 rounded-xl font-semibold text-sm shadow-[0_4px_12px_rgba(129,215,180,0.4)] hover:shadow-[0_8px_20px_rgba(129,215,180,0.5)] transition-all duration-300 flex items-center justify-center space-x-2"
+              className="w-full bg-[#81D7B4] hover:bg-[#76cbaa] text-white py-3 px-4 rounded-xl font-medium text-sm shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center space-x-2"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
@@ -228,14 +226,12 @@ const SavvyFinanceVideos = ({ videos }: { videos: Video[] }) => {
 
   return (
     <div className="relative">
-      {/* Enhanced container with dashboard styling */}
-      <div className="relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(129,215,180,0.3),0_8px_32px_-8px_rgba(22,50,57,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] p-8 overflow-hidden">
+      {/* Simplified container for performance */}
+      <div className="relative bg-white rounded-3xl border border-gray-200 shadow-sm p-6 overflow-visible">
         {/* Noise texture overlay */}
-        <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
         
-        {/* Background decorative elements */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#81D7B4]/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-[#81D7B4]/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        {/* Decorative elements removed for performance */}
         
         <div className="relative z-10">
           {/* Enhanced scrolling container */}
@@ -265,7 +261,7 @@ const SavvyFinanceVideos = ({ videos }: { videos: Video[] }) => {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white px-8 py-4 rounded-2xl shadow-[0_4px_12px_rgba(129,215,180,0.4)] hover:shadow-[0_8px_20px_rgba(129,215,180,0.5)] transition-all duration-300 font-semibold"
+            className="inline-flex items-center space-x-3 bg-[#81D7B4] hover:bg-[#76cbaa] text-white px-8 py-4 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 font-medium"
             >
               <div className="flex items-center space-x-3">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

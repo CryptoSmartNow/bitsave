@@ -5,10 +5,10 @@ import { useParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { useReferrals } from '@/lib/useReferrals';
 import { motion } from 'framer-motion';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import Link from 'next/link';
 
-const spaceGrotesk = Space_Grotesk({
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
 })
@@ -46,7 +46,7 @@ export default function ReferralPage() {
   }, [address, referralCode, markReferralConversion])
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-white ${spaceGrotesk.className}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-white ${exo.className}`}>
       <div className="container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

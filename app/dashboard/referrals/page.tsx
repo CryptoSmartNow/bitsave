@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import { useReferrals } from '@/lib/useReferrals';
 import { useAccount } from 'wagmi';
 
-const spaceGrotesk = Space_Grotesk({
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
 })
@@ -38,7 +38,7 @@ export default function ReferralsPage() {
 
   if (!address) {
     return (
-      <div className={`min-h-screen bg-gray-50 ${spaceGrotesk.className}`}>
+      <div className={`min-h-screen bg-gray-50 ${exo.className}`}>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Referral Dashboard</h1>
@@ -50,7 +50,7 @@ export default function ReferralsPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${spaceGrotesk.className}`}>
+    <div className={`min-h-screen bg-gray-50 ${exo.className}`}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

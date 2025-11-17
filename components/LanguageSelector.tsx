@@ -104,7 +104,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
       // Responsive dropdown width calculation
       let dropdownWidth;
       if (isMobile) {
-        dropdownWidth = Math.min(viewportWidth - 32, 320); // Full width on mobile with margins
+        dropdownWidth = Math.min(viewportWidth - 24, 280); // Slightly narrower on mobile
       } else if (isTablet) {
         dropdownWidth = Math.max(rect.width, 240); // Slightly wider on tablet
       } else {
@@ -339,23 +339,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
             whileTap={{ scale: 0.98 }}
             onClick={toggleDropdown}
             disabled={!isLoaded || isDetectingLocation}
-            className="w-full bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl px-4 py-3 text-left shadow-2xl hover:bg-white/30 hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden"
+            className="w-full bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-left shadow-2xl hover:bg-white/30 hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden"
           >
             {/* Gradient Overlays */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/20 to-white/10 pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-gray-900/5 via-transparent to-white/10 pointer-events-none"></div>
             
-            <div className="relative flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] rounded-xl flex items-center justify-center shadow-lg">
-                <Globe className="w-4 h-4 text-white" />
+            <div className="relative flex items-center space-x-2 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] rounded-xl flex items-center justify-center shadow-lg">
+                <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-lg">{selectedLang.flag}</span>
-                <span className="font-medium text-gray-800">{selectedLang.name}</span>
+                <span className="text-base sm:text-lg">{selectedLang.flag}</span>
+                <span className="font-medium text-gray-800 text-sm sm:text-base">{selectedLang.name}</span>
               </div>
             </div>
             
-            <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           </motion.button>
 
 
@@ -415,13 +415,13 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
                       whileHover={{ scale: 1.02, x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleLanguageChange(language.code)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 sm:py-4 rounded-xl transition-all duration-200 group touch-manipulation ${
+                      className={`w-full flex items-center space-x-2 sm:space-x-3 px-3 py-2 sm:px-4 sm:py-3 rounded-xl transition-all duration-200 group touch-manipulation ${
                         selectedLanguage === language.code
                           ? 'bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC7A0]/20 text-[#2D5A4A] shadow-lg border border-[#81D7B4]/20'
                           : 'hover:bg-white/50 text-gray-700 hover:text-gray-900 hover:shadow-md active:bg-white/60'
                       }`}
                     >
-                      <span className="text-lg sm:text-xl transition-transform duration-200 group-hover:scale-110">{language.flag}</span>
+                      <span className="text-base sm:text-lg transition-transform duration-200 group-hover:scale-110">{language.flag}</span>
                       <span className="font-medium flex-1 text-left text-sm sm:text-base">{language.name}</span>
                       {selectedLanguage === language.code && (
                         <motion.div 

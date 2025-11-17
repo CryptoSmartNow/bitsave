@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
+import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 import { 
   Trophy, 
   Medal, 
@@ -23,10 +24,19 @@ import {
 } from 'lucide-react';
 
 // Initialize the Space Grotesk font
-const spaceGrotesk = Space_Grotesk({ 
+const exo = Exo({ 
   subsets: ['latin'],
   display: 'swap',
 })
+
+// Helper to ensure safe image URLs for Next.js Image
+const ensureImageUrl = (url?: string): string => {
+  if (!url) return '/default-network.png';
+  if (url.startsWith('//')) return `https:${url}`;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return url;
+  return `/${url.replace(/^\//, '')}`;
+};
 
 // Define the leaderboard user interface
 interface LeaderboardUser {
@@ -39,6 +49,12 @@ interface LeaderboardUser {
 }
 
 export default function LeaderboardPage() {
+  const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  useEffect(() => {
+    fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche'])
+      .then(setNetworkLogos)
+      .catch(() => {});
+  }, []);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<LeaderboardUser | null>(null)
@@ -205,7 +221,7 @@ export default function LeaderboardPage() {
   };
   
   return (
-    <div className={`min-h-screen relative overflow-hidden ${spaceGrotesk.className}`} style={{ backgroundColor: '#f2f2f2' }}>
+    <div className={`min-h-screen relative overflow-hidden ${exo.className}`} style={{ backgroundColor: '#f2f2f2' }}>
       {/* Enhanced background decorative elements with brand color accents */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
@@ -652,7 +668,7 @@ export default function LeaderboardPage() {
       
       {/* Your Position Card */}
       <div className="mt-6 md:mt-8 bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC4A0]/20 backdrop-blur-xl rounded-2xl border border-[#81D7B4]/40 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-4 sm:p-6 relative z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/20 rounded-full blur-3xl"></div>
         
         <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center justify-between">
@@ -760,7 +776,7 @@ export default function LeaderboardPage() {
             >
               {/* Header with user info */}
               <div className="p-6 border-b border-gray-200/50 relative">
-                <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+  {/* Noise background removed per redesign spec */}
                 
                 <div className="flex items-center">
                   <div className="relative mr-4">
@@ -802,7 +818,17 @@ export default function LeaderboardPage() {
                   <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-gray-100">
                     <p className="text-sm text-gray-500 mb-1">Network</p>
                     <div className="flex items-center">
-                      <Image src={`/${selectedUser.chain.toLowerCase()}.svg`} alt={selectedUser.chain} width={20} height={20} className="w-5 h-5 mr-2" />
+                      <Image
+                        src={ensureImageUrl(
+                          networkLogos[selectedUser.chain?.toLowerCase()]?.logoUrl ||
+                          networkLogos[selectedUser.chain?.toLowerCase()]?.fallbackUrl ||
+                          `/${selectedUser.chain.toLowerCase()}.svg`
+                        )}
+                        alt={selectedUser.chain}
+                        width={20}
+                        height={20}
+                        className="w-5 h-5 mr-2"
+                      />
                       <span className="font-medium text-gray-800">{selectedUser.chain}</span>
                     </div>
                   </div>
@@ -847,7 +873,7 @@ export default function LeaderboardPage() {
         className="mt-8 bg-white/50 backdrop-blur-xl rounded-3xl border border-[#81D7B4]/30 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] p-8 relative z-10"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl"></div>
-        <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none rounded-3xl"></div>
+  {/* Noise background removed per redesign spec */}
         
         <div className="relative z-10">
           <div className="flex items-center space-x-3 mb-6">

@@ -24,8 +24,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-space-grotesk);
-  --font-mono: var(--font-space-grotesk);
+  --font-sans: var(--font-exo);
+  --font-mono: var(--font-exo);
 }
 
 /* Dark mode removed to maintain consistent light theme */
@@ -197,6 +197,27 @@ body.goog-te-hl {
 [dir="rtl"] .right-4 {
   right: auto;
   left: 1rem;
+}
+
+/* Dashboard redesign: page and container styling */
+.dashboard-page {
+  /* Requested: subtle SaveFi tint over pure white */
+  background: linear-gradient(rgba(129, 215, 180, 0.1), rgba(129, 215, 180, 0.1)), #ffffff;
+}
+
+.dashboard-container {
+  /* Clean structure: pure white, no shadow */
+  border-top-left-radius: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
+/* Cross-browser compatibility placeholder (WebKit/Safari) */
+@supports (-webkit-appearance: none) {
+  .dashboard-container {
+    /* No special overrides required, kept for future maintainability */
+    border-top-left-radius: 20px;
+  }
 }
 
 /* RTL adjustments for borders */
@@ -807,6 +828,68 @@ body.goog-te-hl {
   scrollbar-width: none;  /* Firefox */
 }
 
+/* 3D Credit Card Effects */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.rotate-y-12 {
+  transform: rotateY(12deg);
+}
+
+.rotate-y-minus-12 {
+  transform: rotateY(-12deg);
+}
+
+.rotate-x-12 {
+  transform: rotateX(12deg);
+}
+
+.rotate-x-minus-12 {
+  transform: rotateX(-12deg);
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Credit Card Holographic Effect */
+@keyframes holographic {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.holographic {
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(129, 215, 180, 0.2) 25%,
+    rgba(34, 158, 217, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 75%,
+    rgba(129, 215, 180, 0.2) 100%
+  );
+  background-size: 400% 400%;
+  animation: holographic 3s ease-in-out infinite;
+}
+
+/* Credit Card Chip Effect */
+.chip-effect {
+  background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 50%, #c0c0c0 100%);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.2),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+}
+
+/* Magnetic Stripe Effect */
+.magnetic-stripe {
+  background: linear-gradient(90deg, #2c2c2c 0%, #1a1a1a 50%, #2c2c2c 100%);
+}
+
 /* Carousel conveyor belt animation */
 @keyframes carousel {
   0% {
@@ -826,6 +909,15 @@ body.goog-te-hl {
   }
 }
 
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 .animate-carousel {
   animation: carousel 20s linear infinite;
 }
@@ -834,4 +926,203 @@ body.goog-te-hl {
   animation: carousel-smooth 30s linear infinite;
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+.animate-scroll-left {
+  animation: scroll-left 25s linear infinite;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+/* --- Liquid Glass + Shimmer Utilities --- */
+.glow-ring {
+  position: relative;
+  border-radius: 1.5rem;
+}
+
+.glow-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, var(--c1) 0%, var(--c2) 25%, var(--c1) 50%, var(--c2) 75%, var(--c1) 100%);
+  background-size: 200% 200%;
+  animation: shimmerGradient 6s linear infinite;
+  /* Mask the center so only the border shows */
+  -webkit-mask: 
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 28px rgba(0,0,0,0.12)) drop-shadow(0 0 24px rgba(0,0,0,0.18));
+}
+
+@keyframes shimmerGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-orbPulse {
+  animation: orbPulse 6s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.45; }
+  50% { transform: translateY(-6px) scale(1.06); opacity: 0.7; }
+}
+
+/* Subtle liquid shine helper */
+.liquid-shine {
+  mix-blend-mode: overlay;
+  background: linear-gradient(120deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.18) 22%, rgba(255,255,255,0) 40%);
+}
+
+/* --- Frosted Glass Card --- */
+.glass-card {
+  background: #ffffff; 
+  border: 1px solid rgba(255,255,255,0.55);
+  backdrop-filter: blur(20px) saturate(115%);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.liquid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(160px circle at 30% 30%, rgba(255,255,255,0.60), rgba(255,255,255,0) 60%),
+              radial-gradient(200px circle at 70% 70%, rgba(255,255,255,0.35), rgba(255,255,255,0) 60%);
+  animation: liquidMorph 10s ease-in-out infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes liquidMorph {
+  0% { background-position: 30% 30%, 70% 70%; filter: blur(0px); }
+  50% { background-position: 40% 35%, 60% 65%; filter: blur(1px); }
+  100% { background-position: 30% 30%, 70% 70%; filter: blur(0px); }
+}
+
+/* Hover tilt/skew micro-interaction */
+.morph-tilt { transition: transform 300ms ease, box-shadow 300ms ease; transform: perspective(1000px) translateZ(0); }
+.group:hover .morph-tilt { transform: perspective(1000px) translateY(-2px) scale(1.02) rotate(0.4deg) skewY(0.4deg); box-shadow: 0 24px 48px rgba(0,0,0,0.12); }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-ring { animation: none; }
+  .animate-orbPulse { animation: none; }
+  .liquid-overlay { animation: none; }
+}
+
+/* Liquid Glass Card (clear, uncolored, with caustics) */
+.liquid-glass {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+    0 12px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(26px) saturate(160%) contrast(108%) brightness(110%);
+  -webkit-backdrop-filter: blur(26px) saturate(160%) contrast(108%) brightness(110%);
+  isolation: isolate;
+}
+
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(100% 70% at 12% 10%, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.18) 25%, rgba(255,255,255,0.02) 60%),
+    radial-gradient(90% 60% at 85% 22%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.12) 28%, rgba(255,255,255,0.0) 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.18) 100%);
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+}
+
+.liquid-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: url('/noise.jpg');
+  background-size: 320px 260px;
+  background-repeat: repeat;
+  mix-blend-mode: soft-light;
+  opacity: 0.22;
+  filter: blur(6px) contrast(115%) saturate(120%);
+  animation: caustics-move 18s ease-in-out infinite;
+}
+
+/* Mobile performance tuning */
+@media (max-width: 640px) {
+  .liquid-glass {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.16),
+      0 8px 20px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(14px) saturate(140%) contrast(106%) brightness(108%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%) contrast(106%) brightness(108%);
+  }
+  .liquid-glass::after {
+    opacity: 0.12;
+    filter: blur(5px) contrast(110%) saturate(110%);
+    animation-duration: 22s;
+  }
+}
+
+/* Carousel responsive helpers */
+.carousel-container {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  padding-inline: 0.75rem;
+  scroll-padding-inline: 0.75rem; /* allow first/last to center without clipping */
+}
+.carousel-container::before,
+.carousel-container::after {
+  content: "";
+  flex: 0 0 6%; /* default gutter for 88% items */
+}
+@media (max-width: 360px) {
+  .carousel-container::before,
+  .carousel-container::after { flex-basis: 4%; } /* 92% items -> 4% gutter */
+}
+@media (min-width: 361px) and (max-width: 430px) {
+  .carousel-container::before,
+  .carousel-container::after { flex-basis: 5%; } /* 90% items -> 5% gutter */
+}
+@media (min-width: 431px) and (max-width: 640px) {
+  .carousel-container::before,
+  .carousel-container::after { flex-basis: 7%; } /* 86% items -> 7% gutter */
+}
+.carousel-item {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  flex: 0 0 88%;
+}
+@media (max-width: 360px) {
+  .carousel-item { flex-basis: 92%; }
+}
+@media (min-width: 361px) and (max-width: 430px) {
+  .carousel-item { flex-basis: 90%; }
+}
+@media (min-width: 431px) and (max-width: 640px) {
+  .carousel-item { flex-basis: 86%; }
+}
+
+@keyframes caustics-move {
+  0% { background-position: 0 0; }
+  25% { background-position: 24px -18px; }
+  50% { background-position: -16px 22px; }
+  75% { background-position: 10px -8px; }
+  100% { background-position: 0 0; }
 }

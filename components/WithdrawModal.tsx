@@ -14,6 +14,32 @@ const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 
+// Helper function to ensure image URLs are properly formatted for Next.js Image
+const ensureImageUrl = (url: string | undefined): string => {
+  if (!url) return '/default-network.png'
+  // If it's a relative path starting with /, it's fine
+  if (url.startsWith('/')) return url
+  // If it starts with // (protocol-relative), convert to https
+  if (url.startsWith('//')) return `https:${url}`
+  // If it doesn't start with http/https and doesn't start with /, add /
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `/${url}`
+  }
+  return url
+}
+
+interface NetworkLogoData {
+  [key: string]: {
+    id: string;
+    name: string;
+    logoUrl: string;
+    fallbackUrl?: string;
+    small?: string;
+    large?: string;
+    thumb?: string;
+  }
+}
+
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +48,7 @@ interface WithdrawModalProps {
   penaltyPercentage?: number;
   tokenName?: string;
   isCompleted?: boolean;
+  networkLogos?: NetworkLogoData;
 }
 
 const WithdrawModal = memo(function WithdrawModal({ 
@@ -31,7 +58,8 @@ const WithdrawModal = memo(function WithdrawModal({
   isEth,
   penaltyPercentage,
   tokenName,
-  isCompleted = false
+  isCompleted = false,
+  networkLogos
 }: WithdrawModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -388,42 +416,8 @@ const WithdrawModal = memo(function WithdrawModal({
                 : 'Your withdrawal failed. Please try again or contact our support team for assistance.'}
               {!success && error && (
                 <span className="block mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="text-sm font-medium text-red-800 mb-2">Error Details:</div>
-                  <div className="text-xs text-red-600 mb-3">
-                    {(() => {
-                      // Enhanced error extraction and user-friendly messages
-                      const lowerError = error.toLowerCase();
-                      if (error.includes("missing revert data") || lowerError.includes("call_exception")) {
-                        return "💸 Transaction failed - This usually means insufficient funds for gas fees or the contract couldn't process your request. Please check your wallet balance and ensure you have enough ETH/native tokens for gas fees, then try again.";
-                      } else if (error.includes("INVALID_ARGUMENT") || lowerError.includes("invalid argument")) {
-                        return "❌ Invalid transaction parameters. Please check your plan details and try again.";
-                      } else if (lowerError.includes("insufficient funds") || lowerError.includes("insufficient balance")) {
-                        return "💰 Insufficient funds for gas fees. Please add some ETH to your wallet for transaction fees.";
-                      } else if (lowerError.includes("user rejected") || lowerError.includes("user denied")) {
-                        return "🚫 Transaction was cancelled by user. No funds were withdrawn.";
-                      } else if (lowerError.includes("network") || lowerError.includes("connection")) {
-                        return "🌐 Network connection issue. Please check your internet connection and try again.";
-                      } else if (lowerError.includes("gas")) {
-                        return "⛽ Gas estimation failed. Try increasing gas limit or check network congestion.";
-                      } else if (lowerError.includes("nonce")) {
-                        return "🔄 Transaction nonce error. Please reset your wallet or try again.";
-                      } else if (lowerError.includes("allowance") || lowerError.includes("approval")) {
-                        return "🔐 Token allowance issue. Please approve the token spending and try again.";
-                      } else if (lowerError.includes("maturity") || lowerError.includes("not yet matured")) {
-                        return "⏰ Savings plan hasn't matured yet. Early withdrawal will incur penalties.";
-                      } else if (error.includes("code=")) {
-                        const codeMatch = error.match(/code=([A-Z_]+)/);
-                        return codeMatch ? `⚠️ Error Code: ${codeMatch[1]}` : error;
-                      } else if (error.includes(":")) {
-                        return `⚠️ ${error.split(":").pop()?.trim()}`;
-                      } else {
-                        return `⚠️ ${error}`;
-                      }
-                    })()}
-                  </div>
-                  <div className="text-xs text-gray-600 mb-3 p-2 bg-gray-50 rounded border">
-                    <strong>Original Error:</strong> {error}
-                  </div>
+                  <div className="text-sm font-medium text-red-800 mb-2">Error</div>
+                  <div className="text-xs text-red-600 mb-3">{error}</div>
                   <div className="mt-3 pt-2 border-t border-red-200">
                     <button 
                       onClick={() => window.open('https://t.me/+YimKRR7wAkVmZGRk', '_blank')}
@@ -519,7 +513,15 @@ const WithdrawModal = memo(function WithdrawModal({
             </p>
             <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-gray-50/80 to-gray-100/80 backdrop-blur-sm rounded-full border border-gray-200/40 shadow-sm mb-4">
               <Image 
-                src={isEth ? '/eth.png' : currentNetwork === 'base' ? '/base.svg' : currentNetwork === 'lisk' ? '/lisk.png' : '/celo.png'} 
+                src={
+                  isEth
+                    ? ensureImageUrl(networkLogos?.ethereum?.logoUrl || networkLogos?.['ethereum']?.fallbackUrl || '/eth.png')
+                    : ensureImageUrl(
+                        networkLogos?.[currentNetwork]?.logoUrl ||
+                        networkLogos?.[currentNetwork]?.fallbackUrl ||
+                        '/default-network.png'
+                      )
+                } 
                 alt={isEth ? 'ETH' : getNetworkName()} 
                 width={16}
                 height={16}

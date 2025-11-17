@@ -1,8 +1,21 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  HiOutlineCheck,
+  HiOutlineGlobeAlt,
+  HiOutlineUserCircle,
+  HiOutlineTag,
+  HiOutlineWallet,
+  HiOutlineClipboard,
+  HiOutlineEnvelope,
+  HiOutlineLink,
+  HiOutlineUsers,
+  HiOutlineSun,
+  HiOutlineBellAlert,
+} from 'react-icons/hi2'
 import toast from 'react-hot-toast';
 import NetworkDetection from '@/components/NetworkDetection';
 import ENSLinking from '@/components/ENSLinking';
@@ -10,7 +23,7 @@ import { useENSData } from '@/hooks/useENSData';
 import LanguageSelector from '@/components/LanguageSelector';
 
 // Initialize Space Grotesk font
-const spaceGrotesk = Space_Grotesk({
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-space-grotesk',
@@ -20,6 +33,8 @@ export default function Settings() {
   const { address } = useAccount();
   const { ensName, getDisplayName, hasENS } = useENSData();
   const [mounted, setMounted] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<'Profile'|'Language'|'Appearance'|'Notifications'>('Profile');
+  const tabs = ['Profile','Language','Appearance','Notifications'] as const;
 
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [email, setEmail] = useState('');
@@ -197,17 +212,16 @@ export default function Settings() {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       
-      // Store code verifier for later use
-      sessionStorage.setItem('twitter_code_verifier', codeVerifier);
-      sessionStorage.setItem('twitter_state', generateRandomString(32));
+      localStorage.setItem('twitter_code_verifier', codeVerifier);
+      localStorage.setItem('twitter_state', generateRandomString(32));
       
       // Twitter OAuth 2.0 authorization URL
       const authUrl = new URL('https://twitter.com/i/oauth2/authorize');
       authUrl.searchParams.append('response_type', 'code');
       authUrl.searchParams.append('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '');
       authUrl.searchParams.append('redirect_uri', `${window.location.origin}/auth/twitter/callback`);
-      authUrl.searchParams.append('scope', 'tweet.read users.read');
-      authUrl.searchParams.append('state', sessionStorage.getItem('twitter_state') || '');
+      authUrl.searchParams.append('scope', 'tweet.read users.read offline.access');
+      authUrl.searchParams.append('state', localStorage.getItem('twitter_state') || '');
       authUrl.searchParams.append('code_challenge', codeChallenge);
       authUrl.searchParams.append('code_challenge_method', 'S256');
       
@@ -249,6 +263,7 @@ export default function Settings() {
           clearInterval(checkClosed);
           popup?.close();
           console.error('Twitter authentication failed:', event.data.error);
+          toast.error(`X Connection Failed: ${event.data.error}`);
           setIsConnectingX(false);
           window.removeEventListener('message', messageListener);
         }
@@ -330,70 +345,14 @@ export default function Settings() {
   }
 
   return (
-    <div className={`${spaceGrotesk.variable} font-sans relative min-h-screen bg-gradient-to-br from-gray-50 via-[#81D7B4]/5 to-white overflow-hidden`}>
+    <div className={`${exo.variable} font-sans relative min-h-screen bg-gradient-to-br from-gray-50 via-[#81D7B4]/5 to-white overflow-hidden`}>
       {/* Network Detection Component */}
       <NetworkDetection />
       
       {/* Enhanced Background Elements */}
-      <div className="fixed inset-0 z-0 opacity-[0.08] pointer-events-none bg-[url('/noise.jpg')] mix-blend-overlay"></div>
+      {/* Noise background removed per redesign spec */}
       
-      {/* Modern Grid Pattern */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(rgba(129, 215, 180, 0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(129, 215, 180, 0.15) 1px, transparent 1px)
-          `,
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
-      
-      {/* Floating Orbs with Enhanced Animation */}
-      <motion.div 
-        animate={{ 
-          x: [0, 30, 0],
-          y: [0, -25, 0],
-          scale: [1, 1.1, 1],
-          rotate: [0, 180, 360]
-        }}
-        transition={{ 
-          duration: 15,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="absolute top-20 right-8 lg:right-16 w-80 lg:w-96 h-80 lg:h-96 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC5A0]/10 rounded-full blur-3xl -z-10"
-      />
-      
-      <motion.div 
-        animate={{ 
-          x: [0, -25, 0],
-          y: [0, 20, 0],
-          scale: [1, 0.9, 1],
-          rotate: [360, 180, 0]
-        }}
-        transition={{ 
-          duration: 18,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 2
-        }}
-        className="absolute bottom-32 left-8 lg:left-16 w-72 lg:w-80 h-72 lg:h-80 bg-gradient-to-tr from-[#81D7B4]/15 to-[#6BC5A0]/8 rounded-full blur-3xl -z-10"
-      />
-      
-      <motion.div 
-        animate={{ 
-          x: [0, 20, 0],
-          y: [0, -30, 0],
-          scale: [1, 1.2, 1]
-        }}
-        transition={{ 
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1
-        }}
-        className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-48 lg:w-64 h-48 lg:h-64 bg-gradient-to-bl from-[#81D7B4]/12 to-[#6BC5A0]/6 rounded-full blur-2xl -z-10"
-      />
+      {/* Decorative background elements removed per request */}
       
       {/* Main Content Container */}
       <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
@@ -408,81 +367,46 @@ export default function Settings() {
             className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-[#81D7B4]/30 flex items-center"
           >
             <div className="bg-[#81D7B4]/10 p-1.5 rounded-full mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 text-[#81D7B4]">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
+              <HiOutlineCheck className="w-4 h-4 text-[#81D7B4]" />
             </div>
             <span className="text-sm font-medium text-gray-700">Address copied to clipboard</span>
           </motion.div>
         )}
       </AnimatePresence>
       
-      {/* Enhanced Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="mb-8 sm:mb-12 lg:mb-16 text-center relative"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/8 via-transparent to-[#81D7B4]/8 rounded-3xl blur-3xl"></div>
-        <div className="relative z-10">
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 sm:gap-3 bg-white/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20 shadow-[0_8px_32px_-12px_rgba(129,215,180,0.3)] mb-6 sm:mb-8"
-          >
-            <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 sm:w-6 sm:h-6 text-white">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <span className="text-lg sm:text-xl font-semibold text-gray-700">Account Settings</span>
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-[#81D7B4] to-gray-900 tracking-tight mb-4 sm:mb-6 leading-tight"
-          >
-            Settings
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-medium px-2 sm:px-0"
-          >
-            Customize your <span className="text-[#81D7B4] font-bold">BitSave</span> experience, connect social accounts, and manage your preferences with our modern, intuitive interface.
-          </motion.p>
-        </div>
-      </motion.div>
+      {/* Removed Account Settings header per request; pills moved to top */}
       
       <div className="max-w-6xl mx-auto px-2 sm:px-0">
+        {/* Pill Tabs Navigation (bubble style) */}
+        <div className="mb-6 sm:mb-8 flex justify-start">
+          <div className="bg-gray-100 rounded-full p-2 sm:p-3 flex items-center gap-2 sm:gap-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setSelectedTab(tab)}
+                className={`px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold transition-all ${selectedTab === tab ? 'bg-white text-[#81D7B4] shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
         {/* Modern Layout */}
         <div className="space-y-6 sm:space-y-8 lg:space-y-10">
           {/* Language Settings Card - Full Width */}
+          <div className={selectedTab === 'Language' ? 'block' : 'hidden'}>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute -top-12 -right-12 w-40 h-40 bg-[#81D7B4]/8 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-[#81D7B4]/5 rounded-full blur-2xl"></div>
+            {/* Decorative background circles removed */}
             
             <div className="relative z-10">
               <div className="flex items-center mb-6 sm:mb-8">
                 <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-4 sm:mr-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                    <path d="M2 12h20"></path>
-                  </svg>
+                  <HiOutlineGlobeAlt className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                 </div>
                 <div>
                   <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Language Settings</h2>
@@ -507,12 +431,12 @@ export default function Settings() {
               </div>
             </div>
           </motion.div>
+          </div>
 
-          {/* Profile Settings Card - Full Width */}
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500">
-          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-[#81D7B4]/8 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-[#81D7B4]/5 rounded-full blur-2xl"></div>
+          {/* Profile Settings Card - Full Width (background wrapper removed) */}
+          <div className={`${selectedTab === 'Profile' ? 'block' : 'hidden'}`}>
+          {/* Noise texture removed per redesign spec */}
+          {/* Decorative background removed */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -521,18 +445,12 @@ export default function Settings() {
           >
             <div className="flex items-center mb-4 lg:mb-0">
               <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-4 sm:mr-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <HiOutlineUserCircle className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Profile Settings</h2>
                 <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Manage your identity and social connections</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 bg-[#81D7B4]/10 px-3 sm:px-4 lg:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-[#81D7B4]/20">
-              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#81D7B4] rounded-full animate-pulse"></div>
-              <span className="text-sm sm:text-base font-semibold text-[#81D7B4]">Live</span>
             </div>
           </motion.div>
           
@@ -545,15 +463,12 @@ export default function Settings() {
           >
             <div className="flex items-center mb-4 sm:mb-6">
               <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 text-white">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
+                <HiOutlineTag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-800">Display Name</h3>
             </div>
             
-            <div className="bg-gradient-to-br from-[#81D7B4]/8 to-[#6BC5A0]/8 backdrop-blur-sm p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
+            <div className="p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20">
               
               <div className="relative">
                 <p className="text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
@@ -620,7 +535,7 @@ export default function Settings() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#81D7B4]/20 backdrop-blur-sm"
+                  className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#81D7B4]/20"
                 >
                   <div className="flex items-start">
                     <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-1.5 sm:p-2 rounded-lg mr-3 sm:mr-4 mt-1">
@@ -641,47 +556,35 @@ export default function Settings() {
           </motion.div>
           
           {/* ENS Domain */}
-          <ENSLinking />
+          <div className={selectedTab === 'Profile' ? 'block' : 'hidden'}>
+            <ENSLinking />
+          </div>
           
           {/* Spacing between sections */}
           <div className="h-6 sm:h-8 lg:h-10"></div>
           
-          {/* Wallet Address */}
+          {/* Wallet Address (moved under Profile tab) */}
+          <div className={selectedTab === 'Profile' ? 'block' : 'hidden'}>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             className="lg:col-span-3 bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute -top-12 -right-12 w-40 h-40 bg-[#81D7B4]/8 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-[#81D7B4]/5 rounded-full blur-2xl"></div>
+          {/* Noise background removed per redesign spec */}
+            {/* Decorative background removed */}
             
             <div className="flex items-center mb-6 sm:mb-8">
               <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-2 sm:p-3 rounded-lg sm:rounded-xl mr-3 sm:mr-4 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 sm:w-6 sm:h-6 text-white">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <circle cx="12" cy="16" r="1"></circle>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
+                <HiOutlineWallet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black">Wallet Address</h3>
             </div>
             
-            <motion.div 
-              whileHover={{ scale: 1.01 }}
-              className="bg-gradient-to-br from-[#81D7B4]/5 to-[#6BC5A0]/5 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20 relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
-              
               <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
                 <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-3 sm:gap-0">
                   <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-0 sm:mr-4 lg:mr-6 shadow-lg w-fit">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <circle cx="12" cy="16" r="1"></circle>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
+                    <HiOutlineWallet className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-col gap-2 sm:gap-3">
@@ -719,37 +622,32 @@ export default function Settings() {
                   onClick={copyToClipboard}
                   className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 min-w-[120px] sm:min-w-[140px] text-sm sm:text-base"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
-                  </svg>
+                  <HiOutlineClipboard className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span className="hidden sm:inline">Copy Address</span>
                   <span className="sm:hidden">Copy</span>
                 </motion.button>
-              </div>
-            </motion.div>
+                </div>
           </motion.div>
+          </div>
         </div>
         
         {/* Secondary Grid Layout for Additional Settings */}
         <div className="space-y-6 sm:space-y-8 lg:space-y-10 mt-12 sm:mt-16 lg:mt-20">
           {/* Email Connect Card */}
+        <div className={selectedTab === 'Notifications' ? 'block' : 'hidden'}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
           className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
         >
-          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-          <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-gradient-to-tr from-[#81D7B4]/8 to-[#6BC5A0]/8 rounded-full blur-2xl"></div>
+          {/* Noise texture removed per redesign spec */}
+          {/* Decorative background removed */}
           
           <div className="relative z-10">
             <div className="flex items-center mb-6 sm:mb-8">
               <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 text-white">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+                <HiOutlineEnvelope className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Email Connect</h2>
@@ -759,7 +657,7 @@ export default function Settings() {
             
             <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-[#81D7B4]/20 mb-6 sm:mb-8">
               <p className="text-gray-700 font-medium leading-relaxed text-sm sm:text-base">
-                Connect your email to receive updates, rewards, and important notifications about your savings and DeFi activities.
+                Connect your email to receive updates, rewards, and important notifications about your savings and SaveFi activities.
               </p>
             </div>
             
@@ -776,9 +674,7 @@ export default function Settings() {
               </div>
               {isEmailConnected ? (
                 <div className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <HiOutlineCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   Email Connected
                 </div>
               ) : (
@@ -796,9 +692,7 @@ export default function Settings() {
                     </>
                   ) : (
                     <>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
+                      <HiOutlineLink className="w-4 h-4 sm:w-5 sm:h-5" />
                       Connect Email
                     </>
                   )}
@@ -807,24 +701,23 @@ export default function Settings() {
             </div>
           </div>
         </motion.div>
+        </div>
 
           {/* Social Connect Card */}
+          <div className={selectedTab === 'Profile' ? 'block' : 'hidden'}>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
             className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-gradient-to-tr from-[#81D7B4]/8 to-[#6BC5A0]/8 rounded-full blur-2xl"></div>
+            {/* Noise texture removed per redesign spec */}
+            {/* Decorative background removed */}
             
             <div className="relative z-10">
               <div className="flex items-center mb-6 sm:mb-8">
-                <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+              <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                  <HiOutlineUsers className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Social Connect</h2>
@@ -888,32 +781,23 @@ export default function Settings() {
               </div>
             </div>
           </motion.div>
+          </div>
         
           {/* Appearance Settings */}
+          <div className={selectedTab === 'Appearance' ? 'block' : 'hidden'}>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.7 }}
             className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-visible group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-gradient-to-tr from-[#81D7B4]/8 to-[#6BC5A0]/8 rounded-full blur-2xl"></div>
+          {/* Noise background removed per redesign spec */}
+            {/* Decorative background removed */}
             
             <div className="relative z-10">
               <div className="flex items-center mb-8">
                 <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-4 rounded-2xl mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-7 h-7 text-white">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                  </svg>
+                  <HiOutlineSun className="w-7 h-7 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Appearance</h2>
@@ -949,24 +833,23 @@ export default function Settings() {
               </div>
             </div>
           </motion.div>
+          </div>
           
           {/* Notifications Settings */}
+          <div className={selectedTab === 'Notifications' ? 'block' : 'hidden'}>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
             className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-[#81D7B4]/10 to-[#6BC5A0]/10 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-gradient-to-tr from-[#81D7B4]/8 to-[#6BC5A0]/8 rounded-full blur-2xl"></div>
+          {/* Noise background removed per redesign spec */}
+            {/* Decorative background removed */}
             
             <div className="relative z-10">
               <div className="flex items-center mb-8">
                 <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-4 rounded-2xl mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-7 h-7 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
+                  <HiOutlineBellAlert className="w-7 h-7 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Notifications</h2>
@@ -1009,6 +892,7 @@ export default function Settings() {
               </div>
             </div>
           </motion.div>
+          </div>
         </div>
       </div>
       </div>
@@ -1022,9 +906,7 @@ export default function Settings() {
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/30 shadow-[0_20px_50px_-15px_rgba(129,215,180,0.3)] max-w-md w-full relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#81D7B4]/5 rounded-full blur-2xl"></div>
+          {/* Decorative background circles removed */}
             
             <div className="relative z-10">
               <div className="text-center mb-6 sm:mb-8">

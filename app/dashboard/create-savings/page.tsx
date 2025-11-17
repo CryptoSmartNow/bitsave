@@ -6,38 +6,276 @@ import Link from 'next/link';
 import Image from 'next/image';
 import CustomDatePicker from '@/components/CustomDatePicker';
 import { format } from 'date-fns';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import axios from 'axios';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
-import erc20ABI from '@/app/abi/erc20ABI.json';
+import erc20ABIFile from '@/app/abi/erc20ABI.json';
+const erc20ABI = erc20ABIFile.abi;
 import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interactionTracker';
 import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { useSavingsData } from '@/hooks/useSavingsData';
+import { HiHome, HiAcademicCap, HiTruck, HiBriefcase, HiSun, HiCpuChip, HiHeart, HiRocketLaunch, HiOutlineDocumentText } from 'react-icons/hi2';
+import { FaGamepad } from 'react-icons/fa';
 import NetworkDetection from '@/components/NetworkDetection';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
-import { getSavingFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
+import { useWalletDetection } from '@/hooks/useWalletDetection';
+import WalletRecommendationModal from '@/components/WalletRecommendationModal';
+import { getSavingFeeFromContract, getJoinFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
+import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
+
+// Helper function to ensure image URLs are properly formatted for Next.js Image
+const ensureImageUrl = (url: string | undefined): string => {
+  if (!url) return '/default-network.png'
+  // If it's a relative path starting with /, it's fine
+  if (url.startsWith('/')) return url
+  // If it starts with // (protocol-relative), convert to https
+  if (url.startsWith('//')) return `https:${url}`
+  // If it doesn't start with http/https and doesn't start with /, add /
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `/${url}`
+  }
+  return url
+}
 
 const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
 
+const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
+
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13"
 
-
-const spaceGrotesk = Space_Grotesk({
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
 })
+
+// === UNIFIED NETWORK CONFIG (plug-and-play) ===
+
+type NetworkToken = {
+  symbol: string;
+  address: string;
+  decimals: number;
+};
+
+type NetworkConfig = {
+  id: string;         // internal key, e.g. 'base'
+  name: string;       // display name
+  chainId: number;
+  contractAddress: string;
+  tokens: NetworkToken[];
+  isComingSoon?: boolean;
+};
+
+const NETWORKS: NetworkConfig[] = [
+  {
+    id: 'base',
+    name: 'Base',
+    chainId: 8453,
+    contractAddress: BASE_CONTRACT_ADDRESS,
+    tokens: [
+      { symbol: 'USDC', address: BASE_CONTRACT_ADDRESS, decimals: 6 },
+      { symbol: 'USDGLO', address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
+    ],
+  },
+  {
+    id: 'celo',
+    name: 'Celo',
+    chainId: 42220,
+    contractAddress: CELO_CONTRACT_ADDRESS,
+    tokens: [
+      { symbol: 'USDGLO', address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
+      { symbol: 'cUSD', address: '0x765DE816845861e75A25fCA122bb6898B8B1282a', decimals: 18 },
+      { symbol: 'USDC', address: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', decimals: 6 },
+      { symbol: 'Gooddollar', address: '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A', decimals: 18 },
+    ],
+  },
+  {
+    id: 'lisk',
+    name: 'Lisk',
+    chainId: 1135,
+    contractAddress: LISK_CONTRACT_ADDRESS,
+    tokens: [
+      { symbol: 'USDC', address: '0xf242275d3a6527d877f2c927a82d9b057609cc71', decimals: 6 },
+    ],
+  },
+  {
+    id: 'avalanche',
+    name: 'Avalanche',
+    chainId: 43114,
+    contractAddress: AVALANCHE_CONTRACT_ADDRESS,
+    tokens: [
+      // USDC.e on Avalanche C-Chain
+      { symbol: 'USDC', address: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', decimals: 6 },
+    ],
+  },
+  {
+    id: 'solana',
+    name: 'Solana',
+    chainId: 0, // Placeholder - Solana uses different chain identification
+    contractAddress: '', // Coming soon - no contract yet
+    tokens: [
+      { symbol: 'SOL', address: '', decimals: 9 },
+      { symbol: 'USDC', address: '', decimals: 6 },
+      { symbol: 'USDT', address: '', decimals: 6 },
+    ],
+    isComingSoon: true,
+  },
+];
+
+// --- Unified createSavingsGeneric implementation ---
+const createSavingsGeneric = async ({
+  networkId,
+  tokenSymbol,
+  planName,
+  amountRaw,
+  maturity,
+  penalty,
+  safeMode = false,
+  providerOverride = undefined,
+  signerOverride = undefined,
+  address,
+  additionalOptions = {}
+}: {
+  networkId: string;
+  tokenSymbol: string;
+  planName: string;
+  amountRaw: string;
+  maturity: number;
+  penalty: number;
+  safeMode?: boolean;
+  providerOverride?: any;
+  signerOverride?: any;
+  address: string;
+  additionalOptions?: any;
+}) => {
+  const network = NETWORKS.find(n => n.id === networkId);
+  if (!network) throw new Error('Invalid network selected.');
+  const tokenObj = network.tokens.find(t => t.symbol === tokenSymbol);
+  if (!tokenObj || !tokenObj.address) throw new Error('Invalid or missing token address for selected network.');
+  let provider, signer;
+  if (providerOverride && signerOverride) {
+    provider = providerOverride;
+    signer = signerOverride;
+  } else {
+    if (!window.ethereum) throw new Error('No Ethereum wallet detected.');
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    signer = await provider.getSigner();
+  }
+  const chainIdFromChain = (await provider.getNetwork()).chainId;
+  if (Number(chainIdFromChain) !== Number(network.chainId)) {
+    throw new Error(`Please switch your wallet to the ${network.name} network.`);
+  }
+  const contract = new ethers.Contract(network.contractAddress, CONTRACT_ABI, signer);
+  let userChildContractAddress;
+  try {
+    userChildContractAddress = await contract.getUserChildContractAddress();
+  } catch (e) { userChildContractAddress = undefined; }
+  if (userChildContractAddress === ethers.ZeroAddress || !userChildContractAddress) {
+    let feeInWei = undefined;
+    if (typeof additionalOptions.getFeeFn === 'function') {
+      feeInWei = await additionalOptions.getFeeFn(provider, network.contractAddress);
+    } else if (typeof fetchSavingFee === 'function') {
+      feeInWei = await fetchSavingFee(provider, network.contractAddress);
+    }
+    if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
+    const joinTx = await contract.joinBitsave({ value: feeInWei });
+    await joinTx.wait();
+    userChildContractAddress = await contract.getUserChildContractAddress();
+  }
+  const cleanAmount = amountRaw.replace(/[^0-9.]/g, '');
+  const parsedAmount = parseFloat(cleanAmount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    throw new Error('Invalid amount. Please enter an amount greater than zero.');
+  }
+  const tokenAmount = ethers.parseUnits(parsedAmount.toString(), tokenObj.decimals);
+  await approveERC20(tokenObj.address, tokenAmount, signer);
+  let txOptions = {};
+  if (network.id === 'celo' && typeof fetchCeloPrice === 'function') {
+    const celoPrice = await fetchCeloPrice();
+    if (!celoPrice) throw new Error('Could not fetch CELO price for fee calculation.');
+    const feeInCelo = (1 / celoPrice).toFixed(6);
+    txOptions = { gasLimit: 2717330, value: ethers.parseEther(feeInCelo) };
+  } else {
+    let feeInWei = undefined;
+    if (typeof additionalOptions.getFeeFn === 'function') {
+      feeInWei = await additionalOptions.getFeeFn(provider, network.contractAddress);
+    } else if (typeof fetchSavingFee === 'function') {
+      feeInWei = await fetchSavingFee(provider, network.contractAddress);
+    }
+    if (feeInWei) txOptions = { ...txOptions, value: feeInWei };
+  }
+  const tx = await contract.createSaving(
+    planName,
+    maturity,
+    penalty,
+    safeMode,
+    tokenObj.address,
+    tokenAmount,
+    txOptions
+  );
+  const receipt = await tx.wait();
+  return receipt;
+};
+
+// Approve ERC20 Helper
+const approveERC20 = async (
+  tokenAddress: string,
+  amount: any,
+  signer: any
+) => {
+  try {
+    // Contract to approve is determined by network or can be made generic
+    const contractToApprove = signer.provider?.network?.chainId === 42220 ? CELO_CONTRACT_ADDRESS : CONTRACT_ADDRESS;
+    const erc20Contract = new ethers.Contract(
+      tokenAddress,
+      erc20ABI,
+      signer
+    );
+    const tx = await erc20Contract.approve(contractToApprove, amount);
+    await tx.wait();
+    return true;
+  } catch (error) {
+    console.error("Error approving ERC20 tokens:", error);
+    throw error;
+  }
+};
+
+// Fetch Saving Fee Helper
+const fetchSavingFee = async (provider: any, contractAddress: string) => {
+  try {
+    if (!getSavingFeeFromContract) throw new Error('getSavingFeeFromContract not imported');
+    const feeInWei = await getSavingFeeFromContract(contractAddress, provider);
+    return feeInWei;
+  } catch (error) {
+    console.error('Error fetching saving fee from contract:', error);
+    return null;
+  }
+};
+
+// Fetch Celo Price Helper
+const fetchCeloPrice = async () => {
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=celo&vs_currencies=usd');
+    const data = await response.json();
+    return data.celo.usd;
+  } catch (error) {
+    console.error('Error fetching CELO price:', error);
+    return null;
+  }
+};
 
 export default function CreateSavingsPage() {
   const router = useRouter()
   const { address } = useAccount()
   const { referralData, generateReferralCode, markReferralConversion } = useReferrals()
   const { savingsData } = useSavingsData()
+  const { walletInfo, shouldShowModal, dismissRecommendation } = useWalletDetection()
   const [step, setStep] = useState(1)
   const [mounted, setMounted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -49,6 +287,7 @@ export default function CreateSavingsPage() {
   const [chain, setChain] = useState('base')
   const [startDate] = useState<Date | null>(new Date())
   const [endDate, setEndDate] = useState<Date | null>(null)
+  const [calendarNavigateDate, setCalendarNavigateDate] = useState<Date | null>(null)
   const [penalty, setPenalty] = useState('10%')
 
   const [isLoading, setLoading] = useState(false)
@@ -87,6 +326,10 @@ export default function CreateSavingsPage() {
     amount: '',
     endDate: ''
   })
+  
+  // Network logos state
+  const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  const [isLoadingLogos, setIsLoadingLogos] = useState(true);
   useEffect(() => {
     if (endDate) {
       setSelectedDayRange({
@@ -126,23 +369,6 @@ export default function CreateSavingsPage() {
 
 
 
-
-  // Define available currencies for each network
-  const networkCurrencies: Record<string, string[]> = useMemo(() => ({
-    base: ['USDC', 'USDGLO'],
-    celo: ['cUSD', 'USDGLO', 'USDC', 'Gooddollar'],
-    lisk: ['USDC'],
-  }), []);
-
-  // Update currency options when chain changes
-  useEffect(() => {
-    const available = networkCurrencies[chain] || [];
-    if (!available.includes(currency)) {
-      setCurrency(available[0]);
-    }
-  }, [chain, currency, networkCurrencies]);
-
-  const currencies = networkCurrencies[chain];
 
   // Function to switch network
   const switchToNetwork = async (networkName: string) => {
@@ -221,6 +447,30 @@ export default function CreateSavingsPage() {
               });
             }
           }
+        } else if (networkName === 'avalanche') {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0xA86A' }], // Avalanche chainId in hex (43114)
+            });
+          } catch (switchError: unknown) {
+        if ((switchError as { code: number }).code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0xA86A',
+                  chainName: 'Avalanche',
+                  nativeCurrency: {
+                    name: 'AVAX',
+                    symbol: 'AVAX',
+                    decimals: 18,
+                  },
+                  rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
+                  blockExplorerUrls: ['https://snowtrace.io'],
+                }],
+              });
+            }
+          }
         }
       }
     } catch (error) {
@@ -228,11 +478,47 @@ export default function CreateSavingsPage() {
     }
   };
 
-  const chains = [
-    { id: 'base', name: 'Base', logo: '/base.svg', color: 'bg-blue-900/10', textColor: 'text-blue-800' },
-    { id: 'celo', name: 'Celo', logo: '/celo.png', color: 'bg-green-100', textColor: 'text-green-600', active: true },
-    { id: 'lisk', name: 'Lisk', logo: '/lisk-logo.png', color: 'bg-purple-100', textColor: 'text-purple-600', active: true }
-  ]
+  const chains = useMemo(() => [
+    { 
+      id: 'base', 
+      name: 'Base', 
+      logo: networkLogos['base']?.logoUrl || '/base.svg', 
+      color: 'bg-[#81D7B4]/10', 
+      textColor: 'text-[#81D7B4]' 
+    },
+    { 
+      id: 'celo', 
+      name: 'Celo', 
+      logo: networkLogos['celo']?.logoUrl || '/celo.png', 
+      color: 'bg-green-100', 
+      textColor: 'text-green-600', 
+      active: true 
+    },
+    { 
+      id: 'lisk', 
+      name: 'Lisk', 
+      logo: networkLogos['lisk']?.logoUrl || '/lisk-logo.png', 
+      color: 'bg-purple-100', 
+      textColor: 'text-purple-600', 
+      active: true 
+    },
+    { 
+      id: 'avalanche', 
+      name: 'Avalanche', 
+      logo: networkLogos['avalanche']?.logoUrl || '/eth.png', 
+      color: 'bg-red-100', 
+      textColor: 'text-red-600', 
+      active: true 
+    },
+    { 
+      id: 'solana', 
+      name: 'Solana', 
+      logo: networkLogos['solana']?.logoUrl || '/solana.png', 
+      color: 'bg-purple-100', 
+      textColor: 'text-purple-600', 
+      isComingSoon: true 
+    },
+  ], [networkLogos]);
   const penalties = ['10%', '20%', '30%']
 
   const validateStep = () => {
@@ -257,14 +543,14 @@ export default function CreateSavingsPage() {
           valid = false
         }
       }
+    }
 
+    if (step === 2) {
+      // Validate amount on Step 2 (moved from Step 1)
       if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
         newErrors.amount = 'Please enter a valid amount'
         valid = false
       }
-    }
-
-    if (step === 2) {
       if (!endDate) {
         newErrors.endDate = 'Please select an end date'
         valid = false
@@ -327,1019 +613,38 @@ export default function CreateSavingsPage() {
     getWalletAddress();
   }, []);
 
-  const approveERC20 = async (
-    tokenAddress: string,
-    amount: ethers.BigNumberish,
-    signer: ethers.Signer
-  ) => {
-    try {
-      const contractToApprove = chain === 'celo' ? CELO_CONTRACT_ADDRESS : CONTRACT_ADDRESS;
-
-      const erc20Contract = new ethers.Contract(
-        tokenAddress,
-        erc20ABI.abi,
-        signer
-      );
-
-      const tx = await erc20Contract.approve(contractToApprove, amount);
-      await tx.wait();
-      
-      return true;
-    } catch (error) {
-      console.error("Error approving ERC20 tokens:", error);
-      throw error; // Re-throw to handle in the calling function
-    }
-  };
-
-
-
-
-
-
-
-
-  const handleBaseSavingsCreate = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.")
-      return
-    }
-    setLoading(true)
-    setError(null)
-    setTxHash(null)
-    setSuccess(false)
-
-    try {
-      if (!window.ethereum) {
-        throw new Error("No Ethereum wallet detected. Please install MetaMask.")
-      }
-
-
-
-
-      const userEnteredUsdcAmount = parseFloat(amount)
-      if (isNaN(userEnteredUsdcAmount) || userEnteredUsdcAmount <= 0) {
-        throw new Error("Invalid amount. Please enter an amount greater than zero.")
-      }
-
-      const usdcEquivalentAmount = ethers.parseUnits(userEnteredUsdcAmount.toFixed(6), 6)
-
-
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      await provider.send("eth_requestAccounts", [])
-      const signer = await provider.getSigner()
-
-      const BASE_CHAIN_ID = 8453 
-
-      const network = await provider.getNetwork()
-
-
-      if (Number(network.chainId) !== BASE_CHAIN_ID) {
-        throw new Error("Please switch your wallet to the Base network.")
-      }
-
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-
-      let userChildContractAddress = await contract.getUserChildContractAddress()
-
-
-      if (userChildContractAddress === ethers.ZeroAddress) {
-        // Get saving fee from contract
-        const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
-        if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-        
-        const joinTx = await contract.joinBitsave({
-          value: feeInWei, 
-        })
-        await joinTx.wait()
-
-        userChildContractAddress = await contract.getUserChildContractAddress()
-
-      }
-
-      const maturityTime = selectedDayRange.to
-        ? Math.floor(
-          new Date(
-            selectedDayRange.to.year ?? 0,
-            (selectedDayRange.to.month ?? 1) - 1,
-            selectedDayRange.to.day ?? 1
-          ).getTime() / 1000
-        )
-        : 0
-
-      const safeMode = false
-      const tokenToSave = BASE_CONTRACT_ADDRESS
-
-      await approveERC20(tokenToSave, usdcEquivalentAmount, signer)
-
-      // Get saving fee from contract
-      const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
-      if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-
-      // Estimate gas for createSaving transaction
-      const estimatedGas = await estimateGasForTransaction(
-        contract,
-        'createSaving',
-        [name, maturityTime, selectedPenalty, safeMode, tokenToSave, usdcEquivalentAmount],
-        { value: feeInWei }
-      );
-
-      const txOptions = {
-        gasLimit: estimatedGas,
-        value: feeInWei, 
-      }
-
-      const tx = await contract.createSaving(
-        name,
-        maturityTime,
-        selectedPenalty,
-        safeMode,
-        tokenToSave,
-        usdcEquivalentAmount,
-        txOptions
-      )
-
-      const receipt = await tx.wait()
-      setTxHash(receipt.hash)
-
-      try {
-        await axios.post(
-          "https://bitsaveapi.vercel.app/transactions/",
-          {
-            amount: parseFloat(amount),
-            txnhash: receipt.hash,
-            chain: "base", 
-            savingsname: name,
-            useraddress: walletAddress,
-            transaction_type: "deposit",
-            currency: currency
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "X-API-Key": process.env.NEXT_PUBLIC_API_KEY
-            }
-          }
-        );
-
-      } catch (apiError) {
-        console.error("Error sending transaction data to API:", apiError);
-      }
-
-      setSuccess(true)
-
-    } catch (error) {
-      console.error("Error creating savings plan:", error)
-      setSuccess(false)
-
-      // Use the contract error handler to provide user-friendly error messages
-      const errorMessage = handleContractError(error, 'main');
-      setError(errorMessage);
-      throw error 
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Handle USDGLO savings on Base network
-  const handleUSDGLOBaseSavings = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.")
-      return
-    }
-    setLoading(true)
-    setError(null)
-    setTxHash(null)
-    setSuccess(false)
-
-    try {
-      if (!window.ethereum) {
-        throw new Error("No Ethereum wallet detected. Please install MetaMask.")
-      }
-
-      const userEnteredAmount = parseFloat(amount)
-      if (isNaN(userEnteredAmount) || userEnteredAmount <= 0) {
-        throw new Error("Invalid amount. Please enter an amount greater than zero.")
-      }
-
-      const usdgloAmount = ethers.parseUnits(userEnteredAmount.toFixed(18), 18)
-
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      await provider.send("eth_requestAccounts", [])
-      const signer = await provider.getSigner()
-
-      const BASE_CHAIN_ID = 8453
-      const network = await provider.getNetwork()
-
-      if (Number(network.chainId) !== BASE_CHAIN_ID) {
-        throw new Error("Please switch your wallet to the Base network.")
-      }
-
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-      let userChildContractAddress = await contract.getUserChildContractAddress()
-
-      if (userChildContractAddress === ethers.ZeroAddress) {
-        // Get saving fee from contract
-        const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
-        if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-        
-        const joinTx = await contract.joinBitsave({
-          value: feeInWei, 
-        })
-        await joinTx.wait()
-
-        userChildContractAddress = await contract.getUserChildContractAddress()
-      }
-
-      const maturityTime = selectedDayRange.to
-        ? Math.floor(
-          new Date(
-            selectedDayRange.to.year ?? 0,
-            (selectedDayRange.to.month ?? 1) - 1,
-            selectedDayRange.to.day ?? 1
-          ).getTime() / 1000
-        )
-        : 0
-
-      const safeMode = false
-      const tokenToSave = BASE_TOKENS.USDGLO.address
-
-      await approveERC20(tokenToSave, usdgloAmount, signer)
-
-      // Get saving fee from contract
-      const feeInWei = await fetchSavingFee(provider, CONTRACT_ADDRESS);
-      if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-
-      // Estimate gas for createSaving transaction
-      const estimatedGas = await estimateGasForTransaction(
-        contract,
-        'createSaving',
-        [name, maturityTime, selectedPenalty, safeMode, tokenToSave, usdgloAmount],
-        { value: feeInWei }
-      );
-
-      const txOptions = {
-        gasLimit: estimatedGas,
-        value: feeInWei, 
-      }
-
-      const tx = await contract.createSaving(
-        name,
-        maturityTime,
-        selectedPenalty,
-        safeMode,
-        tokenToSave,
-        usdgloAmount,
-        txOptions
-      )
-
-      const receipt = await tx.wait()
-      setTxHash(receipt.hash)
-
-      try {
-        await axios.post(
-          "https://bitsaveapi.vercel.app/transactions/",
-          {
-            amount: parseFloat(amount),
-            txnhash: receipt.hash,
-            chain: "base", 
-            savingsname: name,
-            useraddress: walletAddress,
-            transaction_type: "deposit",
-            currency: currency
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "X-API-Key": process.env.NEXT_PUBLIC_API_KEY
-            }
-          }
-        );
-      } catch (apiError) {
-        console.error("Error sending transaction data to API:", apiError);
-      }
-
-      setSuccess(true)
-
-    } catch (error) {
-      console.error("Error creating USDGLO savings plan:", error)
-      setSuccess(false)
-
-      const errorMessage = handleContractError(error, 'main');
-      setError(errorMessage);
-      throw error 
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Token addresses and decimals for Base
-  const BASE_TOKENS = {
-    USDC: { address: BASE_CONTRACT_ADDRESS, decimals: 6 },
-    USDGLO: { address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
-  };
-
-  // Token addresses and decimals for Celo
-  const CELO_TOKENS = {
-    USDGLO: { address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
-    cUSD: { address: '0x765DE816845861e75A25fCA122bb6898B8B1282a', decimals: 18 },
-    USDC: { address: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', decimals: 6 },
-    Gooddollar: { address: '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A', decimals: 18 },
-  };
-
-  // Token addresses and decimals for Lisk
-  const LISK_TOKENS = {
-    USDC: { address: '0xf242275d3a6527d877f2c927a82d9b057609cc71', decimals: 6 },
-  };
-
-  // Helper to fetch CELO price in USD
-  const fetchCeloPrice = async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=celo&vs_currencies=usd');
-      const data = await response.json();
-      return data.celo.usd;
-    } catch (error) {
-      console.error('Error fetching CELO price:', error);
-      return null;
-    }
-  };
-
-  // Helper to fetch saving fee from contract
-  const fetchSavingFee = async (provider: ethers.Provider, contractAddress: string) => {
-    try {
-      const feeInWei = await getSavingFeeFromContract(contractAddress, provider);
-      return feeInWei;
-    } catch (error) {
-      console.error('Error fetching saving fee from contract:', error);
-      return null;
-    }
-  };
-
-  
-
-  // Common helper function for Celo setup
-  const setupCeloProvider = async () => {
-    if (!window.ethereum) throw new Error("No Ethereum wallet detected. Please install MetaMask.");
-    
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = await provider.getSigner();
-    
-    const CELO_CHAIN_ID = 42220;
-    const network = await provider.getNetwork();
-    if (Number(network.chainId) !== CELO_CHAIN_ID) {
-      throw new Error("Please switch your wallet to the Celo network.");
-    }
-    
-    return { provider, signer };
-  };
-
-  const setupLiskProvider = async () => {
-    if (!window.ethereum) throw new Error("No Ethereum wallet detected. Please install MetaMask.");
-    
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = await provider.getSigner();
-    
-    const LISK_CHAIN_ID = 1135;
-    const network = await provider.getNetwork();
-    if (Number(network.chainId) !== LISK_CHAIN_ID) {
-      throw new Error("Please switch your wallet to the Lisk network.");
-    }
-    
-    return { provider, signer };
-  };
-
-  // Common helper function for Bitsave contract setup
-  const setupBitsaveContract = async (signer: ethers.Signer) => {
-    const celoPrice = await fetchCeloPrice();
-    if (!celoPrice) throw new Error('Could not fetch CELO price.');
-    const joinFeeCelo = (1 / celoPrice).toFixed(4); // $1 in CELO
-    
-    const contract = new ethers.Contract(CELO_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    let userChildContractAddress;
-    
-    try {
-      userChildContractAddress = await contract.getUserChildContractAddress();
-    } catch (error) {
-      console.error(error);
-      throw new Error("Failed to interact with the Bitsave contract. Please try again.");
-    }
-    
-    if (userChildContractAddress === ethers.ZeroAddress) {
-      try {
-        const joinTx = await contract.joinBitsave({ value: ethers.parseEther(joinFeeCelo) });
-        await joinTx.wait();
-        userChildContractAddress = await contract.getUserChildContractAddress();
-      } catch (joinError) {
-        console.error(joinError);
-        throw new Error("Failed to join Bitsave. Please check your wallet has enough CELO for gas fees.");
-      }
-    }
-    
-    return contract;
-  };
-
-  // Common helper function for Lisk Bitsave contract setup
-  const setupLiskBitsaveContract = async (signer: ethers.Signer) => {
-    const provider = signer.provider;
-    if (!provider) throw new Error('Provider not available from signer.');
-    
-    const contract = new ethers.Contract(LISK_CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    let userChildContractAddress;
-    
-    try {
-      userChildContractAddress = await contract.getUserChildContractAddress();
-    } catch (error) {
-      console.error(error);
-      throw new Error("Failed to interact with the Bitsave contract. Please try again.");
-    }
-    
-    if (userChildContractAddress === ethers.ZeroAddress) {
-      try {
-        // Get saving fee from contract (same as Base implementation)
-        const feeInWei = await fetchSavingFee(provider, LISK_CONTRACT_ADDRESS);
-        if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-        
-        const joinTx = await contract.joinBitsave({ value: feeInWei });
-        await joinTx.wait();
-        userChildContractAddress = await contract.getUserChildContractAddress();
-      } catch (joinError) {
-        console.error(joinError);
-        throw new Error("Failed to join Bitsave. Please check your wallet has enough ETH for gas fees.");
-      }
-    }
-    
-    return contract;
-  };
-
-  // Common helper function for maturity time calculation
-  const calculateMaturityTime = () => {
-    const maturityTime = selectedDayRange.to
-      ? Math.floor(
-        new Date(
-          selectedDayRange.to.year ?? 0,
-          (selectedDayRange.to.month ?? 1) - 1,
-          selectedDayRange.to.day ?? 1
-        ).getTime() / 1000
-      )
-      : 0;
-    
-    if (maturityTime === 0) {
-      throw new Error("Please select a valid end date for your savings plan.");
-    }
-    
-    return maturityTime;
-  };
-
-  // Common helper function for API call
-  const sendTransactionToAPI = async (amount: number, txHash: string, currency: string) => {
-    try {
-      await axios.post(
-        "https://bitsaveapi.vercel.app/transactions/",
-        {
-          amount,
-          txnhash: txHash,
-          chain: "celo",
-          savingsname: name,
-          useraddress: walletAddress,
-          transaction_type: "deposit",
-          currency
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": process.env.NEXT_PUBLIC_API_KEY
-          }
-        }
-      );
-
-    } catch (apiError) {
-      console.error("Error sending transaction data to API:", apiError);
-    }
-  };
-
-  // USDGLO specific savings function
-  const handleUSDGLOSavings = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.");
-      throw new Error("Please connect your wallet.");
-    }
-    
-    setLoading(true);
-    setError(null);
-    setTxHash(null);
-    setSuccess(false);
-    
-    try {
-      // Validate amount
-      const cleanAmount = amount.replace(/[^0-9.]/g, '');
-      const parsedAmount = parseFloat(cleanAmount);
-      
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Invalid amount. Please enter a valid number greater than zero.");
-      }
-      
-  
-      
-      // Setup provider and contract
-      const { signer } = await setupCeloProvider();
-      const contract = await setupBitsaveContract(signer);
-      const maturityTime = calculateMaturityTime();
-      
-      // USDGLO specific logic
-      const token = CELO_TOKENS.USDGLO;
-      const tokenAmount = ethers.parseUnits(parsedAmount.toString(), token.decimals);
-      
-
-      
-      // Approve and create saving
-        await approveERC20(token.address, tokenAmount, signer);
-        
-        // Get current CELO price for $1 fee
-        const celoPrice = await fetchCeloPrice();
-        if (!celoPrice) throw new Error('Could not fetch CELO price for fee calculation.');
-        const feeInCelo = (1 / celoPrice).toFixed(6); // $1 in CELO
-        
-  
-        
-        const txOptions = { 
-          gasLimit: 2717330,
-          value: ethers.parseEther(feeInCelo)
-        };
-        const tx = await contract.createSaving(
-          name,
-          maturityTime,
-          selectedPenalty,
-          false, // safeMode
-          token.address,
-          tokenAmount,
-          txOptions
-        );
-      
-      const receipt = await tx.wait();
-      setTxHash(receipt.hash);
-      
-      // Send to API
-      await sendTransactionToAPI(parsedAmount, receipt.hash, 'USDGLO');
-      
-      // Track referral conversion if user came from a referral link
-      const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
-      if (referralCode) {
-        markReferralConversion(referralCode);
-        localStorage.removeItem('referralCode'); // Remove after conversion
-      }
-      
-      setSuccess(true);
-    } catch (error) {
-      console.error("Error creating USDGLO savings plan:", error);
-      setSuccess(false);
-      
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('user rejected') ||
-          errorMessage.includes('User denied') ||
-          errorMessage.includes('user cancelled') ||
-          errorMessage.includes('ACTION_REJECTED') ||
-          errorMessage.includes('ethers-user-denied')) {
-        setError('Error creating savings user rejected');
-      } else {
-        setError(errorMessage);
-      }
-      throw error; // Re-throw the error so handleSubmit can catch it
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // cUSD specific savings function
-  const handleCUSDSavings = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.");
-      throw new Error("Please connect your wallet.");
-    }
-    
-    setLoading(true);
-    setError(null);
-    setTxHash(null);
-    setSuccess(false);
-    
-    try {
-      // Validate amount
-      const cleanAmount = amount.replace(/[^0-9.]/g, '');
-      const parsedAmount = parseFloat(cleanAmount);
-      
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Invalid amount. Please enter a valid number greater than zero.");
-      }
-      
-
-      
-      // Setup provider and contract
-      const { signer } = await setupCeloProvider();
-      const contract = await setupBitsaveContract(signer);
-      const maturityTime = calculateMaturityTime();
-      
-      // cUSD specific logic
-      const token = CELO_TOKENS.cUSD;
-      const tokenAmount = ethers.parseUnits(parsedAmount.toString(), token.decimals);
-      
-
-      
-      // Approve and create saving
-        await approveERC20(token.address, tokenAmount, signer);
-        
-        // Get current CELO price for $1 fee
-        const celoPrice = await fetchCeloPrice();
-        if (!celoPrice) throw new Error('Could not fetch CELO price for fee calculation.');
-        const feeInCelo = (1 / celoPrice).toFixed(6); // $1 in CELO
-        
-       
-        
-        const txOptions = { 
-          gasLimit: 2717330,
-          value: ethers.parseEther(feeInCelo)
-        };
-        const tx = await contract.createSaving(
-          name,
-          maturityTime,
-          selectedPenalty,
-          false, // safeMode
-          token.address,
-          tokenAmount,
-          txOptions
-        );
-      
-      const receipt = await tx.wait();
-      setTxHash(receipt.hash);
-      
-      // Send to API
-      await sendTransactionToAPI(parsedAmount, receipt.hash, 'cUSD');
-      
-      // Track successful savings creation
-      if (address) {
-        trackSavingsCreated(address, {
-          planName: name,
-          amount: amount,
-          currency: currency,
-          chain: chain,
-          penalty: penalty,
-          endDate: endDate?.toISOString(),
-          txHash: receipt.hash
-        });
-      }
-      
-      setSuccess(true);
-    } catch (error) {
-      console.error("Error creating cUSD savings plan:", error);
-      setSuccess(false);
-      
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('user rejected') ||
-          errorMessage.includes('User denied') ||
-          errorMessage.includes('user cancelled') ||
-          errorMessage.includes('ACTION_REJECTED') ||
-          errorMessage.includes('ethers-user-denied')) {
-        setError('Error creating savings user rejected');
-      } else {
-        setError(errorMessage);
-      }
-      throw error; // Re-throw the error so handleSubmit can catch it
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Gooddollar specific savings function
-  const handleGooddollarSavings = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.");
-      throw new Error("Please connect your wallet.");
-    }
-    
-    setLoading(true);
-    setError(null);
-    setTxHash(null);
-    setSuccess(false);
-    
-    try {
-      // Validate amount
-      const cleanAmountForValidation = amount.replace(/[^0-9.]/g, '');
-      const userEnteredAmount = parseFloat(cleanAmountForValidation);
-      
-      if (isNaN(userEnteredAmount) || userEnteredAmount <= 0) {
-        throw new Error("Invalid amount. Please enter an amount greater than zero.");
-      }
-      
-
-      
-      // Setup provider and contract
-      const { signer } = await setupCeloProvider();
-      const contract = await setupBitsaveContract(signer);
-      const maturityTime = calculateMaturityTime();
-      
-      // Gooddollar specific logic - Convert USD to $G using live price
-      const gAmount = userEnteredAmount / goodDollarPrice;
-      const token = CELO_TOKENS.Gooddollar;
-      const tokenAmount = ethers.parseUnits(gAmount.toFixed(token.decimals), token.decimals);
-      
-
-      
-      // Approve and create saving
-        await approveERC20(token.address, tokenAmount, signer);
-        
-        // Get current CELO price for $1 fee
-        const celoPrice = await fetchCeloPrice();
-        if (!celoPrice) throw new Error('Could not fetch CELO price for fee calculation.');
-        const feeInCelo = (1 / celoPrice).toFixed(6); // $1 in CELO
-        
-        
-        
-        const txOptions = { 
-          gasLimit: 2717330,
-          value: ethers.parseEther(feeInCelo)
-        };
-        const tx = await contract.createSaving(
-          name,
-          maturityTime,
-          selectedPenalty,
-          false, // safeMode
-          token.address,
-          tokenAmount,
-          txOptions
-        );
-      
-      const receipt = await tx.wait();
-      setTxHash(receipt.hash);
-      
-      // Send to API with G amount
-      await sendTransactionToAPI(gAmount, receipt.hash, 'Gooddollar');
-      
-      setSuccess(true);
-    } catch (error) {
-      console.error("Error creating Gooddollar savings plan:", error);
-      setSuccess(false);
-      
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('user rejected') ||
-          errorMessage.includes('User denied') ||
-          errorMessage.includes('user cancelled') ||
-          errorMessage.includes('ACTION_REJECTED') ||
-          errorMessage.includes('ethers-user-denied')) {
-        setError('Error creating savings user rejected');
-      } else {
-        setError(errorMessage);
-      }
-      throw error; // Re-throw the error so handleSubmit can catch it
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // USDC specific savings function
-  const handleUSDCSavings = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.");
-      throw new Error("Please connect your wallet.");
-    }
-    
-    setLoading(true);
-    setError(null);
-    setTxHash(null);
-    setSuccess(false);
-    
-    try {
-      // Validate amount
-      const cleanAmount = amount.replace(/[^0-9.]/g, '');
-      const parsedAmount = parseFloat(cleanAmount);
-      
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Invalid amount. Please enter a valid number greater than zero.");
-      }
-      
-      // Setup provider and contract
-      const { signer } = await setupCeloProvider();
-      const contract = await setupBitsaveContract(signer);
-      const maturityTime = calculateMaturityTime();
-      
-      // USDC specific logic
-      const token = CELO_TOKENS.USDC;
-      const tokenAmount = ethers.parseUnits(parsedAmount.toString(), token.decimals);
-      
-      // Approve and create saving
-      await approveERC20(token.address, tokenAmount, signer);
-      
-      // Get current CELO price for $1 fee
-      const celoPrice = await fetchCeloPrice();
-      if (!celoPrice) throw new Error('Could not fetch CELO price for fee calculation.');
-      const feeInCelo = (1 / celoPrice).toFixed(6); // $1 in CELO
-      
-      const txOptions = { 
-        gasLimit: 2717330,
-        value: ethers.parseEther(feeInCelo)
-      };
-      const tx = await contract.createSaving(
-        name,
-        maturityTime,
-        selectedPenalty,
-        false, // safeMode
-        token.address,
-        tokenAmount,
-        txOptions
-      );
-    
-      const receipt = await tx.wait();
-      setTxHash(receipt.hash);
-      
-      // Track savings creation
-      if (address) {
-        trackSavingsCreated(address, {
-          planName: name,
-          amount: parsedAmount.toString(),
-          currency: 'USDC',
-          chain: 'celo',
-          maturityDate: selectedDayRange.to ? new Date(
-            selectedDayRange.to.year ?? 0,
-            (selectedDayRange.to.month ?? 1) - 1,
-            selectedDayRange.to.day ?? 1
-          ).toISOString() : '',
-          penalty: selectedPenalty.toString(),
-          txHash: receipt.hash
-        });
-      }
-      
-      // Send to API
-      await sendTransactionToAPI(parsedAmount, receipt.hash, 'USDC');
-      
-      setSuccess(true);
-    } catch (error) {
-      console.error("Error creating USDC savings plan:", error);
-      setSuccess(false);
-      
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('user rejected') ||
-          errorMessage.includes('User denied') ||
-          errorMessage.includes('user cancelled') ||
-          errorMessage.includes('ACTION_REJECTED') ||
-          errorMessage.includes('ethers-user-denied')) {
-        setError('Error creating savings user rejected');
-      } else {
-        setError(errorMessage);
-      }
-      throw error; // Re-throw the error so handleSubmit can catch it
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLiskUSDCSavings = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet.");
-      throw new Error("Please connect your wallet.");
-    }
-    
-    setLoading(true);
-    setError(null);
-    setTxHash(null);
-    setSuccess(false);
-    
-    try {
-      // Validate amount
-      const cleanAmount = amount.replace(/[^0-9.]/g, '');
-      const parsedAmount = parseFloat(cleanAmount);
-      
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Invalid amount. Please enter a valid number greater than zero.");
-      }
-      
-      // Setup provider and contract with joinBitsave functionality
-      const { signer } = await setupLiskProvider();
-      const contract = await setupLiskBitsaveContract(signer);
-      const maturityTime = calculateMaturityTime();
-      
-      // USDC specific logic for Lisk
-      const token = LISK_TOKENS.USDC;
-      const tokenAmount = ethers.parseUnits(parsedAmount.toString(), token.decimals);
-      
-      // Approve and create saving
-      await approveERC20(token.address, tokenAmount, signer);
-      
-      // Get saving fee from contract (same as Base implementation)
-      const { signer: contractSigner } = await setupLiskProvider();
-      const provider = contractSigner.provider;
-      if (!provider) throw new Error('Provider not available.');
-      
-      const feeInWei = await fetchSavingFee(provider, LISK_CONTRACT_ADDRESS);
-      if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-      
-      // Estimate gas for createSaving transaction
-      const estimatedGas = await estimateGasForTransaction(
-        contract,
-        'createSaving',
-        [name, maturityTime, selectedPenalty, false, token.address, tokenAmount],
-        { value: feeInWei }
-      );
-      
-      const txOptions = { 
-        gasLimit: estimatedGas,
-        value: feeInWei
-      };
-      const tx = await contract.createSaving(
-        name,
-        maturityTime,
-        selectedPenalty,
-        false, // safeMode
-        token.address,
-        tokenAmount,
-        txOptions
-      );
-    
-      const receipt = await tx.wait();
-      setTxHash(receipt.hash);
-      
-      // Track savings creation
-      if (address) {
-        trackSavingsCreated(address, {
-          planName: name,
-          amount: parsedAmount.toString(),
-          currency: 'USDC',
-          chain: 'lisk',
-          maturityDate: selectedDayRange.to ? new Date(
-            selectedDayRange.to.year ?? 0,
-            (selectedDayRange.to.month ?? 1) - 1,
-            selectedDayRange.to.day ?? 1
-          ).toISOString() : '',
-          penalty: selectedPenalty.toString(),
-          txHash: receipt.hash
-        });
-      }
-      
-      // Send to API
-      await sendTransactionToAPI(parsedAmount, receipt.hash, 'USDC');
-      
-      setSuccess(true);
-    } catch (error) {
-      console.error("Error creating USDC savings plan on Lisk:", error);
-      setSuccess(false);
-      
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('user rejected') ||
-          errorMessage.includes('User denied') ||
-          errorMessage.includes('user cancelled') ||
-          errorMessage.includes('ACTION_REJECTED') ||
-          errorMessage.includes('ethers-user-denied')) {
-        setError('Error creating savings user rejected');
-      } else {
-        setError(errorMessage);
-      }
-      throw error; // Re-throw the error so handleSubmit can catch it
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Main submit handler
+  // Main submit handler (single function for all cases)
   const handleSubmit = async () => {
     setSubmitting(true);
     setError(null);
     setSuccess(false);
     try {
-      if (chain === 'celo') {
-        if (currency === 'USDGLO') {
-          await handleUSDGLOSavings();
-        } else if (currency === 'cUSD') {
-          await handleCUSDSavings();
-        } else if (currency === 'USDC') {
-          await handleUSDCSavings();
-        } else if (currency === 'Gooddollar') {
-          await handleGooddollarSavings();
-        } else {
-          throw new Error('Unsupported currency for Celo network.');
-        }
-      } else if (chain === 'lisk') {
-        if (currency === 'USDC') {
-          await handleLiskUSDCSavings();
-        } else {
-          throw new Error('Unsupported currency for Lisk network.');
-        }
-      } else {
-        if (currency === 'USDGLO') {
-          await handleUSDGLOBaseSavings();
-        } else {
-          await handleBaseSavingsCreate();
-        }
-      }
-      
-      // Track referral conversion if user came from a referral link
+      const selectedNetwork = NETWORKS.find(n => n.id === chain);
+      const tokenObj = selectedNetwork?.tokens.find(t => t.symbol === currency);
+      if (!selectedNetwork || !tokenObj) throw new Error('Selected network or token is not supported.');
+      // Calculate maturity timestamp and other params from current inputs
+      const maturity = calculateMaturityTime();
+      const receipt = await createSavingsGeneric({
+        networkId: selectedNetwork.id,
+        tokenSymbol: tokenObj.symbol,
+        planName: name,
+        amountRaw: amount,
+        maturity,
+        penalty: selectedPenalty,
+        safeMode: false,
+        address: address || '', // enforce string, never undefined
+        additionalOptions: {} // Custom per-network fee logic can go here
+      });
+      // Referral (preserves old logic)
       const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
       if (referralCode) {
         markReferralConversion(referralCode);
-        localStorage.removeItem('referralCode'); // Remove after conversion
+        localStorage.removeItem('referralCode');
       }
-      
+      setTxHash(receipt.hash);
       setSuccess(true);
     } catch (err) {
       console.error('Error creating savings plan:', err);
-      
-      // Track error
       if (address) {
         trackError(address, {
           action: 'create_savings',
@@ -1352,9 +657,8 @@ export default function CreateSavingsPage() {
           }
         });
       }
-      
-      // Individual functions handle their own error messages
       setSuccess(false);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSubmitting(false);
     }
@@ -1437,19 +741,48 @@ export default function CreateSavingsPage() {
     fetchGoodDollarPrice().then(setGoodDollarPrice);
   }, []);
 
+  // Fetch network logos from CoinGecko
+  useEffect(() => {
+    const loadNetworkLogos = async () => {
+      try {
+        setIsLoadingLogos(true);
+        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche']);
+        setNetworkLogos(logos);
+      } catch (error) {
+        console.error('Error loading network logos:', error);
+      } finally {
+        setIsLoadingLogos(false);
+      }
+    };
+
+    loadNetworkLogos();
+  }, []);
+
+  // Place below handleSubmit or near top-level helpers:
+  const calculateMaturityTime = () => {
+    if (selectedDayRange && selectedDayRange.to) {
+      return Math.floor(new Date(
+        selectedDayRange.to.year ?? 0,
+        (selectedDayRange.to.month ?? 1) - 1,
+        selectedDayRange.to.day ?? 1
+      ).getTime() / 1000);
+    }
+    return 0;
+  };
+
   if (!mounted) return null
 
   return (
-    <div className={`${spaceGrotesk.className} min-h-screen bg-gradient-to-b from-white to-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden`}>
+    <div className={`${exo.className} min-h-screen bg-gradient-to-b from-white to-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden`}>
       {/* Network Detection Component */}
       <NetworkDetection />
       
       {/* Enhanced decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed top-1/4 -left-20 w-60 h-60 bg-[#81D7B4]/5 rounded-full blur-3xl"></div>
-      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed bottom-1/3 right-0 w-72 h-72 bg-[#81D7B4]/8 rounded-full blur-3xl"></div>
-      <div className="fixed inset-0 bg-[url('/noise.jpg')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+      {/* Noise background removed per redesign spec */}
 
       {/* Transaction Status Notifications */}
       {showTransactionModal && (
@@ -1498,59 +831,10 @@ export default function CreateSavingsPage() {
                 <>
                   <h2 className="text-xl sm:text-2xl font-bold text-center mb-1 sm:mb-2 text-red-700">Savings Plan Creation Failed</h2>
                   <p className="text-sm sm:text-base text-gray-500 text-center mb-5 sm:mb-8 max-w-xs sm:max-w-none mx-auto">
-                    Your savings plan creation failed. Please try again or contact our support team for assistance.
-                    {error && (
-                      <span className="block mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="text-sm font-medium text-red-800 mb-2">Error Details:</div>
-                        <div className="text-xs sm:text-sm text-red-600 mb-3 leading-relaxed">
-                          {(() => {
-                            // Enhanced error extraction and user-friendly messages
-                            const lowerError = error.toLowerCase();
-                            if (error.includes("missing revert data") || lowerError.includes("call_exception")) {
-                              return "💸 Transaction failed - This usually means insufficient funds for gas fees or the contract couldn't process your request. Please check your wallet balance and ensure you have enough ETH/native tokens for gas fees, then try again.";
-                            } else if (error.includes("INVALID_ARGUMENT") || lowerError.includes("invalid argument")) {
-                              return "❌ Invalid savings plan parameters. Please check your inputs and try again.";
-                            } else if (lowerError.includes("insufficient funds") || lowerError.includes("insufficient balance")) {
-                              return "💰 Insufficient funds. Please check your wallet balance and ensure you have enough for both the savings amount and gas fees.";
-                            } else if (lowerError.includes("user rejected") || lowerError.includes("user denied")) {
-                              return "🚫 Transaction was cancelled by user. No savings plan was created.";
-                            } else if (lowerError.includes("network") || lowerError.includes("connection")) {
-                              return "🌐 Network connection issue. Please check your internet connection and try again.";
-                            } else if (lowerError.includes("gas")) {
-                              return "⛽ Gas estimation failed. Try increasing gas limit or check network congestion.";
-                            } else if (lowerError.includes("nonce")) {
-                              return "🔄 Transaction nonce error. Please reset your wallet or try again.";
-                            } else if (lowerError.includes("allowance") || lowerError.includes("approval")) {
-                              return "🔐 Token allowance issue. Please approve the token spending and try again.";
-                            } else if (lowerError.includes("plan name") || lowerError.includes("name already exists")) {
-                              return "📝 Plan name already exists. Please choose a different name for your savings plan.";
-                            } else if (error.includes("code=")) {
-                              const codeMatch = error.match(/code=([A-Z_]+)/);
-                              return codeMatch ? `⚠️ Error Code: ${codeMatch[1]}` : error;
-                            } else if (error.includes(":")) {
-                              return `⚠️ ${error.split(":").pop()?.trim()}`;
-                            } else {
-                              return `⚠️ ${error}`;
-                            }
-                          })()}
-                        </div>
-                        <div className="text-xs sm:text-sm text-gray-600 mb-3 p-2 sm:p-3 bg-gray-50 rounded border break-words overflow-wrap-anywhere">
-                          <strong>Original Error:</strong> <span className="break-all">{error}</span>
-                        </div>
-
-                        <div className="mt-3 pt-2 border-t border-red-200">
-                          <button 
-                            onClick={() => window.open('https://t.me/+YimKRR7wAkVmZGRk', '_blank')}
-                            className="inline-flex items-center gap-2 px-3 py-2 bg-[#0088cc] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#006699] transition-colors shadow-sm w-full sm:w-auto justify-center"
-                          >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z"/>
-                            </svg>
-                            Get Help on Telegram
-                          </button>
-                        </div>
-                      </span>
-                    )}
+                    {error && (typeof error === 'string' && error.toLowerCase().includes('user rejected')) ?
+                      "You cancelled the transaction in your wallet." :
+                      "Something went wrong with your savings creation. Please try again or contact our team if this keeps happening."
+                    }
                   </p>
                 </>
               )}
@@ -1562,6 +846,10 @@ export default function CreateSavingsPage() {
                   onClick={() => window.open(
                     chain === 'celo'
                       ? `https://explorer.celo.org/tx/${txHash}`
+                      : chain === 'lisk'
+                      ? `https://blockscout.lisk.com/tx/${txHash}`
+                      : chain === 'avalanche'
+                      ? `https://snowtrace.io/tx/${txHash}`
                       : `https://basescan.org/tx/${txHash}`,
                     '_blank'
                   )}
@@ -1618,83 +906,25 @@ export default function CreateSavingsPage() {
         </div>
       )}
 
+      {/* Progress bar moved to top */}
+      <div className="max-w-3xl mx-auto mt-2 sm:mt-4 mb-6 sm:mb-8">
+        <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-1 bg-[#81D7B4] transition-all duration-500"
+            style={{ width: `${((step - 1) / 2) * 100}%` }}
+          />
+        </div>
+      </div>
       <motion.div
-        className="max-w-3xl mx-auto"
+        className="max-w-3xl mx-auto min-h-[70vh] flex flex-col justify-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Enhanced Header */}
-        <div className="text-center mb-8">
-          <Link href="/dashboard" className="inline-flex items-center text-gray-500 hover:text-gray-700 mb-6 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 mr-2">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Dashboard
-          </Link>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 mb-2">Create a Savings Plan</h1>
-          <p className="text-gray-600 max-w-xl mx-auto text-sm sm:text-base">Set up a new savings plan to help you reach your financial goals with automated savings and rewards.</p>
-        </div>
+        {/* Progress bar now rendered at top outside the centered container */}
 
-        {/* Modern Step Navigation */}
-        <div className="mb-8 sm:mb-10 px-2 sm:px-0">
-          <div className="relative">
-            {/* Progress Line */}
-            <div className="absolute left-0 right-0 top-6 h-0.5 bg-gray-200 z-0">
-              <div 
-                className="h-full bg-[#81D7B4] transition-all duration-500 ease-out"
-                style={{ width: `${((step - 1) / 2) * 100}%` }}
-              />
-            </div>
-            
-            {/* Step Items */}
-            <div className="relative flex items-start justify-between">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex flex-col items-center flex-1 relative z-10">
-                  {/* Step Circle */}
-                  <div className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                    step === i
-                      ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg'
-                      : step > i
-                        ? 'bg-[#81D7B4] border-[#81D7B4] text-white'
-                        : 'bg-white border-gray-300 text-gray-400'
-                  }`}>
-                    {step > i ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <span className="font-semibold text-sm">{i}</span>
-                    )}
-                  </div>
-                  
-                  {/* Step Label */}
-                  <div className="mt-3 text-center">
-                    <div className={`text-sm font-medium transition-colors duration-300 ${
-                      step === i ? 'text-[#81D7B4]' : step > i ? 'text-[#81D7B4]' : 'text-gray-500'
-                    }`}>
-                      {i === 1 ? 'Plan Details' : i === 2 ? 'Duration & Penalties' : 'Review & Create'}
-                    </div>
-                    <div className={`text-xs mt-1 transition-colors duration-300 ${
-                      step === i ? 'text-gray-600' : step > i ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
-                      {i === 1 ? 'Basic information' : i === 2 ? 'Set timeline' : 'Confirm details'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Mobile step indicator */}
-          <div className="flex justify-between text-xs sm:hidden mt-3">
-            <span className={step >= 1 ? 'text-[#81D7B4] font-medium' : 'text-gray-500'}>Details</span>
-            <span className={step >= 2 ? 'text-[#81D7B4] font-medium' : 'text-gray-500'}>Duration</span>
-            <span className={step >= 3 ? 'text-[#81D7B4] font-medium' : 'text-gray-500'}>Review</span>
-          </div>
-        </div>
-
-        {/* Card container */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden relative">
+        {/* Card container: ensure dropdowns can overflow above */}
+        <div className={(step === 1 || step === 2) ? 'overflow-visible relative' : 'bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden relative'}>
 
           <AnimatePresence mode="wait">
             {success ? (
@@ -1718,66 +948,348 @@ export default function CreateSavingsPage() {
               </motion.div>
             ) : (
               <>
-                {/* Step 1: Plan Details */}
+                {/* Step 1: Plan Details - Modern Design with Presets */}
                 {step === 1 && (
                   <motion.div
                     key="step1"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="p-4 sm:p-6 md:p-8 lg:p-12"
+                  >
+                    <motion.div
+                      className="space-y-8 sm:space-y-12"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      <div className="flex flex-col items-center gap-8 sm:gap-12">
+                        <motion.div variants={itemVariants} className="text-center max-w-3xl">
+                          <motion.div 
+                            className="inline-flex items-center px-3 py-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-[#81D7B4]/10 via-[#81D7B4]/5 to-[#6bc5a0]/10 rounded-full border border-[#81D7B4]/20 mb-6 sm:mb-8 backdrop-blur-sm"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <motion.div
+                              className="w-5 h-5 sm:w-6 sm:h-6 text-[#81D7B4] mr-2 sm:mr-3 flex items-center justify-center"
+                              initial={{ scale: 0.8 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <HiOutlineDocumentText className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </motion.div>
+                            <span className="text-xs sm:text-sm font-bold text-[#81D7B4]">Step 1 of 3</span>
+                          </motion.div>
+                          <motion.h2 
+                            className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3 sm:mb-4"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1, duration: 0.6 }}
+                          >
+                            Name Your Savings Plan
+                          </motion.h2>
+                          <motion.p 
+                            className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl mx-auto font-medium px-4 sm:px-0"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                          >
+                            Give your savings goal a meaningful name. This helps you stay motivated and track your progress.
+                          </motion.p>
+                        </motion.div>
+                        
+                        <motion.div variants={itemVariants} className="flex flex-col items-center gap-6 sm:gap-8 w-full max-w-2xl">
+                          <motion.div 
+                            className="relative w-full group"
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <div className="absolute inset-y-0 left-0 pl-4 sm:pl-5 flex items-center pointer-events-none">
+                              <motion.svg 
+                                className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors duration-300" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </motion.svg>
+                            </div>
+                            <motion.input
+                              type="text"
+                              id="planName"
+                              value={name}
+                              onChange={(e) => setName(e.target.value)}
+                              placeholder="My dream vacation fund..."
+                              className={`w-full pl-12 sm:pl-14 pr-4 sm:pr-6 py-4 sm:py-5 bg-white/80 backdrop-blur-md rounded-xl sm:rounded-2xl border-2 sm:border-3 text-gray-900 text-lg sm:text-xl placeholder-gray-500 font-medium shadow-lg focus:shadow-xl transition-all duration-300 ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 hover:border-gray-300 focus:ring-[#81D7B4] focus:border-[#81D7B4]'}`}
+                              whileFocus={{ scale: 1.01 }}
+                              transition={{ duration: 0.2 }}
+                            />
+                            <motion.div
+                              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+                              initial={false}
+                              animate={{ opacity: name ? 0.3 : 0 }}
+                            />
+                          </motion.div>
+                          
+                          {/* Continue Button - Under Input Field */}
+                          <motion.button
+                            type="button"
+                            onClick={handleNext}
+                            disabled={!name.trim()}
+                            whileHover={{ 
+                              scale: name.trim() ? 1.08 : 1,
+                              y: name.trim() ? -4 : 0,
+                              transition: { duration: 0.2 }
+                            }}
+                            whileTap={{ 
+                              scale: name.trim() ? 0.95 : 1,
+                              y: name.trim() ? -1 : 0
+                            }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4, duration: 0.6 }}
+                            className={`w-full max-w-xs sm:max-w-md inline-flex items-center justify-center px-6 sm:px-10 py-4 sm:py-5 font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl transition-all duration-300 text-lg sm:text-xl ${
+                              name.trim() 
+                                ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white shadow-[#81D7B4]/30 hover:shadow-[#81D7B4]/40 cursor-pointer' 
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-inner'
+                            }`}
+                          >
+                            <motion.span
+                              animate={{ 
+                                scale: name.trim() ? [1, 1.05, 1] : 1
+                              }}
+                              transition={{ 
+                                duration: 2,
+                                repeat: name.trim() ? Infinity : 0,
+                                repeatType: "reverse"
+                              }}
+                            >
+                              Continue to Settings
+                            </motion.span>
+                            <motion.svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              className="h-7 w-7 ml-3" 
+                              fill="none" 
+                              viewBox="0 0 24 24" 
+                              stroke="currentColor"
+                              animate={{ 
+                                x: name.trim() ? [0, 4, 0] : 0,
+                                scale: name.trim() ? [1, 1.1, 1] : 1
+                              }}
+                              transition={{ 
+                                duration: 1.5,
+                                repeat: name.trim() ? Infinity : 0,
+                                repeatType: "reverse"
+                              }}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </motion.svg>
+                          </motion.button>
+                          
+                          {/* Preset Savings Name Options */}
+                          <motion.div 
+                            className="w-full space-y-4 sm:space-y-6"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3, duration: 0.6 }}
+                          >
+                            <motion.p 
+                              className="text-base sm:text-lg font-bold text-gray-700 text-center bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent"
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              Or choose from popular goals:
+                            </motion.p>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                              {[
+                                { name: 'House Rent', icon: HiHome },
+                                { name: 'School Fees', icon: HiAcademicCap },
+                                { name: 'Car Savings', icon: HiTruck },
+                                { name: 'Emergency Fund', icon: HiBriefcase },
+                                { name: 'Vacation', icon: HiSun },
+                                { name: 'Gaming Setup', icon: FaGamepad },
+                                { name: 'Wedding Fund', icon: HiHeart },
+                                { name: 'Business Capital', icon: HiRocketLaunch }
+                              ].map((preset, index) => (
+                                <motion.button
+                                  key={preset.name}
+                                  type="button"
+                                  onClick={() => setName(preset.name)}
+                                  whileHover={{ 
+                                    scale: 1.08, 
+                                    y: -4,
+                                    transition: { duration: 0.2 }
+                                  }}
+                                  whileTap={{ scale: 0.95, y: -1 }}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: index * 0.1, duration: 0.4 }}
+                                  className={`relative group p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-3 transition-all duration-300 overflow-hidden ${
+                                    name === preset.name
+                                      ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] border-[#81D7B4] text-white shadow-lg sm:shadow-2xl shadow-[#81D7B4]/30 transform scale-105'
+                                      : 'bg-white/70 border-gray-200 text-gray-700 hover:border-white hover:bg-white/90 hover:shadow-lg sm:hover:shadow-xl backdrop-blur-sm'
+                                  }`}
+                                >
+                                  {/* Background gradient overlay for unselected state */}
+                                  {name !== preset.name && (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                                  )}
+                                  
+                                  {/* Icon with enhanced animation */}
+                                  <motion.div 
+                                    className="flex flex-col items-center space-y-3"
+                                    whileHover={{ scale: 1.1 }}
+                                  >
+                                    <motion.div
+                                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${
+                                        name === preset.name 
+                                          ? 'bg-white/20 backdrop-blur-sm' 
+                                          : 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] shadow-md sm:shadow-lg'
+                                      }`}
+                                      whileHover={{ 
+                                        rotate: 360,
+                                        scale: 1.2,
+                                        transition: { duration: 0.4 }
+                                      }}
+                                    >
+                                      <preset.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                    </motion.div>
+                                    <span className={`text-xs sm:text-sm font-bold ${
+                                      name === preset.name ? 'text-white' : 'text-gray-700 group-hover:text-gray-900'
+                                    }`}>
+                                      {preset.name}
+                                    </span>
+                                  </motion.div>
+                                  
+                                  {/* Selection indicator */}
+                                  {name === preset.name && (
+                                    <motion.div
+                                      className="absolute top-2 right-2 w-3 h-3 bg-white rounded-full shadow-lg"
+                                      initial={{ scale: 0 }}
+                                      animate={{ scale: 1 }}
+                                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                                    />
+                                  )}
+                                </motion.button>
+                              ))}
+                            </div>
+                          </motion.div>
+                          
+                          {errors.name && (
+                            <motion.p 
+                              className="text-sm text-red-500 text-center font-medium bg-red-50 px-3 sm:px-4 py-2 rounded-lg border border-red-200"
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              {errors.name}
+                            </motion.p>
+                          )}
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Plan Settings (Amount, Currency, Network, Duration, Penalties) */}
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
                     className="p-4 sm:p-6 md:p-8"
                   >
-                    <motion.h2
-                      className="text-xl font-bold text-gray-800 mb-6 flex items-center"
-                      variants={itemVariants}
+                    {/* Enhanced Step 2 Header */}
+                    <motion.div 
+                      className="mb-8 text-center"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
                     >
-                      <span className="bg-[#81D7B4]/10 w-8 h-8 rounded-full flex items-center justify-center text-[#81D7B4] mr-3 text-sm">1</span>
-                      Plan Details
-                    </motion.h2>
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] rounded-full mb-4 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                      </div>
+                      <motion.h2
+                        className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2"
+                      >
+                        Configure Your Plan
+                      </motion.h2>
+                      <motion.p 
+                        className="text-base sm:text-lg text-gray-600 max-w-md mx-auto"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        Set your savings amount, choose your currency and network, and define your timeline
+                      </motion.p>
+                    </motion.div>
 
                     <motion.div
-                      className="space-y-5 sm:space-y-6"
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
+                      className="space-y-6 sm:space-y-8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      {/* Plan name */}
-                      <motion.div variants={itemVariants}>
-                        <label htmlFor="planName" className="block text-sm font-medium text-gray-700 mb-2">
-                          Plan Name
-                        </label>
-                        <input
-                          type="text"
-                          id="planName"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="e.g. Vacation Fund, Emergency Savings"
-                          className={`w-full px-4 py-3 bg-white rounded-xl border text-gray-900 ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
-                        />
-                        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-                      </motion.div>
-
-                      {/* Amount */}
-                      <motion.div variants={itemVariants}>
-                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
-                          Amount to Save
-                        </label>
-                        <div className="relative">
+                      {/* Amount - Enhanced with better visual hierarchy */}
+                      <motion.div variants={itemVariants} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">How much do you want to save?</h3>
+                            <p className="text-sm text-gray-600">Choose your target savings amount</p>
+                          </div>
+                          <div className="w-10 h-10 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        <div className="relative mb-4">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span className="text-gray-500 text-xl font-medium">$</span>
+                          </div>
                           <input
                             type="text"
                             id="amount"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="0.00"
-                            className={`w-full pl-12 pr-4 py-3 bg-white rounded-xl border text-gray-900 ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
+                            className={`w-full pl-10 pr-4 py-5 bg-white rounded-xl border-2 text-gray-900 text-xl sm:text-2xl font-semibold ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
                           />
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span className="text-gray-500">$</span>
-                          </div>
                         </div>
-                        {errors.amount && <p className="mt-1 text-sm text-red-500">{errors.amount}</p>}
                         
+                        {/* Quick amount cards - Enhanced */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                          {[
+                            { value: '10'},
+                            { value: '100'},
+                            { value: '500' },
+                            { value: '1000' }
+                          ].map((option) => (
+                            <motion.button
+                              key={option.value}
+                              type="button"
+                              onClick={() => setAmount(option.value)}
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`w-full p-4 rounded-xl border transition-all duration-200 text-center ${amount === option.value
+                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                }`}
+                            >
+                              <div className="font-bold text-lg sm:text-xl">${option.value}</div>
+                            </motion.button>
+                          ))}
+                        </div>
+                        {errors.amount && <p className="mt-2 text-sm text-red-500 font-medium">{errors.amount}</p>}
+
                         {/* GoodDollar Equivalent Display */}
                         {currency === 'Gooddollar' && amount && goodDollarEquivalent > 0 && (
                           <motion.div
@@ -1808,71 +1320,52 @@ export default function CreateSavingsPage() {
                             </div>
                           </motion.div>
                         )}
-
                       </motion.div>
 
-                      {/* Currency */}
-                      <motion.div variants={itemVariants}>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Currency
-                        </label>
-                        <div className="flex flex-wrap gap-3 w-full">
-                          {currencies.map((curr) => (
-                            <button
-                              key={curr}
-                              type="button"
-                              onClick={() => setCurrency(curr)}
-                              className={`flex items-center justify-center px-4 py-3 rounded-xl border transition-all duration-200 flex-1 min-w-0 text-base sm:text-sm ${currency === curr
-                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4] shadow-sm'
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm'} font-medium`}
-                              style={{ minWidth: 0 }}
-                            >
-                              <Image
-                                src={
-                                  curr === 'Gooddollar' ? '/$g.png'
-                                  : curr === 'cUSD' ? '/cusd.png'
-                                  : curr === 'USDGLO' ? '/usdglo.png'
-                                  : curr === 'USDC' ? '/usdc.png'
-                                  : `/${curr.toLowerCase().replace('$', '')}.png`
-                                }
-                                alt={curr}
-                                width={20}
-                                height={20}
-                                className="w-5 h-5 mr-2"
-                              />
-                              <span>{curr}</span>
-                            </button>
-                          ))}
+                      {/* Chain - Base primary, others in dropdown */}
+                      <motion.div variants={itemVariants} className="relative z-[100] bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg py-4 my-3">
+                        <div className="flex items-center justify-between mb-8">
+                          <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Select Network</h3>
+                            <p className="text-sm text-gray-600">Choose the blockchain for your savings plan</p>
+                          </div>
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                            </svg>
+                          </div>
                         </div>
-                      </motion.div>
-
-                      {/* Chain - improved: Base as main, others in dropdown */}
-                      <motion.div variants={itemVariants}>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Select Network
-                        </label>
-                        <div className="flex gap-3 w-full">
+                        
+                        <div className="flex flex-col sm:flex-row gap-4 w-full">
                           {/* Main network (Base) */}
-                          <button
+                          <motion.button
                             type="button"
                             onClick={async () => {
                               await switchToNetwork('base');
                               setChain('base');
                             }}
-                            className={`flex items-center justify-center px-5 py-3 rounded-xl border transition-all duration-200 flex-1 text-base sm:text-sm ${chain === 'base'
-                              ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4] shadow-sm'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm'} font-medium`}
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`flex items-center justify-center px-6 py-4 rounded-xl border transition-all duration-200 flex-1 text-sm ${chain === 'base'
+                              ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'} font-medium`}
                           >
                             <Image src="/base.svg" alt="Base" width={20} height={20} className="w-5 h-5 mr-2" />
-                            Base
-                          </button>
+                            <div className="text-left">
+                              <div className="font-bold">Base</div>
+                              <div className="text-xs opacity-75">Low fees, fast</div>
+                            </div>
+                          </motion.button>
+                          
                           {/* Dropdown for other networks - show selected network if not base */}
                           <div className="relative flex-1">
-                            <button
+                            <motion.button
                               type="button"
-                              className={`flex items-center justify-center px-5 py-3 rounded-xl border transition-all duration-200 w-full text-base sm:text-sm font-medium group shadow-sm ${chain !== 'base'
-                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4]'
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`flex items-center justify-center px-6 py-4 rounded-xl border transition-all duration-200 w-full text-sm font-medium group ${chain !== 'base'
+                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}
                               onClick={() => {
                                 const el = document.getElementById('network-dropdown');
                                 if (el) el.classList.toggle('hidden');
@@ -1880,214 +1373,300 @@ export default function CreateSavingsPage() {
                             >
                               {chain !== 'base' ? (
                                 <>
-                                  <Image src={chains.find(c => c.id === chain)?.logo || ''} alt={chains.find(c => c.id === chain)?.name || ''} width={20} height={20} className="w-5 h-5 mr-2" />
-                                  {chains.find(c => c.id === chain)?.name || 'Other Networks'}
+                                  <Image src={chains.find(c => c.id === chain)?.logo || ''} alt={chains.find(c => c.id === chain)?.name || ''} width={24} height={24} className="w-6 h-6 mr-3" />
+                                  <div className="text-left flex-1">
+                                    <div className="font-bold">{chains.find(c => c.id === chain)?.name || 'Other Networks'}</div>
+                                    <div className="text-xs opacity-75">{chains.find(c => c.id === chain)?.name === 'Celo' ? 'Mobile-first' : 'Alternative'}</div>
+                                  </div>
                                 </>
                               ) : (
-                                <>Other Networks<svg className="w-4 h-4 ml-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></>
+                                <>
+                                  <div className="text-left flex-1">
+                                    <div className="font-bold">Other Networks</div>
+                                    <div className="text-xs opacity-75">More options</div>
+                                  </div>
+                                  <svg className="w-5 h-5 ml-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                </>
                               )}
-                            </button>
-                            <div id="network-dropdown" className="hidden absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-300 z-10">
+                            </motion.button>
+                            <div id="network-dropdown" className="hidden absolute left-0 right-0 mt-3 w-full bg-white rounded-xl shadow-2xl border border-gray-200 z-[1000] overflow-hidden backdrop-blur-sm sm:left-0 sm:right-auto">
                               {chains.filter(c => c.id !== 'base').map((c) => (
-                                <button
+                                <motion.button
                                   key={c.id}
                                   type="button"
                                   onClick={async () => {
+                                    if (c.isComingSoon) return;
                                     await switchToNetwork(c.id);
                                     setChain(c.id);
                                     document.getElementById('network-dropdown')?.classList.add('hidden');
                                   }}
-                                  className={`flex items-center w-full px-4 py-2 rounded-xl border-b border-gray-100 last:border-b-0 text-base sm:text-sm ${chain === c.id ? 'bg-[#81D7B4]/10 text-[#81D7B4]' : 'hover:bg-gray-100/80 text-gray-700'} font-medium`}
+                                  disabled={c.isComingSoon}
+                                  whileHover={!c.isComingSoon ? { backgroundColor: '#f9fafb' } : {}}
+                                  className={`flex items-center w-full px-4 py-3 border-b border-gray-100 last:border-b-0 text-sm ${chain === c.id ? 'bg-[#81D7B4]/10 text-[#81D7B4]' : c.isComingSoon ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-50 text-gray-700'} font-medium`}
                                 >
-                                  <Image src={c.logo} alt={c.name} width={20} height={20} className="w-5 h-5 mr-2" />
-                                  {c.name}
-                                </button>
+                                  <Image src={c.logo} alt={c.name} width={20} height={20} className="w-5 h-5 mr-2 flex-shrink-0" />
+                                  <span className="flex-1 min-w-0 truncate">{c.name}</span>
+                                  {c.isComingSoon && (
+                                    <span className="ml-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-[10px] sm:text-xs font-bold rounded-full shadow-md whitespace-nowrap flex-shrink-0">
+                                      Coming Soon
+                                    </span>
+                                  )}
+                                </motion.button>
                               ))}
                             </div>
                           </div>
                         </div>
                       </motion.div>
-                    </motion.div>
 
-                    <motion.div
-                      className="mt-8 sm:mt-10 flex justify-end"
-                      variants={itemVariants}
-                    >
-                      <button
-                        type="button"
-                        onClick={handleNext}
-                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
-                      >
-                        Next Step
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </motion.div>
-                  </motion.div>
-                )}
-
-                {/* Step 2: Duration & Penalties - Enhanced */}
-                {step === 2 && (
-                  <motion.div
-                    key="step2"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-4 sm:p-6 md:p-8"
-                  >
-                    <motion.h2
-                      className="text-xl font-bold text-gray-800 mb-6 flex items-center"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <span className="bg-[#81D7B4]/10 w-8 h-8 rounded-full flex items-center justify-center text-[#81D7B4] mr-3 text-sm">2</span>
-                      Duration & Penalties
-                    </motion.h2>
-
-                    <motion.div
-                      className="space-y-5 sm:space-y-6"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      {/* Date selection - enhanced */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          Savings Duration
-                        </label>
-
-                        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm p-4 sm:p-5 relative z-10 overflow-hidden group">
-                          <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#81D7B4]/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-                          <p className="text-sm text-gray-600 mb-4 relative z-10">
-                            Your savings will start today and end on your selected date. Choose an end date at least 30 days from now.
-                          </p>
-
-                          <div className="relative z-10">
-                            <CustomDatePicker
-                              selectedDate={endDate}
-                              onSelectDate={(date) => setEndDate(date)}
-                            />
+                      {/* Currency - Enhanced with visual cards */}
+                      <motion.div variants={itemVariants} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Choose Your Currency</h3>
+                            <p className="text-sm text-gray-600">Select the token you want to save in</p>
                           </div>
-
-                          {startDate && endDate && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mt-4 bg-[#81D7B4]/10 rounded-xl p-3 sm:p-4 border border-[#81D7B4]/30 relative z-10"
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {NETWORKS.find(n => n.id === chain)?.tokens.map((curr) => (
+                            <motion.button
+                              key={curr.symbol}
+                              type="button"
+                              onClick={() => setCurrency(curr.symbol)}
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`p-4 rounded-xl border transition-all duration-200 text-left ${currency === curr.symbol
+                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                }`}
                             >
                               <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#81D7B4] mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-sm font-medium text-gray-800">
-                                  Duration: {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
-                                </span>
+                                <div className="relative">
+                                  <Image
+                                    src={
+                                      curr.symbol === 'Gooddollar' ? '/$g.png'
+                                      : curr.symbol === 'cUSD' ? '/cusd.png'
+                                      : curr.symbol === 'USDGLO' ? '/usdglo.png'
+                                      : curr.symbol === 'USDC' ? '/usdclogo.png'
+                                      : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
+                                    }
+                                    alt={curr.symbol}
+                                    width={20}
+                                    height={20}
+                                    className="w-5 h-5"
+                                  />
+                                  {currency === curr.symbol && (
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full flex items-center justify-center">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-2 flex-1">
+                                  <div className="font-bold text-sm">{curr.symbol}</div>
+                                  <div className="text-xs opacity-75">{curr.symbol} Token</div>
+                                </div>
                               </div>
-                              <div className="mt-2 text-xs text-gray-500 flex items-center">
-                                <span className="inline-block bg-white/80 rounded-md px-2 py-1 mr-2 shadow-sm">
-                                  {format(startDate, 'MMM d, yyyy')}
-                                </span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                                <span className="inline-block bg-white/80 rounded-md px-2 py-1 ml-2 shadow-sm">
-                                  {format(endDate, 'MMM d, yyyy')}
-                                </span>
-                              </div>
-                            </motion.div>
-                          )}
-                          {errors.endDate && <p className="mt-2 text-sm text-red-500 relative z-10">{errors.endDate}</p>}
+                            </motion.button>
+                          ))}
                         </div>
+                      </motion.div>
+
+                      {/* Date selection - enhanced */}
+                      <motion.div variants={itemVariants} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Savings Duration</h3>
+                            <p className="text-sm text-gray-600">Set your savings timeline and end date</p>
+                          </div>
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-6">
+                          Your savings will start today and end on your selected date. Choose an end date at least 30 days from now.
+                        </p>
+
+                        {/* Quick preset buttons */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                          {startDate && [
+                            { label: '1 Month', days: 30 },
+                            { label: '2 Months', days: 60 },
+                            { label: '6 Months', days: 180 },
+                            { label: '1 Year', days: 365 }
+                          ].map((preset) => {
+                            const presetDate = new Date(startDate);
+                            presetDate.setDate(presetDate.getDate() + preset.days);
+                            const isSelected = endDate && format(presetDate, 'yyyy-MM-dd') === format(endDate, 'yyyy-MM-dd');
+                            
+                            return (
+                              <motion.button
+                                key={preset.label}
+                                type="button"
+                                onClick={() => {
+                                  setEndDate(presetDate);
+                                  setCalendarNavigateDate(presetDate);
+                                }}
+                                whileHover={{ scale: 1.02, y: -1 }}
+                                whileTap={{ scale: 0.98 }}
+                                className={`p-3 rounded-xl border transition-all duration-200 text-center ${isSelected
+                                  ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                  }`}
+                              >
+                                <div className="font-bold text-sm">{preset.label}</div>
+                                <div className="text-xs opacity-75">{preset.days} days</div>
+                              </motion.button>
+                            );
+                          })
+                          }
+                        </div>
+
+                        <div className="mb-8">
+                          <CustomDatePicker
+                            selectedDate={endDate}
+                            onSelectDate={(date) => setEndDate(date)}
+                            navigateToDate={calendarNavigateDate}
+                          />
+                        </div>
+
+                        {startDate && endDate && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 rounded-xl p-4 border border-[#81D7B4]/30"
+                          >
+                            <div className="flex items-center mb-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#81D7B4] mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-sm font-bold text-gray-800">
+                                Duration: {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">Start Date</div>
+                                <div className="bg-white/80 rounded-lg px-3 py-2 font-medium text-gray-700 shadow-sm">
+                                  {format(startDate, 'MMM d, yyyy')}
+                                </div>
+                              </div>
+                              <div className="flex-1 px-4">
+                                <div className="h-px bg-gradient-to-r from-gray-300 to-gray-300 relative">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">End Date</div>
+                                <div className="bg-white/80 rounded-lg px-3 py-2 font-medium text-gray-700 shadow-sm">
+                                  {format(endDate, 'MMM d, yyyy')}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                        {errors.endDate && <p className="mt-4 text-sm text-red-500 font-medium">{errors.endDate}</p>}
                       </motion.div>
 
                       {/* Penalties - enhanced */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-700 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <motion.div variants={itemVariants} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Early Withdrawal Penalty</h3>
+                            <p className="text-sm text-gray-600">Choose a penalty to stay committed to your goal</p>
+                          </div>
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Early Withdrawal Penalty
-                          </label>
-                        </div>
-
-                        <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-4 sm:p-5">
-                          <p className="text-sm text-gray-600 mb-4">
-                            Setting a penalty helps you stay committed to your savings goal. If you withdraw funds before the end date, this percentage will be deducted.
-                          </p>
-
-                          <div className="flex gap-2">
-                            {penalties.map((p, index) => (
-                              <motion.button
-                                key={p}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5 + (index * 0.1) }}
-                                type="button"
-                                onClick={() => setPenalty(p)}
-                                className={`flex-1 py-3 rounded-xl border ${penalty === p
-                                  ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#81D7B4] shadow-sm'
-                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                                  } transition-all font-medium text-center`}
-                              >
-                                {p}
-                              </motion.button>
-                            ))}
-                          </div>
-
-                          <div className="mt-4 flex items-center text-sm text-gray-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            <span>
-                              With <span className="font-medium text-amber-700">{penalty}</span> penalty, early withdrawal of <span className="font-medium text-amber-700">${amount || '1000'}</span> would cost you <span className="font-medium text-amber-700">${(Number(amount || '1000') * parseFloat(penalty) / 100).toFixed(2)}</span>.
-                            </span>
                           </div>
                         </div>
+
+                        <p className="text-sm text-gray-600 mb-6">
+                          Setting a penalty helps you stay committed to your savings goal. If you withdraw funds before the end date, this percentage will be deducted from your savings.
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                          {penalties.map((p, index) => (
+                            <motion.button
+                              key={p}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.1 + (index * 0.05) }}
+                              type="button"
+                              onClick={() => setPenalty(p)}
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`w-full p-2 sm:p-3 rounded-xl border transition-all duration-200 text-center ${penalty === p
+                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                }`}
+                            >
+                              <div className="text-base sm:text-lg font-bold">{p}</div>
+                              <div className="text-xs opacity-75">Penalty</div>
+                            </motion.button>
+                          ))}
+                        </div>
+
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center text-sm text-gray-600 bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          <div>
+                            <div className="font-medium text-amber-800 mb-1">Penalty Impact</div>
+                            <div>
+                              With <span className="font-bold text-amber-700">{penalty}</span> penalty, early withdrawal of <span className="font-bold text-amber-700">${amount || '1000'}</span> would cost you <span className="font-bold text-amber-700">${(Number(amount || '1000') * parseFloat(penalty) / 100).toFixed(2)}</span>.
+                            </div>
+                          </div>
+                        </motion.div>
                       </motion.div>
                     </motion.div>
 
                     <motion.div
-                      className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0"
+                      className="mt-8 sm:mt-10 flex flex-row flex-wrap justify-between gap-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.6 }}
                     >
-                      <button
+                      <motion.button
                         type="button"
                         onClick={handlePrevious}
-                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-300 shadow-sm hover:bg-gray-50 transition-all duration-200"
+                        whileHover={{ scale: 1.02, x: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center justify-center px-6 sm:px-8 py-4 bg-white text-gray-700 font-bold rounded-xl border-2 border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition-all duration-200 group"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 group-hover:translate-x-[-2px] transition-transform" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         Previous
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         type="button"
                         onClick={handleNext}
-                        className="inline-flex items-center px-5 sm:px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+                        whileHover={{ scale: 1.02, x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center px-6 sm:px-8 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transition-all duration-200 group"
                       >
-                        Next Step
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-3 group-hover:translate-x-[2px] transition-transform" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
-                      </button>
+                      </motion.button>
                     </motion.div>
                   </motion.div>
                 )}
@@ -2099,147 +1678,252 @@ export default function CreateSavingsPage() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     className="p-4 sm:p-6 md:p-8"
                   >
-                    <motion.h2
-                      className="text-xl font-bold text-gray-800 mb-6 flex items-center"
-                      initial={{ opacity: 0, y: 10 }}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
+                      transition={{ delay: 0.1, duration: 0.5 }}
+                      className="text-center mb-8"
                     >
-                      <span className="bg-[#81D7B4]/10 w-8 h-8 rounded-full flex items-center justify-center text-[#81D7B4] mr-3 text-sm">3</span>
-                      Review & Create
-                    </motion.h2>
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-2xl mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <motion.h2
+                        className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        Review Your Plan
+                      </motion.h2>
+                      <motion.p
+                        className="text-gray-600 text-lg"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        Double-check your savings plan details before creating
+                      </motion.p>
+                    </motion.div>
 
                     <motion.div
-                      className="space-y-6"
+                      className="space-y-6 max-w-4xl mx-auto"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
                     >
-                      {/* Summary card */}
+                      {/* Main Amount Card - Hero Section */}
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-gradient-to-br from-[#81D7B4]/10 to-blue-400/5 rounded-xl border border-[#81D7B4]/20 p-4 sm:p-6 relative overflow-hidden"
+                        className="bg-gradient-to-br from-white via-white to-gray-50 rounded-2xl p-8 shadow-lg border border-gray-100 relative overflow-hidden"
                       >
-                        <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
-                        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
-
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 relative z-10">
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-800">{name || "Untitled Plan"}</h3>
-                            <p className="text-sm text-gray-600 mt-1">Review your savings plan details</p>
-                          </div>
-                          <div className="mt-3 sm:mt-0 flex items-center bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/60 shadow-sm">
-                            <div className="bg-white rounded-full p-1 mr-2 shadow-sm">
-                              <Image
-                                src={
-                                  currency === 'Gooddollar' ? '/$g.png'
-                                  : currency === 'cUSD' ? '/cusd.png'
-                                  : currency === 'USDGLO' ? '/usdglo.png'
-                                  : currency === 'USDC' ? '/usdc.png'
-                                  : `/${currency.toLowerCase().replace('$', '')}.png`
-                                }
-                                alt={currency}
-                                width={16}
-                                height={16}
-                                className="w-4 h-4"
-                              />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{currency}</span>
-                            <span className="mx-2 text-gray-300">|</span>
-                            {chains.map(c => c.id === chain && (
-                              <div key={c.id} className="flex items-center">
-                                <div className="bg-white rounded-full p-1 mr-1.5 shadow-sm">
-                                  <Image src={c.logo} alt={c.name} width={16} height={16} className="w-4 h-4" />
-                                </div>
-                                <span className="text-sm font-medium text-gray-700">{c.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
+                        {/* Background decoration */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#81D7B4]/10 to-transparent rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#6bc5a0]/10 to-transparent rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
+                        
                         <div className="relative z-10">
-                          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-white/60 shadow-sm">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-sm text-gray-500">Amount</span>
-                              <span className="text-xs px-2 py-1 bg-[#81D7B4]/10 text-[#81D7B4] rounded-full font-medium">Principal</span>
+                          {/* Plan Name */}
+                          <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="text-center mb-6"
+                          >
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2">{name || "My Savings Plan"}</h3>
+                            <div className="inline-flex items-center space-x-2 bg-[#81D7B4]/10 rounded-full px-4 py-2">
+                              <div className="flex items-center space-x-1">
+                                <div className="bg-white rounded-full p-1 shadow-sm">
+                                  <Image
+                                    src={
+                                      currency === 'Gooddollar' ? '/$g.png'
+                                      : currency === 'cUSD' ? '/cusd.png'
+                                      : currency === 'USDGLO' ? '/usdglo.png'
+                                      : currency === 'USDC' ? '/usdc.png'
+                                      : `/${currency.toLowerCase().replace('$', '')}.png`
+                                    }
+                                    alt={currency}
+                                    width={16}
+                                    height={16}
+                                    className="w-4 h-4"
+                                  />
+                                </div>
+                                <span className="text-sm font-medium text-gray-700">{currency}</span>
+                              </div>
+                              <span className="text-gray-300">•</span>
+                              <div className="flex items-center space-x-1">
+                                {chains.map(c => c.id === chain && (
+                                  <div key={c.id} className="flex items-center space-x-1">
+                                    <div className="bg-white rounded-full p-1 shadow-sm">
+                                      <Image src={c.logo} alt={c.name} width={16} height={16} className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-700">{c.name}</span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            <div className="flex items-baseline">
-                              <span className="text-2xl font-bold text-gray-800">${amount || "0.00"}</span>
-                              <span className="ml-1 text-gray-500">{currency}</span>
+                          </motion.div>
+
+                          {/* Amount Display */}
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                            className="text-center"
+                          >
+                            <div className="inline-flex items-baseline space-x-2">
+                              <span className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                                ${amount || "0.00"}
+                              </span>
+                              <span className="text-xl text-gray-500 font-medium">{currency}</span>
                             </div>
-                          </div>
+                            <div className="mt-2 text-sm text-gray-500">Total Savings Amount</div>
+                          </motion.div>
                         </div>
                       </motion.div>
 
-                      {/* Details list */}
+                      {/* Plan Details Grid */}
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm overflow-hidden"
+                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
                       >
-                        <div className="divide-y divide-gray-100">
-                          <div className="flex flex-col sm:flex-row sm:items-center py-3 px-4 sm:px-6">
-                            <span className="text-sm font-medium text-gray-500 sm:w-1/3">Start Date</span>
-                            <span className="text-sm text-gray-800 font-medium mt-1 sm:mt-0">
-                              {startDate ? format(startDate, 'MMMM d, yyyy') : 'Today'}
-                            </span>
+                        {/* Timeline Card */}
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300"
+                        >
+                          <div className="flex items-center mb-4">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center mr-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-lg font-semibold text-gray-800">Timeline</h4>
                           </div>
-
-                          <div className="flex flex-col sm:flex-row sm:items-center py-3 px-4 sm:px-6">
-                            <span className="text-sm font-medium text-gray-500 sm:w-1/3">End Date</span>
-                            <span className="text-sm text-gray-800 font-medium mt-1 sm:mt-0">
-                              {endDate ? format(endDate, 'MMMM d, yyyy') : 'Not selected'}
-                            </span>
+                          
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-500">Start Date</span>
+                              <span className="text-sm font-medium text-gray-800">
+                                {startDate ? format(startDate, 'MMM d, yyyy') : 'Today'}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-500">End Date</span>
+                              <span className="text-sm font-medium text-gray-800">
+                                {endDate ? format(endDate, 'MMM d, yyyy') : 'Not selected'}
+                              </span>
+                            </div>
+                            
+                            <div className="pt-3 border-t border-gray-100">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">Duration</span>
+                                <span className="text-sm font-semibold text-[#81D7B4]">
+                                  {startDate && endDate
+                                    ? `${Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days`
+                                    : 'Not calculated'}
+                                </span>
+                              </div>
+                            </div>
                           </div>
+                        </motion.div>
 
-                          <div className="flex flex-col sm:flex-row sm:items-center py-3 px-4 sm:px-6">
-                            <span className="text-sm font-medium text-gray-500 sm:w-1/3">Duration</span>
-                            <span className="text-sm text-gray-800 font-medium mt-1 sm:mt-0">
-                              {startDate && endDate
-                                ? `${Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days`
-                                : 'Not calculated'}
-                            </span>
+                        {/* Penalty Card */}
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300"
+                        >
+                          <div className="flex items-center mb-4">
+                            <div className="w-10 h-10 bg-gradient-to-br from-amber-100 to-amber-50 rounded-xl flex items-center justify-center mr-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-lg font-semibold text-gray-800">Early Withdrawal</h4>
                           </div>
-
-                          <div className="flex flex-col sm:flex-row sm:items-center py-3 px-4 sm:px-6">
-                            <span className="text-sm font-medium text-gray-500 sm:w-1/3">Early Withdrawal Penalty</span>
-                            <span className="flex flex-wrap items-center gap-2 mt-1 sm:mt-0">
-                              <span className="inline-flex items-center bg-amber-50 text-amber-700 rounded-md px-2 py-0.5 text-xs font-semibold whitespace-nowrap">
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-500">Penalty Rate</span>
+                              <span className="inline-flex items-center bg-amber-100 text-amber-800 rounded-full px-3 py-1 text-sm font-semibold">
                                 {penalty}
                               </span>
-                              <span className="text-gray-500 text-xs sm:text-sm truncate">
-                                (${(Number(amount || '0') * parseFloat(penalty) / 100).toFixed(2)} fee on early withdrawal)
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-500">Penalty Amount</span>
+                              <span className="text-sm font-medium text-gray-800">
+                                ${(Number(amount || '0') * parseFloat(penalty) / 100).toFixed(2)}
                               </span>
-                            </span>
+                            </div>
+                            
+                            <div className="pt-3 border-t border-gray-100">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">You'd Receive</span>
+                                <span className="text-sm font-semibold text-green-700">
+                                  ${(Number(amount || '0') * (100 - parseFloat(penalty)) / 100).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+
+                      {/* Cost Info Card */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7 }}
+                        className="bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5 rounded-xl p-4 border border-[#81D7B4]/20"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-700">
+                              <span className="font-semibold text-[#2D5A4A]">$1</span> creation fee required
+                              {savingsData.deposits === 0 && (
+                                <>
+                                  {' • '}<span className="font-semibold text-[#2D5A4A]">$1</span> join fee for first-time users
+                                </>
+                              )}
+                            </p>
                           </div>
                         </div>
                       </motion.div>
 
-                      {/* Comprehensive Penalties Information Section - Collapsible */}
+                      {/* Comprehensive Penalties Information Section - Collapsible (compact) */}
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.45 }}
-                        className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc4a1]/10 rounded-xl border border-[#81D7B4]/30 relative overflow-hidden"
+                        className="rounded-xl relative overflow-hidden"
                       >
-                        {/* Background decorative elements */}
-                        <div className="absolute -top-10 -right-10 w-20 h-20 bg-[#81D7B4]/20 rounded-full blur-2xl"></div>
-                        <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-[#6bc4a1]/20 rounded-full blur-2xl"></div>
-                        
+                        {/* Background decorative elements removed */}
+
                         <div className="relative z-10">
                           {/* Collapsible Header */}
                           <button
                             onClick={() => setPenaltiesExpanded(!penaltiesExpanded)}
-                            className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-[#81D7B4]/5 transition-colors duration-200 rounded-xl"
+                            className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-[#81D7B4]/5 transition-colors duration-200 rounded-xl"
                           >
                             <div className="flex items-center space-x-3">
-                              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#81D7B4] to-[#6bc4a1] rounded-lg flex items-center justify-center shadow-lg">
+                              <div className="flex-shrink-0 w-9 h-9 bg-[#81D7B4] rounded-lg flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -2423,7 +2107,7 @@ export default function CreateSavingsPage() {
                     </motion.div>
 
                     <motion.div
-                      className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-between space-y-6 sm:space-y-0"
+                      className="mt-8 sm:mt-10 flex flex-row flex-wrap justify-between gap-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.6 }}
@@ -2431,7 +2115,7 @@ export default function CreateSavingsPage() {
                       <button
                         type="button"
                         onClick={handlePrevious}
-                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-all duration-300 transform hover:translate-y-[-2px] order-2 sm:order-1"
+                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-all duration-300 transform hover:translate-y-[-2px]"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -2442,7 +2126,7 @@ export default function CreateSavingsPage() {
                         type="button"
                         onClick={handleSubmit}
                         disabled={submitting || isLoading || !termsAgreed}
-                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-[0_4px_10px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_15px_rgba(129,215,180,0.4)] transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-70 disabled:cursor-not-allowed order-1 sm:order-2"
+                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-[0_4px_10px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_15px_rgba(129,215,180,0.4)] transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-70 disabled:cursor-not-allowed"
                       >
                         {(submitting || isLoading) ? (
                           <>
@@ -2454,7 +2138,7 @@ export default function CreateSavingsPage() {
                           </>
                         ) : (
                           <>
-                            Create Savings Plan
+                            Create Plan
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
@@ -2469,6 +2153,14 @@ export default function CreateSavingsPage() {
           </AnimatePresence>
         </div>
       </motion.div>
+
+      {/* Wallet Recommendation Modal */}
+      <WalletRecommendationModal
+        isOpen={shouldShowModal}
+        onClose={dismissRecommendation}
+        onDontShowAgain={() => {}}
+        currentWallet={walletInfo?.name || 'Unknown Wallet'}
+      />
     </div>
   )
 }

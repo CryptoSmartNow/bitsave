@@ -33,11 +33,15 @@ import childContractABI from '../app/abi/childContractABI.js';
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
+const HEDERA_CONTRACT_ADDRESS = "0x2f33f1f07f6e56c11fd48a4f3596d9dadfe67409";
+const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"; 
 
 // Network chain IDs
 const BASE_CHAIN_ID = BigInt(8453);
 const CELO_CHAIN_ID = BigInt(42220);
 const LISK_CHAIN_ID = BigInt(1135);
+const HEDERA_CHAIN_ID = BigInt(296);
+const AVALANCHE_CHAIN_ID = BigInt(43114);
 
 // Token mapping for Celo network
 const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
@@ -46,6 +50,13 @@ const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: str
   "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdc.png" },
   "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" }
 };
+
+// Token mapping for Hedera network
+const HEDERA_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
+  [HEDERA_CONTRACT_ADDRESS]: { name: "HBAR", decimals: 18, logo: "/hedera-logo.svg" }
+};
+
+const AVALANCHE_USDC_E = "0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664";
 
 interface UseSavingsDataReturn {
   savingsData: SavingsData;
@@ -57,6 +68,8 @@ interface UseSavingsDataReturn {
   isBaseNetwork: boolean;
   isCeloNetwork: boolean;
   isLiskNetwork: boolean;
+  isHederaNetwork: boolean;
+  isAvalancheNetwork: boolean;
   isCorrectNetwork: boolean;
   refetch: () => Promise<void>;
   clearCache: () => void;
@@ -73,14 +86,13 @@ const defaultSavingsData: SavingsData = {
 };
 
 export function useSavingsData(): UseSavingsDataReturn {
+
+  
   // Wagmi hooks for wallet connection
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   
-  // Add debugging for account and connection state
-  useEffect(() => {
-    console.log('👤 Account state:', { address, isConnected, chainId });
-  }, [address, isConnected, chainId]);
+
   
   // State management
   const [savingsData, setSavingsData] = useState<SavingsData>(defaultSavingsData);
@@ -92,6 +104,8 @@ export function useSavingsData(): UseSavingsDataReturn {
   const [isBaseNetwork, setIsBaseNetwork] = useState(false);
   const [isCeloNetwork, setIsCeloNetwork] = useState(false);
   const [isLiskNetwork, setIsLiskNetwork] = useState(false);
+  const [isHederaNetwork, setIsHederaNetwork] = useState(false);
+  const [isAvalancheNetwork, setIsAvalancheNetwork] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   
   // Ref to track if component is mounted
@@ -106,13 +120,12 @@ export function useSavingsData(): UseSavingsDataReturn {
   
   // Update network states based on wagmi chainId
   useEffect(() => {
-    console.log('🔍 Network state update - chainId:', chainId);
-    
     if (!chainId) {
-      console.log('❌ No chainId, setting all networks to false');
       setIsBaseNetwork(false);
       setIsCeloNetwork(false);
       setIsLiskNetwork(false);
+      setIsHederaNetwork(false);
+      setIsAvalancheNetwork(false);
       setIsCorrectNetwork(false);
       return;
     }
@@ -121,37 +134,21 @@ export function useSavingsData(): UseSavingsDataReturn {
     const isBase = chainIdBigInt === BASE_CHAIN_ID;
     const isCelo = chainIdBigInt === CELO_CHAIN_ID;
     const isLisk = chainIdBigInt === LISK_CHAIN_ID;
-    
-    console.log('🌐 Network detection:', {
-      chainId,
-      chainIdBigInt: chainIdBigInt.toString(),
-      isBase,
-      isCelo,
-      isLisk,
-      BASE_CHAIN_ID: BASE_CHAIN_ID.toString(),
-      CELO_CHAIN_ID: CELO_CHAIN_ID.toString(),
-      LISK_CHAIN_ID: LISK_CHAIN_ID.toString()
-    });
+    const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
+    const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
     
     // Force immediate state updates
     setIsBaseNetwork(isBase);
     setIsCeloNetwork(isCelo);
     setIsLiskNetwork(isLisk);
-    setIsCorrectNetwork(isBase || isCelo || isLisk);
-    
-    // Log the state changes
-    console.log('✅ Network flags updated:', {
-      isBaseNetwork: isBase,
-      isCeloNetwork: isCelo,
-      isLiskNetwork: isLisk,
-      isCorrectNetwork: isBase || isCelo || isLisk
-    });
+    setIsHederaNetwork(isHedera);
+    setIsAvalancheNetwork(isAvalanche);
+    setIsCorrectNetwork(isBase || isCelo || isLisk || isHedera || isAvalanche);
   }, [chainId]);
 
   // Handle initial loading state when wallet connection changes
   useEffect(() => {
     if (!isConnected || !address || !chainId) {
-      console.log('👤 Wallet disconnected or missing data - resetting to default state');
       setSavingsData(defaultSavingsData);
       setIsLoading(false);
       setIsBackgroundLoading(false);
@@ -208,46 +205,56 @@ export function useSavingsData(): UseSavingsDataReturn {
       const ethPricePromise = fetchEthPrice();
       const goodDollarPricePromise = fetchGoodDollarPrice();
       
-      // Ensure wallet is available
-      if (!window.ethereum) {
-        throw new Error("No Ethereum wallet detected. Please install MetaMask.");
-      }
+      // Use a public RPC provider for read-only calls to avoid wallet prompts
+      const chainIdBig = BigInt(chainId);
+      const rpcUrl = (() => {
+        if (chainIdBig === BASE_CHAIN_ID) return 'https://mainnet.base.org';
+        if (chainIdBig === CELO_CHAIN_ID) return 'https://forno.celo.org';
+        if (chainIdBig === LISK_CHAIN_ID) return 'https://rpc.api.lisk.com';
+        if (chainIdBig === HEDERA_CHAIN_ID) return 'https://mainnet.hashio.io/api';
+        if (chainIdBig === AVALANCHE_CHAIN_ID) return 'https://api.avax.network/ext/bc/C/rpc';
+        return 'https://forno.celo.org';
+      })();
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
       
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      
-      // Fetch network info and prices concurrently
-      const [network, currentEthPrice, goodDollarPrice] = await Promise.all([
-        provider.getNetwork(),
+      // Fetch prices concurrently
+      const [currentEthPrice, goodDollarPrice] = await Promise.all([
         ethPricePromise,
         goodDollarPricePromise
       ]);
       
-
       setEthPrice(currentEthPrice || 3500);
       
-      // Update network state
-      setCurrentNetwork(network);
+      // Update simple network state from chainId
+      setCurrentNetwork({ chainId: chainIdBig });
       
       // Validate network
-      if (network.chainId !== BASE_CHAIN_ID && network.chainId !== CELO_CHAIN_ID && network.chainId !== LISK_CHAIN_ID) {
-        throw new Error("Please switch to Base, Celo, or Lisk network");
+      if (chainIdBig !== BASE_CHAIN_ID && chainIdBig !== CELO_CHAIN_ID && chainIdBig !== LISK_CHAIN_ID && chainIdBig !== HEDERA_CHAIN_ID) {
+        throw new Error("Please switch to Base, Celo, Lisk, or Hedera network");
       }
-      const signer = await provider.getSigner();
+      const fromAddress: string | undefined = address ?? undefined;
       
       // Select contract address based on network
-      const contractAddress = (network.chainId === BASE_CHAIN_ID)
+      const contractAddress = (chainIdBig === BASE_CHAIN_ID)
         ? BASE_CONTRACT_ADDRESS
-        : (network.chainId === CELO_CHAIN_ID)
+        : (chainIdBig === CELO_CHAIN_ID)
         ? CELO_CONTRACT_ADDRESS
-        : LISK_CONTRACT_ADDRESS;
+        : (chainIdBig === LISK_CHAIN_ID)
+        ? LISK_CONTRACT_ADDRESS
+        : (chainIdBig === HEDERA_CHAIN_ID)
+        ? HEDERA_CONTRACT_ADDRESS
+        : AVALANCHE_CONTRACT_ADDRESS;
       
       // Initialize contract
-      const contract = new ethers.Contract(contractAddress, BitSaveABI, signer);
+      const contract = new ethers.Contract(contractAddress, BitSaveABI, provider);
       
       // Get user's child contract address with timeout
       let userChildContractAddress;
       try {
-        const contractPromise = contract.getUserChildContractAddress();
+        // Pass explicit from override to preserve msg.sender even without a signer
+        const contractPromise = (fromAddress
+          ? (contract as any).getUserChildContractAddress({ from: fromAddress })
+          : contract.getUserChildContractAddress());
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Contract call timeout')), 10000)
         );
@@ -256,8 +263,6 @@ export function useSavingsData(): UseSavingsDataReturn {
         
         // Handle case where user hasn't created a savings plan yet
         if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
-          console.log('👤 User has no child contract address - returning default data');
-          
           // Reset loading states before returning
           if (isBackgroundFetch) {
             setIsBackgroundLoading(false);
@@ -284,11 +289,13 @@ export function useSavingsData(): UseSavingsDataReturn {
       const childContract = new ethers.Contract(
         userChildContractAddress,
         childContractABI,
-        signer
+        provider
       );
       
       // Fetch savings names with timeout
-      const savingsNamesPromise = childContract.getSavingsNames();
+      const savingsNamesPromise = (fromAddress
+        ? (childContract as any).getSavingsNames({ from: fromAddress })
+        : childContract.getSavingsNames());
       const savingsTimeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Savings names timeout')), 8000)
       );
@@ -317,7 +324,9 @@ export function useSavingsData(): UseSavingsDataReturn {
           try {
             processedPlanNames.add(savingName);
             
-            const savingDataPromise = childContract.getSaving(savingName);
+            const savingDataPromise = (fromAddress
+              ? (childContract as any).getSaving(savingName, { from: fromAddress })
+              : childContract.getSaving(savingName));
             const timeoutPromise = new Promise((_, reject) => 
               setTimeout(() => reject(new Error(`Timeout for ${savingName}`)), 5000)
             );
@@ -352,7 +361,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                 tokenName = "ETH";
                 decimals = 18;
                 tokenLogo = '/eth.png';
-              } else if (network.chainId === CELO_CHAIN_ID) {
+              } else if (chainIdBig === CELO_CHAIN_ID) {
                 const tokenInfo = CELO_TOKEN_MAP[(tokenId as string).toLowerCase()];
                 if (tokenInfo) {
                   tokenName = tokenInfo.name;
@@ -363,7 +372,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                   decimals = 6;
                   tokenLogo = '/usdglo.png';
                 }
-              } else if (network.chainId === BASE_CHAIN_ID) {
+              } else if (chainIdBig === BASE_CHAIN_ID) {
                 if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
                   tokenName = "USDC";
                   decimals = 6;
@@ -373,9 +382,26 @@ export function useSavingsData(): UseSavingsDataReturn {
                   decimals = 18;
                   tokenLogo = '/usdglo.png';
                 }
-              } else if (network.chainId === LISK_CHAIN_ID) {
+              } else if (chainIdBig === LISK_CHAIN_ID) {
                 if (tokenId.toLowerCase() === "0xf242275d3a6527d877f2c927a82d9b057609cc71") {
                   tokenName = "USDC";
+                  decimals = 6;
+                  tokenLogo = '/usdc.png';
+                }
+              } else if (chainIdBig === HEDERA_CHAIN_ID) {
+                const tokenInfo = HEDERA_TOKEN_MAP[(tokenId as string).toLowerCase()];
+                if (tokenInfo) {
+                  tokenName = tokenInfo.name;
+                  decimals = tokenInfo.decimals;
+                  tokenLogo = tokenInfo.logo;
+                } else {
+                  tokenName = 'HBAR';
+                  decimals = 18;
+                  tokenLogo = '/hedera-logo.svg';
+                }
+              } else if (chainIdBig === AVALANCHE_CHAIN_ID) {
+                if (tokenId.toLowerCase() === AVALANCHE_USDC_E) {
+                  tokenName = 'USDC';
                   decimals = 6;
                   tokenLogo = '/usdc.png';
                 }
@@ -453,7 +479,18 @@ export function useSavingsData(): UseSavingsDataReturn {
       
       return finalData;
       
-    } catch (error) {
+    } catch (error: any) {
+      const code = error?.code;
+      const msg = String(error?.message || '').toLowerCase();
+      const userRejected = code === 4001 || code === 'ACTION_REJECTED' || msg.includes('rejected') || msg.includes('denied');
+      if (userRejected) {
+        // Silent fallback when user cancels wallet interaction; use default data
+        console.warn('Savings fetch: user cancelled wallet interaction, using default data');
+        if (!isBackgroundFetch) {
+          setError(null);
+        }
+        return defaultSavingsData;
+      }
       console.error("Error fetching savings data:", handleContractError(error));
       
       // Set error state but don't throw - let cached data be used if available
@@ -463,20 +500,20 @@ export function useSavingsData(): UseSavingsDataReturn {
       
       return null;
     } finally {
-      if (!isMountedRef.current) return null;
-      
-      if (isBackgroundFetch) {
-        setIsBackgroundLoading(false);
-      } else {
-        setIsLoading(false);
+      // Only update loading state if component is still mounted
+      if (isMountedRef.current) {
+        if (isBackgroundFetch) {
+          setIsBackgroundLoading(false);
+        } else {
+          setIsLoading(false);
+        }
       }
     }
-  }, [isConnected, address, fetchEthPrice, fetchGoodDollarPrice]);
+  }, [isConnected, address, chainId, fetchEthPrice, fetchGoodDollarPrice]);
   
   // Main fetch function with caching logic
   const fetchSavingsData = useCallback(async (forceRefresh = false) => {
     if (!isConnected || !address || !chainId) {
-      console.log('👤 User not connected or missing address/chainId - setting default data');
       setSavingsData(defaultSavingsData);
       setIsLoading(false);
       setIsBackgroundLoading(false);
@@ -489,25 +526,12 @@ export function useSavingsData(): UseSavingsDataReturn {
     // Check for cached data first (unless forcing refresh)
     if (!forceRefresh) {
       const cachedData = getCachedSavingsData(address, networkChainId);
-      if (cachedData) {
-  
-        setSavingsData(cachedData);
-        
-        // Check if background refresh is needed
-        if (needsBackgroundRefresh(address, networkChainId)) {
-    
-          // Fetch fresh data in background
-          fetchSavingsDataFromBlockchain(true).then(freshData => {
-            if (freshData && isMountedRef.current) {
+      const needsRefresh = needsBackgroundRefresh(address, networkChainId);
       
-              setSavingsData(freshData);
-              cacheSavingsData(freshData, address, networkChainId);
-            }
-          }).catch(error => {
-            console.error('Background refresh failed:', error);
-            // Keep using cached data on background fetch failure
-          });
-        }
+      if (cachedData && !forceRefresh && !needsRefresh) {
+        setSavingsData(cachedData);
+        setIsLoading(false); // ✅ FIXED: Set loading to false when using cached data
+        setError(null);
         return;
       }
     }
@@ -540,31 +564,33 @@ export function useSavingsData(): UseSavingsDataReturn {
   
   // Force refresh network state by manually triggering network detection
   const forceRefreshNetworkState = useCallback(() => {
-    console.log('🔄 Force refreshing network state...');
     if (chainId) {
       const chainIdBigInt = BigInt(chainId);
       const isBase = chainIdBigInt === BASE_CHAIN_ID;
       const isCelo = chainIdBigInt === CELO_CHAIN_ID;
       const isLisk = chainIdBigInt === LISK_CHAIN_ID;
-      
-      console.log('🔄 Force refresh - Network detection:', {
-        chainId,
-        isBase,
-        isCelo,
-        isLisk
-      });
+      const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
       
       setIsBaseNetwork(isBase);
       setIsCeloNetwork(isCelo);
       setIsLiskNetwork(isLisk);
-      setIsCorrectNetwork(isBase || isCelo || isLisk);
+      setIsHederaNetwork(isHedera);
+      setIsCorrectNetwork(isBase || isCelo || isLisk || isHedera);
     }
   }, [chainId]);
   
   // Initial data fetch on mount or when dependencies change
   useEffect(() => {
-    fetchSavingsData();
-  }, [fetchSavingsData]);
+    if (isConnected && address && chainId) {
+      fetchSavingsData();
+    } else {
+      // Set default data when not connected
+      setSavingsData(defaultSavingsData);
+      setIsLoading(false);
+      setError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address, chainId]); // Remove fetchSavingsData to prevent infinite loop
   
   return {
     savingsData,
@@ -576,6 +602,8 @@ export function useSavingsData(): UseSavingsDataReturn {
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
+    isHederaNetwork,
+    isAvalancheNetwork,
     isCorrectNetwork,
     refetch,
     clearCache,

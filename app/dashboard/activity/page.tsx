@@ -3,9 +3,18 @@
 import { useState, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
+import {
+  HiOutlineEnvelope,
+  HiOutlineCalendar,
+  HiOutlineFire,
+  HiOutlineMegaphone,
+  HiOutlineHashtag,
+  HiOutlineUserPlus,
+  HiOutlineArrowRight,
+} from 'react-icons/hi2';
 
-const spaceGrotesk = Space_Grotesk({ 
+const exo = Exo({ 
   subsets: ['latin'],
   variable: '--font-space-grotesk'
 });
@@ -32,6 +41,19 @@ const MOCK_USER_DATA = {
 
 export default function ActivityPage() {
   const [userData] = useState(MOCK_USER_DATA);
+
+  // Modern, neat points header
+  const PointsHeader = () => (
+    <div className="inline-flex items-center gap-3 rounded-2xl border border-[#81D7B4]/30 bg-[#81D7B4]/10 shadow-sm px-5 py-4">
+      <div className="h-8 w-8 rounded-xl bg-[#81D7B4] text-white flex items-center justify-center">
+        <HiOutlineFire className="h-5 w-5" />
+      </div>
+      <div className="flex flex-col text-left">
+        <span className="text-xs text-[#2D5A4A]">Points</span>
+        <span className="text-2xl font-semibold tracking-tight text-[#2D5A4A]">{userData.userPoints}</span>
+      </div>
+    </div>
+  );
 
   const tasks: Task[] = [
     {
@@ -119,34 +141,21 @@ export default function ActivityPage() {
 
   const TaskIcon = ({ icon }: { icon: string }) => {
     const icons: { [key: string]: ReactNode } = {
-      twitter: <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>,
-      farcaster: <svg className="w-6 h-6" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.5 10.5C21.5 9.67157 20.8284 9 20 9H12C11.1716 9 10.5 9.67157 10.5 10.5V21.5C10.5 22.3284 11.1716 23 12 23H20C20.8284 23 21.5 22.3284 21.5 21.5V10.5Z" fill="currentColor"/><path d="M16 13.5C17.3807 13.5 18.5 14.6193 18.5 16C18.5 17.3807 17.3807 18.5 16 18.5C14.6193 18.5 13.5 17.3807 13.5 16C13.5 14.6193 14.6193 13.5 16 13.5Z" fill="white"/></svg>,
-      email: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" /></svg>,
-      tweet: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
-      cast: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-      referral: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.5a9 9 0 0118 0" /></svg>,
-      streak: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>,
-      calendar: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-    }
-    return icons[icon] || null
+      twitter: <HiOutlineHashtag className="w-6 h-6" />,
+      farcaster: <HiOutlineMegaphone className="w-6 h-6" />,
+      email: <HiOutlineEnvelope className="w-6 h-6" />,
+      tweet: <HiOutlineHashtag className="w-6 h-6" />,
+      cast: <HiOutlineMegaphone className="w-6 h-6" />,
+      referral: <HiOutlineUserPlus className="w-6 h-6" />,
+      streak: <HiOutlineFire className="w-6 h-6" />,
+      calendar: <HiOutlineCalendar className="w-6 h-6" />,
+    };
+    return icons[icon] || <HiOutlineMegaphone className="w-6 h-6" />
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-white via-[#81D7B4]/5 to-white ${spaceGrotesk.variable} font-sans`}>
-      {/* Enhanced Background Elements with Neomorphism */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Floating orbs with glassmorphism */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-gradient-to-br from-blue-400/10 to-[#81D7B4]/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-[#81D7B4]/10 to-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-bl from-purple-400/8 to-pink-400/8 rounded-full blur-2xl animate-pulse delay-500"></div>
-        
-        {/* Noise texture overlay */}
-        <div className="absolute inset-0 opacity-[0.015] mix-blend-overlay" style={{
-          backgroundImage: `url('/noise.jpg')`,
-          backgroundSize: '200px 200px',
-          backgroundRepeat: 'repeat'
-        }}></div>
-      </div>
+    <div className={`${exo.variable} font-sans min-h-screen bg-white`}>
+      {/* Background removed for a cleaner layout */}
 
       <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
         {/* Earn $BTS Section */}
@@ -156,37 +165,32 @@ export default function ActivityPage() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="mb-20"
         >
-          {/* Neomorphic container with enhanced glassmorphism */}
-          <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-[#81D7B4]/20 shadow-[0_8px_32px_0_rgba(129,215,180,0.15)] overflow-hidden">
-            {/* Enhanced background patterns */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/8 via-[#81D7B4]/4 to-[#81D7B4]/2"></div>
-            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-[#81D7B4]/15 to-transparent rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-60 h-60 bg-gradient-to-tr from-[#81D7B4]/10 to-transparent rounded-full blur-2xl"></div>
-            
-            {/* Inner shadow for neomorphism */}
-            <div className="absolute inset-[1px] rounded-[calc(2rem-1px)] bg-gradient-to-br from-white/30 to-white/10 pointer-events-none"></div>
-            
-            <div className="relative p-4 sm:p-6 md:p-8 lg:p-16">
-              <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          {/* Clean container for hero section - removed background card */}
+          <div className="relative px-2 sm:px-3 md:px-6 lg:px-8">
+            <div className="relative">
+              <div className="text-center mb-8 md:mb-12">
                 <motion.h2 
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[#81D7B4] via-[#6BC5A0] to-[#5AB08A] bg-clip-text text-transparent mb-4 sm:mb-6 tracking-tight"
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="text-3xl md:text-5xl font-semibold text-[#81D7B4] tracking-tight"
                 >
                   Earn $BTS
                 </motion.h2>
                 <motion.p 
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  className="text-base sm:text-lg md:text-xl text-[#2D7A5A] max-w-3xl mx-auto leading-relaxed"
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
                 >
-                  Complete these tasks to earn points and unlock exclusive rewards in the BitSave ecosystem
+                  Complete simple tasks to earn points and unlock rewards.
                 </motion.p>
+                <div className="mt-6">
+                  <PointsHeader />
+                </div>
               </div>
 
-              {/* Todo List Layout */}
+              {/* Tasks List */}
               <div className="max-w-4xl mx-auto space-y-4">
                 {tasks.map((task, index) => (
                   <motion.div
@@ -201,11 +205,11 @@ export default function ActivityPage() {
                     className="group"
                   >
                     <Link href={task.href || '#'} target={task.href?.startsWith('http') ? '_blank' : '_self'}>
-                      <div className={`relative bg-white/95 backdrop-blur-sm rounded-2xl border transition-all duration-300 p-3 sm:p-4 md:p-6 ${
+                      <div className={`relative bg-white/90 backdrop-blur-sm rounded-xl border transition-all duration-300 p-4 md:p-5 ${
                         task.isCompleted 
-                          ? 'border-[#81D7B4]/50 shadow-[0_4px_20px_rgba(129,215,180,0.2)] bg-gradient-to-r from-[#81D7B4]/8 to-white/95' 
-                          : 'border-[#81D7B4]/20 shadow-[0_2px_10px_rgba(129,215,180,0.08)] hover:border-[#81D7B4]/40 hover:shadow-[0_4px_20px_rgba(129,215,180,0.15)]'
-                      } group-hover:-translate-y-1`}>
+                          ? 'border-[#81D7B4]/40 shadow-sm bg-[#81D7B4]/5' 
+                          : 'border-gray-200/60 shadow-sm hover:border-[#81D7B4]/50 hover:shadow-md'
+                      }`}>
                         
                         {/* Mobile Layout (Stacked) */}
                         <div className="block sm:hidden">
@@ -241,8 +245,8 @@ export default function ActivityPage() {
                               <motion.div 
                                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                                   task.isCompleted 
-                                    ? 'bg-[#81D7B4]/25 text-[#81D7B4] shadow-lg' 
-                                    : 'bg-[#81D7B4]/10 text-[#5AB08A] group-hover:bg-[#81D7B4]/20 group-hover:text-[#81D7B4] shadow-md'
+                                    ? 'bg-[#81D7B4]/20 text-[#2D5A4A] border border-[#81D7B4]/30 shadow-md' 
+                                    : 'bg-white text-[#2D5A4A] border border-[#81D7B4]/30 group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A] shadow-md'
                                 }`}
                                 whileHover={{ scale: 1.05, rotate: 2 }}
                               >
@@ -255,10 +259,10 @@ export default function ActivityPage() {
                             {/* Task Title and Description */}
                             <div className="flex-1 min-w-0">
                               <motion.h3 
-                                className={`font-bold text-base mb-1 transition-all duration-300 ${
+                                className={`font-medium text-base mb-1 transition-all duration-300 ${
                                   task.isCompleted 
-                                    ? 'text-[#2D7A5A] line-through decoration-[#81D7B4]/50' 
-                                    : 'text-[#3A8B63] group-hover:text-[#2D7A5A]'
+                                    ? 'text-[#81D7B4] line-through decoration-[#81D7B4]/40' 
+                                    : 'text-[#81D7B4]'
                                 }`}
                                 whileHover={{ x: 2 }}
                               >
@@ -266,8 +270,8 @@ export default function ActivityPage() {
                               </motion.h3>
                               <p className={`text-xs leading-relaxed transition-colors duration-300 ${
                                 task.isCompleted 
-                                  ? 'text-[#5AB08A]' 
-                                  : 'text-[#6BC5A0] group-hover:text-[#5AB08A]'
+                                  ? 'text-gray-500' 
+                                  : 'text-gray-600'
                               }`}>
                                 {task.description}
                               </p>
@@ -278,10 +282,10 @@ export default function ActivityPage() {
                           <div className="flex items-center justify-between gap-2 ml-8">
                             <div className="flex items-center gap-2">
                               <motion.div
-                                className={`font-bold text-sm transition-all duration-300 ${
+                                className={`font-semibold text-sm transition-all duration-300 ${
                                   task.isCompleted 
-                                    ? 'text-[#2D7A5A]' 
-                                    : 'text-[#5AB08A] group-hover:text-[#2D7A5A]'
+                                    ? 'text-gray-700' 
+                                    : 'text-[#2D5A4A]'
                                 }`}
                                 whileHover={{ scale: 1.05 }}
                               >
@@ -289,10 +293,10 @@ export default function ActivityPage() {
                               </motion.div>
 
                               <motion.div
-                                className={`px-2 py-1 rounded-full text-xs font-semibold transition-all duration-300 ${
+                                className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
                                   task.isCompleted 
-                                    ? 'text-[#2D7A5A] bg-[#81D7B4]/25 border border-[#81D7B4]/40' 
-                                    : 'text-[#5AB08A] bg-[#81D7B4]/10 border border-[#81D7B4]/20 group-hover:text-[#2D7A5A] group-hover:bg-[#81D7B4]/20 group-hover:border-[#81D7B4]/30'
+                                    ? 'text-[#2D5A4A] bg-[#81D7B4]/15 border border-[#81D7B4]/30' 
+                                    : 'text-[#2D5A4A] bg-[#81D7B4]/10 border border-[#81D7B4]/20'
                                 }`}
                                 whileHover={{ scale: 1.05 }}
                               >
@@ -303,14 +307,12 @@ export default function ActivityPage() {
                             <motion.div 
                               className={`p-1.5 rounded-lg transition-all duration-300 ${
                                 task.isCompleted 
-                                  ? 'text-[#81D7B4] bg-[#81D7B4]/10' 
-                                  : 'text-gray-400 group-hover:text-[#81D7B4] group-hover:bg-[#81D7B4]/10'
+                                  ? 'text-[#2D5A4A] bg-white border border-[#81D7B4]/30' 
+                                  : 'text-[#2D5A4A] group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A]'
                               }`}
                               whileHover={{ x: 3, scale: 1.1 }}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                              </svg>
+                              <HiOutlineArrowRight className="h-3 w-3" />
                             </motion.div>
                           </div>
                         </div>
@@ -348,8 +350,8 @@ export default function ActivityPage() {
                             <motion.div 
                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
                                 task.isCompleted 
-                                  ? 'bg-[#81D7B4]/25 text-[#81D7B4] shadow-lg' 
-                                  : 'bg-[#81D7B4]/10 text-[#5AB08A] group-hover:bg-[#81D7B4]/20 group-hover:text-[#81D7B4] shadow-md'
+                                  ? 'bg-[#81D7B4]/20 text-[#2D5A4A] border border-[#81D7B4]/30' 
+                                  : 'bg-white text-[#2D5A4A] border border-[#81D7B4]/30 group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A]'
                               }`}
                               whileHover={{ scale: 1.05, rotate: 2 }}
                             >
@@ -362,10 +364,10 @@ export default function ActivityPage() {
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1">
                                 <motion.h3 
-                                  className={`font-bold text-lg mb-2 transition-all duration-300 ${
+                                  className={`font-medium text-lg mb-1 transition-all duration-300 ${
                                     task.isCompleted 
-                                      ? 'text-[#2D7A5A] line-through decoration-[#81D7B4]/50' 
-                                      : 'text-[#3A8B63] group-hover:text-[#2D7A5A]'
+                                      ? 'text-[#81D7B4] line-through decoration-[#81D7B4]/40' 
+                                      : 'text-[#81D7B4]'
                                   }`}
                                   whileHover={{ x: 2 }}
                                 >
@@ -373,8 +375,8 @@ export default function ActivityPage() {
                                 </motion.h3>
                                 <p className={`text-sm leading-relaxed transition-colors duration-300 ${
                                   task.isCompleted 
-                                    ? 'text-[#5AB08A]' 
-                                    : 'text-[#6BC5A0] group-hover:text-[#5AB08A]'
+                                    ? 'text-gray-500' 
+                                    : 'text-gray-600'
                                 }`}>
                                   {task.description}
                                 </p>
@@ -383,10 +385,10 @@ export default function ActivityPage() {
                               {/* Points and Status */}
                               <div className="flex items-center gap-4 flex-shrink-0">
                                 <motion.div
-                                  className={`font-bold text-lg transition-all duration-300 ${
+                                  className={`font-semibold text-base transition-all duration-300 ${
                                     task.isCompleted 
-                                      ? 'text-[#2D7A5A]' 
-                                      : 'text-[#5AB08A] group-hover:text-[#2D7A5A]'
+                                      ? 'text-gray-700' 
+                                      : 'text-[#2D5A4A]'
                                   }`}
                                   whileHover={{ scale: 1.05 }}
                                 >
@@ -394,10 +396,10 @@ export default function ActivityPage() {
                                 </motion.div>
 
                                 <motion.div
-                                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-300 ${
+                                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
                                     task.isCompleted 
-                                      ? 'text-[#2D7A5A] bg-[#81D7B4]/25 border border-[#81D7B4]/40' 
-                                      : 'text-[#5AB08A] bg-[#81D7B4]/10 border border-[#81D7B4]/20 group-hover:text-[#2D7A5A] group-hover:bg-[#81D7B4]/20 group-hover:border-[#81D7B4]/30'
+                                      ? 'text-[#2D5A4A] bg-[#81D7B4]/15 border border-[#81D7B4]/30' 
+                                      : 'text-[#2D5A4A] bg-[#81D7B4]/10 border border-[#81D7B4]/20'
                                   }`}
                                   whileHover={{ scale: 1.05 }}
                                 >
@@ -407,14 +409,12 @@ export default function ActivityPage() {
                                 <motion.div 
                                   className={`p-2 rounded-lg transition-all duration-300 ${
                                     task.isCompleted 
-                                      ? 'text-[#81D7B4] bg-[#81D7B4]/10' 
-                                      : 'text-gray-400 group-hover:text-[#81D7B4] group-hover:bg-[#81D7B4]/10'
+                                      ? 'text-[#2D5A4A] bg-white border border-[#81D7B4]/30' 
+                                      : 'text-[#2D5A4A] group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A]'
                                   }`}
                                   whileHover={{ x: 3, scale: 1.1 }}
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                  </svg>
+                                  <HiOutlineArrowRight className="h-4 w-4" />
                                 </motion.div>
                               </div>
                             </div>

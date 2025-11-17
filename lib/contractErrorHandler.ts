@@ -1,4 +1,40 @@
-// Contract error handling utility for child contract custom errors
+// Contract error handling utility focused on extracting precise contract errors
+
+// Attempt to extract the most precise revert reason or custom error name
+const extractPreciseContractError = (error: unknown): string => {
+  const e = error as Record<string, any> | undefined;
+
+  // Ethers v6 custom error decoding
+  if (e && typeof e === 'object') {
+    if (e.errorName) {
+      return String(e.errorName);
+    }
+    if (typeof e.reason === 'string' && e.reason.trim()) {
+      return e.reason.replace(/execution reverted:?\s*/i, '').trim();
+    }
+    if (typeof e.shortMessage === 'string' && e.shortMessage.trim()) {
+      const sm = e.shortMessage.trim();
+      const match = sm.match(/execution reverted:?\s*(.+?)(?:\(|$)/i);
+      return match ? match[1].trim() : sm;
+    }
+  }
+
+  // Fallback to message string parsing
+  const msg = (e && typeof e?.message === 'string') ? e.message : String(error ?? '');
+  if (msg) {
+    const match = msg.match(/execution reverted:?\s*(.+?)(?:\(|$)/i) || msg.match(/revert:?\s*(.+?)(?:\(|$)/i);
+    if (match) return match[1].trim();
+  }
+
+  // Deep RPC error message
+  const nestedMsg = (e?.data?.message || e?.error?.message || e?.info?.error?.message);
+  if (typeof nestedMsg === 'string' && nestedMsg) {
+    const m = nestedMsg.match(/execution reverted:?\s*(.+?)(?:\(|$)/i);
+    if (m) return m[1].trim();
+  }
+
+  return '';
+};
 
 /**
  * Handles child contract custom errors and provides user-friendly error messages
@@ -6,48 +42,22 @@
  * @returns A user-friendly error message
  */
 export const handleChildContractError = (error: unknown): string => {
-  // Check if error has a reason or data property that contains the custom error
-  const errorString = (error as { reason?: string; message?: string })?.reason || 
-                     (error as { message?: string })?.message || 
-                     (typeof error === 'object' && error !== null ? error.toString() : String(error)) || '';
-  
-  // Handle specific child contract custom errors
-  if (errorString.includes('CallNotFromBitsave')) {
-    return 'This operation can only be called from the Bitsave platform. Please ensure you are using the correct interface.';
-  }
-  
-  if (errorString.includes('InvalidSaving')) {
-    return 'The savings plan you are trying to access does not exist or is invalid. Please check the plan name and try again.';
-  }
-  
-  if (errorString.includes('InvalidTime')) {
-    return 'This operation cannot be performed at this time. Please check the maturity date of your savings plan.';
-  }
-  
-  // Handle common contract errors
-  if (errorString.includes('insufficient funds')) {
-    return 'Insufficient funds to complete this transaction. Please check your wallet balance.';
-  }
-  
-  if (errorString.includes('user rejected')) {
-    return 'Transaction was cancelled by user.';
-  }
-  
-  if (errorString.includes('gas')) {
-    return 'Transaction failed due to gas estimation issues. Please try again with a higher gas limit.';
-  }
-  
-  if (errorString.includes('network')) {
-    return 'Network error occurred. Please check your connection and try again.';
-  }
-  
-  // Handle execution reverted errors
-  if (errorString.includes('execution reverted')) {
-    return 'Transaction was reverted by the smart contract. Please verify your input and try again.';
-  }
-  
-  // Default error message
-  return 'An unexpected error occurred. Please try again or contact support if the issue persists.';
+  // Prefer precise contract-derived reason or custom error name
+  const precise = extractPreciseContractError(error);
+  if (precise) return precise;
+
+  const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
+
+  // Short, non-verbose fallbacks
+  if (errorString.includes('callnotfrombitsave')) return 'CallNotFromBitsave';
+  if (errorString.includes('invalidsaving')) return 'InvalidSaving';
+  if (errorString.includes('invalidtime')) return 'InvalidTime';
+  if (errorString.includes('insufficient funds')) return 'Insufficient funds';
+  if (errorString.includes('user rejected') || errorString.includes('user denied')) return 'User rejected transaction';
+  if (errorString.includes('gas')) return 'Gas estimation failed';
+  if (errorString.includes('network')) return 'Network error';
+
+  return 'Transaction failed';
 };
 
 /**
@@ -56,36 +66,21 @@ export const handleChildContractError = (error: unknown): string => {
  * @returns A user-friendly error message
  */
 export const handleMainContractError = (error: unknown): string => {
-  const errorString = (error as { reason?: string; message?: string })?.reason || 
-                     (error as { message?: string })?.message || 
-                     (typeof error === 'object' && error !== null ? error.toString() : String(error)) || '';
-  
-  // Handle specific main contract custom errors
-  if (errorString.includes('AmountNotEnough')) {
-    return 'The amount specified is not sufficient for this operation.';
-  }
-  
-  if (errorString.includes('CanNotWithdrawToken')) {
-    return 'This token cannot be withdrawn at this time. Please check the withdrawal conditions.';
-  }
-  
-  if (errorString.includes('MasterCallRequired')) {
-    return 'This operation requires master authorization.';
-  }
-  
-  if (errorString.includes('NotEnoughToPayGasFee')) {
-    return 'Insufficient funds to pay for gas fees. Please add more funds to your wallet.';
-  }
-  
-  if (errorString.includes('NotSupported')) {
-    return 'This operation is not supported for the specified token or configuration.';
-  }
-  
-  if (errorString.includes('UserNotRegistered')) {
-    return 'You need to join Bitsave first before performing this operation.';
-  }
-  
-  // Fall back to child contract error handler for common errors
+  // Prefer precise contract-derived reason or custom error name
+  const precise = extractPreciseContractError(error);
+  if (precise) return precise;
+
+  const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
+
+  // Short, non-verbose fallbacks for known custom errors
+  if (errorString.includes('amountnotenough')) return 'AmountNotEnough';
+  if (errorString.includes('cannotwithdrawtoken')) return 'CanNotWithdrawToken';
+  if (errorString.includes('mastercallrequired')) return 'MasterCallRequired';
+  if (errorString.includes('notenoughtopaygasfee')) return 'NotEnoughToPayGasFee';
+  if (errorString.includes('notsupported')) return 'NotSupported';
+  if (errorString.includes('usernotregistered')) return 'UserNotRegistered';
+
+  // Fall back to common short messages
   return handleChildContractError(error);
 };
 

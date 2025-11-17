@@ -23,7 +23,7 @@ function TwitterCallbackContent() {
         }
         
         // Verify state parameter
-        const storedState = sessionStorage.getItem('twitter_state');
+        const storedState = localStorage.getItem('twitter_state');
         if (state !== storedState) {
           window.opener?.postMessage({
             type: 'TWITTER_AUTH_ERROR',
@@ -35,7 +35,7 @@ function TwitterCallbackContent() {
         
         if (code) {
           // Exchange authorization code for access token
-          const codeVerifier = sessionStorage.getItem('twitter_code_verifier');
+          const codeVerifier = localStorage.getItem('twitter_code_verifier');
           
           const tokenResponse = await fetch('/api/auth/twitter/token', {
             method: 'POST',
@@ -78,8 +78,8 @@ function TwitterCallbackContent() {
           }, window.location.origin);
           
           // Clean up session storage
-          sessionStorage.removeItem('twitter_code_verifier');
-          sessionStorage.removeItem('twitter_state');
+          localStorage.removeItem('twitter_code_verifier');
+          localStorage.removeItem('twitter_state');
           
           window.close();
         }

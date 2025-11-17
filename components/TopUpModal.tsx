@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Space_Grotesk } from 'next/font/google';
+import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import { useAccount } from 'wagmi';
@@ -26,10 +26,36 @@ import { handleContractError } from '@/lib/contractErrorHandler';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
 import { getSavingFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
 
-const spaceGrotesk = Space_Grotesk({ 
+const exo = Exo({ 
   subsets: ['latin'],
   display: 'swap',
 })
+
+// Helper function to ensure image URLs are properly formatted for Next.js Image
+const ensureImageUrl = (url: string | undefined): string => {
+  if (!url) return '/default-network.png'
+  // If it's a relative path starting with /, it's fine
+  if (url.startsWith('/')) return url
+  // If it starts with // (protocol-relative), convert to https
+  if (url.startsWith('//')) return `https:${url}`
+  // If it doesn't start with http/https and doesn't start with /, add /
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `/${url}`
+  }
+  return url
+}
+
+interface NetworkLogoData {
+  [key: string]: {
+    id: string
+    name: string
+    logoUrl: string
+    fallbackUrl?: string
+    small?: string
+    large?: string
+    thumb?: string
+  }
+}
 
 interface TopUpModalProps {
   isOpen: boolean
@@ -38,9 +64,10 @@ interface TopUpModalProps {
   planId: string
   isEth?: boolean
   tokenName?: string
+  networkLogos?: NetworkLogoData
 }
 
-const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth = false, tokenName }: TopUpModalProps) {
+const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth = false, tokenName, networkLogos }: TopUpModalProps) {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
@@ -762,7 +789,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto">
       {showTransactionModal ? (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto">
-          <div className={`${spaceGrotesk.className} bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto`}>
+          <div className={`${exo.className} bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto`}>
             <div className="p-5 sm:p-8 flex flex-col items-center">
               {/* Success or Error Icon */}
               <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mb-4 sm:mb-6 ${success ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -793,45 +820,13 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                   : 'Your top-up transaction failed. Please try again or contact our support team for assistance.'}
                 {!success && error && (
                   <span className="block mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="text-sm font-medium text-red-800 mb-2">Error Details:</div>
-                    <div className="text-xs text-red-600 mb-3">
-                      {(() => {
-                        // Enhanced error extraction and user-friendly messages
-                        const lowerError = error.toLowerCase();
-                        if (error.includes("missing revert data") || lowerError.includes("call_exception")) {
-                          return "💸 Transaction failed - This usually means insufficient funds for gas fees or the contract couldn't process your request. Please check your wallet balance and ensure you have enough ETH/native tokens for gas fees, then try again.";
-                        } else if (error.includes("INVALID_ARGUMENT") || lowerError.includes("invalid argument")) {
-                          return "❌ Invalid transaction parameters. Please check your top-up amount and try again.";
-                        } else if (lowerError.includes("insufficient funds") || lowerError.includes("insufficient balance")) {
-                          return "💰 Insufficient funds. Please check your wallet balance and ensure you have enough for both the top-up amount and gas fees.";
-                        } else if (lowerError.includes("user rejected") || lowerError.includes("user denied")) {
-                          return "🚫 Transaction was cancelled by user. No funds were transferred.";
-                        } else if (lowerError.includes("network") || lowerError.includes("connection")) {
-                          return "🌐 Network connection issue. Please check your internet connection and try again.";
-                        } else if (lowerError.includes("gas")) {
-                          return "⛽ Gas estimation failed. Try increasing gas limit or check network congestion.";
-                        } else if (lowerError.includes("nonce")) {
-                          return "🔄 Transaction nonce error. Please reset your wallet or try again.";
-                        } else if (lowerError.includes("allowance") || lowerError.includes("approval")) {
-                          return "🔐 Token allowance issue. Please approve the token spending and try again.";
-                        } else if (error.includes("code=")) {
-                          const codeMatch = error.match(/code=([A-Z_]+)/);
-                          return codeMatch ? `⚠️ Error Code: ${codeMatch[1]}` : error;
-                        } else if (error.includes(":")) {
-                          return `⚠️ ${error.split(":").pop()?.trim()}`;
-                        } else {
-                          return `⚠️ ${error}`;
-                        }
-                      })()}
-                    </div>
-                    <div className="text-xs text-gray-600 mb-3 p-2 bg-gray-50 rounded border">
-                      <strong>Original Error:</strong> {error}
-                    </div>
+                    <div className="text-sm font-medium text-red-800 mb-2">Error</div>
+                    <div className="text-xs text-red-600 mb-3">{error}</div>
                     <div className="mt-3 pt-2 border-t border-red-200">
                       <button 
-                          onClick={() => window.open('https://t.me/+YimKRR7wAkVmZGRk', '_blank')}
-                          className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                        >
+                        onClick={() => window.open('https://t.me/+YimKRR7wAkVmZGRk', '_blank')}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                      >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z"/>
                         </svg>
@@ -898,7 +893,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         <motion.div 
           ref={modalRef}
           onClick={handleModalClick}
-          className={`${spaceGrotesk.className} bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.1)] w-full max-w-md mx-auto overflow-hidden relative my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto scrollbar-hide`}
+          className={`${exo.className} bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.1)] w-full max-w-md mx-auto overflow-hidden relative my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto scrollbar-hide`}
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -940,12 +935,28 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                   <div className="inline-flex items-center px-3.5 py-1.5 bg-gradient-to-r from-[#81D7B4]/10 to-[#81D7B4]/5 backdrop-blur-sm rounded-full border border-[#81D7B4]/20 shadow-sm">
                     {isEth ? (
                       <>
-                        <Image src="/eth.png" alt="ETH" width={16} height={16} className="mr-2" />
+                        <Image
+                          src={ensureImageUrl(networkLogos?.ethereum?.logoUrl || networkLogos?.['ethereum']?.fallbackUrl || '/eth.png')}
+                          alt="ETH"
+                          width={16}
+                          height={16}
+                          className="mr-2"
+                        />
                         <span className="text-xs font-medium text-gray-700">ETH on {getNetworkName()}</span>
                       </>
                     ) : (
                       <>
-                        <Image src={currentNetwork === 'base' ? "/base.svg" : currentNetwork === 'lisk' ? "/lisk.png" : "/celo.png"} alt={getNetworkName()} width={16} height={16} className="mr-2" />
+                        <Image
+                          src={ensureImageUrl(
+                            networkLogos?.[currentNetwork]?.logoUrl ||
+                            networkLogos?.[currentNetwork]?.fallbackUrl ||
+                            '/default-network.png'
+                          )}
+                          alt={getNetworkName()}
+                          width={16}
+                          height={16}
+                          className="mr-2"
+                        />
                         <span className="text-xs font-medium text-gray-700">{getTokenNameDisplay()} on {getNetworkName()}</span>
                       </>
                     )}

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       code,
       redirect_uri: redirectUri,
       code_verifier: codeVerifier,
-      client_id: process.env.TWITTER_CLIENT_ID || ''
+      client_id: process.env.TWITTER_CLIENT_ID || process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || ''
     });
     
     const response = await fetch(tokenUrl, {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': `Basic ${Buffer.from(
-          `${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`
+          `${process.env.TWITTER_CLIENT_ID || process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || ''}:${process.env.TWITTER_CLIENT_SECRET || ''}`
         ).toString('base64')}`
       },
       body: params.toString()
@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
     
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Twitter token exchange failed:', errorData);
+      console.error('Twitter token exchange failed:', { errorData, params: params.toString(), redirectUri });
       return NextResponse.json(
-        { error: 'Failed to exchange code for token' },
+        { error: `Failed to exchange code for token` },
         { status: response.status }
       );
     }

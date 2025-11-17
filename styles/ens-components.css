@@ -151,7 +151,7 @@
 /* Dark Mode Support (if needed) */
 @media (prefers-color-scheme: dark) {
   .ens-name {
-    @apply text-gray-200;
+    @apply text-black;
   }
   
   .ens-name-small {
