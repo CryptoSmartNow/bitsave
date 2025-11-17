@@ -19,7 +19,7 @@ import ReferralTracker from '@/components/ReferralTracker';
 export const metadata: Metadata = {
   title: 'BitSave - Simplified Crypto Savings',
   description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
-  themeColor: '#ffffff',
+  metadataBase: new URL('https://bitsave.app'),
   openGraph: {
     title: 'BitSave - Simplified Crypto Savings',
     description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
@@ -57,7 +57,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  viewportFit: 'cover'
+  viewportFit: 'cover',
+  themeColor: '#ffffff'
 }
 
 export default function RootLayout({
