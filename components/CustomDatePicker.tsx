@@ -84,8 +84,7 @@ export default function CustomDatePicker({
           transition={{ duration: 0.3, delay: i * 0.05 }}
         >
           <span className="xs:hidden">{dayName.charAt(0)}</span>
-          <span className="hidden xs:block sm:hidden">{dayName.slice(0, 2)}</span>
-          <span className="hidden sm:block">{dayName}</span>
+          <span className="hidden xs:block">{dayName.slice(0, 2)}</span>
         </motion.div>
       )
     }
