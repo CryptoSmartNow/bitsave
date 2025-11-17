@@ -18,7 +18,7 @@ import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interacti
 import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { useSavingsData } from '@/hooks/useSavingsData';
-import { HiHome, HiAcademicCap, HiTruck, HiBriefcase, HiSun, HiCpuChip, HiHeart, HiRocketLaunch, HiOutlineDocumentText } from 'react-icons/hi2';
+import { HiHome, HiAcademicCap, HiTruck, HiBriefcase, HiSun, HiCpuChip, HiHeart, HiRocketLaunch, HiOutlineDocumentText, HiWallet, HiCurrencyDollar, HiKey, HiGlobeAlt, HiBolt, HiScale, HiArrowPath, HiLink, HiCheckCircle } from 'react-icons/hi2';
 import { FaGamepad } from 'react-icons/fa';
 import NetworkDetection from '@/components/NetworkDetection';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
@@ -76,9 +76,9 @@ const NETWORKS: NetworkConfig[] = [
     id: 'base',
     name: 'Base',
     chainId: 8453,
-    contractAddress: BASE_CONTRACT_ADDRESS,
+    contractAddress: CONTRACT_ADDRESS, 
     tokens: [
-      { symbol: 'USDC', address: BASE_CONTRACT_ADDRESS, decimals: 6 },
+      { symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals: 6 }, // Correct Base USDC address
       { symbol: 'USDGLO', address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
     ],
   },
@@ -183,10 +183,34 @@ const createSavingsGeneric = async ({
     } else if (typeof fetchSavingFee === 'function') {
       feeInWei = await fetchSavingFee(provider, network.contractAddress);
     }
-    if (!feeInWei) throw new Error('Could not fetch saving fee from contract.');
-    const joinTx = await contract.joinBitsave({ value: feeInWei });
-    await joinTx.wait();
-    userChildContractAddress = await contract.getUserChildContractAddress();
+    
+    // If fee fetching fails, try with a default fee or skip fee requirement
+    if (!feeInWei) {
+      console.warn('Could not fetch saving fee, trying with default fee or no fee');
+      // Try with a small default fee (0.001 ETH) or no fee
+      feeInWei = ethers.parseEther('0.001');
+    }
+    
+    try {
+      const joinTx = await contract.joinBitsave({ value: feeInWei });
+      await joinTx.wait();
+      userChildContractAddress = await contract.getUserChildContractAddress();
+    } catch (joinError: any) {
+      // If joinBitsave fails with fee, try without fee (some networks/contracts don't require it)
+      if (joinError?.message?.includes('revert') || joinError?.code === 'CALL_EXCEPTION') {
+        console.warn('joinBitsave with fee failed, trying without fee:', joinError.message);
+        try {
+          const joinTxNoFee = await contract.joinBitsave({ value: 0 });
+          await joinTxNoFee.wait();
+          userChildContractAddress = await contract.getUserChildContractAddress();
+        } catch (noFeeError) {
+          console.error('joinBitsave without fee also failed:', noFeeError);
+          throw noFeeError;
+        }
+      } else {
+        throw joinError;
+      }
+    }
   }
   const cleanAmount = amountRaw.replace(/[^0-9.]/g, '');
   const parsedAmount = parseFloat(cleanAmount);
@@ -207,6 +231,11 @@ const createSavingsGeneric = async ({
       feeInWei = await additionalOptions.getFeeFn(provider, network.contractAddress);
     } else if (typeof fetchSavingFee === 'function') {
       feeInWei = await fetchSavingFee(provider, network.contractAddress);
+    }
+    // If fee fetching fails, use a default fee or skip
+    if (!feeInWei && network.id !== 'celo') {
+      console.warn('Could not fetch saving fee for create transaction, using default');
+      feeInWei = ethers.parseEther('0.001'); // Default 0.001 ETH
     }
     if (feeInWei) txOptions = { ...txOptions, value: feeInWei };
   }
@@ -658,7 +687,9 @@ export default function CreateSavingsPage() {
         });
       }
       setSuccess(false);
-      setError(err instanceof Error ? err.message : String(err));
+      // Use contract error handler to extract precise contract error messages
+      const errorMessage = handleContractError(err, 'main');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -786,79 +817,221 @@ export default function CreateSavingsPage() {
 
       {/* Transaction Status Notifications */}
       {showTransactionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0">
-          <div className="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-md mx-auto overflow-hidden border border-[#81D7B4]/30 relative">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#229ED9]/10 rounded-full blur-2xl"></div>
-            <div className="p-5 sm:p-8 flex flex-col items-center">
-              {/* Success, Cancelled, or Error Icon */}
-              {success ? (
-                <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-green-500 flex items-center justify-center mb-4 sm:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              ) : error === 'Error creating savings user rejected' ? (
-                <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-yellow-200 flex items-center justify-center mb-4 sm:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              ) : (
-                <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-red-500 flex items-center justify-center mb-4 sm:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div className="bg-white/98 backdrop-blur-3xl rounded-3xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden border border-white/20 relative transform animate-slideUp">
+            {/* Animated background elements */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-white/30 pointer-events-none"></div>
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-red-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            
+            <div className="relative z-10 p-6 sm:p-8">
+              {/* Enhanced Icon Section */}
+              <div className="flex flex-col items-center mb-6 sm:mb-8">
+                {success ? (
+                  <div className="relative">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/25 animate-bounce">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 animate-ping opacity-20"></div>
+                  </div>
+                ) : error === 'Error creating savings user rejected' ? (
+                  <div className="relative">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-yellow-300 to-amber-400 flex items-center justify-center shadow-lg shadow-yellow-500/25">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-300 to-amber-400 animate-ping opacity-20"></div>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-lg shadow-red-500/25 animate-pulse">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400 to-rose-500 animate-ping opacity-20"></div>
+                  </div>
+                )}
+              </div>
 
-              {/* Title and Message */}
-              {success ? (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-bold text-center mb-1 sm:mb-2">Savings Plan Created!</h2>
-                  <p className="text-sm sm:text-base text-gray-500 text-center mb-5 sm:mb-8 max-w-xs sm:max-w-none mx-auto">
-                    Your Transaction to create your savings plan has been processed and is successful.
-                  </p>
-                </>
-              ) : error === 'Error creating savings user rejected' ? (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-bold text-center mb-1 sm:mb-2 text-yellow-700">Transaction Cancelled</h2>
-                  <p className="text-sm sm:text-base text-gray-500 text-center mb-5 sm:mb-8 max-w-xs sm:max-w-none mx-auto">
-                    You cancelled the transaction in your wallet. No changes were made.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-bold text-center mb-1 sm:mb-2 text-red-700">Savings Plan Creation Failed</h2>
-                  <p className="text-sm sm:text-base text-gray-500 text-center mb-5 sm:mb-8 max-w-xs sm:max-w-none mx-auto">
-                    {error && (typeof error === 'string' && error.toLowerCase().includes('user rejected')) ?
-                      "You cancelled the transaction in your wallet." :
-                      "Something went wrong with your savings creation. Please try again or contact our team if this keeps happening."
-                    }
-                  </p>
-                </>
-              )}
+              {/* Enhanced Title and Message */}
+              <div className="text-center space-y-3 mb-6 sm:mb-8">
+                {success ? (
+                  <>
+                    <h2 id="modal-title" className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      Success!
+                    </h2>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+                      Savings Plan Created
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed max-w-sm mx-auto">
+                      Your savings plan has been successfully created and is now active. Start building your financial future today!
+                    </p>
+                  </>
+                ) : error === 'Error creating savings user rejected' ? (
+                  <>
+                    <h2 id="modal-title" className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
+                      Transaction Cancelled
+                    </h2>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+                      No Changes Made
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed max-w-sm mx-auto">
+                      You cancelled the transaction in your wallet. Your savings plan was not created and no funds were transferred.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 id="modal-title" className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                      Transaction Failed
+                    </h2>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+                      Savings Plan Creation Failed
+                    </h3>
+                    
+                    {/* Enhanced Error Display */}
+                    <div className="bg-gradient-to-br from-red-50 to-rose-50 border-l-4 border-red-500 rounded-2xl p-5 sm:p-6 mt-6 backdrop-blur-sm shadow-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                        <span className="text-sm font-bold text-red-700 uppercase tracking-wider">Error Details</span>
+                      </div>
+                      <div className="bg-white/70 rounded-xl p-4 border border-red-100">
+                        <p className="text-sm text-red-800 font-medium leading-relaxed">
+                          {error && (typeof error === 'string' && error.toLowerCase().includes('user rejected')) ?
+                            "You cancelled the transaction in your wallet." :
+                            error || "Something went wrong with your savings creation. Please try again or contact our team if this keeps happening."
+                          }
+                        </p>
+                      </div>
+                    </div>
 
-              {/* Transaction ID Button (only on success or error, not on cancel) */}
+                    {/* Helpful Error Suggestions */}
+                    {error && error !== 'Error creating savings user rejected' && (
+                      <div className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc4a1]/10 border-l-4 border-[#81D7B4] rounded-2xl p-5 sm:p-6 mt-6 backdrop-blur-sm shadow-lg">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-3 h-3 rounded-full bg-[#81D7B4] animate-pulse"></div>
+                          <span className="text-sm font-bold text-[#81D7B4] uppercase tracking-wider">Suggestions</span>
+                        </div>
+                        <div className="space-y-4">
+                          {error.toLowerCase().includes('insufficient') || error.toLowerCase().includes('balance') ? (
+                            <div className="bg-white/70 rounded-xl p-4 border border-[#81D7B4]/20">
+                              <div className="flex items-center gap-3 mb-2">
+                                <HiWallet className="w-5 h-5 text-[#81D7B4]" />
+                                <p className="text-sm font-semibold text-gray-800">Check your wallet balance</p>
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed">Ensure you have enough tokens for the savings amount plus network fees.</p>
+                            </div>
+                          ) : error.toLowerCase().includes('allowance') || error.toLowerCase().includes('approval') ? (
+                            <div className="bg-white/70 rounded-xl p-4 border border-[#81D7B4]/20">
+                              <div className="flex items-center gap-3 mb-2">
+                                <HiKey className="w-5 h-5 text-[#81D7B4]" />
+                                <p className="text-sm font-semibold text-gray-800">Token approval required</p>
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed">You may need to approve the contract to spend your tokens first.</p>
+                            </div>
+                          ) : error.toLowerCase().includes('network') || error.toLowerCase().includes('chain') ? (
+                            <div className="bg-white/70 rounded-xl p-4 border border-[#81D7B4]/20">
+                              <div className="flex items-center gap-3 mb-2">
+                                <HiGlobeAlt className="w-5 h-5 text-[#81D7B4]" />
+                                <p className="text-sm font-semibold text-gray-800">Network connection issue</p>
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed">Try switching networks or check if you're connected to the correct blockchain.</p>
+                            </div>
+                          ) : error.toLowerCase().includes('gas') || error.toLowerCase().includes('fee') ? (
+                            <div className="bg-white/70 rounded-xl p-4 border border-[#81D7B4]/20">
+                              <div className="flex items-center gap-3 mb-2">
+                                <HiBolt className="w-5 h-5 text-[#81D7B4]" />
+                                <p className="text-sm font-semibold text-gray-800">Gas fee too low</p>
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed">The transaction may need higher gas fees. Try increasing the gas limit in your wallet.</p>
+                            </div>
+                          ) : error.toLowerCase().includes('limit') ? (
+                            <div className="bg-white/70 rounded-xl p-4 border border-[#81D7B4]/20">
+                              <div className="flex items-center gap-3 mb-2">
+                                <HiScale className="w-5 h-5 text-[#81D7B4]" />
+                                <p className="text-sm font-semibold text-gray-800">Amount limit exceeded</p>
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed">The savings amount may be too high or too low. Check the minimum/maximum limits.</p>
+                            </div>
+                          ) : (
+                            <div className="bg-white/70 rounded-xl p-4 border border-[#81D7B4]/20">
+                              <div className="flex items-center gap-3 mb-3">
+                                <HiArrowPath className="w-5 h-5 text-[#81D7B4]" />
+                                <p className="text-sm font-semibold text-gray-800">Try these steps:</p>
+                              </div>
+                              <ul className="text-xs text-gray-600 space-y-2">
+                                <li className="flex items-center gap-2">
+                                  <HiCheckCircle className="w-3 h-3 text-[#81D7B4] flex-shrink-0" />
+                                  <span>Refresh the page and try again</span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                  <HiCheckCircle className="w-3 h-3 text-[#81D7B4] flex-shrink-0" />
+                                  <span>Check your wallet connection</span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                  <HiCheckCircle className="w-3 h-3 text-[#81D7B4] flex-shrink-0" />
+                                  <span>Verify you have sufficient balance</span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                  <HiCheckCircle className="w-3 h-3 text-[#81D7B4] flex-shrink-0" />
+                                  <span>Ensure you're on the correct network</span>
+                                </li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Telegram Support Button for errors (excluding user rejected) */}
+                    {error && error !== 'Error creating savings user rejected' && (
+                      <div className="mt-6">
+                        <button 
+                          onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
+                          className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#0088cc] to-[#006ba1] rounded-2xl text-white font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
+                          aria-label="Get help on Telegram"
+                        >
+                          <span className="absolute inset-0 bg-white/20 rounded-2xl transform scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                          <svg className="w-5 h-5 mr-2 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z"/>
+                          </svg>
+                          <span className="relative z-10">Get Help on Telegram</span>
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Enhanced Transaction ID Button (only on success or error, not on cancel) */}
               {txHash && (success || (error && error !== 'Error creating savings user rejected')) && (
-                <button
-                  className="w-full py-2.5 sm:py-3 border border-gray-300 rounded-full text-gray-700 text-sm sm:text-base font-medium mb-3 sm:mb-4 hover:bg-gray-50 transition-colors"
-                  onClick={() => window.open(
-                    chain === 'celo'
-                      ? `https://explorer.celo.org/tx/${txHash}`
-                      : chain === 'lisk'
-                      ? `https://blockscout.lisk.com/tx/${txHash}`
-                      : chain === 'avalanche'
-                      ? `https://snowtrace.io/tx/${txHash}`
-                      : `https://basescan.org/tx/${txHash}`,
-                    '_blank'
-                  )}
-                >
-                  View Transaction ID
-                </button>
+                <div className="mb-4">
+                  <button
+                    className="group w-full py-3 sm:py-3.5 border-2 border-gray-200 rounded-2xl text-gray-700 text-sm sm:text-base font-semibold hover:border-gray-300 hover:bg-gray-50/50 transition-all duration-300 flex items-center justify-center gap-2"
+                    aria-label="View transaction on block explorer"
+                    onClick={() => window.open(
+                      chain === 'celo'
+                        ? `https://explorer.celo.org/tx/${txHash}`
+                        : chain === 'lisk'
+                        ? `https://blockscout.lisk.com/tx/${txHash}`
+                        : chain === 'avalanche'
+                        ? `https://snowtrace.io/tx/${txHash}`
+                        : `https://basescan.org/tx/${txHash}`,
+                      '_blank'
+                    )}
+                  >
+                    <svg className="w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View on Block Explorer
+                  </button>
+                </div>
               )}
 
-              {/* Tweet Button (only on success) */}
+              {/* Enhanced Tweet Button (only on success) */}
               {success && (() => {
                 const referralLink = referralData?.referralLink || 'https://bitsave.io';
                 // Determine if this is first-time savings based on current deposits count
@@ -874,31 +1047,47 @@ export default function CreateSavingsPage() {
                 });
                 
                 return (
-                  <a
-                    href={tweetProps.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => {
-                      // Redirect to dashboard after a short delay
-                      setTimeout(() => {
-                        window.location.href = '/dashboard';
-                      }, 2000);
-                    }}
-                    className="w-full py-2.5 sm:py-3 bg-black text-white rounded-full text-sm sm:text-base font-semibold flex items-center justify-center gap-2 mb-3 sm:mb-4 hover:bg-gray-900 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.209c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
-                    Post on X
-                  </a>
+                  <div className="mb-4">
+                    <a
+                      href={tweetProps.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        // Redirect to dashboard after a short delay
+                        setTimeout(() => {
+                          window.location.href = '/dashboard';
+                        }, 2000);
+                      }}
+                      className="group w-full py-3 sm:py-3.5 bg-gradient-to-r from-black to-gray-800 text-white rounded-2xl text-sm sm:text-base font-semibold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-gray-500/25 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.209c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                      </svg>
+                      <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                        Share on X
+                      </span>
+                    </a>
+                  </div>
                 );
               })()}
 
-              {/* Action Buttons */}
+              {/* Enhanced Action Buttons */}
               <div className="flex w-full gap-3 sm:gap-4 flex-col sm:flex-row">
                 <button
-                  className={`w-full py-2.5 sm:py-3 ${success ? 'bg-[#81D7B4] hover:bg-[#6bc4a1]' : error === 'Error creating savings user rejected' ? 'bg-yellow-400 hover:bg-yellow-500 text-gray-900' : 'bg-gray-700 hover:bg-gray-800'} rounded-full text-white text-sm sm:text-base font-medium transition-colors`}
+                  className={`group relative w-full py-3 sm:py-3.5 rounded-2xl text-white text-sm sm:text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
+                    success 
+                      ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] hover:shadow-lg hover:shadow-green-500/25' 
+                      : error === 'Error creating savings user rejected' 
+                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 hover:shadow-lg hover:shadow-yellow-500/25' 
+                      : 'bg-gradient-to-r from-gray-700 to-gray-800 hover:shadow-lg hover:shadow-gray-500/25'
+                  }`}
                   onClick={handleCloseTransactionModal}
+                  aria-label="Close modal"
                 >
-                  {success ? 'Go to Dashboard' : error === 'Error creating savings user rejected' ? 'Close' : 'Close'}
+                  <span className="absolute inset-0 bg-white/20 rounded-2xl transform scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                  <span className="relative z-10">
+                    {success ? '🎉 Go to Dashboard' : error === 'Error creating savings user rejected' ? 'Close' : 'Close'}
+                  </span>
                 </button>
               </div>
             </div>

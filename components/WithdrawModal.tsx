@@ -420,8 +420,8 @@ const WithdrawModal = memo(function WithdrawModal({
                   <div className="text-xs text-red-600 mb-3">{error}</div>
                   <div className="mt-3 pt-2 border-t border-red-200">
                     <button 
-                      onClick={() => window.open('https://t.me/+YimKRR7wAkVmZGRk', '_blank')}
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                      onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
+                      className="w-full py-2.5 sm:py-3 bg-[#0088cc] rounded-full text-white text-sm sm:text-base font-medium hover:bg-[#006ba1] transition-colors flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z"/>
