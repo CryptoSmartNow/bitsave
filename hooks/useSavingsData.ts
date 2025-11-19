@@ -190,6 +190,8 @@ export function useSavingsData(): UseSavingsDataReturn {
       return null;
     }
     
+    console.log(`=== Starting Base savings debug for user: ${address} ===`);
+    
     try {
       // Set appropriate loading state
       if (isBackgroundFetch) {
@@ -216,6 +218,18 @@ export function useSavingsData(): UseSavingsDataReturn {
         return 'https://forno.celo.org';
       })();
       const provider = new ethers.JsonRpcProvider(rpcUrl);
+      
+      console.log(`Network configuration: chainId=${chainId}, chainIdBig=${chainIdBig}, isBase=${chainIdBig === BASE_CHAIN_ID}, rpcUrl=${rpcUrl}`);
+      
+      // Test Base network RPC connection
+      if (chainIdBig === BASE_CHAIN_ID) {
+        try {
+          const blockNumber = await provider.getBlockNumber();
+          console.log(`Base network RPC test successful - Current block number: ${blockNumber}`);
+        } catch (rpcError) {
+          console.error(`Base network RPC connection failed:`, rpcError);
+        }
+      }
       
       // Fetch prices concurrently
       const [currentEthPrice, goodDollarPrice] = await Promise.all([
@@ -245,12 +259,15 @@ export function useSavingsData(): UseSavingsDataReturn {
         ? HEDERA_CONTRACT_ADDRESS
         : AVALANCHE_CONTRACT_ADDRESS;
       
+      console.log(`Contract address selection: chainIdBig=${chainIdBig}, BASE_CHAIN_ID=${BASE_CHAIN_ID}, isBase=${chainIdBig === BASE_CHAIN_ID}, contractAddress=${contractAddress}`);
+      
       // Initialize contract
       const contract = new ethers.Contract(contractAddress, BitSaveABI, provider);
       
       // Get user's child contract address with timeout
       let userChildContractAddress;
       try {
+        console.log(`Fetching child contract address for user: ${address} on Base network: ${chainIdBig === BASE_CHAIN_ID}`);
         // Pass explicit from override to preserve msg.sender even without a signer
         const contractPromise = (fromAddress
           ? (contract as any).getUserChildContractAddress({ from: fromAddress })
@@ -260,9 +277,17 @@ export function useSavingsData(): UseSavingsDataReturn {
         );
         
         userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
+        console.log(`Child contract address result: ${userChildContractAddress}`);
+        
+        // Additional Base network debugging
+        if (chainIdBig === BASE_CHAIN_ID) {
+          console.log(`Base network specific: Child contract address retrieved successfully`);
+          console.log(`Base network: Checking if address is valid zero address: ${userChildContractAddress === ethers.ZeroAddress}`);
+        }
         
         // Handle case where user hasn't created a savings plan yet
         if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
+          console.log('No child contract found for user - returning empty savings data');
           // Reset loading states before returning
           if (isBackgroundFetch) {
             setIsBackgroundLoading(false);
@@ -275,6 +300,17 @@ export function useSavingsData(): UseSavingsDataReturn {
       } catch (error) {
         console.error("Error getting user child contract:", handleContractError(error));
         
+        // Base network specific error logging
+        if (chainIdBig === BASE_CHAIN_ID) {
+          console.error(`Base network specific error:`, {
+            error: error,
+            userAddress: address,
+            contractAddress: contractAddress,
+            rpcUrl: rpcUrl,
+            chainId: chainIdBig
+          });
+        }
+        
         // Reset loading states before returning
         if (isBackgroundFetch) {
           setIsBackgroundLoading(false);
@@ -286,13 +322,16 @@ export function useSavingsData(): UseSavingsDataReturn {
       }
       
       // Initialize child contract
+      console.log(`Creating child contract instance for Base network: Address=${userChildContractAddress}, ChainId=${chainIdBig}`);
       const childContract = new ethers.Contract(
         userChildContractAddress,
         childContractABI,
         provider
       );
+      console.log(`Child contract created successfully for Base network`);
       
       // Fetch savings names with timeout
+      console.log(`Fetching savings names from child contract: ${userChildContractAddress} for Base network: ${chainIdBig === BASE_CHAIN_ID}`);
       const savingsNamesPromise = (fromAddress
         ? (childContract as any).getSavingsNames({ from: fromAddress })
         : childContract.getSavingsNames());
@@ -300,8 +339,46 @@ export function useSavingsData(): UseSavingsDataReturn {
         setTimeout(() => reject(new Error('Savings names timeout')), 8000)
       );
       
-      const savingsNamesObj = await Promise.race([savingsNamesPromise, savingsTimeoutPromise]);
-      const savingsNamesArray = savingsNamesObj?.savingsNames || [];
+      let savingsNamesArray: string[] = [];
+      try {
+        const savingsNamesObj = await Promise.race([savingsNamesPromise, savingsTimeoutPromise]);
+        console.log(`Savings names response for Base network:`, savingsNamesObj);
+        savingsNamesArray = savingsNamesObj?.savingsNames || [];
+      } catch (timeoutError) {
+        console.error('Timeout fetching savings names:', timeoutError);
+        // If timeout, try to use cached data if available
+        const cachedData = getCachedSavingsData(address, chainId.toString());
+        if (cachedData) {
+          console.log('Using cached data due to timeout');
+          return cachedData;
+        }
+        // If no cached data, continue with empty array
+        savingsNamesArray = [];
+      }
+      
+      console.log(`Processing ${savingsNamesArray.length} savings names for user ${address} on Base network: ${chainIdBig === BASE_CHAIN_ID}`);
+      console.log(`Savings names list:`, savingsNamesArray);
+      if (savingsNamesArray.length === 0) {
+        console.log(`No savings names found for user ${address} on Base network: ${chainIdBig === BASE_CHAIN_ID}`);
+        console.log(`This could mean: 1) User has no savings, 2) Child contract exists but no savings created, 3) Contract call failed silently`);
+        
+        // Reset loading states before returning
+        if (isBackgroundFetch) {
+          setIsBackgroundLoading(false);
+        } else {
+          setIsLoading(false);
+        }
+        
+        return {
+          totalLocked: "0.00",
+          deposits: 0,
+          rewards: "0.00",
+          currentPlans: [],
+          completedPlans: []
+        };
+      }
+      
+      console.log(`Processing ${savingsNamesArray.length} savings names:`, savingsNamesArray);
       
       // Initialize processing variables
       const currentPlans = [];
@@ -316,14 +393,19 @@ export function useSavingsData(): UseSavingsDataReturn {
         savingName && typeof savingName === "string" && savingName !== "" && !processedPlanNames.has(savingName)
       );
       
+      console.log(`Valid savings names: ${validSavingNames.length} out of ${savingsNamesArray.length}`);
+      console.log(`Valid names:`, validSavingNames);
+      
       // Process savings plans in batches
       for (let i = 0; i < validSavingNames.length; i += BATCH_SIZE) {
         const batch = validSavingNames.slice(i, i + BATCH_SIZE);
+        console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}: ${batch.length} plans`);
         
         const batchPromises = batch.map(async (savingName: string) => {
           try {
             processedPlanNames.add(savingName);
             
+            console.log(`Fetching saving data for "${savingName}" on Base network: ${chainIdBig === BASE_CHAIN_ID}`);
             const savingDataPromise = (fromAddress
               ? (childContract as any).getSaving(savingName, { from: fromAddress })
               : childContract.getSaving(savingName));
@@ -332,6 +414,20 @@ export function useSavingsData(): UseSavingsDataReturn {
             );
             
             const savingData = await Promise.race([savingDataPromise, timeoutPromise]);
+            console.log(`Saving data result for "${savingName}" on Base network:`, savingData);
+            
+            console.log(`Contract response for "${savingName}":`, {
+              savingName,
+              savingData: savingData ? {
+                isValid: savingData.isValid,
+                amount: savingData.amount?.toString(),
+                tokenId: savingData.tokenId,
+                startTime: savingData.startTime?.toString(),
+                maturityTime: savingData.maturityTime?.toString(),
+                penaltyPercentage: savingData.penaltyPercentage?.toString()
+              } : 'null'
+            });
+            
             return { savingName, savingData };
           } catch (err) {
             console.error(`Failed to fetch data for "${savingName}":`, handleContractError(err));
@@ -342,15 +438,38 @@ export function useSavingsData(): UseSavingsDataReturn {
         const batchResults = await Promise.allSettled(batchPromises);
         
         // Process batch results
+        console.log(`Batch ${Math.floor(i/BATCH_SIZE) + 1} results:`, batchResults.map(r => r.status));
+        
+        // Log any rejected promises for debugging
+        const rejectedResults = batchResults.filter(r => r.status === 'rejected');
+        if (rejectedResults.length > 0) {
+          console.warn(`Batch ${Math.floor(i/BATCH_SIZE) + 1} had ${rejectedResults.length} rejected promises`);
+        }
+        
         for (const result of batchResults) {
           if (result.status === 'fulfilled' && result.value) {
             const { savingName, savingData } = result.value;
             
             try {
-              if (!savingData?.isValid) continue;
+              // More lenient validation - allow savings even if isValid is false
+              // This helps with older contracts or edge cases
+              if (savingData === null || savingData === undefined) {
+                console.warn(`Skipping saving "${savingName}": No data returned from contract`);
+                console.log(`Saving data for "${savingName}":`, savingData);
+                continue;
+              }
               
-              // Determine token properties
-              const tokenId = savingData.tokenId;
+              // Log saving data for debugging
+              console.log(`Processing saving "${savingName}":`, {
+                isValid: savingData.isValid,
+                amount: savingData.amount?.toString(),
+                startTime: savingData.startTime?.toString(),
+                maturityTime: savingData.maturityTime?.toString(),
+                tokenId: savingData.tokenId
+              });
+              
+              // Determine token properties with error handling
+              const tokenId = savingData.tokenId || ethers.ZeroAddress;
               const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
               
               let tokenName = "USDC";
@@ -407,16 +526,58 @@ export function useSavingsData(): UseSavingsDataReturn {
                 }
               }
               
-              // Format amounts
-              const targetFormatted = ethers.formatUnits(savingData.amount, decimals);
-              const currentFormatted = ethers.formatUnits(savingData.amount, decimals);
+              // Format amounts with error handling
+              let targetFormatted = "0";
+              let currentFormatted = "0";
               
-              // Calculate progress
-              const now = Date.now();
-              const startTime = Number(savingData.startTime) * 1000;
-              const maturityTime = Number(savingData.maturityTime) * 1000;
-              const progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
-              const penaltyPercentage = Number(savingData.penaltyPercentage);
+              try {
+                if (savingData.amount) {
+                  targetFormatted = ethers.formatUnits(savingData.amount, decimals);
+                  currentFormatted = ethers.formatUnits(savingData.amount, decimals);
+                } else {
+                  console.warn(`Saving "${savingName}" has no amount field`);
+                }
+              } catch (error) {
+                console.error(`Error formatting amount for saving "${savingName}":`, error);
+                targetFormatted = "0";
+                currentFormatted = "0";
+              }
+              
+              // Calculate progress with better error handling
+              const now = Math.floor(Date.now() / 1000); // Convert to seconds to match contract time format
+              const startTime = savingData.startTime ? Number(savingData.startTime) : now;
+              const maturityTime = savingData.maturityTime ? Number(savingData.maturityTime) : startTime + (30 * 24 * 60 * 60); // Default 30 days if not provided
+              
+              // Debug time values
+              console.log(`Time debug for "${savingName}":`, {
+                now: new Date(now * 1000).toISOString(),
+                startTime: new Date(startTime * 1000).toISOString(),
+                maturityTime: new Date(maturityTime * 1000).toISOString(),
+                timeDiff: maturityTime - startTime,
+                nowVsMaturity: now - maturityTime,
+                nowSeconds: now,
+                startSeconds: startTime,
+                maturitySeconds: maturityTime
+              });
+              
+              // Handle edge cases for progress calculation
+              let progress = 0;
+              if (maturityTime <= startTime) {
+                // If maturity time is same as or before start time, consider it completed
+                progress = 100;
+                console.log(`Edge case: maturityTime <= startTime, setting progress to 100%`);
+              } else if (now >= maturityTime) {
+                // If current time is past maturity, it's completed
+                progress = 100;
+                console.log(`Edge case: now >= maturityTime, setting progress to 100%`);
+              } else {
+                // Normal progress calculation
+                const timeProgress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
+                progress = timeProgress;
+                console.log(`Normal progress calculation: ${timeProgress}%`);
+              }
+              
+              const penaltyPercentage = savingData.penaltyPercentage ? Number(savingData.penaltyPercentage) : 0;
               
               // Calculate USD value
               if (isEth) {
@@ -432,7 +593,7 @@ export function useSavingsData(): UseSavingsDataReturn {
               
               totalDeposits++;
               
-              // Create plan data
+              // Create plan data with validation
               const planData = {
                 id: savingName.trim(),
                 address: userChildContractAddress,
@@ -441,17 +602,28 @@ export function useSavingsData(): UseSavingsDataReturn {
                 targetAmount: targetFormatted,
                 progress,
                 isEth,
-                startTime: startTime / 1000,
-                maturityTime: maturityTime / 1000,
+                startTime: startTime, // Already in seconds
+                maturityTime: maturityTime, // Already in seconds
                 penaltyPercentage,
                 tokenName,
                 tokenLogo
               };
               
+              // Validate required fields before adding to arrays
+              if (!planData.id || !planData.name) {
+                console.warn(`Skipping saving "${savingName}": Missing required fields (id or name)`);
+                continue;
+              }
+              
               // Categorize plan
-              if (progress >= 100 || now >= maturityTime) {
+              const isCompleted = progress >= 100 || now >= maturityTime;
+              console.log(`Categorizing "${savingName}": progress=${progress}%, nowSeconds=${now}, maturitySeconds=${maturityTime}, now>=maturity=${now >= maturityTime}, isCompleted=${isCompleted}`);
+              
+              if (isCompleted) {
+                console.log(`Adding "${savingName}" to completed plans`);
                 completedPlans.push(planData);
               } else {
+                console.log(`Adding "${savingName}" to current plans`);
                 currentPlans.push(planData);
               }
             } catch (err) {
@@ -465,6 +637,20 @@ export function useSavingsData(): UseSavingsDataReturn {
       currentPlans.sort((a, b) => b.startTime! - a.startTime!);
       completedPlans.sort((a, b) => b.startTime! - a.startTime!);
       
+      console.log(`Processed ${validSavingNames.length} savings: ${currentPlans.length} current, ${completedPlans.length} completed`);
+      console.log(`Current plans:`, currentPlans.map(p => ({id: p.id, name: p.name, progress: p.progress, startTime: p.startTime, maturityTime: p.maturityTime})));
+      console.log(`Completed plans:`, completedPlans.map(p => ({id: p.id, name: p.name, progress: p.progress, startTime: p.startTime, maturityTime: p.maturityTime})));
+      
+      // Base network specific final summary
+      if (chainIdBig === BASE_CHAIN_ID) {
+        console.log(`=== Base Network Summary for user ${address} ===`);
+        console.log(`Total savings processed: ${validSavingNames.length}`);
+        console.log(`Current plans count: ${currentPlans.length}`);
+        console.log(`Completed plans count: ${completedPlans.length}`);
+        console.log(`User child contract: ${userChildContractAddress}`);
+        console.log(`=== End Base Network Summary ===`);
+      }
+      
       // Calculate rewards
       const totalBtsRewards = (totalUsdValue * 0.005 * 1000).toFixed(2);
       
@@ -477,12 +663,28 @@ export function useSavingsData(): UseSavingsDataReturn {
         completedPlans
       };
       
+      console.log(`Final data summary: ${totalDeposits} total deposits, ${currentPlans.length} current plans, ${completedPlans.length} completed plans, $${totalUsdValue.toFixed(2)} total locked`);
+      console.log(`Final current plans count: ${finalData.currentPlans.length}`);
+      console.log(`Final completed plans count: ${finalData.completedPlans.length}`);
+      
+      // Final Base network debug completion
+      if (chainIdBig === BASE_CHAIN_ID) {
+        console.log(`=== Base Network Debug Complete for user ${address} ===`);
+      }
+      
       return finalData;
       
     } catch (error: any) {
       const code = error?.code;
       const msg = String(error?.message || '').toLowerCase();
       const userRejected = code === 4001 || code === 'ACTION_REJECTED' || msg.includes('rejected') || msg.includes('denied');
+      
+      console.error('Error in fetchSavingsData:', {
+        code,
+        message: error?.message,
+        stack: error?.stack,
+        error: error
+      });
       if (userRejected) {
         // Silent fallback when user cancels wallet interaction; use default data
         console.warn('Savings fetch: user cancelled wallet interaction, using default data');
@@ -529,18 +731,30 @@ export function useSavingsData(): UseSavingsDataReturn {
       const needsRefresh = needsBackgroundRefresh(address, networkChainId);
       
       if (cachedData && !forceRefresh && !needsRefresh) {
+        console.log(`Using cached savings data for user ${address} on chain ${networkChainId}`);
+        if (networkChainId === '8453') {
+          console.log(`Base network: Using cached data - ${cachedData.currentPlans.length} current, ${cachedData.completedPlans.length} completed plans`);
+        }
         setSavingsData(cachedData);
-        setIsLoading(false); // ✅ FIXED: Set loading to false when using cached data
+        setIsLoading(false); 
         setError(null);
         return;
       }
     }
     
     // No cached data or forced refresh - fetch from blockchain
+    console.log(`Fetching fresh savings data for user ${address} on chain ${networkChainId}`);
+    if (networkChainId === '8453') {
+      console.log(`Base network: Fetching fresh data from blockchain`);
+    }
     
     const freshData = await fetchSavingsDataFromBlockchain(false);
     
     if (freshData && isMountedRef.current) {
+      console.log(`Fresh data received for user ${address} on chain ${networkChainId}`);
+      if (networkChainId === '8453') {
+        console.log(`Base network fresh data: ${freshData.currentPlans.length} current, ${freshData.completedPlans.length} completed plans`);
+      }
       setSavingsData(freshData);
       cacheSavingsData(freshData, address, networkChainId);
     } else if (!freshData && isMountedRef.current) {
