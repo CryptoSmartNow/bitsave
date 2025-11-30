@@ -50,7 +50,7 @@ const AVALANCHE_CHAIN_ID = BigInt(43114);
 const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
   "0x765de816845861e75a25fca122bb6898b8b1282a": { name: "cUSD", decimals: 18, logo: "/cusd.png" },
   "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3": { name: "USDGLO", decimals: 18, logo: "/usdglo.png" },
-  "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdc.png" },
+  "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdclogo.png" },
   "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" }
 };
 
@@ -406,7 +406,7 @@ export function useSavingsData(): UseSavingsDataReturn {
 
               let tokenName = "USDC";
               let decimals = 6;
-              let tokenLogo = '/usdc.png';
+              let tokenLogo = '/usdclogo.png';
 
               if (isEth) {
                 tokenName = "ETH";
@@ -427,7 +427,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                 if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
                   tokenName = "USDC";
                   decimals = 6;
-                  tokenLogo = '/usdc.png';
+                  tokenLogo = '/usdclogo.png';
                 } else if (tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
                   tokenName = "USDGLO";
                   decimals = 18;
@@ -437,7 +437,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                 if (tokenId.toLowerCase() === "0xf242275d3a6527d877f2c927a82d9b057609cc71") {
                   tokenName = "USDC";
                   decimals = 6;
-                  tokenLogo = '/usdc.png';
+                  tokenLogo = '/usdclogo.png';
                 }
               } else if (chainIdBig === HEDERA_CHAIN_ID) {
                 const tokenInfo = HEDERA_TOKEN_MAP[(tokenId as string).toLowerCase()];
@@ -454,7 +454,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                 if (tokenId.toLowerCase() === AVALANCHE_USDC_E) {
                   tokenName = 'USDC';
                   decimals = 6;
-                  tokenLogo = '/usdc.png';
+                  tokenLogo = '/usdclogo.png';
                 }
               }
 

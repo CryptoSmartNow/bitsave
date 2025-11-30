@@ -76,7 +76,7 @@ const NETWORKS: NetworkConfig[] = [
     id: 'base',
     name: 'Base',
     chainId: 8453,
-    contractAddress: CONTRACT_ADDRESS, 
+    contractAddress: CONTRACT_ADDRESS,
     tokens: [
       { symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals: 6 }, // Correct Base USDC address
       { symbol: 'USDGLO', address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
@@ -183,14 +183,14 @@ const createSavingsGeneric = async ({
     } else if (typeof fetchSavingFee === 'function') {
       feeInWei = await fetchSavingFee(provider, network.contractAddress);
     }
-    
+
     // If fee fetching fails, try with a default fee or skip fee requirement
     if (!feeInWei) {
       console.warn('Could not fetch saving fee, trying with default fee or no fee');
       // Try with a small default fee (0.001 ETH) or no fee
       feeInWei = ethers.parseEther('0.001');
     }
-    
+
     try {
       const joinTx = await contract.joinBitsave({ value: feeInWei });
       await joinTx.wait();
@@ -325,7 +325,7 @@ export default function CreateSavingsPage() {
   const [isConnected, setIsConnected] = useState(false)
   const [termsAgreed, setTermsAgreed] = useState(false)
   const [penaltiesExpanded, setPenaltiesExpanded] = useState(false)
-  
+
 
 
   interface DayRange {
@@ -355,7 +355,7 @@ export default function CreateSavingsPage() {
     amount: '',
     endDate: ''
   })
-  
+
   // Network logos state
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
   const [isLoadingLogos, setIsLoadingLogos] = useState(true);
@@ -410,8 +410,8 @@ export default function CreateSavingsPage() {
               params: [{ chainId: '0x2105' }], // Base chainId in hex (8453)
             });
           } catch (switchError: unknown) {
-        // This error code indicates that the chain has not been added to MetaMask
-        if ((switchError as { code: number }).code === 4902) {
+            // This error code indicates that the chain has not been added to MetaMask
+            if ((switchError as { code: number }).code === 4902) {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
@@ -435,7 +435,7 @@ export default function CreateSavingsPage() {
               params: [{ chainId: '0xA4EC' }], // Celo chainId in hex (42220)
             });
           } catch (switchError: unknown) {
-        if ((switchError as { code: number }).code === 4902) {
+            if ((switchError as { code: number }).code === 4902) {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
@@ -459,7 +459,7 @@ export default function CreateSavingsPage() {
               params: [{ chainId: '0x46F' }], // Lisk chainId in hex (1135)
             });
           } catch (switchError: unknown) {
-        if ((switchError as { code: number }).code === 4902) {
+            if ((switchError as { code: number }).code === 4902) {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
@@ -483,7 +483,7 @@ export default function CreateSavingsPage() {
               params: [{ chainId: '0xA86A' }], // Avalanche chainId in hex (43114)
             });
           } catch (switchError: unknown) {
-        if ((switchError as { code: number }).code === 4902) {
+            if ((switchError as { code: number }).code === 4902) {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
@@ -508,44 +508,44 @@ export default function CreateSavingsPage() {
   };
 
   const chains = useMemo(() => [
-    { 
-      id: 'base', 
-      name: 'Base', 
-      logo: networkLogos['base']?.logoUrl || '/base.svg', 
-      color: 'bg-[#81D7B4]/10', 
-      textColor: 'text-[#81D7B4]' 
+    {
+      id: 'base',
+      name: 'Base',
+      logo: networkLogos['base']?.logoUrl || '/base.svg',
+      color: 'bg-[#81D7B4]/10',
+      textColor: 'text-[#81D7B4]'
     },
-    { 
-      id: 'celo', 
-      name: 'Celo', 
-      logo: networkLogos['celo']?.logoUrl || '/celo.png', 
-      color: 'bg-green-100', 
-      textColor: 'text-green-600', 
-      active: true 
+    {
+      id: 'celo',
+      name: 'Celo',
+      logo: networkLogos['celo']?.logoUrl || '/celo.png',
+      color: 'bg-green-100',
+      textColor: 'text-green-600',
+      active: true
     },
-    { 
-      id: 'lisk', 
-      name: 'Lisk', 
-      logo: networkLogos['lisk']?.logoUrl || '/lisk-logo.png', 
-      color: 'bg-purple-100', 
-      textColor: 'text-purple-600', 
-      active: true 
+    {
+      id: 'lisk',
+      name: 'Lisk',
+      logo: networkLogos['lisk']?.logoUrl || '/lisk-logo.png',
+      color: 'bg-purple-100',
+      textColor: 'text-purple-600',
+      active: true
     },
-    { 
-      id: 'avalanche', 
-      name: 'Avalanche', 
-      logo: networkLogos['avalanche']?.logoUrl || '/eth.png', 
-      color: 'bg-red-100', 
-      textColor: 'text-red-600', 
-      active: true 
+    {
+      id: 'avalanche',
+      name: 'Avalanche',
+      logo: networkLogos['avalanche']?.logoUrl || '/eth.png',
+      color: 'bg-red-100',
+      textColor: 'text-red-600',
+      active: true
     },
-    { 
-      id: 'solana', 
-      name: 'Solana', 
-      logo: networkLogos['solana']?.logoUrl || '/solana.png', 
-      color: 'bg-purple-100', 
-      textColor: 'text-purple-600', 
-      isComingSoon: true 
+    {
+      id: 'solana',
+      name: 'Solana',
+      logo: networkLogos['solana']?.logoUrl || '/solana.png',
+      color: 'bg-purple-100',
+      textColor: 'text-purple-600',
+      isComingSoon: true
     },
   ], [networkLogos]);
   const penalties = ['10%', '20%', '30%']
@@ -710,7 +710,7 @@ export default function CreateSavingsPage() {
 
   useEffect(() => {
     setMounted(true)
-    
+
     // Track page visit
     if (address) {
       trackPageVisit('/dashboard/create-savings', { walletAddress: address });
@@ -807,7 +807,7 @@ export default function CreateSavingsPage() {
     <div className={`${exo.className} min-h-screen bg-gradient-to-b from-white to-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden`}>
       {/* Network Detection Component */}
       <NetworkDetection />
-      
+
       {/* Enhanced decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed top-1/4 -left-20 w-60 h-60 bg-[#81D7B4]/5 rounded-full blur-3xl"></div>
@@ -823,7 +823,7 @@ export default function CreateSavingsPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-white/30 pointer-events-none"></div>
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-red-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-            
+
             <div className="relative z-10 p-6 sm:p-8">
               {/* Enhanced Icon Section */}
               <div className="flex flex-col items-center mb-6 sm:mb-8">
@@ -891,7 +891,7 @@ export default function CreateSavingsPage() {
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
                       Savings Plan Creation Failed
                     </h3>
-                    
+
                     {/* Enhanced Error Display */}
                     <div className="bg-gradient-to-br from-red-50 to-rose-50 border-l-4 border-red-500 rounded-2xl p-5 sm:p-6 mt-6 backdrop-blur-sm shadow-lg">
                       <div className="flex items-center gap-3 mb-3">
@@ -985,18 +985,18 @@ export default function CreateSavingsPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Telegram Support Button for errors (excluding user rejected) */}
                     {error && error !== 'Error creating savings user rejected' && (
                       <div className="mt-6">
-                        <button 
+                        <button
                           onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
                           className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#0088cc] to-[#006ba1] rounded-2xl text-white font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
                           aria-label="Get help on Telegram"
                         >
                           <span className="absolute inset-0 bg-white/20 rounded-2xl transform scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                           <svg className="w-5 h-5 mr-2 relative z-10" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z"/>
+                            <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z" />
                           </svg>
                           <span className="relative z-10">Get Help on Telegram</span>
                         </button>
@@ -1016,10 +1016,10 @@ export default function CreateSavingsPage() {
                       chain === 'celo'
                         ? `https://explorer.celo.org/tx/${txHash}`
                         : chain === 'lisk'
-                        ? `https://blockscout.lisk.com/tx/${txHash}`
-                        : chain === 'avalanche'
-                        ? `https://snowtrace.io/tx/${txHash}`
-                        : `https://basescan.org/tx/${txHash}`,
+                          ? `https://blockscout.lisk.com/tx/${txHash}`
+                          : chain === 'avalanche'
+                            ? `https://snowtrace.io/tx/${txHash}`
+                            : `https://basescan.org/tx/${txHash}`,
                       '_blank'
                     )}
                   >
@@ -1038,14 +1038,14 @@ export default function CreateSavingsPage() {
                 // Since we just created a new savings, the count would be the previous count
                 const isFirstTime = savingsData.deposits === 0;
                 const transactionType = isFirstTime ? 'first-time-saving' : 'subsequent-saving';
-                
+
                 const tweetProps = getTweetButtonProps(transactionType, {
                   currency: currency,
                   amount: amount,
                   referralLink: referralLink,
                   userTransactionCount: savingsData.deposits
                 });
-                
+
                 return (
                   <div className="mb-4">
                     <a
@@ -1061,7 +1061,7 @@ export default function CreateSavingsPage() {
                       className="group w-full py-3 sm:py-3.5 bg-gradient-to-r from-black to-gray-800 text-white rounded-2xl text-sm sm:text-base font-semibold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-gray-500/25 transition-all duration-300 transform hover:scale-105"
                     >
                       <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.209c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.209c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                       </svg>
                       <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
                         Share on X
@@ -1074,13 +1074,12 @@ export default function CreateSavingsPage() {
               {/* Enhanced Action Buttons */}
               <div className="flex w-full gap-3 sm:gap-4 flex-col sm:flex-row">
                 <button
-                  className={`group relative w-full py-3 sm:py-3.5 rounded-2xl text-white text-sm sm:text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
-                    success 
-                      ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] hover:shadow-lg hover:shadow-green-500/25' 
-                      : error === 'Error creating savings user rejected' 
-                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 hover:shadow-lg hover:shadow-yellow-500/25' 
-                      : 'bg-gradient-to-r from-gray-700 to-gray-800 hover:shadow-lg hover:shadow-gray-500/25'
-                  }`}
+                  className={`group relative w-full py-3 sm:py-3.5 rounded-2xl text-white text-sm sm:text-base font-semibold transition-all duration-300 transform hover:scale-105 ${success
+                      ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] hover:shadow-lg hover:shadow-green-500/25'
+                      : error === 'Error creating savings user rejected'
+                        ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 hover:shadow-lg hover:shadow-yellow-500/25'
+                        : 'bg-gradient-to-r from-gray-700 to-gray-800 hover:shadow-lg hover:shadow-gray-500/25'
+                    }`}
                   onClick={handleCloseTransactionModal}
                   aria-label="Close modal"
                 >
@@ -1155,7 +1154,7 @@ export default function CreateSavingsPage() {
                     >
                       <div className="flex flex-col items-center gap-8 sm:gap-12">
                         <motion.div variants={itemVariants} className="text-center max-w-3xl">
-                          <motion.div 
+                          <motion.div
                             className="inline-flex items-center px-3 py-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-[#81D7B4]/10 via-[#81D7B4]/5 to-[#6bc5a0]/10 rounded-full border border-[#81D7B4]/20 mb-6 sm:mb-8 backdrop-blur-sm"
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.2 }}
@@ -1170,7 +1169,7 @@ export default function CreateSavingsPage() {
                             </motion.div>
                             <span className="text-xs sm:text-sm font-bold text-[#81D7B4]">Step 1 of 3</span>
                           </motion.div>
-                          <motion.h2 
+                          <motion.h2
                             className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3 sm:mb-4"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -1178,7 +1177,7 @@ export default function CreateSavingsPage() {
                           >
                             Name Your Savings Plan
                           </motion.h2>
-                          <motion.p 
+                          <motion.p
                             className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl mx-auto font-medium px-4 sm:px-0"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -1187,18 +1186,18 @@ export default function CreateSavingsPage() {
                             Give your savings goal a meaningful name. This helps you stay motivated and track your progress.
                           </motion.p>
                         </motion.div>
-                        
+
                         <motion.div variants={itemVariants} className="flex flex-col items-center gap-6 sm:gap-8 w-full max-w-2xl">
-                          <motion.div 
+                          <motion.div
                             className="relative w-full group"
                             whileHover={{ scale: 1.02 }}
                             transition={{ duration: 0.2 }}
                           >
                             <div className="absolute inset-y-0 left-0 pl-4 sm:pl-5 flex items-center pointer-events-none">
-                              <motion.svg 
-                                className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors duration-300" 
-                                fill="none" 
-                                stroke="currentColor" 
+                              <motion.svg
+                                className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors duration-300"
+                                fill="none"
+                                stroke="currentColor"
                                 viewBox="0 0 24 24"
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 transition={{ duration: 0.2 }}
@@ -1222,35 +1221,34 @@ export default function CreateSavingsPage() {
                               animate={{ opacity: name ? 0.3 : 0 }}
                             />
                           </motion.div>
-                          
+
                           {/* Continue Button - Under Input Field */}
                           <motion.button
                             type="button"
                             onClick={handleNext}
                             disabled={!name.trim()}
-                            whileHover={{ 
+                            whileHover={{
                               scale: name.trim() ? 1.08 : 1,
                               y: name.trim() ? -4 : 0,
                               transition: { duration: 0.2 }
                             }}
-                            whileTap={{ 
+                            whileTap={{
                               scale: name.trim() ? 0.95 : 1,
                               y: name.trim() ? -1 : 0
                             }}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4, duration: 0.6 }}
-                            className={`w-full max-w-xs sm:max-w-md inline-flex items-center justify-center px-6 sm:px-10 py-4 sm:py-5 font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl transition-all duration-300 text-lg sm:text-xl ${
-                              name.trim() 
-                                ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white shadow-[#81D7B4]/30 hover:shadow-[#81D7B4]/40 cursor-pointer' 
+                            className={`w-full max-w-xs sm:max-w-md inline-flex items-center justify-center px-6 sm:px-10 py-4 sm:py-5 font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl transition-all duration-300 text-lg sm:text-xl ${name.trim()
+                                ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white shadow-[#81D7B4]/30 hover:shadow-[#81D7B4]/40 cursor-pointer'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-inner'
-                            }`}
+                              }`}
                           >
                             <motion.span
-                              animate={{ 
+                              animate={{
                                 scale: name.trim() ? [1, 1.05, 1] : 1
                               }}
-                              transition={{ 
+                              transition={{
                                 duration: 2,
                                 repeat: name.trim() ? Infinity : 0,
                                 repeatType: "reverse"
@@ -1258,17 +1256,17 @@ export default function CreateSavingsPage() {
                             >
                               Continue to Settings
                             </motion.span>
-                            <motion.svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className="h-7 w-7 ml-3" 
-                              fill="none" 
-                              viewBox="0 0 24 24" 
+                            <motion.svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-7 w-7 ml-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
                               stroke="currentColor"
-                              animate={{ 
+                              animate={{
                                 x: name.trim() ? [0, 4, 0] : 0,
                                 scale: name.trim() ? [1, 1.1, 1] : 1
                               }}
-                              transition={{ 
+                              transition={{
                                 duration: 1.5,
                                 repeat: name.trim() ? Infinity : 0,
                                 repeatType: "reverse"
@@ -1277,15 +1275,15 @@ export default function CreateSavingsPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </motion.svg>
                           </motion.button>
-                          
+
                           {/* Preset Savings Name Options */}
-                          <motion.div 
+                          <motion.div
                             className="w-full space-y-4 sm:space-y-6"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3, duration: 0.6 }}
                           >
-                            <motion.p 
+                            <motion.p
                               className="text-base sm:text-lg font-bold text-gray-700 text-center bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent"
                               whileHover={{ scale: 1.05 }}
                               transition={{ duration: 0.2 }}
@@ -1307,8 +1305,8 @@ export default function CreateSavingsPage() {
                                   key={preset.name}
                                   type="button"
                                   onClick={() => setName(preset.name)}
-                                  whileHover={{ 
-                                    scale: 1.08, 
+                                  whileHover={{
+                                    scale: 1.08,
                                     y: -4,
                                     transition: { duration: 0.2 }
                                   }}
@@ -1316,29 +1314,27 @@ export default function CreateSavingsPage() {
                                   initial={{ opacity: 0, y: 20 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: index * 0.1, duration: 0.4 }}
-                                  className={`relative group p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-3 transition-all duration-300 overflow-hidden ${
-                                    name === preset.name
+                                  className={`relative group p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-3 transition-all duration-300 overflow-hidden ${name === preset.name
                                       ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] border-[#81D7B4] text-white shadow-lg sm:shadow-2xl shadow-[#81D7B4]/30 transform scale-105'
                                       : 'bg-white/70 border-gray-200 text-gray-700 hover:border-white hover:bg-white/90 hover:shadow-lg sm:hover:shadow-xl backdrop-blur-sm'
-                                  }`}
+                                    }`}
                                 >
                                   {/* Background gradient overlay for unselected state */}
                                   {name !== preset.name && (
                                     <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                                   )}
-                                  
+
                                   {/* Icon with enhanced animation */}
-                                  <motion.div 
+                                  <motion.div
                                     className="flex flex-col items-center space-y-3"
                                     whileHover={{ scale: 1.1 }}
                                   >
                                     <motion.div
-                                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${
-                                        name === preset.name 
-                                          ? 'bg-white/20 backdrop-blur-sm' 
+                                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${name === preset.name
+                                          ? 'bg-white/20 backdrop-blur-sm'
                                           : 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] shadow-md sm:shadow-lg'
-                                      }`}
-                                      whileHover={{ 
+                                        }`}
+                                      whileHover={{
                                         rotate: 360,
                                         scale: 1.2,
                                         transition: { duration: 0.4 }
@@ -1346,13 +1342,12 @@ export default function CreateSavingsPage() {
                                     >
                                       <preset.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                     </motion.div>
-                                    <span className={`text-xs sm:text-sm font-bold ${
-                                      name === preset.name ? 'text-white' : 'text-gray-700 group-hover:text-gray-900'
-                                    }`}>
+                                    <span className={`text-xs sm:text-sm font-bold ${name === preset.name ? 'text-white' : 'text-gray-700 group-hover:text-gray-900'
+                                      }`}>
                                       {preset.name}
                                     </span>
                                   </motion.div>
-                                  
+
                                   {/* Selection indicator */}
                                   {name === preset.name && (
                                     <motion.div
@@ -1366,9 +1361,9 @@ export default function CreateSavingsPage() {
                               ))}
                             </div>
                           </motion.div>
-                          
+
                           {errors.name && (
-                            <motion.p 
+                            <motion.p
                               className="text-sm text-red-500 text-center font-medium bg-red-50 px-3 sm:px-4 py-2 rounded-lg border border-red-200"
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}
@@ -1394,7 +1389,7 @@ export default function CreateSavingsPage() {
                     className="p-4 sm:p-6 md:p-8"
                   >
                     {/* Enhanced Step 2 Header */}
-                    <motion.div 
+                    <motion.div
                       className="mb-8 text-center"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1410,7 +1405,7 @@ export default function CreateSavingsPage() {
                       >
                         Configure Your Plan
                       </motion.h2>
-                      <motion.p 
+                      <motion.p
                         className="text-base sm:text-lg text-gray-600 max-w-md mx-auto"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -1439,7 +1434,7 @@ export default function CreateSavingsPage() {
                             </svg>
                           </div>
                         </div>
-                        
+
                         <div className="relative mb-4">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span className="text-gray-500 text-xl font-medium">$</span>
@@ -1453,12 +1448,12 @@ export default function CreateSavingsPage() {
                             className={`w-full pl-10 pr-4 py-5 bg-white rounded-xl border-2 text-gray-900 text-xl sm:text-2xl font-semibold ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
                           />
                         </div>
-                        
+
                         {/* Quick amount cards - Enhanced */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                           {[
-                            { value: '10'},
-                            { value: '100'},
+                            { value: '10' },
+                            { value: '100' },
                             { value: '500' },
                             { value: '1000' }
                           ].map((option) => (
@@ -1524,7 +1519,7 @@ export default function CreateSavingsPage() {
                             </svg>
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-4 w-full">
                           {/* Main network (Base) */}
                           <motion.button
@@ -1545,7 +1540,7 @@ export default function CreateSavingsPage() {
                               <div className="text-xs opacity-75">Low fees, fast</div>
                             </div>
                           </motion.button>
-                          
+
                           {/* Dropdown for other networks - show selected network if not base */}
                           <div className="relative flex-1">
                             <motion.button
@@ -1620,7 +1615,7 @@ export default function CreateSavingsPage() {
                             </svg>
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {NETWORKS.find(n => n.id === chain)?.tokens.map((curr) => (
                             <motion.button
@@ -1639,10 +1634,10 @@ export default function CreateSavingsPage() {
                                   <Image
                                     src={
                                       curr.symbol === 'Gooddollar' ? '/$g.png'
-                                      : curr.symbol === 'cUSD' ? '/cusd.png'
-                                      : curr.symbol === 'USDGLO' ? '/usdglo.png'
-                                      : curr.symbol === 'USDC' ? '/usdclogo.png'
-                                      : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
+                                        : curr.symbol === 'cUSD' ? '/cusd.png'
+                                          : curr.symbol === 'USDGLO' ? '/usdglo.png'
+                                            : curr.symbol === 'USDC' ? '/usdclogo.png'
+                                              : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
                                     }
                                     alt={curr.symbol}
                                     width={20}
@@ -1696,7 +1691,7 @@ export default function CreateSavingsPage() {
                             const presetDate = new Date(startDate);
                             presetDate.setDate(presetDate.getDate() + preset.days);
                             const isSelected = endDate && format(presetDate, 'yyyy-MM-dd') === format(endDate, 'yyyy-MM-dd');
-                            
+
                             return (
                               <motion.button
                                 key={preset.label}
@@ -1915,7 +1910,7 @@ export default function CreateSavingsPage() {
                         {/* Background decoration */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#81D7B4]/10 to-transparent rounded-full blur-2xl transform translate-x-16 -translate-y-16"></div>
                         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#6bc5a0]/10 to-transparent rounded-full blur-xl transform -translate-x-12 translate-y-12"></div>
-                        
+
                         <div className="relative z-10">
                           {/* Plan Name */}
                           <motion.div
@@ -1931,10 +1926,10 @@ export default function CreateSavingsPage() {
                                   <Image
                                     src={
                                       currency === 'Gooddollar' ? '/$g.png'
-                                      : currency === 'cUSD' ? '/cusd.png'
-                                      : currency === 'USDGLO' ? '/usdglo.png'
-                                      : currency === 'USDC' ? '/usdc.png'
-                                      : `/${currency.toLowerCase().replace('$', '')}.png`
+                                        : currency === 'cUSD' ? '/cusd.png'
+                                          : currency === 'USDGLO' ? '/usdglo.png'
+                                            : currency === 'USDC' ? '/usdclogo.png'
+                                              : `/${currency.toLowerCase().replace('$', '')}.png`
                                     }
                                     alt={currency}
                                     width={16}
@@ -1998,7 +1993,7 @@ export default function CreateSavingsPage() {
                             </div>
                             <h4 className="text-lg font-semibold text-gray-800">Timeline</h4>
                           </div>
-                          
+
                           <div className="space-y-4">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-500">Start Date</span>
@@ -2006,14 +2001,14 @@ export default function CreateSavingsPage() {
                                 {startDate ? format(startDate, 'MMM d, yyyy') : 'Today'}
                               </span>
                             </div>
-                            
+
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-500">End Date</span>
                               <span className="text-sm font-medium text-gray-800">
                                 {endDate ? format(endDate, 'MMM d, yyyy') : 'Not selected'}
                               </span>
                             </div>
-                            
+
                             <div className="pt-3 border-t border-gray-100">
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-500">Duration</span>
@@ -2042,7 +2037,7 @@ export default function CreateSavingsPage() {
                             </div>
                             <h4 className="text-lg font-semibold text-gray-800">Early Withdrawal</h4>
                           </div>
-                          
+
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-500">Penalty Rate</span>
@@ -2050,14 +2045,14 @@ export default function CreateSavingsPage() {
                                 {penalty}
                               </span>
                             </div>
-                            
+
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-500">Penalty Amount</span>
                               <span className="text-sm font-medium text-gray-800">
                                 ${(Number(amount || '0') * parseFloat(penalty) / 100).toFixed(2)}
                               </span>
                             </div>
-                            
+
                             <div className="pt-3 border-t border-gray-100">
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-500">You'd Receive</span>
@@ -2185,7 +2180,7 @@ export default function CreateSavingsPage() {
                                     <div className="flex-1">
                                       <h4 className="text-sm font-semibold text-gray-800 mb-1">How Penalties Work</h4>
                                       <p className="text-xs text-gray-600 leading-relaxed">
-                                        Penalties are deducted from your principal amount when you withdraw before the maturity date. 
+                                        Penalties are deducted from your principal amount when you withdraw before the maturity date.
                                         This encourages commitment to your savings goals and helps maintain the protocol&apos;s stability.
                                       </p>
                                     </div>
@@ -2202,7 +2197,7 @@ export default function CreateSavingsPage() {
                                     <div className="flex-1">
                                       <h4 className="text-sm font-semibold text-gray-800 mb-1">No Penalty After Maturity</h4>
                                       <p className="text-xs text-gray-600 leading-relaxed">
-                                        Once your savings plan reaches its maturity date ({endDate ? format(endDate, 'MMMM d, yyyy') : 'your selected end date'}), 
+                                        Once your savings plan reaches its maturity date ({endDate ? format(endDate, 'MMMM d, yyyy') : 'your selected end date'}),
                                         you can withdraw your full amount plus any earned rewards without any penalties.
                                       </p>
                                     </div>
@@ -2219,7 +2214,7 @@ export default function CreateSavingsPage() {
                                     <div className="flex-1">
                                       <h4 className="text-sm font-semibold text-gray-800 mb-1">Penalty Distribution</h4>
                                       <p className="text-xs text-gray-600 leading-relaxed">
-                                        Penalty fees are distributed to other savers in the protocol as rewards, creating a 
+                                        Penalty fees are distributed to other savers in the protocol as rewards, creating a
                                         community-driven incentive system that benefits committed savers.
                                       </p>
                                     </div>
@@ -2261,7 +2256,7 @@ export default function CreateSavingsPage() {
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <div className="text-xs text-[#2D5A4A]">
-                                      <span className="font-semibold">Important:</span> Penalties are automatically calculated and deducted by the smart contract. 
+                                      <span className="font-semibold">Important:</span> Penalties are automatically calculated and deducted by the smart contract.
                                       This process is transparent and cannot be reversed once a withdrawal is initiated.
                                     </div>
                                   </div>
@@ -2347,7 +2342,7 @@ export default function CreateSavingsPage() {
       <WalletRecommendationModal
         isOpen={shouldShowModal}
         onClose={dismissRecommendation}
-        onDontShowAgain={() => {}}
+        onDontShowAgain={() => { }}
         currentWallet={walletInfo?.name || 'Unknown Wallet'}
       />
     </div>

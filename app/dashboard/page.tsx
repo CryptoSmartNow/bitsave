@@ -523,7 +523,7 @@ export default function Dashboard() {
     if (tokenName === 'cUSD') return '/cusd.png';
     if (tokenName === 'USDGLO') return '/usdglo.png';
     if (tokenName === '$G' || tokenName === 'Gooddollar') return '/$g.png';
-    if (tokenName === 'USDC') return '/usdc.png';
+    if (tokenName === 'USDC') return '/usdclogo.png';
     return `/${tokenName.toLowerCase()}.png`;
   }, []);
 
@@ -1192,288 +1192,105 @@ export default function Dashboard() {
                     {savingsData.currentPlans.slice(0, 3).map((plan) => (
                       <motion.div
                         key={plan.id}
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        whileHover={{
-                          scale: 1.02,
-                          y: -8,
-                          transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
-                        }}
-                        className="relative group overflow-hidden flex flex-col gap-3 sm:gap-4 md:gap-6"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 30%, rgba(255,255,255,0.6) 70%, rgba(129,215,180,0.12) 100%)',
-                          backdropFilter: 'blur(50px) saturate(200%) brightness(110%)',
-                          WebkitBackdropFilter: 'blur(50px) saturate(200%) brightness(110%)',
-                          borderRadius: '24px',
-                          border: '2px solid rgba(255,255,255,0.5)',
-                          boxShadow: `
-                        0 12px 40px rgba(129,215,180,0.15),
-                        0 4px 20px rgba(255,255,255,0.9),
-                        0 1px 3px rgba(0,0,0,0.05),
-                        inset 0 2px 0 rgba(255,255,255,0.95),
-                        inset 0 -2px 0 rgba(129,215,180,0.15),
-                        inset 0 0 60px rgba(255,255,255,0.3)
-                      `,
-                          padding: '20px'
-                        }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                        className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6"
                       >
-                        {/* Advanced liquid glass background layers */}
-                        <div className="absolute inset-0 rounded-[24px] bg-gradient-to-br from-white/70 via-white/40 to-[#81D7B4]/8 opacity-85"></div>
-                        <div className="absolute inset-0 rounded-[24px] bg-gradient-to-tl from-[#81D7B4]/12 via-blue-400/4 to-white/25 opacity-70"></div>
-                        <div className="absolute inset-0 rounded-[24px] bg-gradient-to-tr from-purple-500/3 via-transparent to-cyan-400/5 opacity-60"></div>
-                        <div className="absolute inset-0 rounded-[24px] bg-radial-gradient from-white/30 via-transparent to-transparent opacity-50"></div>
+                        {/* Subtle gradient accent */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-t-2xl"></div>
 
-                        {/* Enhanced floating orbs with advanced liquid motion */}
-                        <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#81D7B4]/30 via-blue-400/15 to-purple-500/10 rounded-full blur-3xl opacity-70 group-hover:opacity-95 group-hover:scale-110 transition-all duration-1000 animate-pulse"></div>
-                        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-gradient-to-tr from-[#81D7B4]/25 via-cyan-400/12 to-emerald-500/8 rounded-full blur-3xl opacity-60 group-hover:opacity-85 group-hover:scale-105 transition-all duration-1200 animate-pulse"></div>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-[#81D7B4]/8 via-[#81D7B4]/4 to-transparent rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-all duration-800"></div>
-                        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-pink-400/8 via-orange-400/6 to-transparent rounded-full blur-xl opacity-30 animate-bounce group-hover:animate-pulse transition-all duration-500"></div>
-
-                        {/* Noise texture removed per redesign spec */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#81D7B4]/3 opacity-60 mix-blend-soft-light pointer-events-none rounded-[24px]"></div>
-
-                        {/* Premium neomorphic highlight edges */}
-                        <div className="absolute inset-0 rounded-[24px] border-2 border-white/60 opacity-90"></div>
-                        <div className="absolute inset-[2px] rounded-[22px] border border-white/40 opacity-70"></div>
-                        <div className="absolute inset-[4px] rounded-[20px] border border-white/20 opacity-50"></div>
-                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/90 to-transparent rounded-t-[24px]"></div>
-                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#81D7B4]/40 to-transparent rounded-b-[24px]"></div>
-                        <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-white/60 via-transparent to-[#81D7B4]/20 rounded-l-[24px]"></div>
-                        <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-white/40 via-transparent to-[#81D7B4]/30 rounded-r-[24px]"></div>
-                        <div className="absolute inset-0 rounded-[24px] shadow-[inset_0_3px_6px_rgba(255,255,255,0.7),inset_0_-2px_4px_rgba(129,215,180,0.15)] pointer-events-none"></div>
-
-                        {/* Header Row with enhanced neomorphic design */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 relative z-10">
-                          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
-                            {/* Neomorphic token icon container */}
-                            <div
-                              className="relative p-2 sm:p-2.5 md:p-3 rounded-xl sm:rounded-2xl group/icon flex-shrink-0"
-                              style={{
-                                background: 'linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))',
-                                boxShadow: `
-                              0 4px 16px rgba(129,215,180,0.15),
-                              inset 0 1px 0 rgba(255,255,255,0.8),
-                              inset 0 -1px 0 rgba(129,215,180,0.1)
-                            `,
-                                border: '1px solid rgba(129,215,180,0.2)'
-                              }}
-                            >
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#81D7B4]/10 to-[#229ED9]/10 flex items-center justify-center flex-shrink-0">
                               <Image
                                 src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
                                 alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                                width={28}
-                                height={28}
-                                className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 relative z-10 group-hover/icon:scale-110 transition-transform duration-300"
+                                width={24}
+                                height={24}
+                                className="w-6 h-6"
                               />
-                              <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#81D7B4]/10 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300"></div>
                             </div>
-
-                            <div className="flex flex-col min-w-0 flex-1">
-                              {/* Enhanced typography with better hierarchy */}
-                              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 tracking-tight mb-0.5 sm:mb-1 truncate" style={{ fontWeight: 700, letterSpacing: '-0.02em' }}>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-medium text-gray-900 truncate mb-1">
                                 {plan.name}
                               </h3>
-
-                              {/* Liquid glass network badge */}
-                              <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
-                                <span
-                                  className="inline-flex items-center px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 md:py-2 text-[10px] sm:text-xs font-semibold text-[#163239] relative overflow-hidden"
-                                  style={{
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%)',
-                                    backdropFilter: 'blur(20px)',
-                                    borderRadius: '10px',
-                                    border: '1px solid rgba(129,215,180,0.3)',
-                                    boxShadow: '0 2px 8px rgba(129,215,180,0.1), inset 0 1px 0 rgba(255,255,255,0.7)'
-                                  }}
-                                >
-                                  <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 mr-1 sm:mr-1.5 md:mr-2" />
-                                  <span className="hidden xs:inline">{plan.isEth ? 'ETH' : plan.tokenName}</span>
-                                  <span className="mx-1 sm:mx-1.5 md:mx-2 text-gray-400 hidden sm:inline">•</span>
-                                  <Image
-                                    src={ensureImageUrl(
-                                      isBaseNetwork
-                                        ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg')
-                                        : (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png')
-                                    )}
-                                    alt={isBaseNetwork ? 'Base' : 'Celo'}
-                                    width={16}
-                                    height={16}
-                                    className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 mr-0.5 sm:mr-1"
-                                  />
-                                  <span className="hidden xs:inline">{isBaseNetwork ? 'Base' : 'Celo'}</span>
-                                </span>
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span>{plan.isEth ? 'ETH' : plan.tokenName}</span>
+                                <span>•</span>
+                                <span>{isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isAvalancheNetwork ? 'Avalanche' : 'Network'}</span>
                               </div>
                             </div>
                           </div>
-
-                          {/* Liquid glass Top Up button */}
                           <motion.button
                             onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="relative px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-bold text-white overflow-hidden group/button w-full sm:w-auto"
-                            style={{
-                              background: 'linear-gradient(135deg, #81D7B4 0%, #6BC4A0 100%)',
-                              borderRadius: '12px',
-                              border: '1px solid rgba(255,255,255,0.3)',
-                              boxShadow: `
-                            0 4px 16px rgba(129,215,180,0.3),
-                            inset 0 1px 0 rgba(255,255,255,0.4),
-                            inset 0 -1px 0 rgba(0,0,0,0.1)
-                          `
-                            }}
+                            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-lg hover:shadow-md transition-shadow"
                           >
-                            <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
-                              <HiOutlinePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                              <span>Top Up</span>
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></div>
+                            Top Up
                           </motion.button>
                         </div>
 
-                        {/* Enhanced Progress Bars with Liquid Glass Design */}
-                        <div
-                          className="flex flex-col md:flex-row md:items-end md:space-x-6 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5 gap-4 sm:gap-5 md:gap-6 relative overflow-hidden"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 50%, rgba(129,215,180,0.05) 100%)',
-                            backdropFilter: 'blur(30px) saturate(150%)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.5)',
-                            boxShadow: `
-                          0 4px 20px rgba(129,215,180,0.08),
-                          inset 0 1px 0 rgba(255,255,255,0.8),
-                          inset 0 -1px 0 rgba(129,215,180,0.05)
-                        `
-                          }}
-                        >
-                          {/* Subtle background pattern */}
-                          {/* Noise background removed per redesign spec */}
-
+                        {/* Progress Section */}
+                        <div className="space-y-4 mb-6">
                           {/* Progress to Completion */}
-                          <div className="flex-1 relative">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-sm font-bold text-gray-800 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
-                                <div className="w-2 h-2 rounded-full bg-[#81D7B4] shadow-[0_0_8px_rgba(129,215,180,0.6)]"></div>
-                                Progress
-                                <span className="text-xs font-medium text-gray-500 ml-1" title="How close you are to your savings goal">(to completion)</span>
-                              </span>
-                              <span className="text-lg font-black text-gray-900" style={{ letterSpacing: '-0.02em' }}>{Math.round(plan.progress)}%</span>
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-gray-600">Progress</span>
+                              <span className="text-sm font-medium text-gray-900">{Math.round(plan.progress)}%</span>
                             </div>
-
-                            {/* Neomorphic progress bar */}
-                            <div
-                              className="w-full h-3 rounded-full overflow-hidden relative"
-                              style={{
-                                background: 'linear-gradient(145deg, rgba(240,240,240,0.8), rgba(255,255,255,0.9))',
-                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.8)'
-                              }}
-                            >
+                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                               <motion.div
-                                className="h-full rounded-full relative overflow-hidden"
-                                style={{
-                                  width: `${plan.progress}%`,
-                                  background: 'linear-gradient(90deg, #81D7B4 0%, #6BC4A0 50%, #81D7B4 100%)',
-                                  boxShadow: '0 0 16px rgba(129,215,180,0.4), inset 0 1px 0 rgba(255,255,255,0.3)'
-                                }}
+                                className="h-full bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-full"
                                 initial={{ width: 0 }}
                                 animate={{ width: `${plan.progress}%` }}
-                                transition={{ duration: 1.2, ease: "easeOut" }}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-transparent to-white/20 animate-pulse"></div>
-                              </motion.div>
+                                transition={{ duration: 1, ease: "easeOut" }}
+                              />
                             </div>
                           </div>
 
-                          {/* $BTS Rewards */}
-                          <div className="flex-1 relative">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-sm font-bold text-gray-800 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
-                                <div className="w-2 h-2 rounded-full bg-[#81D7B4] shadow-[0_0_8px_rgba(129,215,180,0.6)]"></div>
-                                $BTS Rewards
-                                <span className="text-xs font-medium text-gray-500 ml-1" title="Earned only when you complete your savings">(on completion)</span>
-                              </span>
-                              <span className="text-sm font-black text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                          {/* Rewards */}
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-gray-600">$BTS Rewards</span>
+                              <span className="text-sm font-medium text-gray-900">
                                 {plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(2) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(2)} $BTS
                               </span>
                             </div>
-
-                            {/* Neomorphic rewards progress bar */}
-                            <div
-                              className="w-full h-3 rounded-full overflow-hidden relative"
-                              style={{
-                                background: 'linear-gradient(145deg, rgba(240,240,240,0.8), rgba(255,255,255,0.9))',
-                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.8)'
-                              }}
-                            >
+                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                               <motion.div
-                                className="h-full rounded-full relative overflow-hidden"
-                                style={{
-                                  width: `${plan.progress}%`,
-                                  background: 'linear-gradient(90deg, #81D7B4 0%, #5FB89C 50%, #81D7B4 100%)',
-                                  boxShadow: '0 0 16px rgba(129,215,180,0.3), inset 0 1px 0 rgba(255,255,255,0.3)'
-                                }}
+                                className="h-full bg-gradient-to-r from-[#229ED9] to-[#81D7B4] rounded-full"
                                 initial={{ width: 0 }}
                                 animate={{ width: `${plan.progress}%` }}
-                                transition={{ duration: 1.4, ease: "easeOut", delay: 0.2 }}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-transparent to-white/20 animate-pulse"></div>
-                              </motion.div>
+                                transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
+                              />
                             </div>
                           </div>
                         </div>
 
-                        {/* Enhanced Info Row with Liquid Glass Design */}
-                        <div
-                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4 px-5 py-4 relative overflow-hidden"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 50%, rgba(129,215,180,0.05) 100%)',
-                            backdropFilter: 'blur(25px) saturate(140%)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.5)',
-                            boxShadow: `
-                          0 3px 16px rgba(129,215,180,0.06),
-                          inset 0 1px 0 rgba(255,255,255,0.8),
-                          inset 0 -1px 0 rgba(129,215,180,0.03)
-                        `
-                          }}
-                        >
-                          {/* Subtle background pattern */}
-                          {/* Noise background removed per redesign spec */}
-
-                          <motion.div
-                            className="flex items-center gap-3"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
-                          >
-                            <span className="text-xs font-bold text-gray-600 tracking-wide uppercase" style={{ letterSpacing: '0.05em' }}>
-                              Current Amount:
-                            </span>
-                            <span className="text-lg font-black text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                        {/* Info Grid */}
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Current Amount</p>
+                            <p className="text-base font-medium text-gray-900">
                               {plan.isEth ? (
-                                <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-sm font-bold text-[#81D7B4] ml-1">ETH</span></>
+                                <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-sm text-[#81D7B4]">ETH</span></>
                               ) : plan.tokenName === 'Gooddollar' ? (
-                                <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-sm font-bold text-[#81D7B4] ml-1">$G</span> <span className="text-xs text-gray-500 ml-2">(${(parseFloat(plan.currentAmount) * goodDollarPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span></>
+                                <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-sm text-[#81D7B4]">$G</span></>
                               ) : plan.tokenName === 'USDGLO' ? (
-                                <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm font-bold text-[#81D7B4] ml-1">USDGLO</span></>
+                                <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm text-[#81D7B4]">USDGLO</span></>
                               ) : plan.tokenName === 'cUSD' ? (
-                                <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm font-bold text-[#81D7B4] ml-1">cUSD</span></>
+                                <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm text-[#81D7B4]">cUSD</span></>
                               ) : (
-                                <>{parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm font-bold text-[#81D7B4] ml-1">{plan.tokenName}</span></>
+                                <>{parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm text-[#81D7B4]">{plan.tokenName}</span></>
                               )}
-                            </span>
-                          </motion.div>
-
-                          <motion.div
-                            className="flex items-center gap-3"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                          >
-                            <span className="text-xs font-bold text-gray-600 tracking-wide uppercase" style={{ letterSpacing: '0.05em' }}>
-                              Time Left:
-                            </span>
-                            <span className="text-lg font-black text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Time Left</p>
+                            <p className="text-base font-medium text-gray-900">
                               {(() => {
                                 const currentDate = new Date();
                                 const maturityTimestamp = Number(plan.maturityTime || 0);
@@ -1489,62 +1306,21 @@ export default function Dashboard() {
                                 if (remainingMonths > 1) return `${remainingMonths} months`;
                                 return '';
                               })()}
-                            </span>
-                          </motion.div>
+                            </p>
+                          </div>
                         </div>
 
-                        {/* Enhanced Info Icon and Label with Liquid Glass Design */}
-                        <motion.div
-                          className="flex items-center gap-3 mb-4 px-4 py-3 relative overflow-hidden"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 50%, rgba(129,215,180,0.03) 100%)',
-                            backdropFilter: 'blur(20px) saturate(130%)',
-                            borderRadius: '12px',
-                            border: '1px solid rgba(255,255,255,0.4)',
-                            boxShadow: `
-                          0 2px 12px rgba(129,215,180,0.04),
-                          inset 0 1px 0 rgba(255,255,255,0.7),
-                          inset 0 -1px 0 rgba(129,215,180,0.02)
-                        `
-                          }}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.3 }}
-                        >
-                          {/* Subtle background pattern */}
-                          {/* Noise background removed per redesign spec */}
-
-                          <div
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-full cursor-pointer group relative transition-all duration-200 hover:scale-110"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(129,215,180,0.1), rgba(129,215,180,0.2))',
-                              border: '1px solid rgba(129,215,180,0.3)',
-                              boxShadow: '0 2px 8px rgba(129,215,180,0.1)'
-                            }}
-                            tabIndex={0}
-                          >
-                            <span className="text-xs font-black text-[#81D7B4]" style={{ letterSpacing: '-0.01em' }}>i</span>
-                            <div
-                              className="absolute left-8 top-1/2 -translate-y-1/2 w-72 text-xs rounded-xl px-5 py-4 z-30 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-all duration-300 pointer-events-none font-medium"
-                              style={{
-                                background: 'linear-gradient(135deg, rgba(0,0,0,0.95), rgba(0,0,0,0.9))',
-                                backdropFilter: 'blur(25px)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'white',
-                                boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
-                                letterSpacing: '-0.01em'
-                              }}
-                            >
-                              Withdrawing before the set completion date will forfeit your $BTS rewards and incur a penalty on your savings.
-                              <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-black/90"></div>
-                            </div>
+                        {/* Warning */}
+                        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                          <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-xs font-medium text-amber-600">!</span>
                           </div>
-                          <span className="text-xs font-semibold text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                          <p className="text-xs text-amber-800">
                             Early withdrawal results in loss of rewards and a penalty fee.
-                          </span>
-                        </motion.div>
+                          </p>
+                        </div>
 
-                        {/* Enhanced Withdraw Button with Liquid Glass Design */}
+                        {/* Withdraw Button */}
                         <motion.button
                           onClick={() => {
                             const currentDate = new Date();
@@ -1553,39 +1329,11 @@ export default function Dashboard() {
                             const isCompleted = currentDate >= maturityDate;
                             openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                           }}
-                          className="w-full text-center font-bold text-white relative overflow-hidden group transition-all duration-300"
-                          style={{
-                            background: 'linear-gradient(135deg, #81D7B4 0%, #6BC4A0 50%, #81D7B4 100%)',
-                            borderRadius: '16px',
-                            padding: '16px 24px',
-                            border: '1px solid rgba(255,255,255,0.2)',
-                            boxShadow: `
-                          0 6px 24px rgba(129,215,180,0.2),
-                          inset 0 1px 0 rgba(255,255,255,0.3),
-                          inset 0 -1px 0 rgba(0,0,0,0.05)
-                        `,
-                            letterSpacing: '-0.01em'
-                          }}
-                          whileHover={{
-                            scale: 1.02,
-                            boxShadow: `
-                          0 8px 32px rgba(129,215,180,0.3),
-                          inset 0 1px 0 rgba(255,255,255,0.4),
-                          inset 0 -1px 0 rgba(0,0,0,0.05)
-                        `
-                          }}
-                          whileTap={{ scale: 0.98 }}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.4 }}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-lg hover:shadow-md transition-shadow"
                         >
-                          {/* Button background glow */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[16px]"></div>
-
-                          <span className="flex items-center justify-center gap-3 relative z-10">
-                            <HiOutlineChevronDown className="h-5 w-5 text-white transition-transform duration-200 group-hover:scale-110" />
-                            <span style={{ letterSpacing: '-0.01em' }}>Withdraw</span>
-                          </span>
+                          Withdraw
                         </motion.button>
                       </motion.div>
                     ))}
@@ -1604,151 +1352,128 @@ export default function Dashboard() {
                   <>
                     {/* Show only first 3 completed plans on dashboard */}
                     {savingsData.completedPlans.slice(0, 3).map((plan) => (
-                      <div key={plan.id} className="relative bg-white/70 backdrop-blur-2xl rounded-3xl border border-[#81D7B4]/30 shadow-[0_8px_32px_rgba(129,215,180,0.18),0_1.5px_8px_rgba(34,158,217,0.10)] p-7 md:p-8 hover:shadow-[0_16px_48px_rgba(129,215,180,0.22)] transition-all duration-300 group overflow-hidden flex flex-col gap-6 before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-br before:from-white/60 before:to-[#81D7B4]/10 before:opacity-80 before:pointer-events-none after:absolute after:inset-0 after:rounded-3xl after:shadow-[inset_0_2px_16px_rgba(129,215,180,0.10),inset_0_1.5px_8px_rgba(34,158,217,0.08)] after:pointer-events-none">
-                        {/* Decorative gradients */}
-                        <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-[#81D7B4]/30 to-[#229ED9]/20 rounded-full blur-3xl z-0"></div>
-                        <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-gradient-to-tr from-[#229ED9]/20 to-[#81D7B4]/30 rounded-full blur-3xl z-0"></div>
-                        {/* Noise background removed per redesign spec */}
+                      <motion.div
+                        key={plan.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                        className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6"
+                      >
+                        {/* Subtle gradient accent - using green for completed */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-400 rounded-t-2xl"></div>
 
-                        {/* Header Row */}
-                        <div className="flex items-center justify-between relative z-10">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-[#81D7B4]/20 p-2 rounded-xl border border-[#81D7B4]/30 shadow-sm">
-                              <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={24} height={24} className="w-6 h-6" />
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-400/10 flex items-center justify-center flex-shrink-0">
+                              <Image
+                                src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
+                                alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
+                                width={24}
+                                height={24}
+                                className="w-6 h-6"
+                              />
                             </div>
-                            <div>
-                              <h3 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight mb-0.5 truncate max-w-[180px] sm:max-w-[220px] md:max-w-[300px]">{plan.name}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 text-[#163239] text-xs font-medium shadow-sm">
-                                  <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-1" />
-                                  {plan.isEth ? 'ETH' : plan.tokenName}
-                                  <span className="mx-1 text-gray-300">|</span>
-                                  <Image
-                                    src={ensureImageUrl(
-                                      isBaseNetwork
-                                        ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg')
-                                        : (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png')
-                                    )}
-                                    alt={isBaseNetwork ? 'Base' : 'Celo'}
-                                    width={16}
-                                    height={16}
-                                    className="w-4 h-4 mr-1"
-                                  />
-                                  {isBaseNetwork ? 'Base' : 'Celo'}
-                                </span>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-medium text-gray-900 truncate mb-1">
+                                {plan.name}
+                              </h3>
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span>{plan.isEth ? 'ETH' : plan.tokenName}</span>
+                                <span>•</span>
+                                <span>{isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isAvalancheNetwork ? 'Avalanche' : 'Network'}</span>
+                                <span>•</span>
+                                <span className="text-green-600 font-medium">Completed</span>
                               </div>
                             </div>
                           </div>
-                          <button
+                          <motion.button
                             onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
-                            className="bg-[#81D7B4] text-white text-xs font-semibold px-4 py-2 rounded-full border border-[#81D7B4]/20 shadow-sm hover:shadow-md transition-all duration-300"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-lg hover:shadow-md transition-shadow"
                           >
                             Top Up
-                          </button>
+                          </motion.button>
                         </div>
 
-                        {/* Progress Bars Row */}
-                        <div className="flex flex-col md:flex-row md:items-end md:space-x-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_2px_12px_rgba(129,215,180,0.08)] px-4 py-4 gap-4 md:gap-0">
-                          {/* Progress to Completion */}
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center text-xs mb-1">
-                              <span className="text-gray-700 font-semibold flex items-center gap-1">
-                                Progress
-                                <span className="ml-1 text-gray-400" title="How close you are to your savings goal">(to completion)</span>
-                              </span>
-                              <span className="font-bold text-gray-900">{Math.round(plan.progress)}%</span>
+                        {/* Progress Section */}
+                        <div className="space-y-4 mb-6">
+                          {/* Progress */}
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-gray-600">Progress</span>
+                              <span className="text-sm font-medium text-gray-900">{Math.round(plan.progress)}%</span>
                             </div>
-                            <div className="w-full h-2.5 bg-gray-100/80 rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-gradient-to-r from-[#81D7B4] to-green-400 rounded-full shadow-[0_0_12px_rgba(129,215,180,0.6)]" style={{ width: `${plan.progress}%` }}></div>
-                            </div>
-                          </div>
-                          {/* $BTS Rewards */}
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center text-xs mb-1">
-                              <span className="text-gray-700 font-semibold flex items-center gap-1">
-                                $BTS Rewards
-                                <span className="ml-1 text-gray-400" title="Earned only when you complete your savings">(on completion)</span>
-                              </span>
-                              <span className="font-bold text-gray-900">{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(2) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(2)} $BTS</span>
-                            </div>
-                            <div className="w-full h-2.5 bg-gray-100/80 rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-gradient-to-r from-[#229ED9] to-[#81D7B4] rounded-full shadow-[0_0_12px_rgba(34,158,217,0.3)]" style={{ width: `${plan.progress}%` }}></div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Info Row */}
-                        <div className="flex flex-col gap-2 mt-2">
-                          {/* Current Amount and Time Left Row */}
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 font-medium">Current Amount:</span>
-                              <span className="text-base font-bold text-gray-900">
-                                {plan.isEth ? (
-                                  <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-xs font-medium text-gray-500 ml-1">ETH</span></>
-                                ) : plan.tokenName === 'Gooddollar' ? (
-                                  <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-xs font-medium text-gray-500 ml-1">$G</span> <span className="text-xs text-gray-400 ml-2">(${(parseFloat(plan.currentAmount) * goodDollarPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span></>
-                                ) : plan.tokenName === 'USDGLO' ? (
-                                  <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">USDGLO</span></>
-                                ) : plan.tokenName === 'cUSD' ? (
-                                  <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">cUSD</span></>
-                                ) : (
-                                  <>{parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-medium text-gray-500 ml-1">{plan.tokenName}</span></>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 font-medium">Time Left:</span>
-                              <span className="text-sm font-semibold text-gray-800">
-                                {(() => {
-                                  const currentDate = new Date();
-                                  const maturityTimestamp = Number(plan.maturityTime || 0);
-                                  const maturityDate = new Date(maturityTimestamp * 1000);
-                                  if (isNaN(maturityDate.getTime())) return '';
-                                  const remainingTime = maturityDate.getTime() - currentDate.getTime();
-                                  const remainingDays = Math.max(0, Math.ceil(remainingTime / (1000 * 60 * 60 * 24)));
-                                  if (remainingDays === 0) return 'Completed';
-                                  if (remainingDays === 1) return '1 day';
-                                  if (remainingDays < 30) return `${remainingDays} days`;
-                                  const remainingMonths = Math.ceil(remainingDays / 30);
-                                  if (remainingMonths === 1) return '1 month';
-                                  if (remainingMonths > 1) return `${remainingMonths} months`;
-                                  return '';
-                                })()}
-                              </span>
+                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+                                style={{ width: `${plan.progress}%` }}
+                              />
                             </div>
                           </div>
 
-                          {/* Start and End Dates Row */}
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pt-2 border-t border-gray-100">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 font-medium">Start Date:</span>
-                              <span className="text-sm font-semibold text-gray-800">
-                                {formatTimestamp(Number(plan.startTime || 0))}
+                          {/* Rewards */}
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-gray-600">$BTS Rewards</span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(2) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(2)} $BTS
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 font-medium">End Date:</span>
-                              <span className="text-sm font-semibold text-gray-800">
-                                {formatTimestamp(Number(plan.maturityTime || 0))}
-                              </span>
+                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-[#229ED9] to-[#81D7B4] rounded-full"
+                                style={{ width: `${plan.progress}%` }}
+                              />
                             </div>
                           </div>
                         </div>
 
-                        {/* Info Icon and Label */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#229ED9]/10 border border-[#229ED9]/30 text-[#229ED9] text-xs font-bold cursor-pointer group relative" tabIndex={0}>
-                            i
-                            <span className="absolute left-6 top-1/2 -translate-y-1/2 w-64 bg-white/90 text-[#163239] text-xs rounded-lg shadow-lg border border-[#81D7B4]/20 px-4 py-2 z-20 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 pointer-events-none">
-                              Withdrawing before the set completion date will forfeit your $BTS rewards and incur a penalty on your savings.
-                            </span>
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium">Early withdrawal results in loss of rewards and a penalty fee.</span>
+                        {/* Info Grid */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Current Amount</p>
+                            <p className="text-base font-medium text-gray-900">
+                              {plan.isEth ? (
+                                <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-sm text-[#81D7B4]">ETH</span></>
+                              ) : plan.tokenName === 'Gooddollar' ? (
+                                <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-sm text-[#81D7B4]">$G</span></>
+                              ) : plan.tokenName === 'USDGLO' ? (
+                                <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm text-[#81D7B4]">USDGLO</span></>
+                              ) : plan.tokenName === 'cUSD' ? (
+                                <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm text-[#81D7B4]">cUSD</span></>
+                              ) : (
+                                <>{parseFloat(plan.currentAmount).toFixed(2)} <span className="text-sm text-[#81D7B4]">{plan.tokenName}</span></>
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Status</p>
+                            <p className="text-base font-medium text-green-600">Completed</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Start Date</p>
+                            <p className="text-sm font-medium text-gray-700">{formatTimestamp(Number(plan.startTime || 0))}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">End Date</p>
+                            <p className="text-sm font-medium text-gray-700">{formatTimestamp(Number(plan.maturityTime || 0))}</p>
+                          </div>
+                        </div>
+
+                        {/* Warning */}
+                        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                          <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-xs font-medium text-amber-600">!</span>
+                          </div>
+                          <p className="text-xs text-amber-800">
+                            Early withdrawal results in loss of rewards and a penalty fee.
+                          </p>
                         </div>
 
                         {/* Withdraw Button */}
-                        <button
+                        <motion.button
                           onClick={() => {
                             const currentDate = new Date();
                             const maturityTimestamp = Number(plan.maturityTime || 0);
@@ -1756,14 +1481,13 @@ export default function Dashboard() {
                             const isCompleted = currentDate >= maturityDate;
                             openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                           }}
-                          className="w-full py-3 text-center text-sm font-bold text-white bg-[#81D7B4] rounded-xl shadow-[0_4px_12px_rgba(129,215,180,0.15)] hover:shadow-[0_8px_20px_rgba(129,215,180,0.18)] transition-all duration-300 transform hover:scale-[1.02] relative overflow-hidden group mt-2"
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-lg hover:shadow-md transition-shadow"
                         >
-                          <span className="flex items-center justify-center gap-2">
-                            <HiOutlineChevronDown className="h-4 w-4 text-white" />
-                            Withdraw
-                          </span>
-                        </button>
-                      </div>
+                          Withdraw
+                        </motion.button>
+                      </motion.div>
                     ))}
                   </>
                 ) : (

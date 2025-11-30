@@ -62,7 +62,7 @@ function getTokenLogo(tokenName: string, tokenLogo?: string) {
   if (tokenName === 'cUSD') return '/cusd.png';
   if (tokenName === 'USDGLO') return '/usdglo.png';
   if (tokenName === 'Gooddollar' || tokenName === '$G') return '/$g.png';
-  if (tokenName === 'USDC') return '/usdc.png';
+  if (tokenName === 'USDC') return '/usdclogo.png';
   return `/${tokenName.toLowerCase()}.png`;
 }
 
@@ -97,7 +97,7 @@ export default function PlansPage() {
         console.error('Error fetching network logos:', error);
       }
     };
-    
+
     loadNetworkLogos();
   }, []);
 
@@ -111,10 +111,10 @@ export default function PlansPage() {
           if (accounts.length > 0) {
             const address = accounts[0];
             console.log('Fetching activity data for address:', address);
-            
+
             const response = await fetch(`/api/transactions?address=${address}`);
             console.log('Response status:', response.status);
-            
+
             if (!response.ok) {
               const errorText = await response.text().catch(() => 'Could not read error response');
               console.error('API response error:', {
@@ -123,17 +123,17 @@ export default function PlansPage() {
                 errorText: errorText,
                 url: response.url
               });
-              
+
               // Don't throw for 404 or empty responses, just set empty data
               if (response.status === 404) {
                 console.log('No transactions found for address');
                 setActivityData([]);
                 return;
               }
-              
+
               throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
-            
+
             let data;
             try {
               data = await response.json();
@@ -145,15 +145,15 @@ export default function PlansPage() {
               setActivityData([]);
               return;
             }
-            
+
             if (!data || !Array.isArray(data.transactions)) {
               console.warn('Invalid data format received:', data);
               setActivityData([]);
               return;
             }
-            
+
             const transactions = data.transactions || [];
-            
+
             // Transform transaction data for display
             const formattedActivity = transactions.map((tx: {
               transaction_type: string;
@@ -182,7 +182,7 @@ export default function PlansPage() {
                 return null;
               }
             }).filter(Boolean); // Remove any null entries from mapping errors
-            
+
             setActivityData(formattedActivity);
           } else {
             console.log('No accounts found, skipping activity data fetch');
@@ -242,7 +242,7 @@ export default function PlansPage() {
     <div className={`${exo.className} min-h-screen bg-gradient-to-b from-gray-50 to-gray-100`}>
       {/* Network Detection Component */}
       <NetworkDetection />
-      
+
       {/* Decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-[#6bc4a1]/10 rounded-full blur-3xl"></div>
@@ -294,7 +294,7 @@ export default function PlansPage() {
                   <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none"></div>
 
                   {/* Subtle noise texture */}
-        {/* Noise background removed per redesign spec */}
+                  {/* Noise background removed per redesign spec */}
 
                   {/* Decorative accent */}
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
@@ -378,18 +378,18 @@ export default function PlansPage() {
                       <div className="flex justify-between text-xs pt-2 border-t border-gray-100">
                         <div className="flex flex-col">
                           <span className="text-gray-400 mb-1">Start Date</span>
-                        <span className="text-gray-700 font-normal">{formatTimestamp(plan.startTime)}</span>
+                          <span className="text-gray-700 font-normal">{formatTimestamp(plan.startTime)}</span>
                         </div>
                         <div className="flex flex-col text-right">
                           <span className="text-gray-400 mb-1">End Date</span>
-                        <span className="text-[#81D7B4] font-normal">{formatTimestamp(plan.maturityTime)}</span>
+                          <span className="text-[#81D7B4] font-normal">{formatTimestamp(plan.maturityTime)}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex space-x-2">
                       <button
-                    className="flex-1 bg-white/70 backdrop-blur-sm text-gray-800 font-normal py-2 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 text-sm flex items-center justify-center"
+                        className="flex-1 bg-white/70 backdrop-blur-sm text-gray-800 font-normal py-2 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 text-sm flex items-center justify-center"
                         onClick={(e) => openTopUpModal(e, plan)}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1.5 text-gray-600">
@@ -398,7 +398,7 @@ export default function PlansPage() {
                         Top Up
                       </button>
                       <button
-                    className="flex-1 bg-gradient-to-r from-[#81D7B4]/90 to-[#81D7B4]/80 text-white font-normal py-2 rounded-xl shadow-[0_2px_8px_rgba(129,215,180,0.3)] hover:shadow-[0_4px_12px_rgba(129,215,180,0.4)] transition-all duration-300 text-sm flex items-center justify-center"
+                        className="flex-1 bg-gradient-to-r from-[#81D7B4]/90 to-[#81D7B4]/80 text-white font-normal py-2 rounded-xl shadow-[0_2px_8px_rgba(129,215,180,0.3)] hover:shadow-[0_4px_12px_rgba(129,215,180,0.4)] transition-all duration-300 text-sm flex items-center justify-center"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1.5 text-white">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -441,7 +441,7 @@ export default function PlansPage() {
         {/* Completed Plans Section */}
         {savingsData.completedPlans.length > 0 && (
           <div className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Completed Plans</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Completed Plans</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {savingsData.completedPlans.map((plan) => (
                 <motion.div
@@ -455,7 +455,7 @@ export default function PlansPage() {
                 >
                   <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.2)] overflow-hidden transition-all duration-300 group-hover:shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25)] h-full">
                     <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none"></div>
-                {/* Noise background removed per redesign spec */}
+                    {/* Noise background removed per redesign spec */}
                     <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl"></div>
 
                     <div className="p-6 md:p-7 relative">
@@ -467,7 +467,7 @@ export default function PlansPage() {
                             </svg>
                           </div>
                           <div>
-                          <h3 className="font-medium text-gray-800 text-lg">{plan.name}</h3>
+                            <h3 className="font-medium text-gray-800 text-lg">{plan.name}</h3>
                             <div className="flex gap-4 text-xs text-gray-500">
                               <span>Started: {formatTimestamp(plan.startTime)}</span>
                               <span>Completed: {formatTimestamp(plan.maturityTime)}</span>
@@ -476,7 +476,7 @@ export default function PlansPage() {
                         </div>
                         <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/60 shadow-sm">
                           <Image src={plan.isEth ? '/eth.svg' : '/usdc.svg'} alt={plan.isEth ? 'Ethereum' : 'USDC'} width={14} height={14} className="w-3.5 h-3.5 mr-1.5" />
-                        <span className="text-xs font-normal text-gray-700">{plan.isEth ? 'ETH' : 'USDC'}</span>
+                          <span className="text-xs font-normal text-gray-700">{plan.isEth ? 'ETH' : 'USDC'}</span>
                         </div>
                       </div>
 
@@ -484,7 +484,7 @@ export default function PlansPage() {
                         <div className="flex justify-between items-end mb-1.5">
                           <div>
                             <p className="text-xs text-gray-500 mb-0.5">Final Amount</p>
-                      <p className="text-2xl font-semibold text-gray-800">
+                            <p className="text-2xl font-semibold text-gray-800">
                               {plan.isEth ? `${parseFloat(plan.currentAmount).toFixed(4)} ETH` : `$${parseFloat(plan.currentAmount).toFixed(2)}`}
                             </p>
                           </div>
@@ -496,7 +496,7 @@ export default function PlansPage() {
 
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-500">100% Complete</span>
-                        <span className="text-purple-500 font-normal">Ready to withdraw</span>
+                          <span className="text-purple-500 font-normal">Ready to withdraw</span>
                         </div>
                       </div>
 
@@ -517,13 +517,13 @@ export default function PlansPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Total Saved Card */}
             <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 md:p-7 relative overflow-hidden">
-            {/* Noise background removed per redesign spec */}
+              {/* Noise background removed per redesign spec */}
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
 
               <div className="flex items-center mb-4">
-                        <div className="bg-[#81D7B4]/20 rounded-full p-2.5 mr-3 border border-[#81D7B4]/30">
-                          <HiOutlineBanknotes className="w-5 h-5 text-[#81D7B4]" />
-                        </div>
+                <div className="bg-[#81D7B4]/20 rounded-full p-2.5 mr-3 border border-[#81D7B4]/30">
+                  <HiOutlineBanknotes className="w-5 h-5 text-[#81D7B4]" />
+                </div>
                 <h3 className="font-medium text-gray-800">Total Saved</h3>
               </div>
 
@@ -537,8 +537,8 @@ export default function PlansPage() {
             </div>
 
             {/* Total Goals Card */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 md:p-7 relative overflow-hidden">
-          {/* Noise background removed per redesign spec */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 md:p-7 relative overflow-hidden">
+              {/* Noise background removed per redesign spec */}
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#6bc4a1]/10 rounded-full blur-2xl"></div>
 
               <div className="flex items-center mb-4">
@@ -564,7 +564,7 @@ export default function PlansPage() {
         {/* Activity History Section */}
         <div className="mt-12 mb-8">
           <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Recent Activity</h2>
+            <h2 className="text-2xl font-semibold text-gray-800">Recent Activity</h2>
             <button
               onClick={() => setShowActivityHistory(!showActivityHistory)}
               className="bg-white/70 backdrop-blur-sm text-gray-800 font-normal py-2 px-4 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 text-sm flex items-center"
@@ -609,11 +609,10 @@ export default function PlansPage() {
                           className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-white/40"
                         >
                           <div className="flex items-center space-x-4">
-                            <div className={`p-2 rounded-full ${
-                              activity.type === 'deposit' ? 'bg-green-100 text-green-600' :
-                              activity.type === 'withdrawal' ? 'bg-red-100 text-red-600' :
-                              'bg-[#81D7B4]/20 text-[#81D7B4]'
-                            }`}>
+                            <div className={`p-2 rounded-full ${activity.type === 'deposit' ? 'bg-green-100 text-green-600' :
+                                activity.type === 'withdrawal' ? 'bg-red-100 text-red-600' :
+                                  'bg-[#81D7B4]/20 text-[#81D7B4]'
+                              }`}>
                               {activity.type === 'deposit' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -629,16 +628,15 @@ export default function PlansPage() {
                               )}
                             </div>
                             <div>
-            <p className="font-normal text-gray-800">{activity.description}</p>
+                              <p className="font-normal text-gray-800">{activity.description}</p>
                               <p className="text-sm text-gray-500">{activity.timestamp}</p>
                             </div>
                           </div>
                           <div className="text-right">
-            <p className={`font-semibold ${
-                              activity.type === 'deposit' ? 'text-green-600' :
-                              activity.type === 'withdrawal' ? 'text-red-600' :
-                              'text-gray-800'
-                            }`}>
+                            <p className={`font-semibold ${activity.type === 'deposit' ? 'text-green-600' :
+                                activity.type === 'withdrawal' ? 'text-red-600' :
+                                  'text-gray-800'
+                              }`}>
                               {activity.amount}
                             </p>
                             <p className="text-sm text-gray-500">{activity.network}</p>
@@ -647,7 +645,7 @@ export default function PlansPage() {
                       ))}
                       <div className="text-center pt-4">
                         <Link href="/dashboard/activity">
-              <button className="text-[#81D7B4] hover:text-[#81D7B4]/80 font-normal text-sm transition-colors">
+                          <button className="text-[#81D7B4] hover:text-[#81D7B4]/80 font-normal text-sm transition-colors">
                             View All Activity →
                           </button>
                         </Link>
