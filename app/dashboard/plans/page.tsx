@@ -301,11 +301,30 @@ export default function PlansPage() {
                         <p className="text-xs text-gray-500">Started {formatTimestamp(plan.startTime)}</p>
                       </div>
                     </div>
-                    <div className="flex items-center bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
-                      <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-2" />
-                      <span className="text-xs font-medium text-gray-700">
-                        {plan.isEth ? 'ETH' : plan.tokenName === 'cUSD' ? 'cUSD' : plan.tokenName === 'Gooddollar' ? '$G' : plan.tokenName}
-                      </span>
+                    <div className="flex flex-col gap-2 items-end">
+                      <div className="flex items-center bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+                        <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-2" />
+                        <span className="text-xs font-medium text-gray-700">
+                          {plan.isEth ? 'ETH' : plan.tokenName === 'cUSD' ? 'cUSD' : plan.tokenName === 'Gooddollar' ? '$G' : plan.tokenName}
+                        </span>
+                      </div>
+                      <div className="flex items-center bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+                        <Image
+                          src={
+                            plan.network === 'Base' ? '/base.svg' :
+                              plan.network === 'Celo' ? '/celo.png' :
+                                plan.network === 'Lisk' ? '/lisk.png' :
+                                  '/default-network.png'
+                          }
+                          alt={plan.network || 'Network'}
+                          width={16}
+                          height={16}
+                          className="w-4 h-4 mr-2"
+                        />
+                        <span className="text-xs font-medium text-gray-700">
+                          {plan.network || 'Network'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -362,6 +381,10 @@ export default function PlansPage() {
                     </button>
                     <button
                       className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPlanDetails(plan);
+                      }}
                     >
                       Withdraw
                     </button>

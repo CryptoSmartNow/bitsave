@@ -26,7 +26,7 @@ import { handleContractError } from '@/lib/contractErrorHandler';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
 import { getSavingFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
 
-const exo = Exo({ 
+const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
 })
@@ -67,6 +67,15 @@ interface TopUpModalProps {
   networkLogos?: NetworkLogoData
 }
 
+const getTokenLogo = (name: string, logoUrl: string) => {
+  if (logoUrl) return ensureImageUrl(logoUrl);
+  if (name === 'ETH') return '/eth.png';
+  if (name === 'USDC') return '/usdc.png';
+  if (name === 'cUSD') return '/cusd.png';
+  if (name === 'Gooddollar' || name === '$G') return '/gooddollar.png';
+  return '/default-token.png';
+}
+
 const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth = false, tokenName, networkLogos }: TopUpModalProps) {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
@@ -77,14 +86,14 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base')
   const modalRef = useRef<HTMLDivElement>(null)
   const { address, isConnected } = useAccount()
-  
+
   // Wallet balance checking states
   const [walletBalance, setWalletBalance] = useState<string>('0')
   const [tokenBalance, setTokenBalance] = useState<string>('0')
   const [estimatedGasFee, setEstimatedGasFee] = useState<string>('0')
   const [balanceWarning, setBalanceWarning] = useState<string | null>(null)
   const [isCheckingBalance, setIsCheckingBalance] = useState(false)
-  
+
   useEffect(() => {
     const detectNetwork = async () => {
       if (window.ethereum) {
@@ -93,7 +102,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         const BASE_CHAIN_ID = BigInt(8453);
         const CELO_CHAIN_ID = BigInt(42220);
         const LISK_CHAIN_ID = BigInt(1135);
-        
+
         if (network.chainId === BASE_CHAIN_ID) {
           setCurrentNetwork('base');
         } else if (network.chainId === CELO_CHAIN_ID) {
@@ -105,7 +114,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         }
       }
     };
-    
+
     if (isOpen) {
       detectNetwork();
     }
@@ -147,18 +156,18 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
   const checkWalletBalances = useCallback(async () => {
     if (!address || !window.ethereum) return;
-    
+
     setIsCheckingBalance(true);
     setBalanceWarning(null);
-    
+
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      
+
       // Get native token balance (ETH)
       const nativeBalance = await provider.getBalance(address);
       const nativeBalanceFormatted = ethers.formatEther(nativeBalance);
       setWalletBalance(nativeBalanceFormatted);
-      
+
       // Get token balance for selected currency
       if (!isEth && tokenName) {
         const tokenAddress = getTokenAddress(tokenName, currentNetwork);
@@ -170,20 +179,20 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       } else {
         setTokenBalance(nativeBalanceFormatted); // For ETH top-ups
       }
-      
+
       // Estimate gas fee
       const gasPrice = await provider.getFeeData();
       const estimatedGasLimit = ethers.getBigInt(2717330); // Estimated gas limit for top-up (0.000027 ETH)
       const estimatedGasCost = gasPrice.gasPrice ? gasPrice.gasPrice * estimatedGasLimit : ethers.getBigInt(0);
       const gasFeeFormatted = ethers.formatEther(estimatedGasCost);
       setEstimatedGasFee(gasFeeFormatted);
-      
+
       // Check for warnings
       const amountNum = parseFloat(amount || '0');
       const tokenBalanceNum = parseFloat(isEth ? nativeBalanceFormatted : tokenBalance);
       const nativeBalanceNum = parseFloat(nativeBalanceFormatted);
       const gasFeeNum = parseFloat(gasFeeFormatted);
-      
+
       if (amountNum > 0) {
         if (isEth) {
           // For ETH top-ups, check if user has enough ETH for amount + gas
@@ -200,7 +209,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           }
         }
       }
-      
+
     } catch (error) {
       console.error('Error checking wallet balances:', error);
     } finally {
@@ -214,7 +223,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       const timeoutId = setTimeout(() => {
         checkWalletBalances();
       }, 500); // Debounce to avoid too many calls
-      
+
       return () => clearTimeout(timeoutId);
     } else {
       setBalanceWarning(null);
@@ -232,26 +241,26 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   const diagnoseChildContractIssues = async (childContractAddress: string, savingsPlanName: string, provider: ethers.BrowserProvider, signer: ethers.Signer) => {
     try {
       const childContract = new ethers.Contract(childContractAddress, CHILD_CONTRACT_ABI, signer)
-      
+
       // Check if the saving exists and is valid
       const savingData = await childContract.getSaving(savingsPlanName)
-      
+
       if (!savingData.isValid) {
         throw new Error(`InvalidSaving: The savings plan "${savingsPlanName}" does not exist or is invalid. Please check the plan name.`)
       }
-      
+
       // Check if the owner address matches
       const ownerAddress = await childContract.ownerAddress()
       const signerAddress = await signer.getAddress()
-      
+
       if (ownerAddress.toLowerCase() !== signerAddress.toLowerCase()) {
         throw new Error(`CallNotFromBitsave: The connected wallet (${signerAddress}) does not match the savings plan owner (${ownerAddress}).`)
       }
-      
+
       // Check the stable coin address
       const stableCoinAddress = await childContract.stableCoin()
       console.log(`Child contract stable coin address: ${stableCoinAddress}`)
-      
+
       // Return diagnostic info for logging
       return {
         isValid: savingData.isValid,
@@ -281,7 +290,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     setSuccess(false);
 
     try {
-  
+
       const sanitizedAmount = amount.trim();
       const userEnteredAmount = parseFloat(sanitizedAmount);
 
@@ -296,12 +305,12 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       const provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
-      
+
       const network = await provider.getNetwork();
       const BASE_CHAIN_ID = BigInt(8453);
       const CELO_CHAIN_ID = BigInt(42220);
       const LISK_CHAIN_ID = BigInt(1135);
-      
+
       let networkType = 'celo'; // default
       if (network.chainId === BASE_CHAIN_ID) {
         networkType = 'base';
@@ -312,12 +321,12 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       } else if (network.chainId === CELO_CHAIN_ID) {
         networkType = 'celo';
       }
-      
+
       let contractAddress;
       let tokenAddress;
       let decimals = 6;
       let tokenNameToUse;
-      
+
       if (networkType === 'base') {
         contractAddress = BASE_CONTRACT_ADDRESS;
         tokenAddress = USDC_BASE_ADDRESS;
@@ -331,7 +340,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         tokenAddress = USDGLO_CELO_ADDRESS;
         tokenNameToUse = "USDGLO";
       }
-      
+
       if (networkType === 'base' && tokenName) {
         if (tokenName === 'USDGLO') {
           tokenAddress = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3";
@@ -390,19 +399,19 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       // Additional diagnostic checks for token balance and allowance
       const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
       const userAddress = await signer.getAddress();
-      
+
       // Check user's token balance
       const userBalance = await erc20Contract.balanceOf(userAddress);
       console.log(`User ${tokenNameToUse} balance: ${ethers.formatUnits(userBalance, decimals)}`);
-      
+
       if (userBalance < tokenAmount) {
         throw new Error(`Insufficient ${tokenNameToUse} balance. You have ${ethers.formatUnits(userBalance, decimals)} ${tokenNameToUse}, but need ${userEnteredAmount} ${tokenNameToUse} for this transaction.`);
       }
-      
+
       // Check current allowance
       const currentAllowance = await erc20Contract.allowance(userAddress, contractAddress);
       console.log(`Current ${tokenNameToUse} allowance: ${ethers.formatUnits(currentAllowance, decimals)}`);
-      
+
       // Verify token address matches what the child contract expects
       if (diagnosticInfo.tokenId.toLowerCase() !== tokenAddress.toLowerCase()) {
         throw new Error(`Token mismatch: The savings plan expects ${diagnosticInfo.tokenId} but you're trying to deposit ${tokenAddress}. Please use the correct token for this savings plan.`);
@@ -420,7 +429,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
       // Final check before incrementSaving
       console.log(`Calling incrementSaving with plan: "${savingsPlanName}", token: ${tokenAddress}, amount: ${ethers.formatUnits(tokenAmount, decimals)}`);
-      
+
       // Estimate gas for incrementSaving transaction
       const estimatedGas = await estimateGasForTransaction(
         contract,
@@ -428,10 +437,10 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         [savingsPlanName, tokenAddress, tokenAmount],
         {}
       );
-      
+
       const tx = await contract.incrementSaving(
-        savingsPlanName, 
-        tokenAddress, 
+        savingsPlanName,
+        tokenAddress,
         tokenAmount,
         {
           gasLimit: estimatedGas,
@@ -440,7 +449,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
-      
+
       try {
         await axios.post(
           "https://bitsaveapi.vercel.app/transactions/",
@@ -464,7 +473,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       } catch (apiError) {
         console.error("Error sending transaction data to API:", apiError);
       }
-      
+
       // Track successful transaction
       if (address) {
         trackTransaction(address, {
@@ -476,13 +485,13 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           txHash: receipt.hash
         });
       }
-      
+
       setSuccess(true);
       setShowTransactionModal(true);
-      
+
     } catch (error: unknown) {
       console.error("Error topping up stablecoin savings plan:", error);
-      
+
       // Track error
       if (address) {
         trackError(address, {
@@ -495,23 +504,23 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           }
         });
       }
-      
+
       // Enhanced error handling with child contract diagnostics
       let errorMessage: string;
       const errorString = error instanceof Error ? error.message : String(error);
-      
+
       // Check if this is a diagnostic error (more specific)
-      if (errorString.includes('InvalidSaving:') || 
-          errorString.includes('CallNotFromBitsave:') || 
-          errorString.includes('Token mismatch:') ||
-          errorString.includes('Insufficient') && errorString.includes('balance')) {
+      if (errorString.includes('InvalidSaving:') ||
+        errorString.includes('CallNotFromBitsave:') ||
+        errorString.includes('Token mismatch:') ||
+        errorString.includes('Insufficient') && errorString.includes('balance')) {
         // Use the specific diagnostic error message
         errorMessage = errorString;
       } else {
         // Use the contract error handler for other errors, but try child contract first
         errorMessage = handleContractError(error, 'child');
       }
-      
+
       setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
@@ -524,7 +533,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       setError("Please connect your wallet.");
       return;
     }
-    
+
     setLoading(true);
     setError(null);
     setTxHash(null);
@@ -534,16 +543,16 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       if (!window.ethereum) {
         throw new Error("No Ethereum wallet detected. Please install MetaMask.");
       }
-      
+
       const provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
-      
+
       const network = await provider.getNetwork();
       const BASE_CHAIN_ID = BigInt(8453);
       const CELO_CHAIN_ID = BigInt(42220);
       const LISK_CHAIN_ID = BigInt(1135);
-      
+
       let networkType = 'celo'; // default
       if (network.chainId === BASE_CHAIN_ID) {
         networkType = 'base';
@@ -552,7 +561,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       } else if (network.chainId === CELO_CHAIN_ID) {
         networkType = 'celo';
       }
-      
+
       let contractAddress;
       if (networkType === 'base') {
         contractAddress = BASE_CONTRACT_ADDRESS;
@@ -561,7 +570,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       } else {
         contractAddress = CELO_CONTRACT_ADDRESS;
       }
-      
+
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
       // Check if user has joined Bitsave
@@ -592,22 +601,22 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       const userAddress = await signer.getAddress();
       const userBalance = await provider.getBalance(userAddress);
       console.log(`User ETH balance: ${ethers.formatEther(userBalance)} ETH`);
-      
+
       // Account for gas fees (estimate ~0.01 ETH for gas)
       const gasEstimate = ethers.parseEther("0.01");
       const totalRequired = ethAmountInWei + gasEstimate;
-      
+
       if (userBalance < totalRequired) {
         throw new Error(`Insufficient ETH balance. You have ${ethers.formatEther(userBalance)} ETH, but need approximately ${ethers.formatEther(totalRequired)} ETH (including gas fees) for this transaction.`);
       }
-      
+
       // Verify token address matches what the child contract expects (ETH should be zero address)
       if (diagnosticInfo.tokenId.toLowerCase() !== ETH_TOKEN_ADDRESS.toLowerCase()) {
         throw new Error(`Token mismatch: The savings plan expects ${diagnosticInfo.tokenId} but you're trying to deposit ETH (${ETH_TOKEN_ADDRESS}). Please use the correct token for this savings plan.`);
       }
 
       console.log(`Calling incrementSaving with plan: "${savingsPlanName}", ETH amount: ${ethers.formatEther(ethAmountInWei)} ETH`);
-      
+
       // Estimate gas for incrementSaving transaction
       const estimatedGas = await estimateGasForTransaction(
         contract,
@@ -615,20 +624,20 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         [savingsPlanName, ETH_TOKEN_ADDRESS, ethAmountInWei],
         { value: ethAmountInWei }
       );
-      
+
       const tx = await contract.incrementSaving(
         savingsPlanName,
-        ETH_TOKEN_ADDRESS, 
+        ETH_TOKEN_ADDRESS,
         ethAmountInWei,
         {
-          value: ethAmountInWei, 
-          gasLimit: estimatedGas, 
+          value: ethAmountInWei,
+          gasLimit: estimatedGas,
         }
       );
 
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
-      
+
       try {
         await axios.post(
           "https://bitsaveapi.vercel.app/transactions/",
@@ -639,7 +648,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
             savingsname: savingsPlanName,
             useraddress: address,
             transaction_type: "deposit",
-            currency: "ETH" 
+            currency: "ETH"
           },
           {
             headers: {
@@ -652,13 +661,13 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       } catch (apiError) {
         console.error("Error sending transaction data to API:", apiError);
       }
-      
+
       setSuccess(true);
       setShowTransactionModal(true);
-      
+
     } catch (error: unknown) {
       console.error("Error topping up ETH savings plan:", error);
-      
+
       // Track ETH top-up error
       if (address) {
         trackError(address, {
@@ -671,82 +680,82 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           }
         });
       }
-      
+
       // Enhanced error handling with child contract diagnostics
       let errorMessage: string;
       const errorString = error instanceof Error ? error.message : String(error);
-      
+
       // Check if this is a diagnostic error (more specific)
-      if (errorString.includes('InvalidSaving:') || 
-          errorString.includes('CallNotFromBitsave:') || 
-          errorString.includes('Token mismatch:') ||
-          errorString.includes('Insufficient') && errorString.includes('balance')) {
+      if (errorString.includes('InvalidSaving:') ||
+        errorString.includes('CallNotFromBitsave:') ||
+        errorString.includes('Token mismatch:') ||
+        errorString.includes('Insufficient') && errorString.includes('balance')) {
         // Use the specific diagnostic error message
         errorMessage = errorString;
       } else {
         // Use the contract error handler for other errors, but try child contract first
         errorMessage = handleContractError(error, 'child');
       }
-      
+
       setError(errorMessage);
       setShowTransactionModal(true);
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
-  
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose()
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen, onClose])
-  
+
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose()
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEsc)
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEsc)
     }
   }, [isOpen, onClose])
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
+
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-    
+
     if (isEth) {
       await handleEthTopUp(amount, planName);
     } else {
       await handleStablecoinTopUp(amount, planName);
     }
   }
-  
+
   const handleCloseTransactionModal = () => {
     setShowTransactionModal(false);
     if (success) {
@@ -754,9 +763,9 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       setAmount('');
     }
   }
-  
+
   const presetAmounts = ['10', '50', '100', '500']
-  
+
 
 
   const getTokenNameDisplay = () => {
@@ -770,127 +779,114 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     if (currentNetwork === 'lisk') return "USDC";
     return "USDGLO"; // Celo default
   }
-  
+
   const getNetworkName = () => {
     if (currentNetwork === 'base') return "Base";
     if (currentNetwork === 'lisk') return "Lisk";
     return "Celo";
   }
-  
+
   const getExplorerUrl = () => {
     if (currentNetwork === 'base') return "https://basescan.org/tx/";
     if (currentNetwork === 'lisk') return "https://blockscout.lisk.com/tx/";
     return "https://explorer.celo.org/mainnet/tx/";
   }
-  
+
   if (!isOpen) return null
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto">
       {showTransactionModal ? (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto">
-          <div className={`${exo.className} bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto`}>
-            <div className="p-5 sm:p-8 flex flex-col items-center">
-              {/* Success or Error Icon */}
-              <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mb-4 sm:mb-6 ${success ? 'bg-green-100' : 'bg-red-100'}`}>
+          <div className={`${exo.className} bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden my-4 sm:my-0`}>
+            <div className="p-8 flex flex-col items-center">
+              {/* Icon */}
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${success ? 'bg-[#81D7B4]/10' : 'bg-red-50'}`}>
                 {success ? (
-                  <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-green-500 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="w-12 h-12 rounded-full bg-[#81D7B4] flex items-center justify-center shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                 ) : (
-                  <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-red-500 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                   </div>
                 )}
               </div>
-              
-              {/* Title */}
-              <h2 className="text-xl sm:text-2xl font-bold text-center mb-1 sm:mb-2">
-                {success ? 'Top-Up Successful! 🎉' : 'Top-Up Failed'}
+
+              <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
+                {success ? 'Top Up Successful' : 'Top Up Failed'}
               </h2>
-              
-              {/* Message */}
-              <p className="text-sm sm:text-base text-gray-500 text-center mb-5 sm:mb-8 max-w-xs sm:max-w-none mx-auto">
-                {success 
-                  ? `Great! Your savings plan "${planName}" has been topped up successfully. Keep building towards your goal! 💪`
-                  : 'Your top-up transaction failed. Please try again or contact our support team for assistance.'}
+
+              <div className="text-gray-500 text-center mb-8">
+                <p className="mb-2">
+                  {success
+                    ? 'Your savings plan has been successfully topped up.'
+                    : 'Your top up failed. Please try again.'}
+                </p>
                 {!success && error && (
-                  <span className="block mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="text-sm font-medium text-red-800 mb-2">Error</div>
-                    <div className="text-xs text-red-600 mb-3">{error}</div>
-                    <div className="mt-3 pt-2 border-t border-red-200">
-                      <button 
-                        onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
-                        className="py-2.5 sm:py-3 px-6 bg-[#0088cc] rounded-full text-white text-sm sm:text-base font-medium hover:bg-[#006ba1] transition-colors flex items-center justify-center gap-2 mx-auto"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z"/>
-                        </svg>
-                        Get Help on Telegram
-                      </button>
-                    </div>
-                  </span>
+                  <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl text-left">
+                    <p className="text-xs font-bold text-red-800 uppercase mb-1">Error Details</p>
+                    <p className="text-sm text-red-600">{error}</p>
+                    <button
+                      onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
+                      className="mt-3 text-xs font-medium text-[#0088cc] hover:underline flex items-center"
+                    >
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z" />
+                      </svg>
+                      Get Help on Telegram
+                    </button>
+                  </div>
                 )}
-              </p>
-              
-              {/* Transaction ID Button */}
-              <button 
-                className="w-full py-2.5 sm:py-3 border border-gray-300 rounded-full text-gray-700 text-sm sm:text-base font-medium mb-3 sm:mb-4 hover:bg-gray-50 transition-colors"
-                onClick={() => txHash && window.open(`${getExplorerUrl()}${txHash}`, '_blank')}
-                disabled={!txHash}
-              >
-                View Transaction ID
-              </button>
-              
-              {/* Tweet Button */}
-               {success && (
-                 <button 
-                   className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white text-sm sm:text-base font-medium mb-3 sm:mb-4 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                   onClick={() => {
-                     const tweetProps = getTweetButtonProps('top-up', {
-                       amount: amount,
-                       currency: getTokenNameDisplay(),
-                       planName: planName
-                     });
-                     window.open(tweetProps.href, '_blank');
-                   }}
-                 >
-                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                     <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                   </svg>
-                   Share Success on X
-                 </button>
-               )}
-              
-              {/* Action Buttons */}
-              <div className="flex w-full gap-3 sm:gap-4 flex-col sm:flex-row">
-                <button 
-                  className="w-full py-2.5 sm:py-3 bg-gray-100 rounded-full text-gray-700 text-sm sm:text-base font-medium flex items-center justify-center hover:bg-gray-200 transition-colors"
+              </div>
+
+              <div className="w-full space-y-3">
+                <button
+                  className="w-full py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => txHash && window.open(`${getExplorerUrl()}${txHash}`, '_blank')}
                   disabled={!txHash}
                 >
-                  Go To Explorer
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                  View Transaction
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </button>
-                <button 
-                  className="w-full py-2.5 sm:py-3 bg-gray-700 rounded-full text-white text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
+
+                {success && (
+                  <button
+                    className="w-full py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center"
+                    onClick={() => {
+                      const tweetProps = getTweetButtonProps('top-up', {
+                        planName: planName,
+                        amount: amount,
+                        currency: isEth ? 'ETH' : tokenName
+                      });
+                      window.open(tweetProps.href, '_blank');
+                    }}
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                    </svg>
+                    Share on X
+                  </button>
+                )}
+
+                <button
+                  className="w-full py-3 bg-[#81D7B4] text-white rounded-xl font-medium hover:shadow-md transition-all"
                   onClick={handleCloseTransactionModal}
                 >
                   Close
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
+            </div >
+          </div >
+        </div >
       ) : (
-        <motion.div 
+        <motion.div
           ref={modalRef}
           onClick={handleModalClick}
           className={`${exo.className} bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.1)] w-full max-w-md mx-auto overflow-hidden relative my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto scrollbar-hide`}
@@ -903,186 +899,103 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Enhanced glassmorphism effects */}
-          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
-          <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#81D7B4]/10 rounded-full blur-3xl group-hover:bg-[#81D7B4]/20 transition-all duration-500"></div>
-          <div className="absolute -left-10 -top-10 w-60 h-60 bg-[#81D7B4]/10 rounded-full blur-3xl group-hover:bg-[#81D7B4]/20 transition-all duration-500"></div>
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/80"></div>
-          
+          {/* Clean background without noise/gradients */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#81D7B4]"></div>
+
           <div className="p-6 relative z-10 flex flex-col max-h-full">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-bold text-gray-800">Top Up Savings</h2>
-              <button 
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Top Up Savings</h2>
+              <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 transition-colors bg-white/80 rounded-full p-1.5 backdrop-blur-sm border border-gray-100/50 shadow-sm"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            
-            <div className="mb-6">
-              <div className="flex items-center bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-xl rounded-xl p-4 border border-white/60 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05),0_4px_6px_-2px_rgba(0,0,0,0.03),inset_0_2px_4px_rgba(255,255,255,0.7)] hover:shadow-[0_15px_20px_-5px_rgba(129,215,180,0.1),0_8px_10px_-4px_rgba(129,215,180,0.05),inset_0_2px_4px_rgba(255,255,255,0.7)] transition-all duration-300">
-                <div className="mr-3 bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/10 p-2.5 rounded-full shadow-[inset_0_1px_3px_rgba(0,0,0,0.05),0_3px_6px_rgba(129,215,180,0.12)]">
+
+            {/* Plan Info Card */}
+            <div className="mb-6 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-800 mb-1.5 truncate max-w-[250px]">{planName}</h3>
-                  <div className="inline-flex items-center px-3.5 py-1.5 bg-gradient-to-r from-[#81D7B4]/10 to-[#81D7B4]/5 backdrop-blur-sm rounded-full border border-[#81D7B4]/20 shadow-sm">
-                    {isEth ? (
-                      <>
-                        <Image
-                          src={ensureImageUrl(networkLogos?.ethereum?.logoUrl || networkLogos?.['ethereum']?.fallbackUrl || '/eth.png')}
-                          alt="ETH"
-                          width={16}
-                          height={16}
-                          className="mr-2"
-                        />
-                        <span className="text-xs font-medium text-gray-700">ETH on {getNetworkName()}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Image
-                          src={ensureImageUrl(
-                            networkLogos?.[currentNetwork]?.logoUrl ||
-                            networkLogos?.[currentNetwork]?.fallbackUrl ||
-                            '/default-network.png'
-                          )}
-                          alt={getNetworkName()}
-                          width={16}
-                          height={16}
-                          className="mr-2"
-                        />
-                        <span className="text-xs font-medium text-gray-700">{getTokenNameDisplay()} on {getNetworkName()}</span>
-                      </>
-                    )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-medium text-gray-900 truncate">{planName}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center bg-white px-2 py-0.5 rounded border border-gray-200">
+                      <Image
+                        src={isEth ? '/eth.png' : getTokenLogo(tokenName || '', '')}
+                        alt="Token"
+                        width={14}
+                        height={14}
+                        className="mr-1.5"
+                      />
+                      <span className="text-xs font-medium text-gray-700">{isEth ? 'ETH' : tokenName}</span>
+                    </div>
+                    <div className="flex items-center bg-white px-2 py-0.5 rounded border border-gray-200">
+                      <Image
+                        src={
+                          currentNetwork === 'base' ? '/base.svg' :
+                            currentNetwork === 'celo' ? '/celo.png' :
+                              currentNetwork === 'lisk' ? '/lisk.png' :
+                                '/default-network.png'
+                        }
+                        alt="Network"
+                        width={14}
+                        height={14}
+                        className="mr-1.5"
+                      />
+                      <span className="text-xs font-medium text-gray-700">{getNetworkName()}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-2 w-1.5 h-12 bg-gradient-to-b from-[#81D7B4] to-[#81D7B4]/50 rounded-full shadow-[0_2px_4px_rgba(129,215,180,0.3)]"></div>
               </div>
             </div>
-            
-            {/* Inspirational quote */}
-            <div className="mb-6 bg-[#81D7B4]/5 backdrop-blur-sm rounded-xl p-4 border border-[#81D7B4]/20">
-              <p className="text-sm text-gray-600 italic">
-                &ldquo;The habit of saving is itself an education; it fosters every virtue, teaches self-denial, cultivates the sense of order, trains to forethought.&rdquo;
-              </p>
-              <p className="text-xs text-gray-500 mt-1 text-right">— T.T. Munger</p>
-            </div>
-            
+
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
               <div className="flex-1 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <div className="mb-5">
+                <div className="mb-6">
                   <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
-                    Top Up Amount (USD)
+                    Top Up Amount
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm font-medium">$</span>
-                    </div>
                     <input
-                      type="text"
+                      type="number"
                       name="amount"
                       id="amount"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value.trim())}
-                      className="focus:ring-[#81D7B4] focus:border-[#81D7B4] block w-full pl-8 pr-12 py-3 sm:text-sm border-gray-300 rounded-xl shadow-md bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="block w-full px-4 py-4 text-2xl font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4] transition-all"
                       placeholder="0.00"
-                      aria-describedby="amount-currency"
+                      step="any"
+                      min="0"
                     />
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm font-medium" id="amount-currency">
-                        USD
-                      </span>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-sm font-medium text-gray-500">{getTokenNameDisplay()}</span>
                     </div>
+                  </div>
+
+                  {/* Balance Display */}
+                  <div className="flex justify-between items-center mt-2 px-1">
+                    <span className="text-xs text-gray-500">Available Balance</span>
+                    <span className="text-xs font-medium text-gray-900">
+                      {isEth
+                        ? `${parseFloat(walletBalance).toFixed(4)} ETH`
+                        : `${parseFloat(tokenBalance).toFixed(2)} ${getTokenNameDisplay()}`
+                      }
+                    </span>
                   </div>
                 </div>
-              
-              {/* Balance Warning */}
-              {balanceWarning && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: 'auto' }}
-                  exit={{ opacity: 0, y: -10, height: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  className="mb-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 relative overflow-hidden"
-                >
-                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-amber-200/20 rounded-full blur-2xl"></div>
-                  <div className="flex items-start space-x-3 relative z-10">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-semibold text-amber-800 mb-1">Wallet Balance Warning</h4>
-                      <p className="text-xs text-amber-700 leading-relaxed">{balanceWarning}</p>
-                      {isCheckingBalance && (
-                        <div className="flex items-center mt-1 text-xs text-amber-600">
-                          <svg className="animate-spin w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Checking balances...
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setBalanceWarning(null)}
-                      className="flex-shrink-0 text-amber-500 hover:text-amber-700 transition-colors"
-                    >
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
 
-              {/* Wallet Balance Info */}
-              {address && !balanceWarning && amount && parseFloat(amount) > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-3 relative overflow-hidden"
-                >
-                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-green-200/20 rounded-full blur-2xl"></div>
-                  <div className="flex items-center space-x-3 relative z-10">
-                    <div className="flex-shrink-0">
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-semibold text-green-800 mb-1">Wallet Ready</h4>
-                      <div className="text-xs text-green-700 space-y-0.5">
-                        <div className="flex justify-between">
-                           <span>{getTokenNameDisplay()} Balance:</span>
-                           <span className="font-medium">{parseFloat(isEth ? walletBalance : tokenBalance).toFixed(4)} {getTokenNameDisplay()}</span>
-                         </div>
-                        <div className="flex justify-between">
-                          <span>ETH Balance:</span>
-                          <span className="font-medium">{parseFloat(walletBalance).toFixed(6)} ETH</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Est. Gas Fee:</span>
-                          <span className="font-medium">~{parseFloat(estimatedGasFee).toFixed(6)} ETH</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
+                {/* Quick Amounts */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quick Amounts
+                  <label className="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                    Quick Select
                   </label>
                   <div className="grid grid-cols-4 gap-2">
                     {presetAmounts.map((presetAmount) => (
@@ -1090,55 +1003,65 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                         key={presetAmount}
                         type="button"
                         onClick={() => setAmount(presetAmount)}
-                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all duration-300 ${
-                          amount === presetAmount
-                            ? 'bg-[#81D7B4]/10 border-[#81D7B4]/30 text-[#81D7B4] shadow-[0_2px_10px_rgba(129,215,180,0.2)]'
-                            : 'bg-white/80 backdrop-blur-sm border-gray-200/60 text-gray-700 hover:bg-gray-50/80'
-                        }`}
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${amount === presetAmount
+                          ? 'bg-[#81D7B4] text-white shadow-sm'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100'
+                          }`}
                       >
                         ${presetAmount}
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-              
-              {/* Sticky button area */}
-              <div className="flex justify-end pt-4 border-t border-gray-100/50">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="mr-3 px-4 py-2 border border-gray-300/80 rounded-lg text-gray-700 bg-white/80 backdrop-blur-sm hover:bg-gray-50/90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#81D7B4]/50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading || !amount || parseFloat(amount) <= 0}
-                  className={`px-4 py-2 rounded-lg text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#81D7B4]/50 transition-all duration-300 ${
-                    loading || !amount || parseFloat(amount) <= 0
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] hover:shadow-[0_4px_12px_rgba(129,215,180,0.4)]'
-                  }`}
-                >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processing...
+
+                {/* Balance Warning */}
+                {balanceWarning && (
+                  <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-amber-800 mb-1">Insufficient Balance</h4>
+                      <p className="text-xs text-amber-700">{balanceWarning}</p>
                     </div>
-                  ) : (
-                    'Top Up'
-                  )}
-                </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 mt-auto border-t border-gray-100">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || !amount || parseFloat(amount) <= 0}
+                    className="flex-[2] px-4 py-3.5 bg-[#81D7B4] text-white rounded-xl font-medium hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      'Confirm Top Up'
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </motion.div>
       )}
-    </div>
+    </div >
   )
 })
 

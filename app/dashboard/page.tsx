@@ -1199,10 +1199,32 @@ export default function Dashboard() {
                               <h3 className="text-lg font-medium text-gray-900 truncate mb-1">
                                 {plan.name}
                               </h3>
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <span>{plan.isEth ? 'ETH' : plan.tokenName}</span>
-                                <span>•</span>
-                                <span>{isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isAvalancheNetwork ? 'Avalanche' : 'Network'}</span>
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                <div className="flex items-center bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                  <Image
+                                    src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
+                                    alt="Token"
+                                    width={14}
+                                    height={14}
+                                    className="w-3.5 h-3.5 mr-1.5"
+                                  />
+                                  <span>{plan.isEth ? 'ETH' : plan.tokenName}</span>
+                                </div>
+                                <div className="flex items-center bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                  <Image
+                                    src={
+                                      isBaseNetwork ? '/base.svg' :
+                                        isCeloNetwork ? '/celo.png' :
+                                          isLiskNetwork ? '/lisk.png' :
+                                            '/default-network.png'
+                                    }
+                                    alt="Network"
+                                    width={14}
+                                    height={14}
+                                    className="w-3.5 h-3.5 mr-1.5"
+                                  />
+                                  <span>{isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isAvalancheNetwork ? 'Avalanche' : 'Network'}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1271,7 +1293,7 @@ export default function Dashboard() {
                               )}
                             </p>
                           </div>
-                          <div>
+                          <div className="text-right">
                             <p className="text-xs text-gray-500 mb-1">Time Left</p>
                             <p className="text-base font-medium text-gray-900">
                               {formatTimestamp(Number(plan.maturityTime || 0))}
@@ -1300,7 +1322,7 @@ export default function Dashboard() {
                           }}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
-                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-lg hover:shadow-md transition-shadow"
+                          className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
                         >
                           Withdraw
                         </motion.button>
