@@ -245,7 +245,7 @@ export default function PlansPage() {
 
       {/* Decorative elements */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
-      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-[#6bc4a1]/10 rounded-full blur-3xl"></div>
+      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
       <div className="fixed top-1/4 left-1/3 w-64 h-64 bg-[#81D7B4]/5 rounded-full blur-3xl"></div>
 
       {/* Noise texture removed per redesign spec */}
@@ -260,7 +260,7 @@ export default function PlansPage() {
         {/* Create New Plan Button */}
         <div className="mb-8">
           <Link href="/dashboard/create-savings">
-            <button className="bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-normal py-3 px-6 rounded-xl shadow-[0_4px_10px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_15px_rgba(129,215,180,0.4)] transition-all duration-300 flex items-center">
+            <button className="bg-[#81D7B4] text-white font-medium py-3 px-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center">
               <HiOutlinePlus className="w-5 h-5 mr-2" />
               Create New Savings Plan
             </button>
@@ -288,124 +288,83 @@ export default function PlansPage() {
                 className="group"
                 onClick={() => openPlanDetails(plan)}
               >
-                {/* Glassmorphism Card */}
-                <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.2)] overflow-hidden transition-all duration-300 group-hover:shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25)] h-full">
-                  {/* Card inner shadow for neomorphism effect */}
-                  <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none"></div>
-
-                  {/* Subtle noise texture */}
-                  {/* Noise background removed per redesign spec */}
-
-                  {/* Decorative accent */}
-                  <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
-
-                  <div className="p-6 md:p-7 relative">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center">
-                        <div className="bg-[#81D7B4]/20 rounded-full p-2.5 mr-3 border border-[#81D7B4]/30">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-[#81D7B4]">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-800 text-lg">{plan.name}</h3>
-                          <p className="text-xs text-gray-500">{new Date(plan.startTime * 1000).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/60 shadow-sm">
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 text-[#163239] text-xs font-normal shadow-sm">
-                          <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-1" />
-                          {plan.isEth ? 'ETH' : plan.tokenName === 'cUSD' ? 'cUSD' : plan.tokenName === 'Gooddollar' ? '$G' : plan.tokenName}
-                          <span className="mx-1 text-gray-400">|</span>
-                          <Image
-                            src={ensureImageUrl(
-                              (plan.network && networkLogos[plan.network.toLowerCase()]?.logoUrl) ||
-                              (plan.network && networkLogos[plan.network.toLowerCase()]?.fallbackUrl) ||
-                              (plan.network === 'Base' ? '/base.svg' : '/celo.png')
-                            )}
-                            alt={plan.network || 'Network'}
-                            width={16}
-                            height={16}
-                            className="w-4 h-4 mr-1"
-                          />
-                          {plan.network}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex justify-between items-end mb-1.5">
-                        <div>
-                          <p className="text-xs text-gray-500 mb-0.5">Current Amount</p>
-                          <span className="text-base font-semibold text-gray-900">
-                            {plan.isEth ? (
-                              <>{parseFloat(plan.currentAmount).toFixed(4)} <span className="text-xs font-normal text-gray-500 ml-1">ETH</span></>
-                            ) : plan.isGToken ? (
-                              <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} <span className="text-xs font-normal text-gray-500 ml-1">$G</span> <span className="text-xs text-gray-400 ml-2">(${(parseFloat(plan.currentAmount) * goodDollarPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span></>
-                            ) : plan.isUSDGLO ? (
-                              <>${Number(ethers.formatUnits(plan.currentAmount.split('.')[0], 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xs font-normal text-gray-500 ml-1">USDGLO</span></>
-                            ) : plan.tokenName === 'cUSD' ? (
-                              <>
-                                ${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-normal text-gray-500 ml-1">cUSD</span>
-                              </>
-                            ) : (
-                              <>${parseFloat(plan.currentAmount).toFixed(2)} <span className="text-xs font-normal text-gray-500 ml-1">{plan.tokenName}</span></>
-                            )}
-                          </span>
-                          {plan.isEth && (
-                            <p className="text-xs text-gray-500">
-                              ≈ ${(parseFloat(plan.currentAmount) * ethPrice).toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                        {/* Target display removed */}
-                      </div>
-
-                      {/* Progress bar with neomorphism effect */}
-                      <div className="relative h-2.5 bg-white rounded-full overflow-hidden mb-1.5 shadow-inner">
-                        <div
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/80 rounded-full shadow-[0_0_6px_rgba(129,215,180,0.5)]"
-                          style={{ width: `${plan.progress}%` }}
-                        ></div>
-                      </div>
-
-                      <div className="flex justify-between text-xs mb-2">
-                        <span className="text-gray-500">{plan.progress}% Complete</span>
-                        <span className="text-[#81D7B4] font-normal">Progress</span>
-                      </div>
-
-                      {/* Start and End Dates */}
-                      <div className="flex justify-between text-xs pt-2 border-t border-gray-100">
-                        <div className="flex flex-col">
-                          <span className="text-gray-400 mb-1">Start Date</span>
-                          <span className="text-gray-700 font-normal">{formatTimestamp(plan.startTime)}</span>
-                        </div>
-                        <div className="flex flex-col text-right">
-                          <span className="text-gray-400 mb-1">End Date</span>
-                          <span className="text-[#81D7B4] font-normal">{formatTimestamp(plan.maturityTime)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <button
-                        className="flex-1 bg-white/70 backdrop-blur-sm text-gray-800 font-normal py-2 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 text-sm flex items-center justify-center"
-                        onClick={(e) => openTopUpModal(e, plan)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1.5 text-gray-600">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 text-[#81D7B4]">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Top Up
-                      </button>
-                      <button
-                        className="flex-1 bg-gradient-to-r from-[#81D7B4]/90 to-[#81D7B4]/80 text-white font-normal py-2 rounded-xl shadow-[0_2px_8px_rgba(129,215,180,0.3)] hover:shadow-[0_4px_12px_rgba(129,215,180,0.4)] transition-all duration-300 text-sm flex items-center justify-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1.5 text-white">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        Withdraw
-                      </button>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900 text-lg">{plan.name}</h3>
+                        <p className="text-xs text-gray-500">Started {formatTimestamp(plan.startTime)}</p>
+                      </div>
                     </div>
+                    <div className="flex items-center bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+                      <Image src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')} alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')} width={16} height={16} className="w-4 h-4 mr-2" />
+                      <span className="text-xs font-medium text-gray-700">
+                        {plan.isEth ? 'ETH' : plan.tokenName === 'cUSD' ? 'cUSD' : plan.tokenName === 'Gooddollar' ? '$G' : plan.tokenName}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-500 mb-1">Current Amount</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-medium text-gray-900">
+                        {plan.isEth ? (
+                          <>{parseFloat(plan.currentAmount).toFixed(4)}</>
+                        ) : plan.isGToken ? (
+                          <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</>
+                        ) : plan.isUSDGLO ? (
+                          <>${Number(ethers.formatUnits(plan.currentAmount.split('.')[0], 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+                        ) : (
+                          <>${parseFloat(plan.currentAmount).toFixed(2)}</>
+                        )}
+                      </span>
+                      <span className="text-sm font-medium text-gray-500">
+                        {plan.isEth ? 'ETH' : plan.tokenName}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-gray-500">Progress</span>
+                      <span className="font-medium text-gray-900">{plan.progress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#81D7B4] rounded-full"
+                        style={{ width: `${plan.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">End Date</p>
+                      <p className="text-sm font-medium text-gray-900">{formatTimestamp(plan.maturityTime)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Status</p>
+                      <p className="text-sm font-medium text-[#81D7B4]">Active</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      className="px-4 py-2.5 text-sm font-medium text-white bg-[#81D7B4] rounded-xl hover:shadow-md transition-all"
+                      onClick={(e) => openTopUpModal(e, plan)}
+                    >
+                      Top Up
+                    </button>
+                    <button
+                      className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                    >
+                      Withdraw
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -420,15 +379,15 @@ export default function PlansPage() {
                 className="group"
               >
                 <Link href="/dashboard/create-savings">
-                  <div className="relative bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-gray-300/80 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-300 group-hover:shadow-[0_15px_35px_-15px_rgba(0,0,0,0.15)] h-full flex flex-col items-center justify-center p-6 text-center">
-                    <div className="bg-[#81D7B4]/10 rounded-full p-4 mb-4">
+                  <div className="relative bg-white rounded-2xl border border-dashed border-gray-300 hover:border-[#81D7B4] shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col items-center justify-center p-8 text-center group-hover:bg-gray-50/50">
+                    <div className="bg-[#81D7B4]/10 rounded-full p-4 mb-4 group-hover:scale-110 transition-transform">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-[#81D7B4]">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">Create New Plan</h3>
-                    <p className="text-gray-600 text-sm mb-4">Start a new savings goal and track your progress</p>
-                    <div className="bg-gradient-to-r from-[#81D7B4]/90 to-[#81D7B4]/80 text-white font-medium py-2 px-4 rounded-xl shadow-[0_2px_8px_rgba(129,215,180,0.3)] hover:shadow-[0_4px_12px_rgba(129,215,180,0.4)] transition-all duration-300 text-sm">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Plan</h3>
+                    <p className="text-gray-500 text-sm mb-6 max-w-xs">Start a new savings goal and track your progress towards financial freedom</p>
+                    <div className="bg-[#81D7B4] text-white font-medium py-2.5 px-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 text-sm">
                       Get Started
                     </div>
                   </div>
@@ -453,57 +412,48 @@ export default function PlansPage() {
                   className="group"
                   onClick={() => openPlanDetails(plan)}
                 >
-                  <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.2)] overflow-hidden transition-all duration-300 group-hover:shadow-[0_15px_35px_-15px_rgba(0,0,0,0.25)] h-full">
-                    <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none"></div>
-                    {/* Noise background removed per redesign spec */}
-                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl"></div>
+                  <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full p-6">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-[#81D7B4] rounded-t-2xl"></div>
 
-                    <div className="p-6 md:p-7 relative">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center">
-                          <div className="bg-purple-100 rounded-full p-2.5 mr-3 border border-purple-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-purple-500">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-gray-800 text-lg">{plan.name}</h3>
-                            <div className="flex gap-4 text-xs text-gray-500">
-                              <span>Started: {formatTimestamp(plan.startTime)}</span>
-                              <span>Completed: {formatTimestamp(plan.maturityTime)}</span>
-                            </div>
-                          </div>
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 text-[#81D7B4]">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
                         </div>
-                        <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/60 shadow-sm">
-                          <Image src={plan.isEth ? '/eth.svg' : '/usdc.svg'} alt={plan.isEth ? 'Ethereum' : 'USDC'} width={14} height={14} className="w-3.5 h-3.5 mr-1.5" />
-                          <span className="text-xs font-normal text-gray-700">{plan.isEth ? 'ETH' : 'USDC'}</span>
+                        <div>
+                          <h3 className="font-medium text-gray-900 text-lg">{plan.name}</h3>
+                          <div className="flex gap-2 text-xs text-gray-500">
+                            <span>Started: {formatTimestamp(plan.startTime)}</span>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="mb-4">
-                        <div className="flex justify-between items-end mb-1.5">
-                          <div>
-                            <p className="text-xs text-gray-500 mb-0.5">Final Amount</p>
-                            <p className="text-2xl font-semibold text-gray-800">
-                              {plan.isEth ? `${parseFloat(plan.currentAmount).toFixed(4)} ETH` : `$${parseFloat(plan.currentAmount).toFixed(2)}`}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="relative h-2.5 bg-white rounded-full overflow-hidden mb-1.5 shadow-inner">
-                          <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full shadow-[0_0_6px_rgba(168,85,247,0.5)]" style={{ width: '100%' }}></div>
-                        </div>
-
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">100% Complete</span>
-                          <span className="text-purple-500 font-normal">Ready to withdraw</span>
-                        </div>
+                      <div className="flex items-center bg-green-50 rounded-lg px-3 py-1.5 border border-green-100">
+                        <span className="text-xs font-medium text-green-700">Completed</span>
                       </div>
-
-                      <button className="w-full bg-gradient-to-r from-purple-500/90 to-purple-600/80 text-white font-medium py-2 rounded-xl shadow-[0_2px_8px_rgba(168,85,247,0.3)] hover:shadow-[0_4px_12px_rgba(168,85,247,0.4)] transition-all duration-300 text-sm">
-                        Withdraw Funds
-                      </button>
                     </div>
+
+                    <div className="mb-6">
+                      <p className="text-xs text-gray-500 mb-1">Final Amount</p>
+                      <p className="text-2xl font-medium text-gray-900">
+                        {plan.isEth ? `${parseFloat(plan.currentAmount).toFixed(4)} ETH` : `$${parseFloat(plan.currentAmount).toFixed(2)}`}
+                      </p>
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-gray-500">Progress</span>
+                        <span className="font-medium text-[#81D7B4]">100%</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#81D7B4] rounded-full" style={{ width: '100%' }}></div>
+                      </div>
+                    </div>
+
+                    <button className="w-full bg-[#81D7B4] text-white font-medium py-3 rounded-xl hover:shadow-md transition-all text-sm">
+                      Withdraw Funds
+                    </button>
                   </div>
                 </motion.div>
               ))}
@@ -516,20 +466,17 @@ export default function PlansPage() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Savings Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Total Saved Card */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 md:p-7 relative overflow-hidden">
-              {/* Noise background removed per redesign spec */}
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
-
-              <div className="flex items-center mb-4">
-                <div className="bg-[#81D7B4]/20 rounded-full p-2.5 mr-3 border border-[#81D7B4]/30">
-                  <HiOutlineBanknotes className="w-5 h-5 text-[#81D7B4]" />
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+              <div className="flex items-center mb-6">
+                <div className="bg-[#81D7B4]/10 rounded-xl p-3 mr-4">
+                  <HiOutlineBanknotes className="w-6 h-6 text-[#81D7B4]" />
                 </div>
-                <h3 className="font-medium text-gray-800">Total Saved</h3>
+                <h3 className="font-medium text-gray-900 text-lg">Total Saved</h3>
               </div>
 
-              <p className="text-3xl font-semibold text-gray-800 mb-1">${savingsData.totalLocked}</p>
-              <p className="text-sm text-[#81D7B4] flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1">
+              <p className="text-4xl font-medium text-gray-900 mb-2">${savingsData.totalLocked}</p>
+              <p className="text-sm text-gray-500 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1 text-[#81D7B4]">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
                 Across all savings plans
@@ -537,22 +484,19 @@ export default function PlansPage() {
             </div>
 
             {/* Total Goals Card */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-6 md:p-7 relative overflow-hidden">
-              {/* Noise background removed per redesign spec */}
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#6bc4a1]/10 rounded-full blur-2xl"></div>
-
-              <div className="flex items-center mb-4">
-                <div className="bg-[#6bc4a1]/20 rounded-full p-2.5 mr-3 border border-[#6bc4a1]/30">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-[#6bc4a1]">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+              <div className="flex items-center mb-6">
+                <div className="bg-[#81D7B4]/10 rounded-xl p-3 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 text-[#81D7B4]">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <h3 className="font-medium text-gray-800">Active Goals</h3>
+                <h3 className="font-medium text-gray-900 text-lg">Active Goals</h3>
               </div>
 
-              <p className="text-3xl font-semibold text-gray-800 mb-1">{savingsData.currentPlans.length}</p>
-              <p className="text-sm text-[#6bc4a1] flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1">
+              <p className="text-4xl font-medium text-gray-900 mb-2">{savingsData.currentPlans.length}</p>
+              <p className="text-sm text-gray-500 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1 text-[#81D7B4]">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
                 {savingsData.currentPlans.length > 0 ? `${savingsData.currentPlans.length} active plans` : 'No active plans'}
@@ -610,8 +554,8 @@ export default function PlansPage() {
                         >
                           <div className="flex items-center space-x-4">
                             <div className={`p-2 rounded-full ${activity.type === 'deposit' ? 'bg-green-100 text-green-600' :
-                                activity.type === 'withdrawal' ? 'bg-red-100 text-red-600' :
-                                  'bg-[#81D7B4]/20 text-[#81D7B4]'
+                              activity.type === 'withdrawal' ? 'bg-red-100 text-red-600' :
+                                'bg-[#81D7B4]/20 text-[#81D7B4]'
                               }`}>
                               {activity.type === 'deposit' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
@@ -634,8 +578,8 @@ export default function PlansPage() {
                           </div>
                           <div className="text-right">
                             <p className={`font-semibold ${activity.type === 'deposit' ? 'text-green-600' :
-                                activity.type === 'withdrawal' ? 'text-red-600' :
-                                  'text-gray-800'
+                              activity.type === 'withdrawal' ? 'text-red-600' :
+                                'text-gray-800'
                               }`}>
                               {activity.amount}
                             </p>
