@@ -53,6 +53,11 @@ export interface CachedSavingsData {
   networkChainId: string;
 }
 
+// Helper to check if localStorage is available
+const isStorageAvailable = (): boolean => {
+  return typeof window !== 'undefined' && !!window.localStorage;
+};
+
 // Cache key generation based on user address and network
 function getCacheKey(userAddress: string, networkChainId: string): string {
   return `${CACHE_KEY_PREFIX}${userAddress.toLowerCase()}_${networkChainId}`;
@@ -75,16 +80,16 @@ function shouldRefreshInBackground(cachedData: CachedSavingsData): boolean {
 // Safely parse JSON from localStorage with error handling
 function safeParseCache(cacheString: string | null): CachedSavingsData | null {
   if (!cacheString) return null;
-  
+
   try {
     const parsed = JSON.parse(cacheString) as CachedSavingsData;
-    
+
     // Validate required properties
     if (!parsed.data || !parsed.timestamp || !parsed.userAddress || !parsed.networkChainId) {
       console.warn('Invalid cache structure, ignoring cached data');
       return null;
     }
-    
+
     return parsed;
   } catch (error) {
     console.error('Error parsing cached savings data:', error);
@@ -98,6 +103,8 @@ export function cacheSavingsData(
   userAddress: string,
   networkChainId: string
 ): void {
+  if (!isStorageAvailable()) return;
+
   try {
     const cacheData: CachedSavingsData = {
       data,
@@ -105,10 +112,9 @@ export function cacheSavingsData(
       userAddress: userAddress.toLowerCase(),
       networkChainId
     };
-    
+
     const cacheKey = getCacheKey(userAddress, networkChainId);
     localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-    
 
   } catch (error) {
     console.error('Error caching savings data:', error);
@@ -121,29 +127,28 @@ export function getCachedSavingsData(
   userAddress: string,
   networkChainId: string
 ): SavingsData | null {
+  if (!isStorageAvailable()) return null;
+
   try {
     const cacheKey = getCacheKey(userAddress, networkChainId);
     const cachedString = localStorage.getItem(cacheKey);
     const cachedData = safeParseCache(cachedString);
-    
-    if (!cachedData) {
 
+    if (!cachedData) {
       return null;
     }
-    
+
     // Verify cache is for the correct user and network
-    if (cachedData.userAddress !== userAddress.toLowerCase() || 
-        cachedData.networkChainId !== networkChainId) {
+    if (cachedData.userAddress !== userAddress.toLowerCase() ||
+      cachedData.networkChainId !== networkChainId) {
       console.warn('Cache mismatch - user or network changed');
       clearCachedSavingsData(userAddress, networkChainId);
       return null;
     }
-    
-    if (isCacheValid(cachedData)) {
 
+    if (isCacheValid(cachedData)) {
       return cachedData.data;
     } else {
-
       clearCachedSavingsData(userAddress, networkChainId);
       return null;
     }
@@ -158,13 +163,15 @@ export function needsBackgroundRefresh(
   userAddress: string,
   networkChainId: string
 ): boolean {
+  if (!isStorageAvailable()) return false;
+
   try {
     const cacheKey = getCacheKey(userAddress, networkChainId);
     const cachedString = localStorage.getItem(cacheKey);
     const cachedData = safeParseCache(cachedString);
-    
+
     if (!cachedData) return false;
-    
+
     return shouldRefreshInBackground(cachedData);
   } catch (error) {
     console.error('Error checking background refresh need:', error);
@@ -177,10 +184,11 @@ export function clearCachedSavingsData(
   userAddress: string,
   networkChainId: string
 ): void {
+  if (!isStorageAvailable()) return;
+
   try {
     const cacheKey = getCacheKey(userAddress, networkChainId);
     localStorage.removeItem(cacheKey);
-
   } catch (error) {
     console.error('Error clearing cached savings data:', error);
   }
@@ -188,9 +196,11 @@ export function clearCachedSavingsData(
 
 // Clear all cached savings data (useful for logout or cache reset)
 export function clearAllCachedSavingsData(): void {
+  if (!isStorageAvailable()) return;
+
   try {
     const keysToRemove: string[] = [];
-    
+
     // Find all keys that match our cache prefix
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -198,10 +208,9 @@ export function clearAllCachedSavingsData(): void {
         keysToRemove.push(key);
       }
     }
-    
+
     // Remove all matching keys
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    
 
   } catch (error) {
     console.error('Error clearing all cached savings data:', error);
@@ -214,24 +223,23 @@ export function getCacheStats(): {
   validEntries: number;
   expiredEntries: number;
 } {
-  let totalEntries = 0;
-  let validEntries = 0;
-  let expiredEntries = 0;
-  
+  const stats = { totalEntries: 0, validEntries: 0, expiredEntries: 0 };
+  if (!isStorageAvailable()) return stats;
+
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(CACHE_KEY_PREFIX)) {
-        totalEntries++;
-        
+        stats.totalEntries++;
+
         const cachedString = localStorage.getItem(key);
         const cachedData = safeParseCache(cachedString);
-        
+
         if (cachedData) {
           if (isCacheValid(cachedData)) {
-            validEntries++;
+            stats.validEntries++;
           } else {
-            expiredEntries++;
+            stats.expiredEntries++;
           }
         }
       }
@@ -239,32 +247,31 @@ export function getCacheStats(): {
   } catch (error) {
     console.error('Error getting cache stats:', error);
   }
-  
-  return { totalEntries, validEntries, expiredEntries };
+
+  return stats;
 }
 
 // Cleanup expired cache entries
 export function cleanupExpiredCache(): void {
+  if (!isStorageAvailable()) return;
+
   try {
     const keysToRemove: string[] = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(CACHE_KEY_PREFIX)) {
         const cachedString = localStorage.getItem(key);
         const cachedData = safeParseCache(cachedString);
-        
+
         if (cachedData && !isCacheValid(cachedData)) {
           keysToRemove.push(key);
         }
       }
     }
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
-    if (keysToRemove.length > 0) {
 
-    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
   } catch (error) {
     console.error('Error cleaning up expired cache:', error);
   }
@@ -275,9 +282,10 @@ export function initializeSavingsCache(): void {
   try {
     // Clean up any expired entries on startup
     cleanupExpiredCache();
-    
-    // Log cache statistics
-    const stats = getCacheStats();
+
+    // Log cache statistics (optional, can be removed in prod)
+    // const stats = getCacheStats();
+    // console.log('Savings Cache Initialized:', stats);
 
   } catch (error) {
     console.error('Error initializing savings cache:', error);
