@@ -52,9 +52,9 @@ export default function ChatPage() {
     }
 
     return (
-        <div className={`${exo.variable} font-sans h-screen bg-[#0A0E0D] text-white flex`}>
+        <div className={`${exo.variable} font-sans h-screen bg-[#0A0E0D] text-white flex overflow-hidden`}>
             {/* Contacts Sidebar */}
-            <div className="w-80 border-r border-gray-800 flex flex-col">
+            <div className="hidden md:flex md:w-80 border-r border-gray-800 flex-col">
                 {/* Search */}
                 <div className="p-4 border-b border-gray-800">
                     <div className="relative">
@@ -62,7 +62,7 @@ export default function ChatPage() {
                         <input
                             type="text"
                             placeholder="Search conversations..."
-                            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-[#81D7B4] focus:outline-none text-sm"
                         />
                     </div>
                 </div>
@@ -138,8 +138,8 @@ export default function ChatPage() {
                                     <p className="text-xs text-gray-400 mb-1 ml-1">{msg.sender}</p>
                                 )}
                                 <div className={`px-4 py-3 rounded-2xl ${msg.isOwn
-                                        ? 'bg-[#81D7B4] text-gray-900'
-                                        : 'bg-gray-800 text-white'
+                                    ? 'bg-[#81D7B4] text-gray-900'
+                                    : 'bg-gray-800 text-white'
                                     }`}>
                                     <p>{msg.content}</p>
                                 </div>

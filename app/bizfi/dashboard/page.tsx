@@ -19,7 +19,8 @@ import {
     HiOutlineCommandLine,
     HiOutlineChatBubbleBottomCenterText,
     HiOutlineQuestionMarkCircle,
-    HiOutlineEllipsisVertical
+    HiOutlineEllipsisVertical,
+    HiOutlineBars3
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import Link from "next/link";
@@ -131,6 +132,7 @@ export default function BizFiDashboardPage() {
     const [isReferralValid, setIsReferralValid] = useState(false);
     const [showConsultancyModal, setShowConsultancyModal] = useState(false);
     const [showMoreModal, setShowMoreModal] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -162,8 +164,17 @@ export default function BizFiDashboardPage() {
                 backgroundSize: '40px 40px'
             }}></div>
 
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <div className="fixed left-0 top-0 h-full w-64 bg-[#0A0E0D] border-r border-gray-800 z-20 flex flex-col">
+            <div className={`fixed left-0 top-0 h-full w-64 bg-[#0A0E0D] border-r border-gray-800 z-40 flex flex-col transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}>
                 {/* Logo */}
                 <div className="p-6 border-b border-gray-800">
                     <Link href="/bizfi" className="flex items-center gap-3">
@@ -178,6 +189,7 @@ export default function BizFiDashboardPage() {
                 <nav className="flex-1 p-4 space-y-2">
                     <Link
                         href="/bizfi/dashboard"
+                        onClick={() => setIsSidebarOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800/50 text-white hover:bg-gray-800 transition-colors"
                     >
                         <HiOutlineHome className="w-5 h-5" />
@@ -186,6 +198,7 @@ export default function BizFiDashboardPage() {
 
                     <Link
                         href="/bizfi/dashboard/bizcontent"
+                        onClick={() => setIsSidebarOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors"
                     >
                         <HiOutlineVideoCamera className="w-5 h-5" />
@@ -194,6 +207,7 @@ export default function BizFiDashboardPage() {
 
                     <Link
                         href="/bizfi/dashboard/terminal"
+                        onClick={() => setIsSidebarOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors"
                     >
                         <HiOutlineCommandLine className="w-5 h-5" />
@@ -202,6 +216,7 @@ export default function BizFiDashboardPage() {
 
                     <Link
                         href="/bizfi/dashboard/chat"
+                        onClick={() => setIsSidebarOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors"
                     >
                         <HiOutlineChatBubbleBottomCenterText className="w-5 h-5" />
@@ -210,6 +225,7 @@ export default function BizFiDashboardPage() {
 
                     <Link
                         href="/bizfi/dashboard/support"
+                        onClick={() => setIsSidebarOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors"
                     >
                         <HiOutlineQuestionMarkCircle className="w-5 h-5" />
@@ -217,7 +233,10 @@ export default function BizFiDashboardPage() {
                     </Link>
 
                     <button
-                        onClick={() => setShowMoreModal(true)}
+                        onClick={() => {
+                            setShowMoreModal(true);
+                            setIsSidebarOpen(false);
+                        }}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors w-full"
                     >
                         <HiOutlineEllipsisVertical className="w-5 h-5" />
@@ -234,12 +253,19 @@ export default function BizFiDashboardPage() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 ml-64">
+            <div className="flex-1 lg:ml-64">
                 {/* Header */}
                 <div className="relative z-10 border-b border-gray-800 bg-[#0A0E0D]/80 backdrop-blur-md sticky top-0">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
+                                {/* Hamburger Menu for Mobile */}
+                                <button
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="lg:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                                >
+                                    <HiOutlineBars3 className="w-6 h-6 text-white" />
+                                </button>
                                 <h1 className="text-xl font-bold text-white">Business Dashboard</h1>
                             </div>
 

@@ -70,23 +70,23 @@ export default function TerminalPage() {
     }
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] text-white p-8`}>
+        <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] text-white p-4 sm:p-6 lg:p-8`}>
             {/* Header */}
-            <div className="mb-6">
-                <div className="flex items-center justify-between">
+            <div className="mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Trading Terminal</h1>
-                        <p className="text-gray-400">Trade business tokens on BizMarket</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Trading Terminal</h1>
+                        <p className="text-sm sm:text-base text-gray-400">Trade business tokens on BizMarket</p>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="text-right">
-                            <p className="text-sm text-gray-400">Current Price</p>
-                            <p className="text-2xl font-bold text-[#81D7B4]">$14.50</p>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="text-left sm:text-right">
+                            <p className="text-xs sm:text-sm text-gray-400">Current Price</p>
+                            <p className="text-xl sm:text-2xl font-bold text-[#81D7B4]">$14.50</p>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-400">24h Change</p>
-                            <p className="text-lg font-bold text-green-400 flex items-center gap-1">
-                                <HiOutlineArrowTrendingUp className="w-5 h-5" />
+                        <div className="text-left sm:text-right">
+                            <p className="text-xs sm:text-sm text-gray-400">24h Change</p>
+                            <p className="text-base sm:text-lg font-bold text-green-400 flex items-center gap-1">
+                                <HiOutlineArrowTrendingUp className="w-4 sm:w-5 h-4 sm:h-5" />
                                 +5.2%
                             </p>
                         </div>
@@ -94,26 +94,26 @@ export default function TerminalPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Chart Section */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Price Stats */}
-                    <div className="grid grid-cols-4 gap-4">
-                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-3 sm:p-4">
                             <p className="text-xs text-gray-400 mb-1">24h High</p>
-                            <p className="text-lg font-bold text-white">$14.80</p>
+                            <p className="text-base sm:text-lg font-bold text-white">$14.80</p>
                         </div>
-                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-3 sm:p-4">
                             <p className="text-xs text-gray-400 mb-1">24h Low</p>
-                            <p className="text-lg font-bold text-white">$12.30</p>
+                            <p className="text-base sm:text-lg font-bold text-white">$12.30</p>
                         </div>
-                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-3 sm:p-4">
                             <p className="text-xs text-gray-400 mb-1">24h Volume</p>
-                            <p className="text-lg font-bold text-white">$2.5M</p>
+                            <p className="text-base sm:text-lg font-bold text-white">$2.5M</p>
                         </div>
-                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+                        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-3 sm:p-4">
                             <p className="text-xs text-gray-400 mb-1">Market Cap</p>
-                            <p className="text-lg font-bold text-white">$125M</p>
+                            <p className="text-base sm:text-lg font-bold text-white">$125M</p>
                         </div>
                     </div>
 
@@ -205,8 +205,8 @@ export default function TerminalPage() {
                             <button
                                 onClick={() => setOrderType('buy')}
                                 className={`flex-1 py-3 rounded-lg font-bold transition-all ${orderType === 'buy'
-                                        ? 'bg-green-500 text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    ? 'bg-green-500 text-white'
+                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
                                 Buy
@@ -214,8 +214,8 @@ export default function TerminalPage() {
                             <button
                                 onClick={() => setOrderType('sell')}
                                 className={`flex-1 py-3 rounded-lg font-bold transition-all ${orderType === 'sell'
-                                        ? 'bg-red-500 text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    ? 'bg-red-500 text-white'
+                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
                                 Sell
@@ -267,8 +267,8 @@ export default function TerminalPage() {
 
                             <button
                                 className={`w-full py-4 rounded-xl font-bold text-white transition-all ${orderType === 'buy'
-                                        ? 'bg-green-500 hover:bg-green-600'
-                                        : 'bg-red-500 hover:bg-red-600'
+                                    ? 'bg-green-500 hover:bg-green-600'
+                                    : 'bg-red-500 hover:bg-red-600'
                                     }`}
                             >
                                 {orderType === 'buy' ? 'Buy' : 'Sell'} BizToken

@@ -99,29 +99,29 @@ export default function BizContentPage() {
     }
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] text-white p-8`}>
+        <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] text-white p-4 sm:p-6 lg:p-8`}>
             {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">BizContent</h1>
-                        <p className="text-gray-400">Educational content and updates for business owners</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">BizContent</h1>
+                        <p className="text-sm sm:text-base text-gray-400">Educational content and updates for business owners</p>
                     </div>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all">
+                    <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all w-full sm:w-auto">
                         <HiOutlinePlus className="w-5 h-5" />
-                        Upload Content
+                        <span className="sm:inline">Upload Content</span>
                     </button>
                 </div>
 
                 {/* Category Filter */}
-                <div className="flex items-center gap-3">
-                    <HiOutlineFunnel className="w-5 h-5 text-gray-400" />
-                    <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <HiOutlineFunnel className="w-5 h-5 text-gray-400 hidden sm:block" />
+                    <div className="flex gap-2 overflow-x-auto pb-2 w-full sm:w-auto">
                         {CATEGORIES.map((category) => (
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedCategory === category
+                                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${selectedCategory === category
                                         ? 'bg-[#81D7B4] text-gray-900'
                                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                     }`}
@@ -134,7 +134,7 @@ export default function BizContentPage() {
             </div>
 
             {/* Content Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredContent.map((item, index) => (
                     <motion.div
                         key={item.id}
