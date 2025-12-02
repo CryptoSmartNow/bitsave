@@ -191,96 +191,13 @@ const WithdrawModal = memo(function WithdrawModal({
       const userChildContractAddress = await contract.getUserChildContractAddress();
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
-      
-      // Get savings data with better error handling
-      let savingData;
-      try {
-        savingData = await childContract.getSaving(nameOfSavings);
-      } catch (error: any) {
-        console.error("Failed to get saving data:", error);
-        throw new Error(`Savings plan "${nameOfSavings}" not found or invalid.`);
-      }
-      
-      // Validate savings data before attempting withdrawal
-      if (!savingData) {
-        throw new Error(`Savings plan "${nameOfSavings}" does not exist.`);
-      }
-      
-      // Check if the saving is valid
-      if (savingData.isValid === false) {
-        throw new Error(`Savings plan "${nameOfSavings}" is marked as invalid.`);
-      }
-      
-      if (savingData.amount === undefined || savingData.amount === BigInt(0)) {
-        throw new Error('No funds available in this savings plan.');
-      }
-      
-      // Additional validation: check maturity time from savingData
-      try {
-        // Use maturityTime directly from savingData if available
-        const maturityTime = savingData.maturityTime;
-        const currentTime = BigInt(Math.floor(Date.now() / 1000)); // Current time in seconds
-        
-        if (maturityTime && maturityTime > currentTime) {
-          const timeRemaining = Number(maturityTime - currentTime);
-          const daysRemaining = Math.ceil(timeRemaining / (60 * 60 * 24));
-          throw new Error(`This savings plan is not yet mature. It will be available for withdrawal in ${daysRemaining} days.`);
-        }
-      } catch (maturityError: any) {
-        // If maturity check fails, log it but don't block the withdrawal attempt unless it's our explicit error
-        if (maturityError.message.includes("not yet mature")) {
-          throw maturityError;
-        }
-        console.log("Maturity check failed or not applicable:", maturityError);
-      }
-      
+      const savingData = await childContract.getSaving(nameOfSavings);
       const amount = ethers.formatUnits(savingData.amount, 18);
 
-      // Check if withdrawal is possible by attempting gas estimation on the CHILD contract
-      let gasEstimate;
-      try {
-        console.log(`Attempting gas estimation for withdrawal of plan: ${nameOfSavings} via Child Contract`);
-        // Use childContract for withdrawal
-        gasEstimate = await childContract.withdrawSaving.estimateGas(nameOfSavings);
-        console.log(`Gas estimation successful: ${gasEstimate.toString()}`);
-      } catch (gasError: any) {
-        console.error("Gas estimation failed:", gasError);
-        
-        // Handle specific custom errors based on error data
-        if (gasError.data) {
-          const errorData = String(gasError.data);
-          
-          // Check for the specific custom error 0xd63d1e48 (InvalidSaving)
-          if (errorData.includes('0xd63d1e48')) {
-            throw new Error('Invalid Savings Plan: The savings plan does not exist or is invalid.');
-          }
-          
-          // Check for InvalidTime (0x6f7eac26)
-          if (errorData.includes('0x6f7eac26') || errorData.includes('0x815a2c04')) { 
-            throw new Error('This savings plan is not yet mature. Please wait until the minimum lock period has passed.');
-          }
-          
-          if (errorData.includes('0x6f96b6d9')) { // AmountNotEnough error
-            throw new Error('Insufficient funds in this savings plan.');
-          }
-        }
-        
-        // Handle error message parsing
-        const errorMessage = gasError.message || gasError.toString();
-        if (errorMessage.includes('InvalidTime')) {
-          throw new Error('This savings plan is not yet ready for withdrawal. Please check the maturity time.');
-        }
-        
-        if (errorMessage.includes('InvalidSaving')) {
-           throw new Error('Invalid Savings Plan: The savings plan does not exist or is invalid.');
-        }
-        
-        // Generic fallback error
-        throw new Error(`Unable to process withdrawal: ${errorMessage}`);
-      }
+      const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
 
-      // Execute withdrawal on CHILD contract
-      const tx = await childContract.withdrawSaving(nameOfSavings, {
+
+      const tx = await contract.withdrawSaving(nameOfSavings, {
         gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
       });
 
@@ -382,97 +299,14 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const userChildContractAddress = await contract.getUserChildContractAddress();
 
+
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
-      
-      // Get savings data with better error handling
-      let savingData;
-      try {
-        savingData = await childContract.getSaving(nameOfSavings);
-      } catch (error: any) {
-        console.error("Failed to get saving data:", error);
-        throw new Error(`Savings plan "${nameOfSavings}" not found or invalid.`);
-      }
-      
-      // Validate savings data before attempting withdrawal
-      if (!savingData) {
-        throw new Error(`Savings plan "${nameOfSavings}" does not exist.`);
-      }
-      
-      // Check if the saving is valid
-      if (savingData.isValid === false) {
-        throw new Error(`Savings plan "${nameOfSavings}" is marked as invalid.`);
-      }
-      
-      if (savingData.amount === undefined || savingData.amount === BigInt(0)) {
-        throw new Error('No funds available in this savings plan.');
-      }
-      
-      // Additional validation: check maturity time from savingData
-      try {
-        // Use maturityTime directly from savingData if available
-        const maturityTime = savingData.maturityTime;
-        const currentTime = BigInt(Math.floor(Date.now() / 1000)); // Current time in seconds
-        
-        if (maturityTime && maturityTime > currentTime) {
-          const timeRemaining = Number(maturityTime - currentTime);
-          const daysRemaining = Math.ceil(timeRemaining / (60 * 60 * 24));
-          throw new Error(`This savings plan is not yet mature. It will be available for withdrawal in ${daysRemaining} days.`);
-        }
-      } catch (maturityError: any) {
-        // If maturity check fails, log it but don't block the withdrawal attempt unless it's our explicit error
-        if (maturityError.message.includes("not yet mature")) {
-          throw maturityError;
-        }
-        console.log("Maturity check failed or not applicable:", maturityError);
-      }
-      
+      const savingData = await childContract.getSaving(nameOfSavings);
       const amount = ethers.formatUnits(savingData.amount, 6);
 
-      // Check if withdrawal is possible by attempting gas estimation on the CHILD contract
-      let gasEstimate;
-      try {
-        console.log(`Attempting gas estimation for token withdrawal of plan: ${nameOfSavings} via Child Contract`);
-        // Use childContract for withdrawal
-        gasEstimate = await childContract.withdrawSaving.estimateGas(nameOfSavings);
-        console.log(`Gas estimation successful: ${gasEstimate.toString()}`);
-      } catch (gasError: any) {
-        console.error("Gas estimation failed:", gasError);
-        
-        // Handle specific custom errors based on error data
-        if (gasError.data) {
-          const errorData = String(gasError.data);
-          
-          // Check for the specific custom error 0xd63d1e48 (InvalidSaving)
-          if (errorData.includes('0xd63d1e48')) {
-            throw new Error('Invalid Savings Plan: The savings plan does not exist or is invalid.');
-          }
-          
-          // Check for InvalidTime (0x6f7eac26)
-          if (errorData.includes('0x6f7eac26') || errorData.includes('0x815a2c04')) { 
-            throw new Error('This savings plan is not yet mature. Please wait until the minimum lock period has passed.');
-          }
-          
-          if (errorData.includes('0x6f96b6d9')) { // AmountNotEnough error
-            throw new Error('Insufficient funds in this savings plan.');
-          }
-        }
-        
-        // Handle error message parsing
-        const errorMessage = gasError.message || gasError.toString();
-        if (errorMessage.includes('InvalidTime')) {
-          throw new Error('This savings plan is not yet ready for withdrawal. Please check the maturity time.');
-        }
-        
-        if (errorMessage.includes('InvalidSaving')) {
-           throw new Error('Invalid Savings Plan: The savings plan does not exist or is invalid.');
-        }
-        
-        // Generic fallback error
-        throw new Error(`Unable to process withdrawal: ${errorMessage}`);
-      }
+      const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
 
-      // Execute withdrawal on CHILD contract
-      const tx = await childContract.withdrawSaving(nameOfSavings, {
+      const tx = await contract.withdrawSaving(nameOfSavings, {
         gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
       });
 
