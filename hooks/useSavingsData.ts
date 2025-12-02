@@ -393,10 +393,16 @@ export function useSavingsData(): UseSavingsDataReturn {
             const { savingName, savingData } = result.value;
 
             try {
-              // More lenient validation - allow savings even if isValid is false
-              // This helps with older contracts or edge cases
+              // Strict validation - only process valid savings
               if (savingData === null || savingData === undefined) {
                 if (DEBUG) console.warn(`Skipping saving "${savingName}": No data returned from contract`);
+                continue;
+              }
+
+              // Check if the saving is valid according to the contract
+              // This prevents displaying withdrawn or invalid savings
+              if (!savingData.isValid) {
+                if (DEBUG) console.log(`Skipping saving "${savingName}": isValid = false (withdrawn or invalid)`);
                 continue;
               }
 

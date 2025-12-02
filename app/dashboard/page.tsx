@@ -1180,9 +1180,6 @@ export default function Dashboard() {
                         whileHover={{ y: -4, transition: { duration: 0.2 } }}
                         className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6"
                       >
-                        {/* Subtle gradient accent */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-[#81D7B4] rounded-t-2xl"></div>
-
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -1352,9 +1349,6 @@ export default function Dashboard() {
                           whileHover={{ y: -4, transition: { duration: 0.2 } }}
                           className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6"
                         >
-                          {/* Subtle gradient accent - using green for completed */}
-                          <div className="absolute top-0 left-0 right-0 h-1 bg-[#81D7B4] rounded-t-2xl"></div>
-
                           {/* Header */}
                           <div className="flex items-start justify-between mb-6">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
