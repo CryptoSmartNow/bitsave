@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
 import BitSaveABI from '../../abi/contractABI.js';
-import childContractABI from '../../abi/childContractABI.js';
 import { handleContractError } from '../../../lib/contractErrorHandler';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlineWallet, HiOutlineArrowDownTray, HiOutlineCheckCircle, HiOutlineExclamationTriangle } from 'react-icons/hi2';
@@ -49,16 +48,6 @@ export default function WithdrawPage() {
       const signer = await walletProvider.getSigner();
 
       const mainContract = new ethers.Contract(contractAddress, BitSaveABI, signer);
-
-      // Verify savings plan validity before attempting withdrawal
-      const userChildContractAddress = await mainContract.getUserChildContractAddress();
-      const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
-      const savingData = await childContract.getSaving(savingName);
-
-      if (!savingData.isValid) {
-        throw new Error("This savings plan is invalid or has already been withdrawn.");
-      }
-
       const tx = await mainContract.withdrawSaving(savingName);
       const receipt = await tx.wait();
       setSuccess(`Successfully withdrew from "${savingName}". Tx: ${receipt.hash}`);

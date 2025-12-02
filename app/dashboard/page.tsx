@@ -1314,19 +1314,17 @@ export default function Dashboard() {
                         {/* Withdraw Button */}
                         <motion.button
                           onClick={() => {
-                            if (plan.isValid === false) return;
                             const currentDate = new Date();
                             const maturityTimestamp = Number(plan.maturityTime || 0);
                             const maturityDate = new Date(maturityTimestamp * 1000);
                             const isCompleted = currentDate >= maturityDate;
                             openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                           }}
-                          whileHover={plan.isValid === false ? {} : { scale: 1.01 }}
-                          whileTap={plan.isValid === false ? {} : { scale: 0.99 }}
-                          disabled={plan.isValid === false}
-                          className={`w-full py-3 text-sm font-medium text-white rounded-lg transition-shadow ${plan.isValid === false ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#81D7B4] hover:shadow-md'}`}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
                         >
-                          {plan.isValid === false ? 'Withdrawn' : 'Withdraw'}
+                          Withdraw
                         </motion.button>
                       </motion.div>
                     ))}
@@ -1454,22 +1452,20 @@ export default function Dashboard() {
                           </div>
 
                           {/* Withdraw Button */}
-                        <motion.button
-                          onClick={() => {
-                            if (plan.isValid === false) return;
-                            const currentDate = new Date();
-                            const maturityTimestamp = Number(plan.maturityTime || 0);
-                            const maturityDate = new Date(maturityTimestamp * 1000);
-                            const isCompleted = currentDate >= maturityDate;
-                            openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
-                          }}
-                          whileHover={plan.isValid === false ? {} : { scale: 1.01 }}
-                          whileTap={plan.isValid === false ? {} : { scale: 0.99 }}
-                          disabled={plan.isValid === false}
-                          className={`w-full py-3 text-sm font-medium text-white rounded-lg transition-shadow ${plan.isValid === false ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#81D7B4] hover:shadow-md'}`}
-                        >
-                          {plan.isValid === false ? 'Withdrawn' : 'Withdraw'}
-                        </motion.button>
+                          <motion.button
+                            onClick={() => {
+                              const currentDate = new Date();
+                              const maturityTimestamp = Number(plan.maturityTime || 0);
+                              const maturityDate = new Date(maturityTimestamp * 1000);
+                              const isCompleted = currentDate >= maturityDate;
+                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                            }}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
+                          >
+                            Withdraw
+                          </motion.button>
                         </motion.div>
                       ))}
                     </>

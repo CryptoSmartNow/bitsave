@@ -36,7 +36,6 @@ export interface SavingsPlan {
   tokenName?: string;
   tokenLogo?: string;
   network?: string;
-  isValid?: boolean;
 }
 
 export interface SavingsData {

@@ -6,7 +6,6 @@ import { useAccount } from 'wagmi';
 import Image from 'next/image';
 import childContractABI from '../app/abi/childContractABI.js';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
-import erc20ABI from '../app/abi/erc20ABI.json';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
@@ -193,11 +192,6 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
-
-      if (!savingData.isValid) {
-        throw new Error("This savings plan is invalid or has already been withdrawn.");
-      }
-
       const amount = ethers.formatUnits(savingData.amount, 18);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
@@ -308,25 +302,7 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
-
-      if (!savingData.isValid) {
-        throw new Error("This savings plan is invalid or has already been withdrawn.");
-      }
-
-      let decimals = 18;
-      try {
-        const tokenContract = new ethers.Contract(savingData.tokenId, erc20ABI as any, signer);
-        const d = await tokenContract.decimals();
-        decimals = Number(d);
-      } catch (e) {
-        if (currentTokenName === 'USDC') {
-          decimals = 6;
-        } else {
-          decimals = 18;
-        }
-      }
-
-      const amount = ethers.formatUnits(savingData.amount, decimals);
+      const amount = ethers.formatUnits(savingData.amount, 6);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
 
