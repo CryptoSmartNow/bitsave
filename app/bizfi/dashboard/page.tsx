@@ -27,58 +27,58 @@ const exo = Exo({
 // Dashboard Metrics Data
 const DASHBOARD_METRICS = [
     {
-        label: "BizFi Token Price",
-        value: "$12.50",
-        change: "+5.2%",
+        label: "Token Price",
+        value: "$0.00",
+        change: "0%",
         isPositive: true,
         icon: HiOutlineCurrencyDollar
     },
     {
         label: "Market Cap",
-        value: "$2.5M",
-        change: "+12%",
+        value: "$0",
+        change: "0%",
         isPositive: true,
         icon: HiOutlineTrophy
     },
     {
         label: "Total Investors",
-        value: "1,240",
-        change: "+24",
+        value: "0",
+        change: "0",
         isPositive: true,
         icon: HiOutlineUsers
     },
     {
         label: "Capital Raised",
-        value: "$850K",
-        change: "+15%",
+        value: "$0",
+        change: "0%",
         isPositive: true,
         icon: HiOutlineRocketLaunch
     },
     {
         label: "Monthly Revenue",
-        value: "$45.2K",
-        change: "+8.5%",
+        value: "$0",
+        change: "0%",
         isPositive: true,
         icon: HiOutlineCurrencyDollar
     },
     {
         label: "Growth Rate",
-        value: "125%",
-        change: "+15%",
+        value: "0%",
+        change: "0%",
         isPositive: true,
         icon: HiOutlineFire
     },
     {
         label: "Liquidity Available",
-        value: "$120K",
-        change: "-2.1%",
-        isPositive: false,
+        value: "$0",
+        change: "0%",
+        isPositive: true,
         icon: HiOutlineSparkles
     },
     {
         label: "Compliance Status",
-        value: "Verified",
-        change: "100%",
+        value: "Pending",
+        change: "0%",
         isPositive: true,
         icon: HiOutlineTrophy
     }
@@ -253,8 +253,8 @@ export default function BizFiDashboardPage() {
                                             key={tier.id}
                                             onClick={() => setSelectedTier(tier)}
                                             className={`text-left p-4 rounded-xl border transition-all duration-300 ${selectedTier.id === tier.id
-                                                    ? 'bg-[#81D7B4]/10 border-[#81D7B4] ring-1 ring-[#81D7B4]'
-                                                    : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] ring-1 ring-[#81D7B4]'
+                                                : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-2">

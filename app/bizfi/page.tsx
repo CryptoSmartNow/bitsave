@@ -120,24 +120,9 @@ export default function BizFiPage() {
                         Bitsave BizMarket
                         <span className="block mt-2 text-[#81D7B4]">The Onchain Marketplace for Real-World Business</span>
                     </h2>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+                    <p className="text-lg text-gray-400 max-w-2xl mx-auto">
                         A marketplace where small businesses can list, tokenize, and raise capital. Users can invest and trade tokenized SMEs, businesses, companies, and assets.
                     </p>
-
-                    <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#81D7B4]"></span>
-                            Login with Wallet
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#81D7B4]"></span>
-                            Login with Twitter
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#81D7B4]"></span>
-                            Login with Email
-                        </span>
-                    </div>
                 </motion.div>
 
                 {/* User Segmentation Section */}
