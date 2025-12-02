@@ -8,6 +8,7 @@ import childContractABI from '../app/abi/childContractABI.js';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
 import { handleContractError } from '@/lib/contractErrorHandler';
+import { estimateGasForTransaction } from '@/utils/contractUtils';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
 
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
@@ -189,17 +190,23 @@ const WithdrawModal = memo(function WithdrawModal({
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
       const userChildContractAddress = await contract.getUserChildContractAddress();
+      if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
+        throw new Error('UserNotRegistered');
+      }
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
+      if (!savingData.isValid) {
+        throw new Error('InvalidSaving');
+      }
+      const nowSec = Math.floor(Date.now() / 1000);
+      const matured = nowSec >= Number(savingData.maturityTime);
+      if (!matured && savingData.isSafeMode) {
+        throw new Error('InvalidTime');
+      }
       const amount = ethers.formatUnits(savingData.amount, 18);
-
-      const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
-
-
-      const tx = await contract.withdrawSaving(nameOfSavings, {
-        gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
-      });
+      const gasLimit = await estimateGasForTransaction(contract, 'withdrawSaving', [nameOfSavings]);
+      const tx = await contract.withdrawSaving(nameOfSavings, { gasLimit });
 
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
@@ -298,17 +305,24 @@ const WithdrawModal = memo(function WithdrawModal({
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
       const userChildContractAddress = await contract.getUserChildContractAddress();
+      if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
+        throw new Error('UserNotRegistered');
+      }
 
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
+      if (!savingData.isValid) {
+        throw new Error('InvalidSaving');
+      }
+      const nowSec = Math.floor(Date.now() / 1000);
+      const matured = nowSec >= Number(savingData.maturityTime);
+      if (!matured && savingData.isSafeMode) {
+        throw new Error('InvalidTime');
+      }
       const amount = ethers.formatUnits(savingData.amount, 6);
-
-      const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
-
-      const tx = await contract.withdrawSaving(nameOfSavings, {
-        gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
-      });
+      const gasLimit = await estimateGasForTransaction(contract, 'withdrawSaving', [nameOfSavings]);
+      const tx = await contract.withdrawSaving(nameOfSavings, { gasLimit });
 
 
       const receipt = await tx.wait();
