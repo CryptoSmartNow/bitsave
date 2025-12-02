@@ -5,7 +5,7 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(129, 215, 180, 0.15);
   border-radius: 1.5rem;
-  box-shadow: 
+  box-shadow:
     0 10px 30px 0 rgba(0, 0, 0, 0.1),
     0 1px 2px 0 rgba(0, 0, 0, 0.05);
   overflow: hidden;
@@ -30,7 +30,7 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(129, 215, 180, 0.1);
   border-radius: 1.5rem;
-  box-shadow: 
+  box-shadow:
     0 8px 32px 0 rgba(22, 50, 57, 0.08),
     0 2px 8px 0 rgba(22, 50, 57, 0.06);
   transition: all 0.4s ease;
@@ -99,7 +99,7 @@
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: linear-gradient(135deg, #163239, #81D7B4);
+  background: linear-gradient(135deg, #81D7B4, #81D7B4);
   color: white;
   font-size: 0.75rem;
   font-weight: 600;

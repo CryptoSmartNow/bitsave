@@ -5,138 +5,129 @@ import { useState, useEffect } from 'react';
 
 export default function NotFound() {
   const [mounted, setMounted] = useState(false);
-  const [glitchText, setGlitchText] = useState('404');
 
   useEffect(() => {
     setMounted(true);
-    
-    // Glitch effect for 404 text
-    const glitchChars = ['4', '0', '4', '?', '!', '#', '@', '%'];
-    const interval = setInterval(() => {
-      const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
-      setGlitchText(prev => {
-        const chars = prev.split('');
-        const randomIndex = Math.floor(Math.random() * chars.length);
-        chars[randomIndex] = randomChar;
-        return chars.join('');
-      });
-      
-      setTimeout(() => setGlitchText('404'), 100);
-    }, 2000);
-
-    return () => clearInterval(interval);
   }, []);
 
   if (!mounted) {
     return null;
   }
 
-  const wittyMessages = [
-    "Oops! This page went on a crypto adventure and never came back.",
-    "404: Page not found. Unlike your savings, this one didn't compound.",
-    "This page is as missing as your keys after a bull run.",
-    "Error 404: Page is probably SaveFi farming somewhere.",
-    "Page not found. It's probably staking in another dimension."
-  ];
-
-  const randomMessage = wittyMessages[Math.floor(Math.random() * wittyMessages.length)];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f2f2f2] via-[#e8f5f0] to-[#d4f1e8] flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#81D7B4] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#6bc4a1] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-[#4ade80] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f1f9f6] to-[#e8f5f0] flex items-center justify-center p-6 overflow-hidden relative">
+      {/* Subtle animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-[#81D7B4] rounded-full opacity-5 blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#81D7B4] rounded-full opacity-5 blur-3xl animate-float-slower"></div>
       </div>
 
-      <div className="relative z-10 text-center max-w-2xl mx-auto">
-        {/* Glitch 404 */}
-        <div className="relative mb-8">
-          <h1 className="text-9xl md:text-[12rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#4ade80] select-none">
-            {glitchText}
-          </h1>
-          <div className="absolute inset-0 text-9xl md:text-[12rem] font-black text-red-500 opacity-20 animate-pulse">
-            404
+      <div className="relative z-10 text-center max-w-3xl mx-auto">
+        {/* Clean 404 with visual hierarchy */}
+        <div className="mb-6">
+          <div className="inline-block relative">
+            <h1 className="text-[10rem] md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-br from-[#81D7B4] via-[#81D7B4] to-[#81D7B4] leading-none tracking-tight">
+              404
+            </h1>
+            {/* Subtle shadow effect */}
+            <div className="absolute inset-0 text-[10rem] md:text-[14rem] font-black text-[#81D7B4] opacity-10 blur-sm -z-10 translate-x-2 translate-y-2">
+              404
+            </div>
           </div>
         </div>
 
-        {/* Witty message */}
-        <div className="mb-8 space-y-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
+        {/* Clear message hierarchy */}
+        <div className="mb-10 space-y-3">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
             Page Not Found
           </h2>
-          <p className="text-lg text-gray-600 leading-relaxed">
-            {randomMessage}
+          <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl mx-auto">
+            The page you're looking for doesn't exist or has been moved.
           </p>
         </div>
 
-        {/* Animated crypto icons */}
-        <div className="flex justify-center space-x-4 mb-8">
-          <div className="w-12 h-12 bg-[#81D7B4] rounded-full flex items-center justify-center animate-bounce">
-            <span className="text-white font-bold text-xl">₿</span>
-          </div>
-          <div className="w-12 h-12 bg-[#6bc4a1] rounded-full flex items-center justify-center animate-bounce animation-delay-200">
-            <span className="text-white font-bold text-xl">Ξ</span>
-          </div>
-          <div className="w-12 h-12 bg-[#4ade80] rounded-full flex items-center justify-center animate-bounce animation-delay-400">
-            <span className="text-white font-bold text-xl">$</span>
+        {/* Minimalist icon */}
+        <div className="mb-10 flex justify-center">
+          <div className="relative">
+            <div className="w-20 h-20 bg-[#81D7B4] rounded-2xl flex items-center justify-center shadow-lg transform rotate-12 hover:rotate-0 transition-transform duration-500">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-[#81D7B4] rounded-2xl blur-xl opacity-20 animate-pulse-slow"></div>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        {/* Clean action buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <Link
             href="/"
-            className="px-8 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] text-white font-semibold rounded-xl hover:from-[#6bc4a1] to-[#4ade80] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="group px-8 py-4 bg-[#81D7B4] text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-[#81D7B4]/20 transform hover:-translate-y-1 transition-all duration-300"
           >
-            🏠 Back to Home
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Back to Home
+            </span>
           </Link>
           <Link
             href="/dashboard"
-            className="px-8 py-4 bg-white text-[#81D7B4] font-semibold rounded-xl border-2 border-[#81D7B4] hover:bg-[#81D7B4] hover:text-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="group px-8 py-4 bg-white text-[#81D7B4] font-semibold rounded-xl border-2 border-[#81D7B4] hover:bg-[#81D7B4] hover:text-white hover:border-[#81D7B4] transform hover:-translate-y-1 transition-all duration-300 shadow-md hover:shadow-xl"
           >
-            📊 Go to Dashboard
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Go to Dashboard
+            </span>
           </Link>
         </div>
 
-        {/* Fun fact */}
-        <div className="mt-12 p-6 bg-white/80 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/20 shadow-lg">
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold text-[#81D7B4]">Fun Fact:</span> While you&apos;re here, your BitSave account is still earning BTS Tokens! 🚀
-          </p>
+        {/* Info card with brand colors */}
+        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/30 shadow-xl max-w-md mx-auto">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 bg-[#81D7B4] rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-left flex-1">
+              <h3 className="font-semibold text-gray-900 mb-1">Need Help?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                If you believe this is an error, please contact our support team or return to the homepage.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes blob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
+        @keyframes float-slow {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
           }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-          100% {
-            transform: translate(0px, 0px) scale(1);
+          50% {
+            transform: translate(30px, -30px) scale(1.05);
           }
         }
-        .animate-blob {
-          animation: blob 7s infinite;
+        @keyframes float-slower {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
+          }
+          50% {
+            transform: translate(-20px, 20px) scale(1.03);
+          }
         }
-        .animation-delay-2000 {
-          animation-delay: 2s;
+        .animate-float-slow {
+          animation: float-slow 8s ease-in-out infinite;
         }
-        .animation-delay-4000 {
-          animation-delay: 4s;
+        .animate-float-slower {
+          animation: float-slower 10s ease-in-out infinite;
         }
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-        }
-        .animation-delay-400 {
-          animation-delay: 0.4s;
+        .animate-pulse-slow {
+          animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
     </div>

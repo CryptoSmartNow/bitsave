@@ -1470,7 +1470,7 @@ export default function Dashboard() {
                             }}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
-                            className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-[#81D7B4] to-[#229ED9] rounded-lg hover:shadow-md transition-shadow"
+                            className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
                           >
                             Withdraw
                           </motion.button>

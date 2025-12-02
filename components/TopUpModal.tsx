@@ -889,55 +889,96 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         <motion.div
           ref={modalRef}
           onClick={handleModalClick}
-          className={`${exo.className} bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.1)] w-full max-w-md mx-auto overflow-hidden relative my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto scrollbar-hide`}
+          className={`${exo.className} bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto overflow-hidden relative my-4 sm:my-0 max-h-[90vh] sm:max-h-none overflow-y-auto`}
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
           }}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          {/* Clean background without noise/gradients */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#81D7B4]"></div>
+          {/* Top accent bar */}
+          <motion.div
+            className="absolute top-0 left-0 right-0 h-1.5 bg-[#81D7B4]"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          ></motion.div>
 
-          <div className="p-6 relative z-10 flex flex-col max-h-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Top Up Savings</h2>
-              <button
+          <div className="p-8 relative z-10 flex flex-col max-h-full">
+            {/* Header with close button */}
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <motion.h2
+                  className="text-2xl font-bold text-gray-900 mb-1"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Top Up Savings
+                </motion.h2>
+                <motion.p
+                  className="text-sm text-gray-500"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Add funds to your savings plan
+                </motion.p>
+              </div>
+              <motion.button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                className="group p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200"
+                whileHover={{ scale: 1.05, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </motion.button>
             </div>
 
-            {/* Plan Info Card */}
-            <div className="mb-6 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            {/* Plan Info Card with micro-interactions */}
+            <motion.div
+              className="mb-8 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-5 border border-gray-200/60 hover:border-[#81D7B4]/30 transition-all duration-300 group"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              whileHover={{ y: -2, boxShadow: "0 8px 20px rgba(129, 215, 180, 0.1)" }}
+            >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" viewBox="0 0 20 20" fill="currentColor">
+                <motion.div
+                  className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#81D7B4] to-[#81D7B4] flex items-center justify-center shadow-lg shadow-[#81D7B4]/20"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                   </svg>
-                </div>
+                </motion.div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-medium text-gray-900 truncate">{planName}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center bg-white px-2 py-0.5 rounded border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate mb-2">{planName}</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <motion.div
+                      className="flex items-center bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm"
+                      whileHover={{ scale: 1.05, borderColor: "#81D7B4" }}
+                    >
                       <Image
                         src={isEth ? '/eth.png' : getTokenLogo(tokenName || '', '')}
                         alt="Token"
-                        width={14}
-                        height={14}
-                        className="mr-1.5"
+                        width={16}
+                        height={16}
+                        className="mr-2"
                       />
-                      <span className="text-xs font-medium text-gray-700">{isEth ? 'ETH' : tokenName}</span>
-                    </div>
-                    <div className="flex items-center bg-white px-2 py-0.5 rounded border border-gray-200">
+                      <span className="text-xs font-semibold text-gray-700">{isEth ? 'ETH' : tokenName}</span>
+                    </motion.div>
+                    <motion.div
+                      className="flex items-center bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm"
+                      whileHover={{ scale: 1.05, borderColor: "#81D7B4" }}
+                    >
                       <Image
                         src={
                           currentNetwork === 'base' ? '/base.svg' :
@@ -946,117 +987,152 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                                 '/default-network.png'
                         }
                         alt="Network"
-                        width={14}
-                        height={14}
-                        className="mr-1.5"
+                        width={16}
+                        height={16}
+                        className="mr-2"
                       />
-                      <span className="text-xs font-medium text-gray-700">{getNetworkName()}</span>
-                    </div>
+                      <span className="text-xs font-semibold text-gray-700">{getNetworkName()}</span>
+                    </motion.div>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-              <div className="flex-1 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <div className="mb-6">
-                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {/* Amount Input with enhanced styling */}
+                <motion.div
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <label htmlFor="amount" className="block text-sm font-semibold text-gray-900 mb-3">
                     Top Up Amount
                   </label>
-                  <div className="relative">
+                  <div className="relative group">
                     <input
                       type="number"
                       name="amount"
                       id="amount"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="block w-full px-4 py-4 text-2xl font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4] transition-all"
+                      className="block w-full px-6 py-5 text-3xl font-bold text-gray-900 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4] transition-all duration-300 hover:border-gray-300"
                       placeholder="0.00"
                       step="any"
                       min="0"
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <span className="text-sm font-medium text-gray-500">{getTokenNameDisplay()}</span>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-lg font-bold text-gray-400 group-focus-within:text-[#81D7B4] transition-colors">{getTokenNameDisplay()}</span>
                     </div>
                   </div>
 
-                  {/* Balance Display */}
-                  <div className="flex justify-between items-center mt-2 px-1">
-                    <span className="text-xs text-gray-500">Available Balance</span>
-                    <span className="text-xs font-medium text-gray-900">
+                  {/* Balance Display with better hierarchy */}
+                  <div className="flex justify-between items-center mt-3 px-2">
+                    <span className="text-xs font-medium text-gray-500">Available Balance</span>
+                    <span className="text-sm font-bold text-gray-900">
                       {isEth
                         ? `${parseFloat(walletBalance).toFixed(4)} ETH`
                         : `${parseFloat(tokenBalance).toFixed(2)} ${getTokenNameDisplay()}`
                       }
                     </span>
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Quick Amounts */}
-                <div className="mb-6">
-                  <label className="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                {/* Quick Amounts with micro-interactions */}
+                <motion.div
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <label className="block text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">
                     Quick Select
                   </label>
                   <div className="grid grid-cols-4 gap-2">
-                    {presetAmounts.map((presetAmount) => (
-                      <button
+                    {presetAmounts.map((presetAmount, index) => (
+                      <motion.button
                         key={presetAmount}
                         type="button"
                         onClick={() => setAmount(presetAmount)}
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${amount === presetAmount
-                          ? 'bg-[#81D7B4] text-white shadow-sm'
-                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100'
+                        className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${amount === presetAmount
+                          ? 'bg-[#81D7B4] text-white shadow-lg shadow-[#81D7B4]/30'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-2 border-gray-200 hover:border-[#81D7B4]/30'
                           }`}
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 + index * 0.05 }}
                       >
                         ${presetAmount}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Balance Warning */}
+                {/* Balance Warning with better styling */}
                 {balanceWarning && (
-                  <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3">
+                  <motion.div
+                    className="mb-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-2xl flex items-start gap-3"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     <div className="flex-1">
                       <h4 className="text-xs font-bold text-amber-800 mb-1">Insufficient Balance</h4>
-                      <p className="text-xs text-amber-700">{balanceWarning}</p>
+                      <p className="text-xs text-amber-700 leading-relaxed">{balanceWarning}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
-              </div>
+              </div >
 
-              {/* Action Buttons */}
-              <div className="pt-4 mt-auto border-t border-gray-100">
+              {/* Action Buttons with enhanced micro-interactions */}
+              <motion.div
+                className="pt-6 mt-auto border-t-2 border-gray-100"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
                 <div className="flex gap-3">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={onClose}
-                    className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-6 py-4 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     Cancel
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     type="submit"
                     disabled={loading || !amount || parseFloat(amount) <= 0}
-                    className="flex-[2] px-4 py-3.5 bg-[#81D7B4] text-white rounded-xl font-medium hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="flex-[2] px-6 py-4 bg-[#81D7B4] text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-[#81D7B4]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group"
+                    whileHover={{ scale: loading ? 1 : 1.02, y: loading ? 0 : -2 }}
+                    whileTap={{ scale: loading ? 1 : 0.98 }}
                   >
                     {loading ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Processing...
                       </>
                     ) : (
-                      'Confirm Top Up'
+                      <>
+                        Confirm Top Up
+                        <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </>
                     )}
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             </form>
           </div>
         </motion.div>
