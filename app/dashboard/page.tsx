@@ -89,7 +89,7 @@ export default function Dashboard() {
 
   // UI state management
   const [activeTab, setActiveTab] = useState('current'); // Toggle between current/completed savings
-  const [activeMode, setActiveMode] = useState<'savefi' | 'tradfi'>('savefi'); // Toggle between SaveFi and TradFi
+  const [activeMode, setActiveMode] = useState<'savefi' | 'bizfi'>('savefi'); // Toggle between SaveFi and BizFi
 
   // Modal state for top-up operations
   const [topUpModal, setTopUpModal] = useState({
@@ -746,7 +746,7 @@ export default function Dashboard() {
               )}
             </p>
 
-            {/* SaveFi / TradFi Pill Tabs */}
+            {/* SaveFi / BizFi Pill Tabs */}
             <div className="mt-3 sm:mt-4">
               <div className="inline-flex items-center bg-gray-50 border border-gray-200 rounded-full p-1.5 sm:p-2 gap-2 sm:gap-3 md:gap-4">
                 <button
@@ -757,20 +757,20 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={() => {
-                    setActiveMode('tradfi');
+                    setActiveMode('bizfi');
+                    // Add a small delay for the animation to play before navigation
                     setTimeout(() => {
                       try {
-                        router.push('/dashboard/tradfi');
-                      } catch (error) {
-                        console.error('Navigation failed:', error);
-                        setActiveMode('savefi'); // Revert on failure
-                        alert('Failed to navigate to TradFi page. Please try again.');
+                        router.push('/bizfi');
+                      } catch (e) {
+                        console.error('Navigation error:', e);
+                        alert('Failed to navigate to BizFi page. Please try again.');
                       }
-                    }, 250);
+                    }, 300);
                   }}
-                  className={`px-4 sm:px-5 md:px-6 lg:px-7 py-1.5 sm:py-2 md:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-semibold transition-colors duration-200 hover:bg-gray-100 ${activeMode === 'tradfi' ? 'bg-white text-[#4A9B7A]' : 'text-gray-500 hover:text-gray-700'}`}
+                  className={`px-4 sm:px-5 md:px-6 lg:px-7 py-1.5 sm:py-2 md:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-semibold transition-colors duration-200 hover:bg-gray-100 ${activeMode === 'bizfi' ? 'bg-white text-[#4A9B7A]' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                  TradFi
+                  BizFi
                 </button>
               </div>
             </div>
@@ -825,7 +825,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* TradFi inline overlay removed; navigation goes to /dashboard/tradfi */}
+      {/* BizFi inline overlay removed; navigation goes to /bizfi */}
 
       {/* Modern Network & Balance Section with Glassmorphism */}
       <AnimatePresence mode="wait">
@@ -1314,17 +1314,19 @@ export default function Dashboard() {
                         {/* Withdraw Button */}
                         <motion.button
                           onClick={() => {
+                            if (plan.isValid === false) return;
                             const currentDate = new Date();
                             const maturityTimestamp = Number(plan.maturityTime || 0);
                             const maturityDate = new Date(maturityTimestamp * 1000);
                             const isCompleted = currentDate >= maturityDate;
                             openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                           }}
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
-                          className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
+                          whileHover={plan.isValid === false ? {} : { scale: 1.01 }}
+                          whileTap={plan.isValid === false ? {} : { scale: 0.99 }}
+                          disabled={plan.isValid === false}
+                          className={`w-full py-3 text-sm font-medium text-white rounded-lg transition-shadow ${plan.isValid === false ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#81D7B4] hover:shadow-md'}`}
                         >
-                          Withdraw
+                          {plan.isValid === false ? 'Withdrawn' : 'Withdraw'}
                         </motion.button>
                       </motion.div>
                     ))}
@@ -1452,20 +1454,22 @@ export default function Dashboard() {
                           </div>
 
                           {/* Withdraw Button */}
-                          <motion.button
-                            onClick={() => {
-                              const currentDate = new Date();
-                              const maturityTimestamp = Number(plan.maturityTime || 0);
-                              const maturityDate = new Date(maturityTimestamp * 1000);
-                              const isCompleted = currentDate >= maturityDate;
-                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
-                            }}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                            className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
-                          >
-                            Withdraw
-                          </motion.button>
+                        <motion.button
+                          onClick={() => {
+                            if (plan.isValid === false) return;
+                            const currentDate = new Date();
+                            const maturityTimestamp = Number(plan.maturityTime || 0);
+                            const maturityDate = new Date(maturityTimestamp * 1000);
+                            const isCompleted = currentDate >= maturityDate;
+                            openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                          }}
+                          whileHover={plan.isValid === false ? {} : { scale: 1.01 }}
+                          whileTap={plan.isValid === false ? {} : { scale: 0.99 }}
+                          disabled={plan.isValid === false}
+                          className={`w-full py-3 text-sm font-medium text-white rounded-lg transition-shadow ${plan.isValid === false ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#81D7B4] hover:shadow-md'}`}
+                        >
+                          {plan.isValid === false ? 'Withdrawn' : 'Withdraw'}
+                        </motion.button>
                         </motion.div>
                       ))}
                     </>

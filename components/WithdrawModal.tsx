@@ -192,6 +192,11 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
+
+      if (!savingData.isValid) {
+        throw new Error("This savings plan is invalid or has already been withdrawn.");
+      }
+
       const amount = ethers.formatUnits(savingData.amount, 18);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
@@ -302,6 +307,11 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
+
+      if (!savingData.isValid) {
+        throw new Error("This savings plan is invalid or has already been withdrawn.");
+      }
+
       const amount = ethers.formatUnits(savingData.amount, 6);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);

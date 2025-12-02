@@ -524,7 +524,8 @@ export function useSavingsData(): UseSavingsDataReturn {
                 penaltyPercentage,
                 tokenName,
                 tokenLogo,
-                network: isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isHederaNetwork ? 'Hedera' : isAvalancheNetwork ? 'Avalanche' : 'Unknown'
+                network: isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isHederaNetwork ? 'Hedera' : isAvalancheNetwork ? 'Avalanche' : 'Unknown',
+                isValid: savingData.isValid
               };
 
               // Validate required fields before adding to arrays
@@ -536,10 +537,13 @@ export function useSavingsData(): UseSavingsDataReturn {
               // Categorize plan
               const isCompleted = progress >= 100 || now >= maturityTime;
 
-              if (isCompleted) {
-                completedPlans.push(planData);
-              } else {
-                currentPlans.push(planData);
+              // Only include valid (not withdrawn) plans in the active/completed lists
+              if (planData.isValid) {
+                if (isCompleted) {
+                  completedPlans.push(planData);
+                } else {
+                  currentPlans.push(planData);
+                }
               }
             } catch (err) {
               console.error(`Failed to process plan "${savingName}":`, handleContractError(err));
