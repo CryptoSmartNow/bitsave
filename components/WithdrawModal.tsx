@@ -575,7 +575,7 @@ const WithdrawModal = memo(function WithdrawModal({
                 <button
                   onClick={handleWithdraw}
                   disabled={isLoading}
-                  className="group w-full py-4 text-center text-base font-bold text-white bg-[#81D7B4] rounded-xl shadow-lg hover:shadow-2xl hover:shadow-[#81D7B4]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98]">
+                  className="group w-full py-3 text-center text-base font-bold text-white bg-[#81D7B4] rounded-xl shadow-lg hover:shadow-2xl hover:shadow-[#81D7B4]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98]">
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full mr-3"></div>

@@ -1380,14 +1380,6 @@ export default function Dashboard() {
                                 </div>
                               </div>
                             </div>
-                            <motion.button
-                              onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-4 py-2 text-sm font-medium text-white bg-[#81D7B4] rounded-lg hover:shadow-md transition-shadow"
-                            >
-                              Top Up
-                            </motion.button>
                           </div>
 
                           {/* Progress Section */}

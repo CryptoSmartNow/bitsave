@@ -70,7 +70,7 @@ interface TopUpModalProps {
 const getTokenLogo = (name: string, logoUrl: string) => {
   if (logoUrl) return ensureImageUrl(logoUrl);
   if (name === 'ETH') return '/eth.png';
-  if (name === 'USDC') return '/usdc.png';
+  if (name === 'USDC') return '/usdclogo.png';
   if (name === 'cUSD') return '/cusd.png';
   if (name === 'Gooddollar' || name === '$G') return '/gooddollar.png';
   return '/default-token.png';
@@ -972,6 +972,11 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                         width={16}
                         height={16}
                         className="mr-2"
+                        unoptimized
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/default-token.png';
+                        }}
                       />
                       <span className="text-xs font-semibold text-gray-700">{isEth ? 'ETH' : tokenName}</span>
                     </motion.div>
@@ -1017,13 +1022,13 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                       id="amount"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="block w-full px-6 py-5 text-3xl font-bold text-gray-900 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4] transition-all duration-300 hover:border-gray-300"
+                      className="block w-full px-4 py-3 text-xl sm:text-2xl font-bold text-gray-900 bg-white border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4] transition-all duration-300 hover:border-gray-300"
                       placeholder="0.00"
                       step="any"
                       min="0"
                     />
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <span className="text-lg font-bold text-gray-400 group-focus-within:text-[#81D7B4] transition-colors">{getTokenNameDisplay()}</span>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-base sm:text-lg font-bold text-gray-400 group-focus-within:text-[#81D7B4] transition-colors">{getTokenNameDisplay()}</span>
                     </div>
                   </div>
 
@@ -1055,7 +1060,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                         key={presetAmount}
                         type="button"
                         onClick={() => setAmount(presetAmount)}
-                        className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${amount === presetAmount
+                        className={`py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${amount === presetAmount
                           ? 'bg-[#81D7B4] text-white shadow-lg shadow-[#81D7B4]/30'
                           : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-2 border-gray-200 hover:border-[#81D7B4]/30'
                           }`}
@@ -1101,7 +1106,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                   <motion.button
                     type="button"
                     onClick={onClose}
-                    className="flex-1 px-6 py-4 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -1110,7 +1115,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                   <motion.button
                     type="submit"
                     disabled={loading || !amount || parseFloat(amount) <= 0}
-                    className="flex-[2] px-6 py-4 bg-[#81D7B4] text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-[#81D7B4]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group"
+                    className="flex-[2] px-4 py-3 bg-[#81D7B4] text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-[#81D7B4]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group"
                     whileHover={{ scale: loading ? 1 : 1.02, y: loading ? 0 : -2 }}
                     whileTap={{ scale: loading ? 1 : 0.98 }}
                   >
