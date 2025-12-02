@@ -1,7 +1,6 @@
-import { ethers } from 'ethers';
-import CONTRACT_ABI from '@/app/abi/contractABI.js';
-import CHILD_CONTRACT_ABI from '@/app/abi/childContractABI.js';
+// Contract error handling utility focused on extracting precise contract errors
 
+// Attempt to extract the most precise revert reason or custom error name
 const extractPreciseContractError = (error: unknown): string => {
   const e = error as Record<string, any> | undefined;
 
@@ -17,18 +16,6 @@ const extractPreciseContractError = (error: unknown): string => {
       const sm = e.shortMessage.trim();
       const match = sm.match(/execution reverted:?\s*(.+?)(?:\(|$)/i);
       return match ? match[1].trim() : sm;
-    }
-    if (e.data) {
-      try {
-        const ifaceMain = new ethers.Interface(CONTRACT_ABI as any);
-        const parsedMain = ifaceMain.parseError(e.data);
-        if (parsedMain && parsedMain.name) return parsedMain.name;
-      } catch {}
-      try {
-        const ifaceChild = new ethers.Interface(CHILD_CONTRACT_ABI as any);
-        const parsedChild = ifaceChild.parseError(e.data);
-        if (parsedChild && parsedChild.name) return parsedChild.name;
-      } catch {}
     }
   }
 
