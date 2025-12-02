@@ -52,7 +52,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className={`${exo.variable} font-sans h-screen bg-[#0A0E0D] text-white flex overflow-hidden`}>
+        <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] bg-[#0A0E0D] text-white flex overflow-hidden`}>
             {/* Contacts Sidebar */}
             <div className="hidden md:flex md:w-80 border-r border-gray-800 flex-col">
                 {/* Search */}
