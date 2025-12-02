@@ -512,9 +512,9 @@ export function useSavingsData(): UseSavingsDataReturn {
 
               // Create plan data with validation
               const planData = {
-                id: savingName.trim(),
+                id: savingName,
                 address: userChildContractAddress,
-                name: savingName.trim(),
+                name: savingName,
                 currentAmount: currentFormatted,
                 targetAmount: targetFormatted,
                 progress,
