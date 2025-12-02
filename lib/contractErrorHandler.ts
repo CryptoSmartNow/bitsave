@@ -33,6 +33,14 @@ const extractPreciseContractError = (error: unknown): string => {
     if (m) return m[1].trim();
   }
 
+  // Check for custom error selectors in the data field
+  if (e?.data && typeof e.data === 'string' && e.data.startsWith('0x')) {
+    const selector = e.data.slice(0, 10); // First 4 bytes (8 hex chars + 0x)
+    if (selector.length === 10 && selector !== '0x') {
+      return `Unknown custom error: ${selector}`;
+    }
+  }
+
   return '';
 };
 
@@ -68,7 +76,13 @@ export const handleChildContractError = (error: unknown): string => {
 export const handleMainContractError = (error: unknown): string => {
   // Prefer precise contract-derived reason or custom error name
   const precise = extractPreciseContractError(error);
-  if (precise) return precise;
+  if (precise) {
+    // Check if this is an unknown custom error selector
+    if (precise.includes('Unknown custom error: 0xd63d1e48')) {
+      return 'Withdrawal failed: This savings plan may not be ready for withdrawal yet. Please check if the minimum time period has passed or if there are sufficient funds available.';
+    }
+    return precise;
+  }
 
   const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
 

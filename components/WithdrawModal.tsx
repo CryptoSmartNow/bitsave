@@ -192,10 +192,25 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
+      
+      // Validate savings data before attempting withdrawal
+      if (!savingData || savingData.amount === BigInt(0)) {
+        throw new Error('No funds available in this savings plan.');
+      }
+      
       const amount = ethers.formatUnits(savingData.amount, 18);
 
-      const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
-
+      let gasEstimate;
+      try {
+        gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
+      } catch (gasError: any) {
+        console.error("Gas estimation failed:", gasError);
+        // Check for specific custom error
+        if (gasError.data && gasError.data.includes('0xd63d1e48')) {
+          throw new Error('This savings plan cannot be withdrawn at this time. Please ensure the minimum lock period has passed and you have sufficient balance.');
+        }
+        throw new Error('Unable to process withdrawal. Please check if the savings plan is ready for withdrawal.');
+      }
 
       const tx = await contract.withdrawSaving(nameOfSavings, {
         gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
@@ -302,9 +317,25 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
+      
+      // Validate savings data before attempting withdrawal
+      if (!savingData || savingData.amount === BigInt(0)) {
+        throw new Error('No funds available in this savings plan.');
+      }
+      
       const amount = ethers.formatUnits(savingData.amount, 6);
 
-      const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
+      let gasEstimate;
+      try {
+        gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
+      } catch (gasError: any) {
+        console.error("Gas estimation failed:", gasError);
+        // Check for specific custom error
+        if (gasError.data && gasError.data.includes('0xd63d1e48')) {
+          throw new Error('This savings plan cannot be withdrawn at this time. Please ensure the minimum lock period has passed and you have sufficient balance.');
+        }
+        throw new Error('Unable to process withdrawal. Please check if the savings plan is ready for withdrawal.');
+      }
 
       const tx = await contract.withdrawSaving(nameOfSavings, {
         gasLimit: gasEstimate + (gasEstimate * BigInt(20) / BigInt(100)),
