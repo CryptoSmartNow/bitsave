@@ -191,25 +191,86 @@ const WithdrawModal = memo(function WithdrawModal({
       const userChildContractAddress = await contract.getUserChildContractAddress();
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
-      const savingData = await childContract.getSaving(nameOfSavings);
+      
+      // Get savings data with better error handling
+      let savingData;
+      try {
+        savingData = await childContract.getSaving(nameOfSavings);
+      } catch (error: any) {
+        console.error("Failed to get saving data:", error);
+        throw new Error(`Savings plan "${nameOfSavings}" not found or invalid.`);
+      }
       
       // Validate savings data before attempting withdrawal
-      if (!savingData || savingData.amount === BigInt(0)) {
+      if (!savingData) {
+        throw new Error(`Savings plan "${nameOfSavings}" does not exist.`);
+      }
+      
+      if (savingData.amount === undefined || savingData.amount === BigInt(0)) {
         throw new Error('No funds available in this savings plan.');
+      }
+      
+      // Additional validation: check maturity time
+      try {
+        const maturityTime = await childContract.getSavingMode(nameOfSavings);
+        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+        
+        if (maturityTime && maturityTime > currentTime) {
+          const timeRemaining = maturityTime - currentTime;
+          const daysRemaining = Math.ceil(timeRemaining / (60 * 60 * 24));
+          throw new Error(`This savings plan is not yet mature. It will be available for withdrawal in ${daysRemaining} days.`);
+        }
+      } catch (maturityError: any) {
+        // If maturity check fails, log it but don't block the withdrawal attempt
+        console.log("Maturity check failed or not applicable:", maturityError);
       }
       
       const amount = ethers.formatUnits(savingData.amount, 18);
 
+      // Check if withdrawal is possible by attempting gas estimation with better error handling
       let gasEstimate;
       try {
+        console.log(`Attempting gas estimation for withdrawal of plan: ${nameOfSavings}`);
         gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
+        console.log(`Gas estimation successful: ${gasEstimate.toString()}`);
       } catch (gasError: any) {
         console.error("Gas estimation failed:", gasError);
-        // Check for specific custom error
-        if (gasError.data && gasError.data.includes('0xd63d1e48')) {
-          throw new Error('This savings plan cannot be withdrawn at this time. Please ensure the minimum lock period has passed and you have sufficient balance.');
+        
+        // Handle specific custom errors based on error data
+        if (gasError.data) {
+          const errorData = String(gasError.data);
+          
+          // Check for the specific custom error 0xd63d1e48
+          if (errorData.includes('0xd63d1e48')) {
+            throw new Error('This savings plan cannot be withdrawn at this time. The minimum lock period may not have passed yet, or there may be insufficient funds available.');
+          }
+          
+          // Check for other known custom errors from the ABI
+          if (errorData.includes('0x815a2c04')) { // InvalidTime error
+            throw new Error('This savings plan is not yet mature. Please wait until the minimum lock period has passed.');
+          }
+          
+          if (errorData.includes('0x6f96b6d9')) { // AmountNotEnough error
+            throw new Error('Insufficient funds in this savings plan.');
+          }
+          
+          if (errorData.includes('0x4a4c82d5')) { // CanNotWithdrawToken error
+            throw new Error('This token cannot be withdrawn at this time.');
+          }
         }
-        throw new Error('Unable to process withdrawal. Please check if the savings plan is ready for withdrawal.');
+        
+        // Handle error message parsing
+        const errorMessage = gasError.message || gasError.toString();
+        if (errorMessage.includes('InvalidTime')) {
+          throw new Error('This savings plan is not yet ready for withdrawal. Please check the maturity time.');
+        }
+        
+        if (errorMessage.includes('AmountNotEnough')) {
+          throw new Error('The withdrawal amount is too small or insufficient funds are available.');
+        }
+        
+        // Generic fallback error
+        throw new Error(`Unable to process withdrawal: ${errorMessage}. This may be due to the savings plan not being ready for withdrawal yet.`);
       }
 
       const tx = await contract.withdrawSaving(nameOfSavings, {
@@ -314,27 +375,87 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const userChildContractAddress = await contract.getUserChildContractAddress();
 
-
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
-      const savingData = await childContract.getSaving(nameOfSavings);
+      
+      // Get savings data with better error handling
+      let savingData;
+      try {
+        savingData = await childContract.getSaving(nameOfSavings);
+      } catch (error: any) {
+        console.error("Failed to get saving data:", error);
+        throw new Error(`Savings plan "${nameOfSavings}" not found or invalid.`);
+      }
       
       // Validate savings data before attempting withdrawal
-      if (!savingData || savingData.amount === BigInt(0)) {
+      if (!savingData) {
+        throw new Error(`Savings plan "${nameOfSavings}" does not exist.`);
+      }
+      
+      if (savingData.amount === undefined || savingData.amount === BigInt(0)) {
         throw new Error('No funds available in this savings plan.');
+      }
+      
+      // Additional validation: check maturity time
+      try {
+        const maturityTime = await childContract.getSavingMode(nameOfSavings);
+        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+        
+        if (maturityTime && maturityTime > currentTime) {
+          const timeRemaining = maturityTime - currentTime;
+          const daysRemaining = Math.ceil(timeRemaining / (60 * 60 * 24));
+          throw new Error(`This savings plan is not yet mature. It will be available for withdrawal in ${daysRemaining} days.`);
+        }
+      } catch (maturityError: any) {
+        // If maturity check fails, log it but don't block the withdrawal attempt
+        console.log("Maturity check failed or not applicable:", maturityError);
       }
       
       const amount = ethers.formatUnits(savingData.amount, 6);
 
+      // Check if withdrawal is possible by attempting gas estimation with better error handling
       let gasEstimate;
       try {
+        console.log(`Attempting gas estimation for token withdrawal of plan: ${nameOfSavings}`);
         gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
+        console.log(`Gas estimation successful: ${gasEstimate.toString()}`);
       } catch (gasError: any) {
         console.error("Gas estimation failed:", gasError);
-        // Check for specific custom error
-        if (gasError.data && gasError.data.includes('0xd63d1e48')) {
-          throw new Error('This savings plan cannot be withdrawn at this time. Please ensure the minimum lock period has passed and you have sufficient balance.');
+        
+        // Handle specific custom errors based on error data
+        if (gasError.data) {
+          const errorData = String(gasError.data);
+          
+          // Check for the specific custom error 0xd63d1e48
+          if (errorData.includes('0xd63d1e48')) {
+            throw new Error('This savings plan cannot be withdrawn at this time. The minimum lock period may not have passed yet, or there may be insufficient funds available.');
+          }
+          
+          // Check for other known custom errors from the ABI
+          if (errorData.includes('0x815a2c04')) { // InvalidTime error
+            throw new Error('This savings plan is not yet mature. Please wait until the minimum lock period has passed.');
+          }
+          
+          if (errorData.includes('0x6f96b6d9')) { // AmountNotEnough error
+            throw new Error('Insufficient funds in this savings plan.');
+          }
+          
+          if (errorData.includes('0x4a4c82d5')) { // CanNotWithdrawToken error
+            throw new Error('This token cannot be withdrawn at this time.');
+          }
         }
-        throw new Error('Unable to process withdrawal. Please check if the savings plan is ready for withdrawal.');
+        
+        // Handle error message parsing
+        const errorMessage = gasError.message || gasError.toString();
+        if (errorMessage.includes('InvalidTime')) {
+          throw new Error('This savings plan is not yet ready for withdrawal. Please check the maturity time.');
+        }
+        
+        if (errorMessage.includes('AmountNotEnough')) {
+          throw new Error('The withdrawal amount is too small or insufficient funds are available.');
+        }
+        
+        // Generic fallback error
+        throw new Error(`Unable to process withdrawal: ${errorMessage}. This may be due to the savings plan not being ready for withdrawal yet.`);
       }
 
       const tx = await contract.withdrawSaving(nameOfSavings, {
