@@ -251,7 +251,10 @@ export default function BizFiDashboardPage() {
 
                             {/* Referral Code */}
                             <div className="mb-8 p-4 bg-[#81D7B4]/5 rounded-xl border border-[#81D7B4]/20">
-                                <label className="block text-sm font-medium text-[#81D7B4] mb-2">Have a Referral Code?</label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-medium text-[#81D7B4]">Have a Referral Code?</label>
+                                    <span className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">Save up to 40%</span>
+                                </div>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
