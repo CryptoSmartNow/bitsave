@@ -12,6 +12,7 @@ import { Exo } from 'next/font/google';
 // Custom modal components for savings operations
 import TopUpModal from '../../components/TopUpModal';
 import WithdrawModal from '../../components/WithdrawModal';
+import PlanDetailsModal from '../../components/PlanDetailsModal';
 import NetworkDetection from '../../components/NetworkDetection';
 import NetworkSelectionModal from '../../components/NetworkSelectionModal';
 // Animation library for smooth UI transitions
@@ -29,7 +30,7 @@ import { initializeSavingsCache } from '../../utils/savingsCache';
 import { useENSData } from '../../hooks/useENSData';
 // Date utility functions for formatting timestamps
 import { formatTimestamp } from '../../utils/dateUtils';
-import { HiOutlineArrowRight, HiOutlineCheckCircle, HiOutlineArrowDown, HiOutlineBell, HiOutlineChevronDown, HiOutlineCheck, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlinePlus, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlineArrowRight, HiOutlineCheckCircle, HiOutlineArrowDown, HiOutlineBell, HiOutlineChevronDown, HiOutlineCheck, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlinePlus, HiOutlineXMark, HiOutlineEye, HiOutlineBanknotes } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '../../utils/networkLogos';
 
 // Helper function to ensure image URLs are properly formatted for Next.js Image
@@ -98,6 +99,14 @@ export default function Dashboard() {
     planId: '',
     isEth: false,
     isGToken: false,
+    tokenName: ''
+  });
+
+  // Modal state for plan details
+  const [planDetailsModal, setPlanDetailsModal] = useState({
+    isOpen: false,
+    plan: null as any,
+    isEth: false,
     tokenName: ''
   });
 
@@ -646,6 +655,16 @@ export default function Dashboard() {
         tokenName={withdrawModal.tokenName}
         isCompleted={withdrawModal.isCompleted}
         networkLogos={networkLogos}
+      />
+
+      {/* Plan Details Modal */}
+      <PlanDetailsModal
+        isOpen={planDetailsModal.isOpen}
+        onClose={() => setPlanDetailsModal({ ...planDetailsModal, isOpen: false })}
+        plan={planDetailsModal.plan}
+        isEth={planDetailsModal.isEth}
+        tokenName={planDetailsModal.tokenName}
+        goodDollarPrice={goodDollarPrice}
       />
 
       {/* Network Selection Modal (Mobile) */}
@@ -1247,7 +1266,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Footer Info */}
-                        <div className="flex justify-between items-center text-sm font-medium text-gray-400">
+                        <div className="flex justify-between items-center text-sm font-medium text-gray-400 mb-6">
                           <span>{Math.round(plan.progress)}%</span>
                           <span>
                             {(() => {
@@ -1266,10 +1285,15 @@ export default function Dashboard() {
                           </span>
                         </div>
 
-                        {/* Hidden Withdraw Click Area (User can click card body or we add explicit button if needed, but per design usually these are detailed views. 
-                            However, since this is dashboard, I will add a subtle Withdraw text or keep the card clickable if that was the intent, 
-                            but for now I will add a very minimal withdraw button at the bottom right to ensure functionality isn't lost) */}
-                        <div className="mt-4 flex justify-end">
+                        {/* Action Buttons: Plan Details & Outline Withdraw */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <button
+                            onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
+                            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
+                          >
+                            <HiOutlineEye className="w-4 h-4" />
+                            Plan Details
+                          </button>
                           <button
                             onClick={() => {
                               const currentDate = new Date();
@@ -1278,8 +1302,9 @@ export default function Dashboard() {
                               const isCompleted = currentDate >= maturityDate;
                               openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                             }}
-                            className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors"
+                            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-red-50 hover:border-red-500 hover:text-red-500 transition-all group/withdraw"
                           >
+                            <HiOutlineBanknotes className="w-4 h-4 group-hover/withdraw:text-red-500" />
                             Withdraw
                           </button>
                         </div>
@@ -1366,14 +1391,21 @@ export default function Dashboard() {
                           </div>
 
                           {/* Footer Info */}
-                          <div className="flex justify-between items-center text-sm font-medium text-gray-400">
+                          <div className="flex justify-between items-center text-sm font-medium text-gray-400 mb-6">
                             <span>100%</span>
                             <span>Goal Reached</span>
                           </div>
 
-                          {/* Withdraw Button (Prominent for completed plans) */}
-                          <div className="mt-6">
-                            <motion.button
+                          {/* Action Buttons: Plan Details & Outline Withdraw */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <button
+                              onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
+                              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
+                            >
+                              <HiOutlineEye className="w-4 h-4" />
+                              Plan Details
+                            </button>
+                            <button
                               onClick={() => {
                                 const currentDate = new Date();
                                 const maturityTimestamp = Number(plan.maturityTime || 0);
@@ -1381,12 +1413,11 @@ export default function Dashboard() {
                                 const isCompleted = currentDate >= maturityDate;
                                 openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                               }}
-                              whileHover={{ scale: 1.01 }}
-                              whileTap={{ scale: 0.99 }}
-                              className="w-full py-3 text-sm font-medium text-white bg-[#81D7B4] rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/20 transition-all"
+                              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
                             >
+                              <HiOutlineBanknotes className="w-4 h-4" />
                               Withdraw Funds
-                            </motion.button>
+                            </button>
                           </div>
                         </motion.div>
                       ))}
