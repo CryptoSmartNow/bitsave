@@ -11,6 +11,7 @@ import {
     HiOutlineFunnel
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
+import "../../bizfi-colors.css";
 
 const exo = Exo({
     subsets: ['latin'],
@@ -92,20 +93,20 @@ export default function BizContentPage() {
 
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] flex items-center justify-center`}>
+            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] text-white p-4 sm:p-6 lg:p-8`}>
+        <div className={`${exo.variable} font-sans min-h-screen text-white p-4 sm:p-6 lg:p-8`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
             {/* Header */}
             <div className="mb-6 sm:mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">BizContent</h1>
-                        <p className="text-sm sm:text-base text-gray-400">Educational content and updates for business owners</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#F9F9FB' }}>BizContent</h1>
+                        <p className="text-sm sm:text-base" style={{ color: '#7B8B9A' }}>Educational content and updates for business owners</p>
                     </div>
                     <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all w-full sm:w-auto">
                         <HiOutlinePlus className="w-5 h-5" />
@@ -122,8 +123,8 @@ export default function BizContentPage() {
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
                                 className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${selectedCategory === category
-                                        ? 'bg-[#81D7B4] text-gray-900'
-                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                    ? 'bg-[#81D7B4] text-gray-900'
+                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                     }`}
                             >
                                 {category}

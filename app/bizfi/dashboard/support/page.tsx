@@ -11,6 +11,7 @@ import {
     HiOutlineBookOpen
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
+import "../../bizfi-colors.css";
 
 const exo = Exo({
     subsets: ['latin'],
@@ -59,15 +60,11 @@ const FAQ_ITEMS = [
         questions: [
             {
                 q: "What payment methods do you accept?",
-                a: "We accept cryptocurrency payments (ETH, USDC, USDT) and traditional payment methods (credit card, bank transfer) for listing fees."
+                a: "We accept cryptocurrency payments (ETH, USDC, USDT) for listing fees."
             },
             {
                 q: "Are there ongoing fees?",
                 a: "We charge a 2.5% transaction fee on token trades. There are no monthly fees or hidden charges."
-            },
-            {
-                q: "Do you offer refunds?",
-                a: "Listing fees are non-refundable once your application is approved. However, if your application is rejected, you'll receive a full refund."
             }
         ]
     }
@@ -95,18 +92,18 @@ export default function SupportPage() {
 
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] flex items-center justify-center`}>
+            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] text-white p-4 sm:p-6 lg:p-8`}>
+        <div className={`${exo.variable} font-sans min-h-screen text-white p-4 sm:p-6 lg:p-8`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
             {/* Header */}
             <div className="mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Support Center</h1>
-                <p className="text-sm sm:text-base text-gray-400">Get help with your BizMarket journey</p>
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#F9F9FB' }}>Support Center</h1>
+                <p className="text-sm sm:text-base" style={{ color: '#7B8B9A' }}>Get help with your BizMarket journey</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
@@ -259,7 +256,7 @@ export default function SupportPage() {
                         <div className="mt-6 pt-6 border-t border-gray-800">
                             <p className="text-sm text-gray-400 mb-3">Other ways to reach us:</p>
                             <div className="space-y-2 text-sm">
-                                <p className="text-gray-300">📧 support@bizmarket.io</p>
+                                <p className="text-gray-300">📧 bizfi@bitsave.io</p>
                                 <p className="text-gray-300">💬 Live chat (9AM-5PM EST)</p>
                             </div>
                         </div>

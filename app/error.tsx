@@ -70,14 +70,14 @@ export default function Error({ error, reset }: ErrorProps) {
         {error.message && (
           <div className="mb-10 p-5 bg-white/90 backdrop-blur-sm rounded-2xl border border-red-200/50 shadow-lg max-w-lg mx-auto">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mt-0.5">
-                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex-shrink-0 w-8 h-8 bg-red-900 rounded-lg flex items-center justify-center mt-0.5">
+                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
               <div className="text-left flex-1">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Error Details</h3>
-                <p className="text-xs text-gray-600 font-mono break-all leading-relaxed">
+                <h3 className="font-semibold text-gray-100 mb-1 text-sm">Error Details</h3>
+                <p className="text-xs text-gray-400 font-mono break-all leading-relaxed">
                   {error.message}
                 </p>
                 {error.digest && (

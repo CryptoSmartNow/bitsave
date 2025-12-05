@@ -15,6 +15,8 @@ import {
     HiOutlineCheckCircle
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
+import WizardForm from "./components/WizardForm";
+import "../bizfi-colors.css";
 
 const exo = Exo({
     subsets: ['latin'],
@@ -22,97 +24,47 @@ const exo = Exo({
     variable: '--font-exo',
 });
 
-// Dashboard Metrics Data
-const DASHBOARD_METRICS = [
-    {
-        label: "Token Price",
-        value: "$0.00",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineCurrencyDollar
-    },
-    {
-        label: "Market Cap",
-        value: "$0",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineTrophy
-    },
-    {
-        label: "Total Investors",
-        value: "0",
-        change: "0",
-        isPositive: true,
-        icon: HiOutlineUsers
-    },
-    {
-        label: "Capital Raised",
-        value: "$0",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineRocketLaunch
-    },
-    {
-        label: "Monthly Revenue",
-        value: "$0",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineCurrencyDollar
-    },
-    {
-        label: "Growth Rate",
-        value: "0%",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineFire
-    },
-    {
-        label: "Liquidity Available",
-        value: "$0",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineBeaker
-    },
-    {
-        label: "Compliance Status",
-        value: "Pending",
-        change: "0%",
-        isPositive: true,
-        icon: HiOutlineTrophy
-    }
-];
+
 
 // Tiers
-const TIERS = [
-    {
-        id: 'micro',
-        name: 'Micro Business',
-        price: 10,
-        referralPrice: 6,
-        description: 'For small businesses and SMEs earning under $5,000/month (saloons, food vendors, sole traders).'
-    },
-    {
-        id: 'builder',
-        name: 'Builder Tier',
-        price: 35,
-        referralPrice: 30,
-        description: 'For idea-stage founders, student entrepreneurs, and early builders launching their startup.'
-    },
-    {
-        id: 'growth',
-        name: 'Growth Business',
-        price: 60,
-        referralPrice: 50,
-        description: 'For operational businesses earning over $5,000/month with customers and revenue.'
-    },
-    {
-        id: 'enterprise',
-        name: 'Enterprise Projects',
-        price: 120,
-        referralPrice: 100,
-        description: 'For large-scale projects (real estate, agriculture, manufacturing) raising significant capital.'
-    }
-];
+type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
+
+const TIERS: Array<{
+    id: TierType;
+    name: string;
+    price: number;
+    referralPrice: number;
+    description: string;
+}> = [
+        {
+            id: 'micro',
+            name: 'Micro Business',
+            price: 10,
+            referralPrice: 6,
+            description: 'For small businesses and SMEs earning under $5,000/month (saloons, food vendors, sole traders).'
+        },
+        {
+            id: 'builder',
+            name: 'Builder Tier',
+            price: 35,
+            referralPrice: 30,
+            description: 'For idea-stage founders, student entrepreneurs, and early builders launching their startup.'
+        },
+        {
+            id: 'growth',
+            name: 'Growth Business',
+            price: 60,
+            referralPrice: 50,
+            description: 'For operational businesses earning over $5,000/month with customers and revenue.'
+        },
+        {
+            id: 'enterprise',
+            name: 'Enterprise Projects',
+            price: 120,
+            referralPrice: 100,
+            description: 'For large-scale projects (real estate, agriculture, manufacturing) raising significant capital.'
+        }
+    ];
 
 export default function BizFiDashboardPage() {
     const router = useRouter();
@@ -122,9 +74,27 @@ export default function BizFiDashboardPage() {
     const [referralCode, setReferralCode] = useState('');
     const [isReferralValid, setIsReferralValid] = useState(false);
     const [showConsultancyModal, setShowConsultancyModal] = useState(false);
+    const [businessCount, setBusinessCount] = useState(1000);
 
     useEffect(() => {
         setMounted(true);
+
+        // Fetch and increment global business counter
+        const fetchCounter = async () => {
+            try {
+                const response = await fetch('/api/bizfi/counter');
+                const data = await response.json();
+                setBusinessCount(data.count);
+            } catch (error) {
+                console.error('Failed to fetch business counter:', error);
+                // Fallback to localStorage if API fails
+                const currentCount = parseInt(localStorage.getItem('bizfi_business_count') || '1000');
+                setBusinessCount(currentCount + 1);
+                localStorage.setItem('bizfi_business_count', (currentCount + 1).toString());
+            }
+        };
+
+        fetchCounter();
     }, []);
 
     const handleReferralCheck = (code: string) => {
@@ -139,121 +109,111 @@ export default function BizFiDashboardPage() {
 
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] flex items-center justify-center`}>
+            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-sans`}>
+        <div className={`${exo.variable} font-sans`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)', minHeight: '100vh' }}>
             {/* Header */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Business Dashboard</h1>
-                        <p className="text-sm sm:text-base text-gray-400">Manage your business listing and track performance</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#F9F9FB' }}>Business Dashboard</h1>
+                        <p className="text-sm sm:text-base" style={{ color: '#7B8B9A' }}>Manage your business listing and track performance</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowConsultancyModal(true)}
-                            className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all"
+                            className="flex items-center gap-2 px-4 sm:px-6 py-3 font-bold rounded-xl transition-all"
+                            style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
                         >
                             <HiOutlineChatBubbleLeftRight className="w-5 h-5" />
                             <span className="hidden sm:inline">Book Consultancy</span>
                             <span className="sm:hidden">Book</span>
                         </button>
                         {address && (
-                            <div className="hidden md:block px-4 py-2 bg-gray-800 rounded-xl text-sm text-gray-300">
+                            <div className="hidden md:block px-4 py-2 rounded-xl text-sm" style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#9BA8B5' }}>
                                 {address.slice(0, 6)}...{address.slice(-4)}
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Metrics Grid */}
+                {/* Business Counter */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-12"
+                    className="mb-8 text-center"
                 >
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-white">Your Business Overview</h2>
-                        <span className="px-3 py-1 bg-[#81D7B4]/10 text-[#81D7B4] rounded-full text-xs font-bold border border-[#81D7B4]/20">
-                            Live Preview
-                        </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {DASHBOARD_METRICS.map((metric, index) => (
-                            <motion.div
-                                key={metric.label}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-5 hover:border-[#81D7B4]/30 transition-all duration-300"
-                            >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="p-2 bg-[#81D7B4]/10 rounded-lg">
-                                        <metric.icon className="w-5 h-5 text-[#81D7B4]" />
-                                    </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${metric.isPositive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
-                                        }`}>
-                                        {metric.change}
-                                    </span>
-                                </div>
-                                <p className="text-gray-400 text-sm mb-1">{metric.label}</p>
-                                <p className="text-2xl font-bold text-white">{metric.value}</p>
-                            </motion.div>
-                        ))}
+                    <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full border" style={{ background: 'linear-gradient(90deg, rgba(44, 62, 93, 0.5) 0%, rgba(129, 215, 180, 0.1) 100%)', borderColor: 'rgba(129, 215, 180, 0.3)' }}>
+                        <HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" />
+                        <p className="text-base sm:text-lg leading-relaxed" style={{ color: '#7B8B9A' }}>
+                            <span className="text-[#81D7B4] font-bold">{(1000 + businessCount).toLocaleString()}</span> Real World Businesses have listed Onchain
+                        </p>
                     </div>
                 </motion.div>
 
                 {/* Pre-Listing Assessment Form */}
                 <div className="grid lg:grid-cols-3 gap-8">
                     {/* Form Section */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-3 bg-[#81D7B4]/10 rounded-xl">
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="backdrop-blur-sm rounded-2xl border p-8" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>
                                     <HiOutlineClipboardDocumentCheck className="w-6 h-6 text-[#81D7B4]" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white">Pre-Listing Assessment</h2>
-                                    <p className="text-gray-400 text-sm">Complete this form to check eligibility and start tokenization.</p>
+                                    <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>List Your Business</h2>
+                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Fill the form to bring your business onchain</p>
                                 </div>
+                            </div>
+
+                            <div className="mb-6 p-4 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(129, 215, 180, 0.1) 0%, transparent 100%)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
+                                <p className="text-sm leading-relaxed" style={{ color: '#F9F9FB' }}>
+                                    Fill the Form to Bring your business onchain, <span className="text-[#81D7B4] font-bold">raise capital</span> to expand globally, and get new customers.
+                                </p>
                             </div>
 
                             {/* Tier Selection */}
                             <div className="mb-8">
-                                <label className="block text-sm font-medium text-gray-300 mb-3">Select Your Business Tier</label>
+                                <label className="block text-sm font-medium mb-3" style={{ color: '#9BA8B5' }}>Select Your Business Tier</label>
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     {TIERS.map((tier) => (
                                         <button
                                             key={tier.id}
                                             onClick={() => setSelectedTier(tier)}
                                             className={`text-left p-4 rounded-xl border transition-all duration-300 ${selectedTier.id === tier.id
-                                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] ring-1 ring-[#81D7B4]'
-                                                : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                                                ? ''
+                                                : ''
                                                 }`}
+                                            style={{
+                                                backgroundColor: selectedTier.id === tier.id ? 'rgba(129, 215, 180, 0.1)' : 'rgba(44, 62, 93, 0.3)',
+                                                borderColor: selectedTier.id === tier.id ? '#81D7B4' : 'rgba(123, 139, 154, 0.3)',
+                                                boxShadow: selectedTier.id === tier.id ? '0 0 0 1px #81D7B4' : 'none'
+                                            }}
                                         >
                                             <div className="flex justify-between items-start mb-2">
-                                                <span className={`font-bold ${selectedTier.id === tier.id ? 'text-[#81D7B4]' : 'text-white'}`}>
+                                                <span className="font-bold" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB' }}>
                                                     {tier.name}
                                                 </span>
-                                                <span className="text-sm font-mono text-gray-400">${tier.price}</span>
+                                                <span className="text-sm font-mono" style={{ color: '#7B8B9A' }}>${tier.price}</span>
                                             </div>
-                                            <p className="text-xs text-gray-500 leading-relaxed">{tier.description}</p>
+                                            <p className="text-xs leading-relaxed" style={{ color: '#7B8B9A' }}>{tier.description}</p>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Referral Code */}
-                            <div className="mb-8 p-4 bg-[#81D7B4]/5 rounded-xl border border-[#81D7B4]/20">
+                            <div className="mb-8 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-medium text-[#81D7B4]">Have a Referral Code?</label>
-                                    <span className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">Save up to 40%</span>
+                                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ color: '#81D7B4', backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>Save up to 40%</span>
                                 </div>
                                 <div className="flex gap-2">
                                     <input
@@ -261,127 +221,69 @@ export default function BizFiDashboardPage() {
                                         placeholder="Enter code to save on listing fees"
                                         value={referralCode}
                                         onChange={(e) => handleReferralCheck(e.target.value)}
-                                        className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-[#81D7B4]"
+                                        className="flex-1 px-4 py-2 rounded-lg focus:outline-none"
+                                        style={{
+                                            backgroundColor: 'rgba(26, 37, 56, 0.8)',
+                                            border: '1px solid rgba(123, 139, 154, 0.3)',
+                                            color: '#F9F9FB'
+                                        }}
+                                        onFocus={(e) => e.currentTarget.style.borderColor = '#81D7B4'}
+                                        onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(123, 139, 154, 0.3)'}
                                     />
                                     {isReferralValid && (
-                                        <div className="flex items-center gap-1 text-green-400 text-sm font-bold px-3">
+                                        <div className="flex items-center gap-1 text-sm font-bold px-3" style={{ color: '#81D7B4' }}>
                                             <HiOutlineCheckCircle className="w-5 h-5" />
                                             <span>-${selectedTier.price - selectedTier.referralPrice}</span>
                                         </div>
                                     )}
                                 </div>
                                 {isReferralValid && (
-                                    <p className="text-xs text-green-400 mt-2">
+                                    <p className="text-xs mt-2" style={{ color: '#81D7B4' }}>
                                         Code applied! You pay <span className="font-bold">${selectedTier.referralPrice}</span> instead of ${selectedTier.price}.
                                     </p>
                                 )}
                             </div>
-
-                            {/* Dynamic Form Fields based on Tier */}
-                            <form className="space-y-6">
-                                {/* Section A: General */}
-                                <div>
-                                    <h3 className="text-lg font-bold text-white mb-4 pb-2 border-b border-gray-800">General Information</h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Full Name</label>
-                                            <input type="text" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Email</label>
-                                            <input type="email" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Country</label>
-                                            <input type="text" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Phone Number</label>
-                                            <input type="tel" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Section B: Business Identity (Dynamic) */}
-                                <div>
-                                    <h3 className="text-lg font-bold text-white mb-4 pb-2 border-b border-gray-800">Business Details</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Business Name</label>
-                                            <input type="text" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Business Description</label>
-                                            <textarea rows={3} className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none resize-none" placeholder="Briefly describe your business..." />
-                                        </div>
-                                        {selectedTier.id === 'enterprise' && (
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-400 mb-1">Project Executive Summary</label>
-                                                <textarea rows={4} className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none resize-none" placeholder="Detailed project summary..." />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Section C: Financials */}
-                                <div>
-                                    <h3 className="text-lg font-bold text-white mb-4 pb-2 border-b border-gray-800">Financials & Goals</h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Monthly Revenue (Avg)</label>
-                                            <input type="number" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-400 mb-1">Target Raise Amount ($)</label>
-                                            <input type="number" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4">
-                                    <button
-                                        type="button"
-                                        className="w-full py-4 bg-[#81D7B4] text-gray-900 font-bold rounded-xl shadow-lg hover:bg-[#6BC4A0] transition-all duration-300 hover:scale-[1.01] flex items-center justify-center gap-2"
-                                    >
-                                        <span>Submit Assessment & Pay ${isReferralValid ? selectedTier.referralPrice : selectedTier.price}</span>
-                                        <HiOutlineRocketLaunch className="w-5 h-5" />
-                                    </button>
-                                    <p className="text-center text-xs text-gray-500 mt-3">
-                                        By submitting, you agree to our Terms of Service and Privacy Policy.
-                                    </p>
-                                </div>
-                            </form>
                         </div>
+
+                        {/* Wizard Form */}
+                        <WizardForm
+                            selectedTier={selectedTier}
+                            referralCode={referralCode}
+                            isReferralValid={isReferralValid}
+                        />
                     </div>
 
                     {/* Sidebar / Info */}
                     <div className="space-y-6">
-                        <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Why List on BizFi?</h3>
+                        <div className="backdrop-blur-sm rounded-2xl border p-6" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
+                            <h3 className="text-lg font-bold mb-4" style={{ color: '#F9F9FB' }}>Why List on BizFi?</h3>
                             <ul className="space-y-3">
                                 <li className="flex gap-3">
                                     <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm text-gray-400">Access global capital from crypto investors.</p>
+                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global capital from crypto investors.</p>
                                 </li>
                                 <li className="flex gap-3">
                                     <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm text-gray-400">Tokenize equity or revenue streams easily.</p>
+                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Tokenize equity or revenue streams easily.</p>
                                 </li>
                                 <li className="flex gap-3">
                                     <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm text-gray-400">Automated compliance and investor management.</p>
+                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Automated compliance and investor management.</p>
                                 </li>
                             </ul>
                         </div>
 
-                        <div className="bg-gradient-to-br from-[#81D7B4]/20 to-transparent rounded-2xl border border-[#81D7B4]/20 p-6">
-                            <h3 className="text-lg font-bold text-white mb-2">Need Help?</h3>
-                            <p className="text-sm text-gray-400 mb-4">
+                        <div className="rounded-2xl border p-6" style={{ background: 'linear-gradient(135deg, rgba(129, 215, 180, 0.15) 0%, rgba(44, 62, 93, 0.4) 100%)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
+                            <h3 className="text-lg font-bold mb-2" style={{ color: '#F9F9FB' }}>Need Help?</h3>
+                            <p className="text-sm mb-4" style={{ color: '#7B8B9A' }}>
                                 Not sure which tier fits you? Book a free consultancy session with our experts.
                             </p>
                             <button
                                 onClick={() => setShowConsultancyModal(true)}
-                                className="w-full py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-lg hover:bg-[#6BC4A0] transition-all"
+                                className="w-full py-3 font-bold rounded-lg transition-all"
+                                style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
                             >
                                 Schedule Call
                             </button>
@@ -397,7 +299,8 @@ export default function BizFiDashboardPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        style={{ backgroundColor: 'rgba(15, 24, 37, 0.8)' }}
                         onClick={() => setShowConsultancyModal(false)}
                     >
                         <motion.div
@@ -405,29 +308,36 @@ export default function BizFiDashboardPage() {
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl w-full max-w-md p-6"
+                            className="rounded-2xl border shadow-2xl w-full max-w-md p-6"
+                            style={{ backgroundColor: 'rgba(44, 62, 93, 0.95)', borderColor: 'rgba(123, 139, 154, 0.3)' }}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">Book Consultancy</h2>
+                                <h2 className="text-xl font-bold" style={{ color: '#F9F9FB' }}>Book Consultancy</h2>
                                 <button
                                     onClick={() => setShowConsultancyModal(false)}
-                                    className="text-gray-400 hover:text-white transition-colors"
+                                    className="transition-colors"
+                                    style={{ color: '#7B8B9A' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
                                 >
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                            <p className="text-gray-400 mb-6">
+                            <p className="mb-6" style={{ color: '#7B8B9A' }}>
                                 Schedule a 15-minute call with a BizFi representative to discuss your business needs and listing strategy.
                             </p>
                             {/* Mock Calendar Embed Placeholder */}
-                            <div className="bg-gray-800 rounded-xl h-64 flex items-center justify-center mb-6 border border-gray-700">
-                                <p className="text-gray-500 text-sm">Calendar Integration Loading...</p>
+                            <div className="rounded-xl h-64 flex items-center justify-center mb-6 border" style={{ backgroundColor: 'rgba(26, 37, 56, 0.8)', borderColor: 'rgba(123, 139, 154, 0.3)' }}>
+                                <p className="text-sm" style={{ color: '#7B8B9A' }}>Calendar Integration Loading...</p>
                             </div>
                             <button
                                 onClick={() => setShowConsultancyModal(false)}
-                                className="w-full py-3 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-700 transition-all border border-gray-700"
+                                className="w-full py-3 font-bold rounded-lg transition-all border"
+                                style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#F9F9FB', borderColor: 'rgba(123, 139, 154, 0.3)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.7)'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)'}
                             >
                                 Close
                             </button>

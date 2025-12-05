@@ -31,11 +31,11 @@ export default function Features() {
       {/* Enhanced background elements */}
       <div className="absolute -z-10 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[100px] top-1/4 left-0 transform -translate-x-1/2"></div>
       <div className="absolute -z-10 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] bottom-0 right-0 transform translate-x-1/3"></div>
-      
+
       {/* Decorative elements */}
       <div className="absolute top-20 right-20 w-24 h-24 border border-primary/20 rounded-lg rotate-12 opacity-30 hidden lg:block"></div>
       <div className="absolute bottom-20 left-20 w-16 h-16 border border-secondary/20 rounded-lg -rotate-12 opacity-30 hidden lg:block"></div>
-      
+
       <div className="container mx-auto">
         <div className="text-center mb-20 animate-fade-in-up">
           {/* Enhanced title with decorative elements - Centered and more stunning */}
@@ -44,63 +44,67 @@ export default function Features() {
               {/* Holographic shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/0 via-[#81D7B4]/20 to-[#81D7B4]/0 animate-shimmer"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#81D7B4]/0 via-[#81D7B4]/10 to-[#81D7B4]/0 animate-shimmer-slow"></div>
-              
+
               <div className="w-3 h-3 rounded-full bg-[#81D7B4] animate-pulse relative z-10"></div>
               <span className="text-sm font-semibold text-[#81D7B4] uppercase tracking-wider relative z-10">Powerful Features</span>
             </div>
           </div>
-          
+
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-800">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/80">
               Key Features
             </span>
           </h2>
-          
+
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Designed for growth, ease, and peace of mind - everything you need for successful crypto savings
           </p>
         </div>
-        
-        <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+
+        <div className="grid md:grid-cols-3 gap-8 lg:gap-10">
           {featureItems.map((feature, index) => (
-            <div 
+            <div
               key={index}
-              className="backdrop-blur-xl bg-white/90 p-8 rounded-xl border border-[#81D7B4]/20 relative overflow-hidden group hover:bg-white transition-all duration-500 hover:shadow-[0_10px_30px_-10px_rgba(129,215,180,0.25)] shadow-sm animate-fade-in-up hover:-translate-y-1"
+              className="group relative p-10 rounded-3xl bg-white border-2 border-gray-100 hover:border-[#81D7B4]/30 transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl animate-fade-in-up"
               style={{ animationDelay: `${index * 0.2}s` }}
             >
-              <div className="absolute -right-20 -top-20 w-40 h-40 bg-[#81D7B4]/5 rounded-full blur-3xl group-hover:bg-[#81D7B4]/10 transition-colors"></div>
-              
+              {/* Gradient background on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-[#81D7B4]/30 shadow-sm">
-                  {feature.icon}
+                {/* Icon */}
+                <div className="mb-8 flex justify-center">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                    {feature.icon}
+                  </div>
                 </div>
-                
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-800">
-                  <span className="text-[#81D7B4]">{feature.title}</span>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold mb-4 text-center text-gray-900 group-hover:text-[#81D7B4] transition-colors duration-300">
+                  {feature.title}
                 </h3>
-                
-                <p className="text-gray-600 mb-6">
+
+                {/* Description */}
+                <p className="text-gray-600 mb-6 text-center leading-relaxed">
                   {feature.description}
                 </p>
-                
-                <div className="p-4 backdrop-blur-md bg-white/85 rounded-lg border border-[#81D7B4]/20 shadow-sm relative">
-                  <p className="text-sm">
-                    <span className="font-bold text-[#81D7B4]">Strategy: </span>
-                    <span className="text-[#81D7B4]">{feature.detail}</span>
+
+                {/* Detail Box */}
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-[#81D7B4]/5 to-transparent border border-[#81D7B4]/10">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    <span className="font-bold text-[#81D7B4] block mb-2">Key Benefit:</span>
+                    {feature.detail}
                   </p>
-                  
-                  {/* Add glowing dot indicator */}
-                  <div className="absolute bottom-4 right-4 w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse"></div>
                 </div>
-                
-                {/* Decorative corner accent */}
-                <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-[#81D7B4]/30 rounded-br-lg opacity-70"></div>
               </div>
+
+              {/* Decorative corner */}
+              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-[#81D7B4]/20 rounded-br-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
           ))}
         </div>
       </div>
-      
+
       {/* animation keyframes */}
       <style jsx>{`
         @keyframes float-particle {

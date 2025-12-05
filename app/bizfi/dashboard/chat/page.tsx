@@ -9,6 +9,7 @@ import {
     HiOutlineEllipsisVertical
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
+import "../../bizfi-colors.css";
 
 const exo = Exo({
     subsets: ['latin'],
@@ -45,14 +46,14 @@ export default function ChatPage() {
 
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0A0E0D] flex items-center justify-center`}>
+            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] bg-[#0A0E0D] text-white flex overflow-hidden`}>
+        <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] text-white flex overflow-hidden`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
             {/* Contacts Sidebar */}
             <div className="hidden md:flex md:w-80 border-r border-gray-800 flex-col">
                 {/* Search */}

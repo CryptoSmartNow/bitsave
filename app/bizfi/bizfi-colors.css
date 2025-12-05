@@ -1,0 +1,145 @@
+/* BizFi Brand Color System - Dark Mode Optimized */
+
+:root {
+    /* Brand Colors */
+    --bizfi-mint-green: #81D7B4;
+    --bizfi-mint-green-light: #9FE0C5;
+    --bizfi-mint-green-dark: #6BC4A0;
+
+    --bizfi-navy-blue: #2C3E5D;
+    --bizfi-navy-blue-light: #3A4F73;
+    --bizfi-navy-blue-dark: #1A2538;
+    --bizfi-navy-blue-darker: #0F1825;
+
+    --bizfi-off-white: #F9F9FB;
+    --bizfi-cool-gray: #7B8B9A;
+    --bizfi-cool-gray-light: #9BA8B5;
+    --bizfi-cool-gray-dark: #5F6D7A;
+
+    /* Semantic Colors - Dark Mode */
+    --bizfi-bg-primary: #0F1825;
+    --bizfi-bg-secondary: #1A2538;
+    --bizfi-bg-tertiary: #2C3E5D;
+
+    --bizfi-surface-primary: rgba(44, 62, 93, 0.6);
+    --bizfi-surface-secondary: rgba(44, 62, 93, 0.4);
+    --bizfi-surface-hover: rgba(44, 62, 93, 0.8);
+
+    --bizfi-text-primary: #F9F9FB;
+    --bizfi-text-secondary: #7B8B9A;
+    --bizfi-text-tertiary: #5F6D7A;
+    --bizfi-text-accent: #81D7B4;
+
+    --bizfi-border-primary: rgba(123, 139, 154, 0.2);
+    --bizfi-border-secondary: rgba(123, 139, 154, 0.1);
+    --bizfi-border-accent: rgba(129, 215, 180, 0.3);
+    --bizfi-border-accent-strong: rgba(129, 215, 180, 0.6);
+
+    /* Action Colors */
+    --bizfi-action-primary: #81D7B4;
+    --bizfi-action-primary-hover: #6BC4A0;
+    --bizfi-action-primary-active: #5AB38E;
+
+    /* Gradients */
+    --bizfi-gradient-bg: linear-gradient(180deg, #0F1825 0%, #1A2538 100%);
+    --bizfi-gradient-surface: linear-gradient(135deg, rgba(44, 62, 93, 0.6) 0%, rgba(26, 37, 56, 0.4) 100%);
+    --bizfi-gradient-accent: linear-gradient(135deg, #81D7B4 0%, #6BC4A0 100%);
+    --bizfi-gradient-accent-subtle: linear-gradient(135deg, rgba(129, 215, 180, 0.1) 0%, rgba(107, 196, 160, 0.05) 100%);
+
+    /* Shadows */
+    --bizfi-shadow-sm: 0 2px 8px rgba(15, 24, 37, 0.3);
+    --bizfi-shadow-md: 0 4px 16px rgba(15, 24, 37, 0.4);
+    --bizfi-shadow-lg: 0 8px 32px rgba(15, 24, 37, 0.5);
+    --bizfi-shadow-accent: 0 4px 20px rgba(129, 215, 180, 0.15);
+    --bizfi-shadow-accent-strong: 0 8px 32px rgba(129, 215, 180, 0.25);
+
+    /* Overlays */
+    --bizfi-overlay-light: rgba(129, 215, 180, 0.05);
+    --bizfi-overlay-medium: rgba(129, 215, 180, 0.1);
+    --bizfi-overlay-strong: rgba(129, 215, 180, 0.15);
+}
+
+/* Utility Classes */
+.bizfi-bg-primary {
+    background: var(--bizfi-bg-primary);
+}
+
+.bizfi-bg-secondary {
+    background: var(--bizfi-bg-secondary);
+}
+
+.bizfi-bg-gradient {
+    background: var(--bizfi-gradient-bg);
+}
+
+.bizfi-surface {
+    background: var(--bizfi-surface-primary);
+    border: 1px solid var(--bizfi-border-primary);
+    border-radius: 1.5rem;
+}
+
+.bizfi-surface-hover {
+    transition: all 0.3s ease;
+}
+
+.bizfi-surface-hover:hover {
+    background: var(--bizfi-surface-hover);
+    border-color: var(--bizfi-border-accent);
+    box-shadow: var(--bizfi-shadow-accent);
+}
+
+.bizfi-text-primary {
+    color: var(--bizfi-text-primary);
+}
+
+.bizfi-text-secondary {
+    color: var(--bizfi-text-secondary);
+}
+
+.bizfi-text-accent {
+    color: var(--bizfi-text-accent);
+}
+
+.bizfi-btn-primary {
+    background: var(--bizfi-action-primary);
+    color: var(--bizfi-bg-primary);
+    font-weight: 700;
+    border-radius: 0.75rem;
+    padding: 0.75rem 2rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.bizfi-btn-primary:hover {
+    background: var(--bizfi-action-primary-hover);
+    box-shadow: var(--bizfi-shadow-accent-strong);
+    transform: translateY(-2px);
+}
+
+.bizfi-btn-primary:active {
+    background: var(--bizfi-action-primary-active);
+    transform: translateY(0);
+}
+
+.bizfi-border-accent {
+    border-color: var(--bizfi-border-accent);
+}
+
+.bizfi-border-accent-strong {
+    border-color: var(--bizfi-border-accent-strong);
+}
+
+/* Background Pattern */
+.bizfi-dot-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(123, 139, 154, 0.15) 1px, transparent 0);
+    background-size: 40px 40px;
+}
+
+/* Glow Effects */
+.bizfi-glow-mint {
+    box-shadow: 0 0 40px rgba(129, 215, 180, 0.2);
+}
+
+.bizfi-glow-navy {
+    box-shadow: 0 0 60px rgba(44, 62, 93, 0.4);
+}
