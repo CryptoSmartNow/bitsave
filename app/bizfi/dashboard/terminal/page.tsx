@@ -441,7 +441,7 @@ export default function TerminalPage() {
                                     : 'bg-red-500 hover:bg-red-600'
                                     }`}
                             >
-                                {orderType === 'buy' ? 'Buy' : 'Sell'} BizToken
+                                {orderType === 'buy' ? 'Buy' : 'Sell'} BizShares
                             </button>
                         </div>
                     </div>

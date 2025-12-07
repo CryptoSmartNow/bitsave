@@ -1201,8 +1201,11 @@ export default function Dashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                        className="relative bg-white rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group"
+                        className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group overflow-hidden"
                       >
+                        {/* Noise Texture Overlay */}
+                        <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
                         {/* Header: Icon, Title/Date, Top Up */}
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-4">
@@ -1331,8 +1334,11 @@ export default function Dashboard() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                          className="relative bg-white rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group"
+                          className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group overflow-hidden"
                         >
+                          {/* Noise Texture Overlay */}
+                          <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
                           {/* Header: Icon, Title/Date (No Top Up) */}
                           <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-4">

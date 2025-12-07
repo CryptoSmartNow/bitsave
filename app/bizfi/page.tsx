@@ -20,7 +20,8 @@ import {
     HiOutlineChartBarSquare,
     HiOutlineSparkles,
     HiOutlineArrowRight,
-    HiOutlineShieldCheck
+    HiOutlineShieldCheck,
+    HiOutlineBanknotes
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import Link from "next/link";
@@ -117,6 +118,13 @@ const PRODUCTS = [
         description: "Provide liquidity for the top 1% projects on BizMarket; earn a Savvy 10% markup every time Primary Market buyers sell at a 10% discount.",
         icon: HiOutlineArrowsRightLeft,
         status: "Coming April 2026"
+    },
+    {
+        id: "bitloans",
+        title: "Bitloans",
+        description: "Use your BizShares or ETH, as collateral and borrow Local StableCoins.",
+        icon: HiOutlineBanknotes,
+        status: "Coming March 2026"
     }
 ];
 
@@ -321,15 +329,7 @@ export default function BizFiPage() {
                                 </span>
                             </motion.h1>
 
-                            <motion.p
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: 0.3 }}
-                                className="text-xl md:text-2xl mb-10 leading-relaxed max-w-3xl mx-auto"
-                                style={{ color: '#9BA8B5' }}
-                            >
-                                Transform your business into tradeable tokens and access global capital markets in <span className="text-[#F9F9FB] font-semibold">minutes, not months</span>.
-                            </motion.p>
+
 
                             {/* CTA Buttons */}
                             <motion.div
@@ -382,7 +382,7 @@ export default function BizFiPage() {
                             >
                                 <div className="flex items-center gap-2">
                                     <HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" />
-                                    <span className="text-sm" style={{ color: '#7B8B9A' }}>24-48h Approval</span>
+                                    <span className="text-sm" style={{ color: '#7B8B9A' }}>Fast Verification</span>
                                 </div>
                                 <div className="hidden sm:block w-px h-4" style={{ backgroundColor: 'rgba(123, 139, 154, 0.3)' }}></div>
                                 <div className="flex items-center gap-2">
@@ -421,10 +421,10 @@ export default function BizFiPage() {
                         >
                             <HiOutlineRocketLaunch className="w-12 h-12 text-[#81D7B4] mb-4" />
                             <h3 className="text-2xl font-bold mb-3" style={{ color: '#F9F9FB' }}>
-                                Quick Launch
+                                Launch Onchain
                             </h3>
                             <p className="leading-relaxed" style={{ color: '#7B8B9A' }}>
-                                Get your business tokenized and live in 24-48 hours with our streamlined process
+                                Launch your business onchain and raise capital from the web3 space.
                             </p>
                         </motion.div>
 
@@ -636,7 +636,7 @@ export default function BizFiPage() {
                         </p>
                     </motion.div>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid md:grid-cols-3 gap-8">
                         {PRODUCTS.map((product, index) => {
                             const Icon = product.icon;
                             return (

@@ -13,7 +13,8 @@ import {
     HiOutlineBars3,
     HiOutlineChevronLeft,
     HiOutlineChevronRight,
-    HiOutlineBuildingStorefront
+    HiOutlineBuildingStorefront,
+    HiOutlineChartBar
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import { AnimatePresence, motion } from "framer-motion";
@@ -36,7 +37,7 @@ export default function BizFiDashboardLayout({
     const pathname = usePathname();
 
     const menuItems = [
-        { href: "/bizfi/dashboard", label: "Home", icon: HiOutlineHome },
+        { href: "/bizfi/dashboard", label: "Biz Dashboard", icon: HiOutlineChartBar },
         { href: "/bizfi/dashboard/launchpad", label: "LaunchPad", icon: HiOutlineRocketLaunch },
         { href: "/bizfi/dashboard/bizcontent", label: "BizContent", icon: HiOutlineVideoCamera },
         { href: "/bizfi/dashboard/terminal", label: "BizMarket", icon: HiOutlineBuildingStorefront },

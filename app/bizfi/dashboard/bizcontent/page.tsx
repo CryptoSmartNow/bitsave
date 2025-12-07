@@ -41,7 +41,7 @@ const CONTENT_ITEMS = [
     },
     {
         id: 3,
-        title: "Marketing Your BizToken Effectively",
+        title: "Marketing Your BizShares Effectively",
         thumbnail: "/api/placeholder/400/225",
         duration: "15:42",
         views: 2103,

@@ -288,7 +288,10 @@ export default function PlansPage() {
                 className="group"
                 onClick={() => openPlanDetails(plan)}
               >
-                <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full p-6">
+                <div className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full p-6 overflow-hidden">
+                  {/* Noise Texture Overlay */}
+                  <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20">
@@ -435,7 +438,10 @@ export default function PlansPage() {
                   className="group"
                   onClick={() => openPlanDetails(plan)}
                 >
-                  <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full p-6">
+                  <div className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full p-6 overflow-hidden">
+                    {/* Noise Texture Overlay */}
+                    <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
                     <div className="absolute top-0 left-0 right-0 h-1 bg-[#81D7B4] rounded-t-2xl"></div>
 
                     <div className="flex justify-between items-start mb-6">
