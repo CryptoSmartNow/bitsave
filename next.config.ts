@@ -17,12 +17,15 @@ const nextConfig: NextConfig = {
     //   },
     // },
   },
-  
+
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  
+
+  // External packages to avoid bundling issues (fixes thread-stream/pino errors)
+  serverExternalPackages: ['pino', 'pino-pretty'],
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -73,10 +76,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // Note: Webpack configuration removed to avoid conflicts with Turbopack
   // Turbopack handles bundle optimization automatically
-  
+
   // Headers for performance
   async headers() {
     return [
