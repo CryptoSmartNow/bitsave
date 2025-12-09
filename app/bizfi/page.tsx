@@ -346,9 +346,7 @@ export default function BizFiPage() {
                             </span>
                         </h1>
 
-                        <p className="text-lg md:text-xl text-[#9BA8B5] mb-12 max-w-2xl mx-auto leading-relaxed">
-                            A decentralized platform for businesses to issue tokens, raise funding, and engage with a global community of investors.
-                        </p>
+
 
                         <div className="flex flex-col sm:flex-row items-center gap-4 mb-16 w-full justify-center">
                             <Link
