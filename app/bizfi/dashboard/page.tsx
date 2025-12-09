@@ -48,7 +48,7 @@ const TIERS: Array<{
             name: 'Builder Tier',
             price: 35,
             referralPrice: 30,
-            description: 'For idea-stage founders, student entrepreneurs, and early builders launching their startup.'
+            description: 'For idea-stage founders, entrepreneurs, and builders launching their startup or prototype, tech start-ups and more.'
         },
         {
             id: 'growth',

@@ -35,6 +35,12 @@
     --bizfi-border-accent: rgba(129, 215, 180, 0.3);
     --bizfi-border-accent-strong: rgba(129, 215, 180, 0.6);
 
+    /* Neomorphism */
+    --bizfi-neo-shadow: 8px 8px 16px #0a1019, -8px -8px 16px #141f31;
+    --bizfi-neo-shadow-sm: 5px 5px 10px #0a1019, -5px -5px 10px #141f31;
+    --bizfi-neo-shadow-inset: inset 6px 6px 12px #0a1019, inset -6px -6px 12px #141f31;
+    --bizfi-neo-bg: #0F1825;
+
     /* Action Colors */
     --bizfi-action-primary: #81D7B4;
     --bizfi-action-primary-hover: #6BC4A0;
@@ -44,7 +50,6 @@
     --bizfi-gradient-bg: linear-gradient(180deg, #0F1825 0%, #1A2538 100%);
     --bizfi-gradient-surface: linear-gradient(135deg, rgba(44, 62, 93, 0.6) 0%, rgba(26, 37, 56, 0.4) 100%);
     --bizfi-gradient-accent: linear-gradient(135deg, #81D7B4 0%, #6BC4A0 100%);
-    --bizfi-gradient-accent-subtle: linear-gradient(135deg, rgba(129, 215, 180, 0.1) 0%, rgba(107, 196, 160, 0.05) 100%);
 
     /* Shadows */
     --bizfi-shadow-sm: 0 2px 8px rgba(15, 24, 37, 0.3);
@@ -52,11 +57,6 @@
     --bizfi-shadow-lg: 0 8px 32px rgba(15, 24, 37, 0.5);
     --bizfi-shadow-accent: 0 4px 20px rgba(129, 215, 180, 0.15);
     --bizfi-shadow-accent-strong: 0 8px 32px rgba(129, 215, 180, 0.25);
-
-    /* Overlays */
-    --bizfi-overlay-light: rgba(129, 215, 180, 0.05);
-    --bizfi-overlay-medium: rgba(129, 215, 180, 0.1);
-    --bizfi-overlay-strong: rgba(129, 215, 180, 0.15);
 }
 
 /* Utility Classes */
@@ -64,40 +64,22 @@
     background: var(--bizfi-bg-primary);
 }
 
-.bizfi-bg-secondary {
-    background: var(--bizfi-bg-secondary);
+.bizfi-neo {
+    background: var(--bizfi-neo-bg);
+    box-shadow: var(--bizfi-neo-shadow);
+    border-radius: 2rem;
 }
 
-.bizfi-bg-gradient {
-    background: var(--bizfi-gradient-bg);
-}
-
-.bizfi-surface {
-    background: var(--bizfi-surface-primary);
-    border: 1px solid var(--bizfi-border-primary);
+.bizfi-neo-sm {
+    background: var(--bizfi-neo-bg);
+    box-shadow: var(--bizfi-neo-shadow-sm);
     border-radius: 1.5rem;
 }
 
-.bizfi-surface-hover {
-    transition: all 0.3s ease;
-}
-
-.bizfi-surface-hover:hover {
-    background: var(--bizfi-surface-hover);
-    border-color: var(--bizfi-border-accent);
-    box-shadow: var(--bizfi-shadow-accent);
-}
-
-.bizfi-text-primary {
-    color: var(--bizfi-text-primary);
-}
-
-.bizfi-text-secondary {
-    color: var(--bizfi-text-secondary);
-}
-
-.bizfi-text-accent {
-    color: var(--bizfi-text-accent);
+.bizfi-neo-inset {
+    background: var(--bizfi-neo-bg);
+    box-shadow: var(--bizfi-neo-shadow-inset);
+    border-radius: 1rem;
 }
 
 .bizfi-btn-primary {
@@ -121,25 +103,8 @@
     transform: translateY(0);
 }
 
-.bizfi-border-accent {
-    border-color: var(--bizfi-border-accent);
-}
-
-.bizfi-border-accent-strong {
-    border-color: var(--bizfi-border-accent-strong);
-}
-
 /* Background Pattern */
 .bizfi-dot-pattern {
     background-image: radial-gradient(circle at 1px 1px, rgba(123, 139, 154, 0.15) 1px, transparent 0);
     background-size: 40px 40px;
-}
-
-/* Glow Effects */
-.bizfi-glow-mint {
-    box-shadow: 0 0 40px rgba(129, 215, 180, 0.2);
-}
-
-.bizfi-glow-navy {
-    box-shadow: 0 0 60px rgba(44, 62, 93, 0.4);
 }
