@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { useAccount } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import {
     HiOutlineRocketLaunch,
     HiOutlineFire,
@@ -208,7 +208,7 @@ function NotifyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 
 export default function BizFiPage() {
     const router = useRouter();
-    const { address } = useAccount();
+    const { login, authenticated, user, logout } = usePrivy();
     const [mounted, setMounted] = useState(false);
     const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -273,10 +273,25 @@ export default function BizFiPage() {
                                 Back to SaveFi
                             </Link>
 
-                            {address && (
-                                <div className="hidden sm:block px-3 py-1.5 rounded-full border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5]">
-                                    {address.slice(0, 6)}...{address.slice(-4)}
+                            {authenticated && user?.wallet ? (
+                                <div className="hidden sm:flex items-center gap-2">
+                                    <div className="px-3 py-1.5 rounded-full border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5]">
+                                        {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
+                                    </div>
+                                    <button
+                                        onClick={logout}
+                                        className="text-xs text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
+                                    >
+                                        Disconnect
+                                    </button>
                                 </div>
+                            ) : (
+                                <button
+                                    onClick={login}
+                                    className="hidden sm:block px-4 py-2 text-sm font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl hover:bg-[#6BC4A0] transition-colors"
+                                >
+                                    Connect Wallet
+                                </button>
                             )}
 
                             {/* Mobile Menu Button */}
