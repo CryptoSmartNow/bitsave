@@ -48,7 +48,7 @@ export async function GET(
       headers.set('Content-Disposition', `inline; filename="${result.metadata.originalName}"`);
     }
 
-    return new NextResponse(result.buffer, {
+    return new NextResponse(result.buffer as any, {
       status: 200,
       headers
     });

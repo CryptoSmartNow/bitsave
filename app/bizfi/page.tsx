@@ -1,24 +1,19 @@
 "use client";
 
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import {
     HiOutlineRocketLaunch,
-    HiOutlineFire,
     HiOutlineTrophy,
-    HiOutlineClock,
-    HiOutlineUsers,
     HiOutlineCurrencyDollar,
     HiOutlineArrowLeft,
     HiOutlineBuildingStorefront,
     HiOutlineChatBubbleLeftRight,
     HiOutlineArrowsRightLeft,
     HiOutlineGift,
-    HiOutlineCheckCircle,
     HiOutlineChartBarSquare,
-    HiOutlineSparkles,
     HiOutlineArrowRight,
     HiOutlineShieldCheck,
     HiOutlineBanknotes,
@@ -213,12 +208,6 @@ export default function BizFiPage() {
     const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showNotifyModal, setShowNotifyModal] = useState(false);
-    const containerRef = useRef(null);
-
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
 
     useEffect(() => {
         setMounted(true);
@@ -237,7 +226,7 @@ export default function BizFiPage() {
     }
 
     return (
-        <div ref={containerRef} className={`${archivo.variable} font-sans min-h-screen text-white relative overflow-x-hidden`} style={{ background: '#0F1825' }}>
+        <div className={`${archivo.variable} font-sans min-h-screen text-white relative overflow-x-hidden`} style={{ background: '#0F1825' }}>
             {/* Ambient orbs - Static */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-3xl opacity-40" style={{ background: 'radial-gradient(circle, rgba(44, 62, 93, 0.4) 0%, transparent 70%)' }}></div>

@@ -3,7 +3,7 @@
  import { ReactNode, useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { base, celo, avalanche } from 'wagmi/chains';
+import { base, celo, avalanche } from 'viem/chains';
 import { RainbowKitProvider, lightTheme, darkTheme, useConnectModal, useAccountModal, useChainModal } from '@rainbow-me/rainbowkit';
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import {
