@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import WithdrawModal from '@/components/WithdrawModal';
 import TopUpModal from '@/components/TopUpModal';
+import PlanDetailsModal from '@/components/PlanDetailsModal';
 import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
@@ -34,7 +35,6 @@ const exo = Exo({
   display: 'swap',
 })
 
-
 // Define types for our plan data
 interface Plan {
   id: string;
@@ -45,16 +45,14 @@ interface Plan {
   progress: number;
   isEth: boolean;
   isGToken?: boolean;
-  isUSDGLO?: boolean; // Add this property
+  isUSDGLO?: boolean;
   startTime: number;
   maturityTime: number;
   penaltyPercentage: number;
   tokenName?: string;
   tokenLogo?: string;
-  network?: string; // Add network field
+  network?: string;
 }
-
-
 
 // Helper to get logo for a token
 function getTokenLogo(tokenName: string, tokenLogo?: string) {
@@ -67,12 +65,7 @@ function getTokenLogo(tokenName: string, tokenLogo?: string) {
 }
 
 export default function PlansPage() {
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false)
-  const [topUpPlan, setTopUpPlan] = useState<Plan | null>(null)
   const [goodDollarPrice, setGoodDollarPrice] = useState(0.0001);
-  const [showActivityHistory, setShowActivityHistory] = useState(false);
   const [activityData, setActivityData] = useState<Array<{
     type: string;
     description: string;
@@ -83,6 +76,33 @@ export default function PlansPage() {
   }>>([]);
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+
+  // Modal states aligned with Dashboard
+  const [topUpModal, setTopUpModal] = useState({
+    isOpen: false,
+    planName: '',
+    planId: '',
+    isEth: false,
+    isGToken: false,
+    tokenName: ''
+  });
+
+  const [withdrawModal, setWithdrawModal] = useState({
+    isOpen: false,
+    planId: '',
+    planName: '',
+    isEth: false,
+    penaltyPercentage: 0,
+    tokenName: '',
+    isCompleted: false
+  });
+
+  const [planDetailsModal, setPlanDetailsModal] = useState({
+    isOpen: false,
+    plan: null as any,
+    isEth: false,
+    tokenName: ''
+  });
 
   // Use the new caching hook for savings data
   const { savingsData, isLoading, ethPrice } = useSavingsData()
@@ -110,44 +130,29 @@ export default function PlansPage() {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
           if (accounts.length > 0) {
             const address = accounts[0];
-            console.log('Fetching activity data for address:', address);
-
+            
             const response = await fetch(`/api/transactions?address=${address}`);
-            console.log('Response status:', response.status);
-
+            
             if (!response.ok) {
-              const errorText = await response.text().catch(() => 'Could not read error response');
-              console.error('API response error:', {
-                status: response.status,
-                statusText: response.statusText,
-                errorText: errorText,
-                url: response.url
-              });
-
-              // Don't throw for 404 or empty responses, just set empty data
               if (response.status === 404) {
-                console.log('No transactions found for address');
                 setActivityData([]);
                 return;
               }
-
-              throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+              const errorText = await response.text().catch(() => 'Could not read error response');
+              console.error('API response error:', errorText);
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             let data;
             try {
               data = await response.json();
-              console.log('Activity data received:', data);
             } catch (jsonError) {
               console.error('Error parsing JSON response:', jsonError);
-              const textResponse = await response.text();
-              console.error('Raw response:', textResponse);
               setActivityData([]);
               return;
             }
 
             if (!data || !Array.isArray(data.transactions)) {
-              console.warn('Invalid data format received:', data);
               setActivityData([]);
               return;
             }
@@ -178,30 +183,22 @@ export default function PlansPage() {
                   txHash: tx.txnhash
                 };
               } catch (mapError) {
-                console.error('Error mapping transaction:', tx, mapError);
+                console.error('Error mapping transaction:', mapError);
                 return null;
               }
-            }).filter(Boolean); // Remove any null entries from mapping errors
+            }).filter(Boolean);
 
             setActivityData(formattedActivity);
           } else {
-            console.log('No accounts found, skipping activity data fetch');
             setActivityData([]);
           }
         } catch (error) {
           console.error('Error fetching activity data:', error);
-          console.error('Error details:', {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : 'No stack trace',
-            type: typeof error,
-            error: JSON.stringify(error, null, 2)
-          });
-          setActivityData([]); // Set empty data on error to prevent UI issues
+          setActivityData([]);
         } finally {
           setIsLoadingActivity(false);
         }
       } else {
-        console.log('No ethereum provider found, skipping activity data fetch');
         setActivityData([]);
       }
     };
@@ -209,7 +206,7 @@ export default function PlansPage() {
     fetchActivityData();
   }, []);
 
-  // Fetch GoodDollar price from Coingecko
+  // Fetch GoodDollar price
   const fetchGoodDollarPrice = async () => {
     try {
       const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd');
@@ -225,17 +222,36 @@ export default function PlansPage() {
     fetchGoodDollarPrice().then(setGoodDollarPrice);
   }, []);
 
-  // Update the openPlanDetails function to use the Plan type
-  const openPlanDetails = (plan: Plan) => {
-    setSelectedPlan(plan);
-    setIsModalOpen(true);
+  // Modal Handlers
+  const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '') => {
+    setTopUpModal({
+      isOpen: true,
+      planName,
+      planId,
+      isEth,
+      isGToken: tokenName === '$G',
+      tokenName
+    });
   };
 
-  // Add a new function to handle top-up
-  const openTopUpModal = (e: React.MouseEvent, plan: Plan) => {
-    e.stopPropagation(); // Prevent the card click event from firing
-    setTopUpPlan(plan);
-    setIsTopUpModalOpen(true);
+  const closeTopUpModal = () => {
+    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '' });
+  };
+
+  const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false) => {
+    setWithdrawModal({
+      isOpen: true,
+      planId,
+      planName,
+      isEth,
+      penaltyPercentage,
+      tokenName,
+      isCompleted
+    });
+  };
+
+  const closeWithdrawModal = () => {
+    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false });
   };
 
   return (
@@ -251,7 +267,7 @@ export default function PlansPage() {
             <p className="text-gray-500 max-w-2xl">Track and manage your savings goals. Create new plans or contribute to existing ones.</p>
           </div>
           <Link href="/dashboard/create-savings">
-            <button className="bg-[#81D7B4] text-[#0F1825] font-bold py-3 px-6 rounded-xl shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/30 hover:bg-[#6BC4A0] transition-all duration-300 flex items-center whitespace-nowrap">
+            <button className="bg-[#81D7B4] text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/30 hover:bg-[#6BC4A0] transition-all duration-300 flex items-center whitespace-nowrap">
               <HiOutlinePlus className="w-5 h-5 mr-2" />
               Create New Plan
             </button>
@@ -276,64 +292,66 @@ export default function PlansPage() {
                   key={plan.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden"
+                  className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group overflow-hidden"
                 >
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-6">
+                  {/* Noise Texture Overlay */}
+                  <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
+                  {/* Header: Icon, Title/Date, Top Up */}
+                  <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      {/* Icon */}
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-14 h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm">
                         <Image
                           src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
                           alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                          width={28}
-                          height={28}
-                          className="object-contain"
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 object-contain"
                         />
                       </div>
-                      {/* Title & Date */}
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 tracking-tight line-clamp-1">{plan.name}</h3>
-                        <p className="text-xs font-medium text-gray-400">
-                          Started {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                          {plan.name}
+                        </h3>
+                        <p className="text-sm font-medium text-gray-400">
+                          Created {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                         </p>
                       </div>
                     </div>
-                    {/* Top Up Button */}
-                    <button
-                      onClick={(e) => openTopUpModal(e, plan)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#81D7B4]/10 text-[#81D7B4] text-xs font-bold hover:bg-[#81D7B4]/20 transition-colors"
+                    <motion.button
+                      onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 text-gray-700 font-semibold text-sm hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors bg-white hover:bg-[#81D7B4]/5"
                     >
-                      <HiOutlinePlus className="w-3.5 h-3.5" />
+                      <HiOutlinePlus className="w-4 h-4" />
                       Top Up
-                    </button>
+                    </motion.button>
                   </div>
 
                   {/* Divider */}
-                  <div className="h-px w-full bg-gray-50 mb-6"></div>
+                  <div className="h-px w-full bg-gray-100 mb-6"></div>
 
                   {/* Stats Row */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl font-bold text-gray-900 tracking-tight">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="font-bold text-gray-900 text-lg">
                       {plan.isEth ? (
-                        parseFloat(plan.currentAmount).toFixed(4)
-                      ) : plan.isGToken ? (
-                        parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
-                      ) : plan.isUSDGLO ? (
-                        Number(ethers.formatUnits(plan.currentAmount.split('.')[0], 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        <>{parseFloat(plan.currentAmount).toFixed(4)} ETH Saved</>
+                      ) : plan.tokenName === 'Gooddollar' ? (
+                        <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>
                       ) : (
-                        parseFloat(plan.currentAmount).toFixed(2)
+                        <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>
                       )}
-                    </span>
-                    <span className="text-sm font-medium text-gray-400 mt-1">
-                      {plan.isEth ? 'ETH' : plan.tokenName}
-                    </span>
+                    </div>
+                    <div className="w-px h-4 bg-gray-300"></div>
+                    <div className="font-bold text-[#81D7B4] text-lg">
+                      +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS Reward
+                    </div>
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full h-2.5 bg-gray-50 rounded-full overflow-hidden mb-2">
+                  <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden mb-2">
                     <motion.div
                       className="h-full bg-[#81D7B4] rounded-full"
                       initial={{ width: 0 }}
@@ -343,8 +361,8 @@ export default function PlansPage() {
                   </div>
 
                   {/* Footer Info */}
-                  <div className="flex justify-between items-center text-xs font-medium text-gray-400 mb-6">
-                    <span className="text-gray-500">{Math.round(plan.progress)}% Saved</span>
+                  <div className="flex justify-between items-center text-sm font-medium text-gray-400 mb-6">
+                    <span>{Math.round(plan.progress)}%</span>
                     <span>
                       {(() => {
                         const now = Math.floor(Date.now() / 1000);
@@ -352,28 +370,36 @@ export default function PlansPage() {
                         const diff = end - now;
                         if (diff <= 0) return "Completed";
                         const days = Math.ceil(diff / (60 * 60 * 24));
-                        return `${days} Days Left`;
+                        if (days > 30) {
+                          const months = Math.floor(days / 30);
+                          const remainingDays = days % 30;
+                          return `${months} Months & ${remainingDays} Days Remaining`;
+                        }
+                        return `${days} Days Remaining`;
                       })()}
                     </span>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Action Buttons: Plan Details & Outline Withdraw */}
+                  <div className="grid grid-cols-2 gap-4">
                     <button
-                      onClick={() => openPlanDetails(plan)}
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                      onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
                     >
                       <HiOutlineEye className="w-4 h-4" />
-                      Details
+                      Plan Details
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openPlanDetails(plan);
+                      onClick={() => {
+                        const currentDate = new Date();
+                        const maturityTimestamp = Number(plan.maturityTime || 0);
+                        const maturityDate = new Date(maturityTimestamp * 1000);
+                        const isCompleted = currentDate >= maturityDate;
+                        openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                       }}
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-sm hover:bg-[#81D7B4]/5 transition-all"
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-red-50 hover:border-red-500 hover:text-red-500 transition-all group/withdraw"
                     >
-                      <HiOutlineBanknotes className="w-4 h-4" />
+                      <HiOutlineBanknotes className="w-4 h-4 group-hover/withdraw:text-red-500" />
                       Withdraw
                     </button>
                   </div>
@@ -410,83 +436,203 @@ export default function PlansPage() {
                       key={plan.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 opacity-80 hover:opacity-100 transition-opacity"
+                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                      className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-6">
+                      {/* Noise Texture Overlay */}
+                      <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
+                      {/* Header: Icon, Title/Date (No Top Up) */}
+                      <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-gray-100">
+                          <div className="w-14 h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm">
                             <Image
                               src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
                               alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                              width={28}
-                              height={28}
-                              className="object-contain opacity-50 grayscale"
+                              width={32}
+                              height={32}
+                              className="w-8 h-8 object-contain"
                             />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-gray-700 line-clamp-1">{plan.name}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider">
-                                Completed
-                              </span>
-                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                              {plan.name}
+                            </h3>
+                            <p className="text-sm font-medium text-gray-400">
+                              Created {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                            </p>
                           </div>
                         </div>
-                      </div>
-
-                      <div className="mb-6">
-                        <p className="text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Final Amount</p>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-bold text-gray-700">
-                            {plan.isEth ? parseFloat(plan.currentAmount).toFixed(4) : parseFloat(plan.currentAmount).toFixed(2)}
-                          </span>
-                          <span className="text-sm font-medium text-gray-400">
-                            {plan.isEth ? 'ETH' : plan.tokenName}
-                          </span>
+                        {/* Completed Badge */}
+                        <div className="px-4 py-1.5 rounded-full bg-green-50 border border-green-100 text-green-600 font-semibold text-sm">
+                          Completed
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => openPlanDetails(plan)}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 font-semibold text-sm hover:text-gray-900 hover:border-gray-300 transition-all"
-                      >
-                        <HiOutlineBanknotes className="w-4 h-4" />
-                        View Details
-                      </button>
+                      {/* Divider */}
+                      <div className="h-px w-full bg-gray-100 mb-6"></div>
+
+                      {/* Stats Row */}
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="font-bold text-gray-900 text-lg">
+                          {plan.isEth ? (
+                            <>{parseFloat(plan.currentAmount).toFixed(4)} ETH Saved</>
+                          ) : plan.tokenName === 'Gooddollar' ? (
+                            <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>
+                          ) : (
+                            <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>
+                          )}
+                        </div>
+                        <div className="w-px h-4 bg-gray-300"></div>
+                        <div className="font-bold text-[#81D7B4] text-lg">
+                          +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS Reward
+                        </div>
+                      </div>
+
+                      {/* Progress Bar (Full) */}
+                      <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden mb-2">
+                        <motion.div
+                          className="h-full bg-[#81D7B4] rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        />
+                      </div>
+
+                      {/* Footer Info */}
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-400 mb-6">
+                        <span>100%</span>
+                        <span>Goal Reached</span>
+                      </div>
+
+                      {/* Action Buttons: Plan Details & Outline Withdraw */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
+                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
+                        >
+                          <HiOutlineEye className="w-4 h-4" />
+                          Plan Details
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentDate = new Date();
+                            const maturityTimestamp = Number(plan.maturityTime || 0);
+                            const maturityDate = new Date(maturityTimestamp * 1000);
+                            const isCompleted = currentDate >= maturityDate;
+                            openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                          }}
+                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
+                        >
+                          <HiOutlineBanknotes className="w-4 h-4" />
+                          Withdraw Funds
+                        </button>
+                      </div>
                     </motion.div>
                   ))}
                 </div>
               </div>
             )}
+
+            {/* Activity History Section */}
+            <div className="pt-8 border-t border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Activity History</h2>
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                {isLoadingActivity ? (
+                  <div className="p-8 text-center">
+                    <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-[#81D7B4] rounded-full mx-auto mb-2"></div>
+                    <p className="text-gray-500">Loading activity...</p>
+                  </div>
+                ) : activityData.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {activityData.map((activity, index) => (
+                      <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            activity.type === 'deposit' 
+                              ? 'bg-green-100 text-green-600' 
+                              : 'bg-orange-100 text-orange-600'
+                          }`}>
+                            {activity.type === 'deposit' ? (
+                              <HiOutlinePlus className="w-5 h-5" />
+                            ) : (
+                              <HiOutlineBanknotes className="w-5 h-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{activity.description}</p>
+                            <p className="text-sm text-gray-500">{activity.timestamp}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
+                          <div className="text-right">
+                            <p className={`font-bold ${
+                              activity.type === 'deposit' 
+                                ? 'text-green-600' 
+                                : 'text-orange-600'
+                            }`}>
+                              {activity.amount}
+                            </p>
+                            <a 
+                              href={`https://basescan.org/tx/${activity.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[#81D7B4] hover:underline"
+                            >
+                              View on Explorer
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <HiOutlineClipboardDocumentList className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">No activity yet</h3>
+                    <p className="text-gray-500">Your transactions will appear here</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         )}
       </div>
 
-      {/* Plan Details Modal */}
-      {selectedPlan && (
-        <WithdrawModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          planName={selectedPlan.name}
-          isEth={selectedPlan.isEth}
-          penaltyPercentage={selectedPlan.penaltyPercentage}
-          tokenName={selectedPlan.tokenName}
-          isCompleted={new Date().getTime() >= selectedPlan.maturityTime * 1000}
-        />
-      )}
+      {/* Modals */}
+      <TopUpModal
+        isOpen={topUpModal.isOpen}
+        onClose={closeTopUpModal}
+        planName={topUpModal.planName}
+        planId={topUpModal.planId}
+        isEth={topUpModal.isEth}
+        tokenName={topUpModal.tokenName}
+        networkLogos={networkLogos}
+      />
 
-      {/* TopUpModal component */}
-      {isTopUpModalOpen && topUpPlan && (
-        <TopUpModal
-          isOpen={isTopUpModalOpen}
-          onClose={() => setIsTopUpModalOpen(false)}
-          planName={topUpPlan.name}
-          planId={topUpPlan.address}
-          isEth={topUpPlan.isEth}
-          tokenName={topUpPlan.tokenName}
-          networkLogos={networkLogos}
-        />
-      )}
+      <WithdrawModal
+        isOpen={withdrawModal.isOpen}
+        onClose={closeWithdrawModal}
+        planName={withdrawModal.planName}
+        planId={withdrawModal.planId}
+        isEth={withdrawModal.isEth}
+        penaltyPercentage={withdrawModal.penaltyPercentage}
+        tokenName={withdrawModal.tokenName}
+        isCompleted={withdrawModal.isCompleted}
+        networkLogos={networkLogos}
+      />
+
+      <PlanDetailsModal
+        isOpen={planDetailsModal.isOpen}
+        onClose={() => setPlanDetailsModal({ ...planDetailsModal, isOpen: false })}
+        plan={planDetailsModal.plan}
+        isEth={planDetailsModal.isEth}
+        tokenName={planDetailsModal.tokenName}
+        goodDollarPrice={goodDollarPrice}
+      />
     </div>
   )
 }
