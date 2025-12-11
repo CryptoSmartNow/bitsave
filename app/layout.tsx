@@ -12,6 +12,7 @@ const exo = Exo({
 
 import { Providers } from './providers';
 import ReferralTracker from '@/components/ReferralTracker';
+import InstallPWA from '@/components/InstallPWA';
 
 // Add this import to your layout file
 // import "../styles/date-picker.css";
@@ -74,6 +75,7 @@ export default function RootLayout({
       <body className={`${exo.className}`}>
         <Providers>
           <ReferralTracker />
+          <InstallPWA />
           {children}
         </Providers>
       </body>

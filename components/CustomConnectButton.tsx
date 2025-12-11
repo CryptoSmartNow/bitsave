@@ -218,9 +218,6 @@ const CustomConnectButton = memo(function CustomConnectButton() {
         className="group relative bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
       >
         <span className="relative z-10 flex items-center justify-center space-x-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
           <span>Connect Wallet</span>
         </span>
         
@@ -273,7 +270,7 @@ const CustomConnectButton = memo(function CustomConnectButton() {
             {/* Avatar or Icon */}
             {user?.wallet?.address?.slice(2, 4)}
         </div>
-        <span className="font-semibold text-gray-900 dark:text-white">
+        <span className="font-semibold text-gray-700 dark:text-gray-200">
           {user?.wallet?.address ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}` : 'Connected'}
         </span>
       </button>

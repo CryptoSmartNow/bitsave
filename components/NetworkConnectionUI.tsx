@@ -148,9 +148,6 @@ const NetworkConnectionUI = memo(function NetworkConnectionUI({
               onClick={() => login({ loginMethods: ['wallet'] })}
               className="inline-flex items-center justify-center rounded-md px-6 py-3 bg-[#2D5A4A] text-white hover:bg-[#264c3f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#81D7B4] transition-colors"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
               Connect Wallet
             </button>
             <button

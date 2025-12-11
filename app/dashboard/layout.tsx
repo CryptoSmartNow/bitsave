@@ -363,8 +363,8 @@ export default function DashboardLayout({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center min-h-screen gap-6 p-4 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#81D7B4] to-[#66C4A3] rounded-2xl flex items-center justify-center shadow-lg mb-2">
-                 <HiOutlineTrophy className="w-8 h-8 text-white" />
+              <div className="w-24 h-24 relative mb-2">
+                 <Image src="/bitsavelogo.png" alt="BitSave" fill className="object-contain" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your Wallet</h2>
