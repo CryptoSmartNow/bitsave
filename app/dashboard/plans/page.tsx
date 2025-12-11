@@ -73,7 +73,9 @@ export default function PlansPage() {
     timestamp: string;
     network: string;
     txHash: string;
+    rawDate: Date;
   }>>([]);
+  const [activeTab, setActiveTab] = useState('all');
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
 
@@ -177,6 +179,7 @@ export default function PlansPage() {
               currency?: string;
               created_at: string;
               txnhash: string;
+              chain?: string;
             }) => {
               try {
                 return {
@@ -189,14 +192,17 @@ export default function PlansPage() {
                     hour: '2-digit',
                     minute: '2-digit'
                   }),
-                  network: 'Base',
+                  rawDate: new Date(tx.created_at),
+                  network: tx.chain || 'Base',
                   txHash: tx.txnhash
                 };
               } catch (mapError) {
                 console.error('Error mapping transaction:', mapError);
                 return null;
               }
-            }).filter(Boolean);
+            })
+            .filter(Boolean)
+            .sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
             setActivityData(formattedActivity);
           } else {
@@ -263,6 +269,17 @@ export default function PlansPage() {
   const closeWithdrawModal = () => {
     setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false });
   };
+
+  const filteredActivityData = useMemo(() => {
+    if (activeTab === 'all') return activityData;
+    return activityData.filter(item => {
+      const type = item.type.toLowerCase();
+      if (activeTab === 'deposit') return type === 'deposit' || type === 'savings_created';
+      if (activeTab === 'withdrawal') return type === 'withdrawal' || type === 'withdraw';
+      if (activeTab === 'topup') return type === 'topup' || type === 'top_up';
+      return true;
+    });
+  }, [activityData, activeTab]);
 
   return (
     <div className={`${exo.className} pb-20`}>
@@ -352,7 +369,7 @@ export default function PlansPage() {
 
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     {/* Header: Icon, Title/Date */}
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4 sm:gap-6">
                       <div className="w-16 h-16 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                         <Image
                           src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
@@ -373,7 +390,7 @@ export default function PlansPage() {
                     </div>
 
                     {/* Stats Row */}
-                    <div className="flex items-center gap-6 bg-white/50 rounded-xl px-6 py-3 border border-gray-100/50">
+                    <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 bg-white/50 rounded-xl px-4 sm:px-6 py-3 border border-gray-100/50 w-full sm:w-auto">
                         <div>
                           <p className="text-xs font-medium text-gray-400 mb-1">Saved Amount</p>
                           <p className="font-bold text-gray-900 text-lg md:text-xl">
@@ -434,19 +451,19 @@ export default function PlansPage() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                       <button
                         onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-xs sm:text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105"
                       >
-                        <HiOutlinePlus className="w-4 h-4" />
+                        <HiOutlinePlus className="w-3 h-3 sm:w-4 sm:h-4" />
                         Top Up
                       </button>
                       <button
                         onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
                       >
-                        <HiOutlineEye className="w-4 h-4" />
+                        <HiOutlineEye className="w-3 h-3 sm:w-4 sm:h-4" />
                         Details
                       </button>
                       <button
@@ -457,9 +474,9 @@ export default function PlansPage() {
                           const isCompleted = currentDate >= maturityDate;
                           openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-sm hover:bg-[#81D7B4]/5 transition-all"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4]/5 transition-all"
                       >
-                        <HiOutlineBanknotes className="w-4 h-4" />
+                        <HiOutlineBanknotes className="w-3 h-3 sm:w-4 sm:h-4" />
                         Withdraw
                       </button>
                     </div>
@@ -504,7 +521,7 @@ export default function PlansPage() {
                       <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4 sm:gap-6">
                           <div className="w-16 h-16 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                             <Image
                               src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
@@ -530,7 +547,7 @@ export default function PlansPage() {
                         </div>
 
                          {/* Stats Row */}
-                        <div className="flex items-center gap-6 bg-white/50 rounded-xl px-6 py-3 border border-gray-100/50">
+                        <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 bg-white/50 rounded-xl px-4 sm:px-6 py-3 border border-gray-100/50 w-full sm:w-auto">
                             <div>
                               <p className="text-xs font-medium text-gray-400 mb-1">Final Amount</p>
                               <p className="font-bold text-gray-900 text-lg md:text-xl">
@@ -572,12 +589,12 @@ export default function PlansPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                           <button
                             onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
                           >
-                            <HiOutlineEye className="w-4 h-4" />
+                            <HiOutlineEye className="w-3 h-3 sm:w-4 sm:h-4" />
                             Details
                           </button>
                           <button
@@ -588,9 +605,9 @@ export default function PlansPage() {
                               const isCompleted = currentDate >= maturityDate;
                               openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                             }}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
                           >
-                            <HiOutlineBanknotes className="w-4 h-4" />
+                            <HiOutlineBanknotes className="w-3 h-3 sm:w-4 sm:h-4" />
                             Withdraw Funds
                           </button>
                         </div>
@@ -603,25 +620,49 @@ export default function PlansPage() {
 
             {/* Activity History Section */}
             <div className="pt-8 border-t border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Activity History</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Activity History</h2>
+                
+                {/* Tabs */}
+                <div className="flex p-1 bg-gray-100 rounded-xl overflow-x-auto hide-scrollbar">
+                  {['all', 'deposit', 'topup', 'withdrawal'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                        activeTab === tab
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
                 {isLoadingActivity ? (
                   <div className="p-8 text-center">
                     <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-[#81D7B4] rounded-full mx-auto mb-2"></div>
                     <p className="text-gray-500">Loading activity...</p>
                   </div>
-                ) : activityData.length > 0 ? (
+                ) : filteredActivityData.length > 0 ? (
                   <div className="divide-y divide-gray-100">
-                    {activityData.map((activity, index) => (
+                    {filteredActivityData.map((activity, index) => (
                       <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-start gap-4">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            activity.type === 'deposit' 
-                              ? 'bg-green-100 text-green-600' 
+                            activity.type === 'deposit' || activity.type === 'savings_created'
+                              ? 'bg-green-100 text-green-600'
+                              : activity.type === 'topup'
+                              ? 'bg-blue-100 text-blue-600'
                               : 'bg-orange-100 text-orange-600'
                           }`}>
-                            {activity.type === 'deposit' ? (
+                            {activity.type === 'deposit' || activity.type === 'savings_created' ? (
                               <HiOutlinePlus className="w-5 h-5" />
+                            ) : activity.type === 'topup' ? (
+                              <HiOutlineCurrencyDollar className="w-5 h-5" />
                             ) : (
                               <HiOutlineBanknotes className="w-5 h-5" />
                             )}
@@ -634,8 +675,10 @@ export default function PlansPage() {
                         <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
                           <div className="text-right">
                             <p className={`font-bold ${
-                              activity.type === 'deposit' 
-                                ? 'text-green-600' 
+                              activity.type === 'deposit' || activity.type === 'savings_created'
+                                ? 'text-green-600'
+                                : activity.type === 'topup'
+                                ? 'text-blue-600'
                                 : 'text-orange-600'
                             }`}>
                               {activity.amount}
@@ -658,7 +701,7 @@ export default function PlansPage() {
                     <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <HiOutlineClipboardDocumentList className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">No activity yet</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">No {activeTab !== 'all' ? activeTab : ''} activity yet</h3>
                     <p className="text-gray-500">Your transactions will appear here</p>
                   </div>
                 )}

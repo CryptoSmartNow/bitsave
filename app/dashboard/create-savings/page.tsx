@@ -670,6 +670,30 @@ export default function CreateSavingsPage() {
         markReferralConversion(referralCode);
         localStorage.removeItem('referralCode');
       }
+
+      // Record transaction to bitsaveapi.vercel.app
+      try {
+        const apiKey = "99292ndjnfjfndfn399e933ndnfjnf39993943nfknfdjfnjdn*&&^%$%^&*";
+        await axios.post('https://bitsaveapi.vercel.app/transactions/', {
+          amount: parseFloat(amount),
+          txnhash: receipt.hash,
+          chain: chain,
+          savingsname: name,
+          useraddress: address,
+          transaction_type: 'deposit',
+          currency: currency
+        }, {
+          headers: {
+            'accept': 'application/json',
+            'X-API-Key': apiKey,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (apiError) {
+        console.error('Failed to record transaction to external API:', apiError);
+        // Don't fail the whole flow if this logging fails
+      }
+
       setTxHash(receipt.hash);
       setSuccess(true);
     } catch (err) {
