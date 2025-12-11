@@ -12,7 +12,7 @@ import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
 import { formatTimestamp } from '@/utils/dateUtils';
-import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 
 // Helper function to ensure image URLs are properly formatted for Next.js Image
@@ -617,7 +617,6 @@ export default function PlansPage() {
         isOpen={withdrawModal.isOpen}
         onClose={closeWithdrawModal}
         planName={withdrawModal.planName}
-        planId={withdrawModal.planId}
         isEth={withdrawModal.isEth}
         penaltyPercentage={withdrawModal.penaltyPercentage}
         tokenName={withdrawModal.tokenName}
