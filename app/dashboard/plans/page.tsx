@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import Link from 'next/link';
@@ -12,7 +12,7 @@ import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
 import { formatTimestamp } from '@/utils/dateUtils';
-import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlineChartPie } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 
 // Helper function to ensure image URLs are properly formatted for Next.js Image
@@ -106,6 +106,16 @@ export default function PlansPage() {
 
   // Use the new caching hook for savings data
   const { savingsData, isLoading, ethPrice } = useSavingsData()
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    return {
+      activeCount: savingsData.currentPlans.length,
+      completedCount: savingsData.completedPlans.length,
+      totalLocked: savingsData.totalLocked,
+      rewards: savingsData.rewards
+    };
+  }, [savingsData]);
 
   // Fetch network logos on component mount
   useEffect(() => {
@@ -259,7 +269,7 @@ export default function PlansPage() {
       {/* Network Detection Component */}
       <NetworkDetection />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 relative z-10 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 relative z-10 space-y-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100">
           <div>
@@ -274,134 +284,185 @@ export default function PlansPage() {
           </Link>
         </div>
 
-        {/* Plans Grid */}
+        {/* Stats Cards - Carousel on mobile, Grid on desktop */}
+        <div className="flex overflow-x-auto pb-4 gap-4 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory hide-scrollbar">
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
+             <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+             <div className="relative z-10">
+               <div className="flex items-center gap-3 mb-2">
+                 <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                   <HiOutlineChartPie className="w-5 h-5" />
+                 </div>
+                 <h3 className="text-gray-500 font-medium text-sm">Active Plans</h3>
+               </div>
+               <p className="text-3xl font-bold text-gray-900">{stats.activeCount}</p>
+             </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
+             <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+             <div className="relative z-10">
+               <div className="flex items-center gap-3 mb-2">
+                 <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                   <HiOutlineBanknotes className="w-5 h-5" />
+                 </div>
+                 <h3 className="text-gray-500 font-medium text-sm">Total Value</h3>
+               </div>
+               <p className="text-3xl font-bold text-gray-900">${parseFloat(stats.totalLocked).toLocaleString()}</p>
+             </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
+             <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+             <div className="relative z-10">
+               <div className="flex items-center gap-3 mb-2">
+                 <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                   <HiOutlineCurrencyDollar className="w-5 h-5" />
+                 </div>
+                 <h3 className="text-gray-500 font-medium text-sm">Rewards Earned</h3>
+               </div>
+               <p className="text-3xl font-bold text-gray-900">{stats.rewards} <span className="text-sm font-medium text-gray-400">$BTS</span></p>
+             </div>
+          </div>
+        </div>
+
+        {/* Plans Grid - Full Width / Vertical List */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-gray-50 rounded-2xl h-[300px]"></div>
+                <div className="bg-gray-50 rounded-2xl h-[200px]"></div>
               </div>
             ))}
           </div>
         ) : (
           <div className="space-y-12">
             {/* Active Plans */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-6">
               {savingsData.currentPlans.map((plan) => (
                 <motion.div
                   key={plan.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group overflow-hidden"
+                  className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 sm:p-8 hover:shadow-lg transition-all duration-300 group overflow-hidden"
                 >
                   {/* Noise Texture Overlay */}
                   <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
-                  {/* Header: Icon, Title/Date, Top Up */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    {/* Header: Icon, Title/Date */}
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                         <Image
                           src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
                           alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                          width={32}
-                          height={32}
-                          className="w-8 h-8 object-contain"
+                          width={36}
+                          height={36}
+                          className="w-9 h-9 object-contain"
                         />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-1">
                           {plan.name}
                         </h3>
                         <p className="text-sm font-medium text-gray-400">
-                          Created {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                          Started {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </p>
                       </div>
                     </div>
-                    <motion.button
-                      onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 text-gray-700 font-semibold text-sm hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors bg-white hover:bg-[#81D7B4]/5"
-                    >
-                      <HiOutlinePlus className="w-4 h-4" />
-                      Top Up
-                    </motion.button>
+
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-6 bg-white/50 rounded-xl px-6 py-3 border border-gray-100/50">
+                        <div>
+                          <p className="text-xs font-medium text-gray-400 mb-1">Saved Amount</p>
+                          <p className="font-bold text-gray-900 text-lg md:text-xl">
+                            {plan.isEth ? (
+                              <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
+                            ) : plan.tokenName === 'Gooddollar' ? (
+                              <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
+                            ) : (
+                              <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                            )}
+                          </p>
+                        </div>
+                        <div className="w-px h-10 bg-gray-200"></div>
+                        <div>
+                          <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
+                          <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
+                            +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
+                          </p>
+                        </div>
+                    </div>
                   </div>
 
                   {/* Divider */}
-                  <div className="h-px w-full bg-gray-100 mb-6"></div>
+                  <div className="h-px w-full bg-gray-100 my-6"></div>
 
-                  {/* Stats Row */}
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="font-bold text-gray-900 text-lg">
-                      {plan.isEth ? (
-                        <>{parseFloat(plan.currentAmount).toFixed(4)} ETH Saved</>
-                      ) : plan.tokenName === 'Gooddollar' ? (
-                        <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>
-                      ) : (
-                        <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>
-                      )}
+                  <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
+                    {/* Progress Bar Section */}
+                    <div className="flex-1 w-full">
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
+                         <span>Progress</span>
+                         <span className="text-[#81D7B4] font-bold">{Math.round(plan.progress)}%</span>
+                      </div>
+                      <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-[#81D7B4] rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${plan.progress}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        />
+                      </div>
+                      <div className="mt-2 text-right">
+                         <span className="text-xs font-medium text-gray-400">
+                            {(() => {
+                              const now = Math.floor(Date.now() / 1000);
+                              const end = Number(plan.maturityTime || 0);
+                              const diff = end - now;
+                              if (diff <= 0) return "Completed";
+                              const days = Math.ceil(diff / (60 * 60 * 24));
+                              if (days > 30) {
+                                const months = Math.floor(days / 30);
+                                const remainingDays = days % 30;
+                                return `${months} Months & ${remainingDays} Days Remaining`;
+                              }
+                              return `${days} Days Remaining`;
+                            })()}
+                         </span>
+                      </div>
                     </div>
-                    <div className="w-px h-4 bg-gray-300"></div>
-                    <div className="font-bold text-[#81D7B4] text-lg">
-                      +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS Reward
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <button
+                        onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105"
+                      >
+                        <HiOutlinePlus className="w-4 h-4" />
+                        Top Up
+                      </button>
+                      <button
+                        onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                      >
+                        <HiOutlineEye className="w-4 h-4" />
+                        Details
+                      </button>
+                      <button
+                        onClick={() => {
+                          const currentDate = new Date();
+                          const maturityTimestamp = Number(plan.maturityTime || 0);
+                          const maturityDate = new Date(maturityTimestamp * 1000);
+                          const isCompleted = currentDate >= maturityDate;
+                          openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                        }}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-sm hover:bg-[#81D7B4]/5 transition-all"
+                      >
+                        <HiOutlineBanknotes className="w-4 h-4" />
+                        Withdraw
+                      </button>
                     </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden mb-2">
-                    <motion.div
-                      className="h-full bg-[#81D7B4] rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${plan.progress}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                    />
-                  </div>
-
-                  {/* Footer Info */}
-                  <div className="flex justify-between items-center text-sm font-medium text-gray-400 mb-6">
-                    <span>{Math.round(plan.progress)}%</span>
-                    <span>
-                      {(() => {
-                        const now = Math.floor(Date.now() / 1000);
-                        const end = Number(plan.maturityTime || 0);
-                        const diff = end - now;
-                        if (diff <= 0) return "Completed";
-                        const days = Math.ceil(diff / (60 * 60 * 24));
-                        if (days > 30) {
-                          const months = Math.floor(days / 30);
-                          const remainingDays = days % 30;
-                          return `${months} Months & ${remainingDays} Days Remaining`;
-                        }
-                        return `${days} Days Remaining`;
-                      })()}
-                    </span>
-                  </div>
-
-                  {/* Action Buttons: Plan Details & Outline Withdraw */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
-                    >
-                      <HiOutlineEye className="w-4 h-4" />
-                      Plan Details
-                    </button>
-                    <button
-                      onClick={() => {
-                        const currentDate = new Date();
-                        const maturityTimestamp = Number(plan.maturityTime || 0);
-                        const maturityDate = new Date(maturityTimestamp * 1000);
-                        const isCompleted = currentDate >= maturityDate;
-                        openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
-                      }}
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-red-50 hover:border-red-500 hover:text-red-500 transition-all group/withdraw"
-                    >
-                      <HiOutlineBanknotes className="w-4 h-4 group-hover/withdraw:text-red-500" />
-                      Withdraw
-                    </button>
                   </div>
                 </motion.div>
               ))}
@@ -430,103 +491,109 @@ export default function PlansPage() {
             {savingsData.completedPlans.length > 0 && (
               <div className="pt-8 border-t border-gray-100">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Completed Plans</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex flex-col gap-6">
                   {savingsData.completedPlans.map((plan) => (
                     <motion.div
                       key={plan.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                      className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group overflow-hidden"
+                      className="relative bg-gradient-to-br from-white via-white to-[#81D7B4]/10 rounded-3xl border border-gray-100 p-6 sm:p-8 hover:shadow-lg transition-all duration-300 group overflow-hidden"
                     >
                       {/* Noise Texture Overlay */}
                       <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
-                      {/* Header: Icon, Title/Date (No Top Up) */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                             <Image
                               src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
                               alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                              width={32}
-                              height={32}
-                              className="w-8 h-8 object-contain"
+                              width={36}
+                              height={36}
+                              className="w-9 h-9 object-contain"
                             />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                            <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-1">
                               {plan.name}
                             </h3>
-                            <p className="text-sm font-medium text-gray-400">
-                              Created {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                            </p>
+                            <div className="flex items-center gap-2">
+                               <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                                 Completed
+                               </span>
+                               <span className="text-sm font-medium text-gray-400">
+                                 Goal Reached
+                               </span>
+                            </div>
                           </div>
                         </div>
-                        {/* Completed Badge */}
-                        <div className="px-4 py-1.5 rounded-full bg-green-50 border border-green-100 text-green-600 font-semibold text-sm">
-                          Completed
+
+                         {/* Stats Row */}
+                        <div className="flex items-center gap-6 bg-white/50 rounded-xl px-6 py-3 border border-gray-100/50">
+                            <div>
+                              <p className="text-xs font-medium text-gray-400 mb-1">Final Amount</p>
+                              <p className="font-bold text-gray-900 text-lg md:text-xl">
+                                {plan.isEth ? (
+                                  <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
+                                ) : plan.tokenName === 'Gooddollar' ? (
+                                  <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
+                                ) : (
+                                  <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                                )}
+                              </p>
+                            </div>
+                            <div className="w-px h-10 bg-gray-200"></div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
+                              <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
+                                +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
+                              </p>
+                            </div>
                         </div>
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px w-full bg-gray-100 mb-6"></div>
+                      <div className="h-px w-full bg-gray-100 my-6"></div>
 
-                      {/* Stats Row */}
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className="font-bold text-gray-900 text-lg">
-                          {plan.isEth ? (
-                            <>{parseFloat(plan.currentAmount).toFixed(4)} ETH Saved</>
-                          ) : plan.tokenName === 'Gooddollar' ? (
-                            <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>
-                          ) : (
-                            <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>
-                          )}
+                      <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
+                        <div className="flex-1 w-full">
+                          <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
+                             <span>Progress</span>
+                             <span className="text-green-500 font-bold">100%</span>
+                          </div>
+                          <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-[#81D7B4] rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: "100%" }}
+                              transition={{ duration: 1, ease: "easeOut" }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-px h-4 bg-gray-300"></div>
-                        <div className="font-bold text-[#81D7B4] text-lg">
-                          +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS Reward
+
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <button
+                            onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                          >
+                            <HiOutlineEye className="w-4 h-4" />
+                            Details
+                          </button>
+                          <button
+                            onClick={() => {
+                              const currentDate = new Date();
+                              const maturityTimestamp = Number(plan.maturityTime || 0);
+                              const maturityDate = new Date(maturityTimestamp * 1000);
+                              const isCompleted = currentDate >= maturityDate;
+                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                            }}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
+                          >
+                            <HiOutlineBanknotes className="w-4 h-4" />
+                            Withdraw Funds
+                          </button>
                         </div>
-                      </div>
-
-                      {/* Progress Bar (Full) */}
-                      <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden mb-2">
-                        <motion.div
-                          className="h-full bg-[#81D7B4] rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: "100%" }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                        />
-                      </div>
-
-                      {/* Footer Info */}
-                      <div className="flex justify-between items-center text-sm font-medium text-gray-400 mb-6">
-                        <span>100%</span>
-                        <span>Goal Reached</span>
-                      </div>
-
-                      {/* Action Buttons: Plan Details & Outline Withdraw */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <button
-                          onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
-                        >
-                          <HiOutlineEye className="w-4 h-4" />
-                          Plan Details
-                        </button>
-                        <button
-                          onClick={() => {
-                            const currentDate = new Date();
-                            const maturityTimestamp = Number(plan.maturityTime || 0);
-                            const maturityDate = new Date(maturityTimestamp * 1000);
-                            const isCompleted = currentDate >= maturityDate;
-                            openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
-                          }}
-                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
-                        >
-                          <HiOutlineBanknotes className="w-4 h-4" />
-                          Withdraw Funds
-                        </button>
                       </div>
                     </motion.div>
                   ))}

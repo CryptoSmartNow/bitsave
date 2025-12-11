@@ -770,8 +770,8 @@ export default function Dashboard() {
               )}
             </p>
 
-            {/* SaveFi / BizFi Pill Tabs */}
-            <div className="mt-3 sm:mt-4">
+            {/* SaveFi / BizFi Pill Tabs - Hidden for now */}
+            {/* <div className="mt-3 sm:mt-4">
               <div className="inline-flex items-center bg-gray-50 border border-gray-200 rounded-full p-1.5 sm:p-2 gap-2 sm:gap-3 md:gap-4">
                 <button
                   onClick={() => setActiveMode('savefi')}
@@ -797,7 +797,7 @@ export default function Dashboard() {
                   BizFi
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

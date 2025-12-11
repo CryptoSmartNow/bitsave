@@ -12,17 +12,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch transactions from the external API
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
-    const apiUrl = `https://bitsaveapi.vercel.app/transactions/?useraddress=${address}`;
+    // Fetch transactions from the external API using the specific endpoint structure provided
+    // URL format: https://bitsaveapi.vercel.app/transactions/{address}
+    const apiUrl = `https://bitsaveapi.vercel.app/transactions/${address}`;
     
     console.log('Fetching transactions from external API:', apiUrl);
-    console.log('API Key present:', !!apiKey);
     
     const response = await fetch(apiUrl, {
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey
+        'accept': 'application/json'
       },
       // Add timeout to prevent hanging requests
       signal: AbortSignal.timeout(10000) // 10 second timeout
@@ -52,34 +50,20 @@ export async function GET(request: NextRequest) {
     let data;
     try {
       data = await response.json();
-      console.log('External API response data:', JSON.stringify(data, null, 2));
+      // console.log('External API response data:', JSON.stringify(data, null, 2));
     } catch (jsonError) {
       console.error('Error parsing external API JSON response:', jsonError);
-      const textResponse = await response.text().catch(() => 'Could not read response');
-      console.error('Raw external API response:', textResponse);
       return NextResponse.json({ transactions: [] });
     }
     
-    // Transform the data to match expected format
-    const transactions = data.results || data.transactions || [];
+    // The new API endpoint returns a direct array of transactions
+    const transactions = Array.isArray(data) ? data : (data.results || data.transactions || []);
     
-    if (!Array.isArray(transactions)) {
-      console.warn('Unexpected data format from external API:', data);
-      return NextResponse.json({ transactions: [] });
-    }
-    
+    // Return formatted response that matches what the frontend expects
+    // The frontend expects { transactions: [...] }
     return NextResponse.json({
-      transactions: transactions.map((tx: {
-        id?: string;
-        transaction_type?: string;
-        amount?: string;
-        currency?: string;
-        created_at?: string;
-        savingsname?: string;
-        txnhash?: string;
-        chain?: string;
-      }) => ({
-        id: tx.id || `${tx.txnhash || 'unknown'}-${tx.created_at || Date.now()}`,
+      transactions: transactions.map((tx: any) => ({
+        id: tx.id || tx._id || `${tx.txnhash || 'unknown'}-${Date.now()}`,
         transaction_type: tx.transaction_type || 'unknown',
         amount: tx.amount || '0',
         currency: tx.currency || 'ETH',
@@ -94,7 +78,6 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching transactions:', error);
     
     // Return empty transactions array instead of error for better UX
-    // This allows the UI to continue working even if transaction data fails
     return NextResponse.json({ 
       transactions: [],
       error: error instanceof Error ? error.message : 'Failed to fetch transactions',
