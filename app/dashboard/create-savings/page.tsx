@@ -10,6 +10,7 @@ import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
+import { useWallets } from '@privy-io/react-auth';
 import axios from 'axios';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import erc20ABIFile from '@/app/abi/erc20ABI.json';
@@ -260,7 +261,9 @@ const approveERC20 = async (
 ) => {
   try {
     // Contract to approve is determined by network or can be made generic
-    const contractToApprove = signer.provider?.network?.chainId === 42220 ? CELO_CONTRACT_ADDRESS : CONTRACT_ADDRESS;
+    const network = await signer.provider?.getNetwork();
+    const chainId = network?.chainId;
+    const contractToApprove = Number(chainId) === 42220 ? CELO_CONTRACT_ADDRESS : CONTRACT_ADDRESS;
     const erc20Contract = new ethers.Contract(
       tokenAddress,
       erc20ABI,
@@ -302,6 +305,7 @@ const fetchCeloPrice = async () => {
 export default function CreateSavingsPage() {
   const router = useRouter()
   const { address } = useAccount()
+  const { wallets } = useWallets()
   const { referralData, generateReferralCode, markReferralConversion } = useReferrals()
   const { savingsData } = useSavingsData()
   const { walletInfo, shouldShowModal, dismissRecommendation } = useWalletDetection()
@@ -651,6 +655,23 @@ export default function CreateSavingsPage() {
       const selectedNetwork = NETWORKS.find(n => n.id === chain);
       const tokenObj = selectedNetwork?.tokens.find(t => t.symbol === currency);
       if (!selectedNetwork || !tokenObj) throw new Error('Selected network or token is not supported.');
+
+      // Get provider and signer from Privy wallet
+      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
+      if (!activeWallet) {
+          // Fallback to window.ethereum if strictly needed, but better to fail if Privy is source of truth
+          // throw new Error('Active wallet not found in Privy.');
+          // Or just continue and let createSavingsGeneric try window.ethereum
+          console.warn('Active wallet not found in Privy wallets, falling back to default provider detection');
+      }
+
+      let providerOverride, signerOverride;
+      if (activeWallet) {
+          const ethereumProvider = await activeWallet.getEthereumProvider();
+          providerOverride = new ethers.BrowserProvider(ethereumProvider);
+          signerOverride = await providerOverride.getSigner();
+      }
+
       // Calculate maturity timestamp and other params from current inputs
       const maturity = calculateMaturityTime();
       const receipt = await createSavingsGeneric({
@@ -662,6 +683,8 @@ export default function CreateSavingsPage() {
         penalty: selectedPenalty,
         safeMode: false,
         address: address || '', // enforce string, never undefined
+        providerOverride,
+        signerOverride,
         additionalOptions: {} // Custom per-network fee logic can go here
       });
       // Referral (preserves old logic)
