@@ -187,9 +187,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
     setIsOpen(false);
 
     // Handle routing
-    // Simply update the language without changing the URL path for BizFi
-    // This avoids 404s since we don't have localized routes for /bizfi
-    if (!pathname.startsWith('/bizfi')) {
+    // Simply update the language without changing the URL path for BizFi, Dashboard, and Landing Pages
+    // This avoids 404s since we don't have localized routes for these sections yet, or we want consistent behavior
+    const isSpecialRoute = pathname.startsWith('/bizfi') || pathname.startsWith('/dashboard') || pathname === '/' || !pathname.match(/^\/(en|es|fr|de|zh|ja|ko|pt|ru|ar|hi|it|nl|sv|tr)/);
+
+    if (!isSpecialRoute) {
         const currentPath = pathname;
         const localePattern = new RegExp(`^\/(${supportedLocales.join('|')})`);
         const pathWithoutLocale = currentPath.replace(localePattern, '') || '/';
@@ -205,8 +207,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
 
     // Handle Google Translate based on language selection
     setTimeout(() => {
-      const isBizFi = pathname.startsWith('/bizfi');
-
+      // Apply translation logic for all pages
       if (languageCode === 'en') {
         // For English: Clear Google Translate and reset to original content
         document.cookie = `googtrans=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
@@ -220,7 +221,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
         }
         
         // Force reload to ensure clean English content
-        // On BizFi, we reload to clear the translation fully
+        // Reload to clear the translation fully for all pages
         setTimeout(() => {
           window.location.reload();
         }, 100);
@@ -236,12 +237,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
           selectElement.dispatchEvent(new Event('change'));
         }
 
-        // On BizFi, if we just set the cookie but the widget didn't pick it up (common issue),
+        // If we just set the cookie but the widget didn't pick it up (common issue),
         // a reload might be needed to force the translation layer to apply initial state
         // However, we try to avoid reload if possible.
         // If the widget was found and event dispatched, it should work.
         // If not, we might need to reload.
-        if (isBizFi && !selectElement) {
+        if (!selectElement) {
             setTimeout(() => {
                  window.location.reload();
             }, 500);
@@ -303,6 +304,32 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
   }, [isOpen, updateDropdownPosition]);
 
   const selectedLang = languages.find(lang => lang.code === selectedLanguage) || languages[0];
+
+  // Determine theme based on path
+  const isBizFi = pathname.startsWith('/bizfi');
+  
+  // Theme configuration
+  const theme = {
+    buttonBg: isBizFi ? 'bg-[#1A2538]/80' : 'bg-white/80',
+    buttonBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200',
+    buttonHover: isBizFi ? 'hover:bg-[#1A2538]' : 'hover:bg-white',
+    textPrimary: isBizFi ? 'text-[#F9F9FB]' : 'text-gray-800',
+    textSecondary: isBizFi ? 'text-[#7B8B9A]' : 'text-gray-500',
+    iconBg: isBizFi ? 'bg-[#81D7B4]/10' : 'bg-[#81D7B4]/10',
+    iconBorder: isBizFi ? 'border-[#81D7B4]/20' : 'border-[#81D7B4]/20',
+    iconColor: isBizFi ? 'text-[#81D7B4]' : 'text-[#81D7B4]',
+    dropdownBg: isBizFi ? 'bg-[#1A2538]' : 'bg-white',
+    dropdownBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200',
+    dropdownShadow: isBizFi ? 'shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]' : 'shadow-xl',
+    itemHover: isBizFi ? 'hover:bg-[#7B8B9A]/10' : 'hover:bg-gray-50',
+    itemText: isBizFi ? 'text-[#9BA8B5]' : 'text-gray-600',
+    itemHoverText: isBizFi ? 'hover:text-[#F9F9FB]' : 'hover:text-gray-900',
+    activeBg: isBizFi ? 'bg-[#81D7B4]/10' : 'bg-[#81D7B4]/10',
+    activeText: isBizFi ? 'text-[#81D7B4]' : 'text-[#2D5A4A]',
+    activeBorder: isBizFi ? 'border-[#81D7B4]/20' : 'border-[#81D7B4]/20',
+    loaderBg: isBizFi ? 'bg-[#1A2538]/80' : 'bg-white/80',
+    loaderBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200',
+  };
 
   return (
     <>
@@ -373,23 +400,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
             whileTap={{ scale: 0.98 }}
             onClick={toggleDropdown}
             disabled={!isLoaded || isDetectingLocation}
-            className="w-full bg-[#1A2538]/80 backdrop-blur-xl border border-[#7B8B9A]/20 rounded-xl px-3 py-2 text-left shadow-lg hover:bg-[#1A2538] hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden"
+            className={`w-full ${theme.buttonBg} backdrop-blur-xl border ${theme.buttonBorder} rounded-xl px-3 py-2 text-left shadow-lg ${theme.buttonHover} hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden`}
           >
             {/* Gradient Overlays */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 via-transparent to-transparent pointer-events-none"></div>
             
             <div className="relative flex items-center space-x-2">
-              <div className="w-6 h-6 bg-[#81D7B4]/10 rounded-lg flex items-center justify-center border border-[#81D7B4]/20">
-                <Globe className="w-3.5 h-3.5 text-[#81D7B4]" />
+              <div className={`w-6 h-6 ${theme.iconBg} rounded-lg flex items-center justify-center border ${theme.iconBorder}`}>
+                <Globe className={`w-3.5 h-3.5 ${theme.iconColor}`} />
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-base">{selectedLang.flag}</span>
-                <span className="font-medium text-[#F9F9FB] text-sm hidden sm:inline-block">{selectedLang.name}</span>
-                <span className="font-medium text-[#F9F9FB] text-sm sm:hidden">{selectedLang.code.toUpperCase()}</span>
+                <span className={`font-medium ${theme.textPrimary} text-sm hidden sm:inline-block`}>{selectedLang.name}</span>
+                <span className={`font-medium ${theme.textPrimary} text-sm sm:hidden`}>{selectedLang.code.toUpperCase()}</span>
               </div>
             </div>
             
-            <ChevronDown className={`w-4 h-4 text-[#7B8B9A] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 ${theme.textSecondary} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           </motion.button>
 
 
@@ -397,11 +424,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
 
         {/* Loading indicator */}
         {(!isLoaded || isDetectingLocation) && (
-          <div className="absolute inset-0 bg-[#1A2538]/80 backdrop-blur-xl rounded-xl flex items-center justify-center border border-[#7B8B9A]/20">
+          <div className={`absolute inset-0 ${theme.loaderBg} backdrop-blur-xl rounded-xl flex items-center justify-center border ${theme.loaderBorder}`}>
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#81D7B4]"></div>
               {isDetectingLocation && (
-                <span className="text-xs text-[#7B8B9A]">Detecting...</span>
+                <span className={`text-xs ${theme.textSecondary}`}>Detecting...</span>
               )}
             </div>
           </div>
@@ -425,7 +452,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed bg-[#1A2538] backdrop-blur-xl border border-[#7B8B9A]/20 rounded-xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] z-[10000] max-h-64 sm:max-h-72 overflow-y-auto"
+              className={`fixed ${theme.dropdownBg} backdrop-blur-xl border ${theme.dropdownBorder} rounded-xl ${theme.dropdownShadow} z-[10000] max-h-64 sm:max-h-72 overflow-y-auto`}
               style={{
                 top: dropdownPosition.top,
                 left: dropdownPosition.left,
@@ -447,8 +474,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
                       onClick={() => handleLanguageChange(language.code)}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 group touch-manipulation ${
                         selectedLanguage === language.code
-                          ? 'bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20'
-                          : 'hover:bg-[#7B8B9A]/10 text-[#9BA8B5] hover:text-[#F9F9FB]'
+                          ? `${theme.activeBg} ${theme.activeText} border ${theme.activeBorder}`
+                          : `${theme.itemHover} ${theme.itemText} ${theme.itemHoverText}`
                       }`}
                     >
                       <span className="text-lg transition-transform duration-200 group-hover:scale-110">{language.flag}</span>

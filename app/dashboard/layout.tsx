@@ -10,6 +10,7 @@ import { Exo } from 'next/font/google';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { HiOutlineHome, HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineUserGroup, HiOutlineTrophy, HiOutlineUserPlus, HiOutlinePlus, HiOutlineCog, HiOutlineArrowRightOnRectangle, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
 import { FiMenu, FiX } from 'react-icons/fi';
+import LanguageSelector from '@/components/LanguageSelector';
 
 
 // Removed custom network connection UI in favor of RainbowKit modal-only
@@ -135,7 +136,7 @@ export default function DashboardLayout({
                 </button>
               )}
             </div>
-        
+
             {/* Navigation Section */}
             <div className="flex-1 overflow-y-auto pt-8 xs:pt-10 sm:pt-12 pb-4 px-2 xs:px-3 sm:px-3 mb-4">
               <Link href="/dashboard" onClick={handleMobileNavClick} className={`group flex items-center ${sidebarCollapsed ? 'px-3 py-4 justify-center' : 'px-3 xs:px-4 py-3 xs:py-4'} mb-1 xs:mb-2 rounded-xl mx-1 transition-all duration-300 ${
@@ -326,14 +327,30 @@ export default function DashboardLayout({
           </div>
         )}
 
+        {/* Mobile Language Selector: Fixed top-right (left of menu) - Root Level */}
+        {mounted && isConnected && (
+            <div className="md:hidden fixed top-4 right-[72px] z-30 w-[100px]">
+                <LanguageSelector />
+            </div>
+        )}
+
 
 
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out ${isConnected ? 'md:ml-64' : 'md:ml-0'} ml-0 overflow-x-hidden`}>
+        <div className={`transition-all duration-300 ease-in-out ${isConnected ? 'md:ml-64' : 'md:ml-0'} ml-0 overflow-x-hidden relative min-h-screen`}>
+            
+            {mounted && isConnected && (
+                <>
+                    {/* Desktop Language Selector: Absolute top-right */}
+                    <div className="hidden md:block absolute top-6 right-8 z-30 w-[140px]">
+                        <LanguageSelector />
+                    </div>
+                </>
+            )}
 
         {mounted ? (
           isConnected ? (
-            <div className="mt-8 sm:mt-10 lg:mt-14 px-3 sm:px-4 md:px-6 lg:px-8 pb-0">
+            <div className="mt-20 md:mt-14 px-3 sm:px-4 md:px-6 lg:px-8 pb-0">
               {(() => {
                 const pageTitles: Record<string, string> = {
                   '/dashboard': 'Dashboard Overview',
