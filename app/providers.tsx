@@ -80,9 +80,9 @@ function PrivyWrapper({ children }: { children: ReactNode }) {
         },
         loginMethods: ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
         supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
-        // externalWallets: {
-        //   walletConnect: { projectId },
-        // },
+        externalWallets: {
+            walletConnect: { enabled: true },
+        },
       }}
     >
       <QueryClientProvider client={queryClient}>

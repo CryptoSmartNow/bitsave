@@ -77,12 +77,12 @@ export default function DashboardLayout({
             />
           )}
 
-          <div className={`fixed inset-y-0 left-0 h-screen transition-transform duration-300 ease-in-out z-50 ${
+          <div className={`fixed inset-y-0 left-0 h-[90vh] my-auto transition-transform duration-300 ease-in-out z-50 ${
             sidebarCollapsed ? '-translate-x-full md:translate-x-0 w-[280px] xs:w-[320px] sm:w-[360px] md:w-60' : 'translate-x-0 w-[280px] xs:w-[320px] sm:w-[360px] md:w-60'
           }`}>
 
           {/* Main Sidebar Container - solid on mobile, transparent on desktop */}
-          <div className="h-full m-2 xs:m-3 sm:m-4 rounded-2xl relative bg-white/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-0 border border-gray-200 md:border-0 shadow-2xl md:shadow-none">
+          <div className="h-full m-2 xs:m-3 sm:m-4 rounded-2xl relative bg-white/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-0 border border-gray-200 md:border-0 shadow-2xl md:shadow-none overflow-y-auto">
           
           {/* Content Container */}
           <div className="relative h-full flex flex-col">
