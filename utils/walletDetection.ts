@@ -21,19 +21,19 @@ export function detectWalletType(): WalletInfo {
 
   const provider = window.ethereum;
 
-  // MetaMask detection
-  if (provider.isMetaMask) {
+  // Rabby Wallet detection (Prioritize Rabby over MetaMask since Rabby also sets isMetaMask to true)
+  if (provider.isRabby) {
     return {
-      name: 'MetaMask',
+      name: 'Rabby Wallet',
       isDetected: true,
       provider
     };
   }
 
-  // Rabby Wallet detection
-  if (provider.isRabby) {
+  // MetaMask detection
+  if (provider.isMetaMask) {
     return {
-      name: 'Rabby Wallet',
+      name: 'MetaMask',
       isDetected: true,
       provider
     };

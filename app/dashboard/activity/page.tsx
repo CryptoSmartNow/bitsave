@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { useState, ReactNode, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Exo } from 'next/font/google';
 import {
@@ -12,6 +12,11 @@ import {
   HiOutlineHashtag,
   HiOutlineUserPlus,
   HiOutlineArrowRight,
+  HiOutlineTrophy,
+  HiOutlineStar,
+  HiOutlineCurrencyDollar,
+  HiOutlineLockClosed,
+  HiOutlineCheckCircle
 } from 'react-icons/hi2';
 
 const exo = Exo({ 
@@ -27,115 +32,117 @@ interface Task {
   isCompleted: boolean;
   href: string;
   icon: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  category?: 'social' | 'saving' | 'referral';
 }
 
-// Mock data for demonstration
+// Mock data for demonstration - reset state for new user
 const MOCK_USER_DATA = {
-  hasSavingsPlan: true,
-  hasConnectedX: true,
-  hasConnectedFarcaster: true,
-  hasEmail: true,
+  hasSavingsPlan: false,
+  hasConnectedX: false,
+  hasConnectedFarcaster: false,
+  hasEmail: false,
   userPoints: 0,
+  level: 1,
+  nextLevelPoints: 100,
+  rank: 0,
   referralLink: 'https://bitsave.io/ref/123xyz',
 };
 
+const MOCK_LEADERBOARD: any[] = [];
+
 export default function ActivityPage() {
   const [userData] = useState(MOCK_USER_DATA);
-
-  // Modern, neat points header
-  const PointsHeader = () => (
-    <div className="inline-flex items-center gap-3 rounded-2xl border border-[#81D7B4]/30 bg-[#81D7B4]/10 shadow-sm px-5 py-4">
-      <div className="h-8 w-8 rounded-xl bg-[#81D7B4] text-white flex items-center justify-center">
-        <HiOutlineFire className="h-5 w-5" />
-      </div>
-      <div className="flex flex-col text-left">
-        <span className="text-xs text-[#2D5A4A]">Points</span>
-        <span className="text-2xl font-semibold tracking-tight text-[#2D5A4A]">{userData.userPoints}</span>
-      </div>
-    </div>
-  );
+  const [activeTab, setActiveTab] = useState<'all' | 'social' | 'saving'>('all');
 
   const tasks: Task[] = [
     {
       id: 'tweet_after_saving',
       title: 'Tweet after Saving',
-      description: 'Get 1 point for the tweet you send after creating a new savings plan.',
+      description: 'Share your savings milestone with the world.',
       points: 1,
       isCompleted: false,
       href: '/dashboard/create-savings',
       icon: 'tweet',
+      difficulty: 'easy',
+      category: 'social'
     },
     {
       id: 'connect_x',
       title: 'Connect X (Twitter)',
-      description: 'Link your X account to earn points and unlock social features.',
+      description: 'Link your X account to unlock social quests.',
       points: 1,
       isCompleted: false,
       href: '/dashboard/settings',
       icon: 'twitter',
+      difficulty: 'easy',
+      category: 'social'
     },
     {
       id: 'connect_farcaster',
       title: 'Connect Farcaster',
-      description: 'Link your Farcaster account for onchain perks and rewards.',
+      description: 'Join the onchain conversation.',
       points: 1,
       isCompleted: false,
       href: '/dashboard/settings',
       icon: 'farcaster',
+      difficulty: 'medium',
+      category: 'social'
     },
     {
       id: 'add_email',
       title: 'Add Email Address',
-      description: 'Secure your account and get important notifications.',
+      description: 'Stay updated with important alerts.',
       points: 1,
       isCompleted: false,
       href: '/dashboard/settings',
       icon: 'email',
+      difficulty: 'easy',
+      category: 'social'
     },
     {
       id: 'tweet_about_bitsave',
-      title: 'Tweet about BitSave',
-      description: 'Share your experience with BitSave on X.',
+      title: 'Shoutout on X',
+      description: 'Tell your friends about BitSave.',
       points: 5,
       isCompleted: false,
       href: `https://twitter.com/intent/tweet?text=Exploring%20the%20world%20of%20DeFi%20savings%20with%20@bitsaveprotocol!%20%23SaveFi%20%23Web3&url=${userData.referralLink}`,
       icon: 'tweet',
-    },
-    {
-      id: 'cast_about_bitsave',
-      title: 'Cast about BitSave',
-      description: 'Post about BitSave on Farcaster.',
-      points: 5,
-      isCompleted: false,
-      href: `https://warpcast.com/~/compose?text=Exploring%20the%20world%20of%20DeFi%20savings%20with%20@bitsave!%20&embeds[]=${userData.referralLink}`,
-      icon: 'cast',
+      difficulty: 'easy',
+      category: 'social'
     },
     {
       id: 'referral_signup',
       title: 'Refer a Friend',
-      description: 'Earn points for every friend who signs up using your link.',
+      description: 'Earn huge points for every friend who joins.',
       points: 5,
       isCompleted: false,
       href: '/dashboard/settings',
       icon: 'referral',
+      difficulty: 'hard',
+      category: 'referral'
     },
     {
       id: 'complete_plan',
-      title: 'Complete a Savings Plan',
-      description: 'Reach your savings goal to earn a streak bonus.',
+      title: 'Complete a Plan',
+      description: 'Finish a savings plan successfully.',
       points: 10,
       isCompleted: false,
       href: '/dashboard/plans',
       icon: 'streak',
+      difficulty: 'hard',
+      category: 'saving'
     },
     {
       id: 'weekly_saving',
-      title: '4-Week Saving Streak',
-      description: 'Save consistently every week for a month.',
+      title: '4-Week Streak',
+      description: 'Save consistently for 4 weeks.',
       points: 10,
       isCompleted: false,
       href: '/dashboard/plans',
       icon: 'calendar',
+      difficulty: 'medium',
+      category: 'saving'
     },
   ];
 
@@ -153,284 +160,242 @@ export default function ActivityPage() {
     return icons[icon] || <HiOutlineMegaphone className="w-6 h-6" />
   }
 
-  return (
-    <div className={`${exo.variable} font-sans min-h-screen bg-white`}>
-      {/* Background removed for a cleaner layout */}
+  const filteredTasks = activeTab === 'all' 
+    ? tasks 
+    : tasks.filter(t => t.category === activeTab || (activeTab === 'social' && t.category === 'referral'));
 
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
-        {/* Earn $BTS Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-20"
-        >
-          {/* Clean container for hero section - removed background card */}
-          <div className="relative px-2 sm:px-3 md:px-6 lg:px-8">
-            <div className="relative">
-              <div className="text-center mb-8 md:mb-12">
-                <motion.h2 
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="text-3xl md:text-5xl font-semibold text-[#81D7B4] tracking-tight"
-                >
-                  Earn $BTS
-                </motion.h2>
-                <motion.p 
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
-                >
-                  Complete simple tasks to earn points and unlock rewards.
-                </motion.p>
-                <div className="mt-6">
-                  <PointsHeader />
+  const progressPercentage = (userData.userPoints / userData.nextLevelPoints) * 100;
+
+  return (
+    <div className={`${exo.variable} font-sans min-h-screen bg-gray-50/50 pb-20`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Page Header */}
+        <div className="mb-8 md:mb-12 text-center md:text-left">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl md:text-4xl font-bold text-gray-900 mb-2"
+          >
+            Rewards Playground
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-gray-500 max-w-2xl"
+          >
+            Complete quests, earn $BTS, and climb the leaderboard to unlock exclusive rewards.
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          
+          {/* Left Column: Stats & Leaderboard */}
+          <div className="space-y-6 lg:col-span-2">
+            
+            {/* User Stats Card */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-[#81D7B4]/10 border border-[#81D7B4]/20 relative overflow-hidden w-full"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#81D7B4]/20 to-transparent rounded-bl-full -mr-8 -mt-8 pointer-events-none"></div>
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Current Level</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-1 pr-4">
+                    <span className="text-xl font-extrabold text-gray-900 whitespace-nowrap">Level {userData.level}</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center text-white shadow-lg shadow-[#81D7B4]/30 flex-shrink-0">
+                  <HiOutlineTrophy className="w-6 h-6" />
                 </div>
               </div>
 
-              {/* Tasks List */}
-              <div className="max-w-4xl mx-auto space-y-4">
-                {tasks.map((task, index) => (
+              {/* Progress Bar */}
+              <div className="mb-2 flex justify-between text-sm font-medium">
+                <span className="text-[#2D5A4A]">{userData.userPoints} $BTS</span>
+                <span className="text-gray-400">{userData.nextLevelPoints} $BTS</span>
+              </div>
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-6">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercentage}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-[#81D7B4] to-[#4FB38B] rounded-full shadow-[0_0_10px_rgba(129,215,180,0.5)]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 text-center">
+                  <div className="text-gray-400 text-xs font-bold uppercase mb-1">Rank</div>
+                  <div className="text-xl font-bold text-gray-900">#{userData.rank}</div>
+                </div>
+                <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 text-center">
+                  <div className="text-gray-400 text-xs font-bold uppercase mb-1">Quests</div>
+                  <div className="text-xl font-bold text-gray-900">{tasks.filter(t => t.isCompleted).length}/{tasks.length}</div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Mini Leaderboard */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 w-full"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <HiOutlineStar className="w-5 h-5 text-yellow-500" />
+                  Top Earners
+                </h3>
+                {MOCK_LEADERBOARD.length > 0 && (
+                  <Link href="#" className="text-xs font-bold text-[#81D7B4] hover:underline">View All</Link>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                {MOCK_LEADERBOARD.length > 0 ? (
+                  MOCK_LEADERBOARD.map((user, idx) => (
+                    <div key={idx} className={`flex items-center justify-between p-3 rounded-xl transition-colors ${user.name === 'You' ? 'bg-[#81D7B4]/10 border border-[#81D7B4]/20' : 'hover:bg-gray-50'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full ${idx < 3 ? 'bg-yellow-100 text-yellow-700' : 'text-gray-500'}`}>
+                          {user.rank}
+                        </div>
+                        <div className="text-sm font-medium text-gray-900 font-mono">{user.name}</div>
+                      </div>
+                      <div className="text-sm font-bold text-gray-600">{user.points} $BTS</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400 text-sm">
+                    <p>No earning activity</p>
+                    <p className="text-xs mt-1">Be the first to earn $BTS!</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* Right Column: Quests */}
+          <div className="lg:col-span-3 space-y-6">
+            
+            {/* Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+              {['all', 'social', 'saving'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold capitalize whitespace-nowrap transition-all ${
+                    activeTab === tab 
+                      ? 'bg-[#81D7B4] text-white shadow-lg shadow-[#81D7B4]/30' 
+                      : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'
+                  }`}
+                >
+                  {tab} Quests
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AnimatePresence mode='popLayout'>
+                {filteredTasks.map((task, index) => (
                   <motion.div
                     key={task.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ 
-                      duration: 0.5, 
-                      delay: 0.1 * index,
-                      ease: "easeOut"
-                    }}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
                     className="group"
                   >
-                    <Link href={task.href || '#'} target={task.href?.startsWith('http') ? '_blank' : '_self'}>
-                      <div className={`relative bg-white/90 backdrop-blur-sm rounded-xl border transition-all duration-300 p-4 md:p-5 ${
+                    <Link href={task.href} target={task.href.startsWith('http') ? '_blank' : '_self'}>
+                      <div className={`h-full bg-white rounded-2xl border-2 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${
                         task.isCompleted 
-                          ? 'border-[#81D7B4]/40 shadow-sm bg-[#81D7B4]/5' 
-                          : 'border-gray-200/60 shadow-sm hover:border-[#81D7B4]/50 hover:shadow-md'
+                          ? 'border-gray-100 opacity-75 grayscale-[0.5]' 
+                          : 'border-transparent hover:border-[#81D7B4]/50 shadow-sm'
                       }`}>
-                        
-                        {/* Mobile Layout (Stacked) */}
-                        <div className="block sm:hidden">
-                          <div className="flex items-start gap-3 mb-3">
-                            {/* Checkbox/Status Indicator */}
-                            <div className="flex-shrink-0 mt-1">
-                              <motion.div
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                                  task.isCompleted 
-                                    ? 'bg-[#81D7B4] border-[#81D7B4] shadow-[0_2px_8px_rgba(129,215,180,0.4)]' 
-                                    : 'border-[#81D7B4]/40 group-hover:border-[#81D7B4]/70 bg-white'
-                                }`}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                {task.isCompleted && (
-                                  <motion.svg 
-                                    className="w-2.5 h-2.5 text-white" 
-                                    fill="currentColor" 
-                                    viewBox="0 0 20 20"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ delay: 0.2, type: "spring", stiffness: 500 }}
-                                  >
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </motion.svg>
-                                )}
-                              </motion.div>
-                            </div>
-
-                            {/* Task Icon */}
-                            <div className="flex-shrink-0">
-                              <motion.div 
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                                  task.isCompleted 
-                                    ? 'bg-[#81D7B4]/20 text-[#2D5A4A] border border-[#81D7B4]/30 shadow-md' 
-                                    : 'bg-white text-[#2D5A4A] border border-[#81D7B4]/30 group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A] shadow-md'
-                                }`}
-                                whileHover={{ scale: 1.05, rotate: 2 }}
-                              >
-                                <div className="scale-75">
-                                  <TaskIcon icon={task.icon} />
-                                </div>
-                              </motion.div>
-                            </div>
-
-                            {/* Task Title and Description */}
-                            <div className="flex-1 min-w-0">
-                              <motion.h3 
-                                className={`font-medium text-base mb-1 transition-all duration-300 ${
-                                  task.isCompleted 
-                                    ? 'text-[#81D7B4] line-through decoration-[#81D7B4]/40' 
-                                    : 'text-[#81D7B4]'
-                                }`}
-                                whileHover={{ x: 2 }}
-                              >
-                                {task.title}
-                              </motion.h3>
-                              <p className={`text-xs leading-relaxed transition-colors duration-300 ${
-                                task.isCompleted 
-                                  ? 'text-gray-500' 
-                                  : 'text-gray-600'
-                              }`}>
-                                {task.description}
-                              </p>
-                            </div>
+                        {/* Difficulty Badge */}
+                        {!task.isCompleted && (
+                          <div className={`absolute top-4 right-4 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide border ${
+                            task.difficulty === 'easy' ? 'bg-green-50 text-green-600 border-green-100' :
+                            task.difficulty === 'medium' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+                            'bg-red-50 text-red-600 border-red-100'
+                          }`}>
+                            {task.difficulty}
                           </div>
+                        )}
 
-                          {/* Points and Status Row */}
-                          <div className="flex items-center justify-between gap-2 ml-8">
-                            <div className="flex items-center gap-2">
-                              <motion.div
-                                className={`font-semibold text-sm transition-all duration-300 ${
-                                  task.isCompleted 
-                                    ? 'text-gray-700' 
-                                    : 'text-[#2D5A4A]'
-                                }`}
-                                whileHover={{ scale: 1.05 }}
-                              >
-                                +{task.points} {task.points > 1 ? 'pts' : 'pt'}
-                              </motion.div>
-
-                              <motion.div
-                                className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
-                                  task.isCompleted 
-                                    ? 'text-[#2D5A4A] bg-[#81D7B4]/15 border border-[#81D7B4]/30' 
-                                    : 'text-[#2D5A4A] bg-[#81D7B4]/10 border border-[#81D7B4]/20'
-                                }`}
-                                whileHover={{ scale: 1.05 }}
-                              >
-                                {task.isCompleted ? 'Done' : 'To Do'}
-                              </motion.div>
-                            </div>
-
-                            <motion.div 
-                              className={`p-1.5 rounded-lg transition-all duration-300 ${
-                                task.isCompleted 
-                                  ? 'text-[#2D5A4A] bg-white border border-[#81D7B4]/30' 
-                                  : 'text-[#2D5A4A] group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A]'
-                              }`}
-                              whileHover={{ x: 3, scale: 1.1 }}
-                            >
-                              <HiOutlineArrowRight className="h-3 w-3" />
-                            </motion.div>
+                        {task.isCompleted && (
+                          <div className="absolute top-4 right-4 text-[#81D7B4]">
+                            <HiOutlineCheckCircle className="w-6 h-6" />
+                          </div>
+                        )}
+                        
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm ${
+                            task.isCompleted ? 'bg-gray-100 text-gray-400' : 'bg-[#81D7B4]/10 text-[#2D5A4A]'
+                          }`}>
+                            <TaskIcon icon={task.icon} />
                           </div>
                         </div>
 
-                        {/* Desktop Layout (Horizontal) */}
-                        <div className="hidden sm:flex items-center gap-3 sm:gap-4 md:gap-6">
-                          {/* Checkbox/Status Indicator */}
-                          <div className="flex-shrink-0">
-                            <motion.div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                                task.isCompleted 
-                                  ? 'bg-[#81D7B4] border-[#81D7B4] shadow-[0_2px_8px_rgba(129,215,180,0.4)]' 
-                                  : 'border-[#81D7B4]/40 group-hover:border-[#81D7B4]/70 bg-white'
-                              }`}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              {task.isCompleted && (
-                                <motion.svg 
-                                  className="w-3 h-3 text-white" 
-                                  fill="currentColor" 
-                                  viewBox="0 0 20 20"
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{ delay: 0.2, type: "spring", stiffness: 500 }}
-                                >
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </motion.svg>
-                              )}
-                            </motion.div>
+                        <h3 className={`font-bold text-lg mb-2 ${task.isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                          {task.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-6 min-h-[40px]">
+                          {task.description}
+                        </p>
+
+                        <div className="flex items-center justify-between mt-auto">
+                          <div className="flex items-center gap-2">
+                            <HiOutlineCurrencyDollar className={`w-4 h-4 ${task.isCompleted ? 'text-gray-400' : 'text-yellow-500'}`} />
+                            <span className={`font-bold ${task.isCompleted ? 'text-gray-400' : 'text-gray-900'}`}>
+                              {task.points} $BTS
+                            </span>
                           </div>
-
-                          {/* Task Icon */}
-                          <div className="flex-shrink-0">
-                            <motion.div 
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                                task.isCompleted 
-                                  ? 'bg-[#81D7B4]/20 text-[#2D5A4A] border border-[#81D7B4]/30' 
-                                  : 'bg-white text-[#2D5A4A] border border-[#81D7B4]/30 group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A]'
-                              }`}
-                              whileHover={{ scale: 1.05, rotate: 2 }}
-                            >
-                              <TaskIcon icon={task.icon} />
-                            </motion.div>
-                          </div>
-
-                          {/* Task Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <motion.h3 
-                                  className={`font-medium text-lg mb-1 transition-all duration-300 ${
-                                    task.isCompleted 
-                                      ? 'text-[#81D7B4] line-through decoration-[#81D7B4]/40' 
-                                      : 'text-[#81D7B4]'
-                                  }`}
-                                  whileHover={{ x: 2 }}
-                                >
-                                  {task.title}
-                                </motion.h3>
-                                <p className={`text-sm leading-relaxed transition-colors duration-300 ${
-                                  task.isCompleted 
-                                    ? 'text-gray-500' 
-                                    : 'text-gray-600'
-                                }`}>
-                                  {task.description}
-                                </p>
-                              </div>
-
-                              {/* Points and Status */}
-                              <div className="flex items-center gap-4 flex-shrink-0">
-                                <motion.div
-                                  className={`font-semibold text-base transition-all duration-300 ${
-                                    task.isCompleted 
-                                      ? 'text-gray-700' 
-                                      : 'text-[#2D5A4A]'
-                                  }`}
-                                  whileHover={{ scale: 1.05 }}
-                                >
-                                  +{task.points} {task.points > 1 ? 'pts' : 'pt'}
-                                </motion.div>
-
-                                <motion.div
-                                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
-                                    task.isCompleted 
-                                      ? 'text-[#2D5A4A] bg-[#81D7B4]/15 border border-[#81D7B4]/30' 
-                                      : 'text-[#2D5A4A] bg-[#81D7B4]/10 border border-[#81D7B4]/20'
-                                  }`}
-                                  whileHover={{ scale: 1.05 }}
-                                >
-                                  {task.isCompleted ? 'Completed' : 'To Do'}
-                                </motion.div>
-
-                                <motion.div 
-                                  className={`p-2 rounded-lg transition-all duration-300 ${
-                                    task.isCompleted 
-                                      ? 'text-[#2D5A4A] bg-white border border-[#81D7B4]/30' 
-                                      : 'text-[#2D5A4A] group-hover:bg-[#81D7B4]/20 group-hover:text-[#2D5A4A]'
-                                  }`}
-                                  whileHover={{ x: 3, scale: 1.1 }}
-                                >
-                                  <HiOutlineArrowRight className="h-4 w-4" />
-                                </motion.div>
-                              </div>
-                            </div>
+                          
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                            task.isCompleted ? 'bg-gray-100 text-gray-400' : 'bg-gray-50 text-gray-400 group-hover:bg-[#81D7B4] group-hover:text-white'
+                          }`}>
+                            <HiOutlineArrowRight className="w-4 h-4" />
                           </div>
                         </div>
                       </div>
                     </Link>
                   </motion.div>
                 ))}
-              </div>
-              
-
+              </AnimatePresence>
             </div>
-          </div>
-        </motion.div>
 
+            {/* Locked/Future Content Teaser - Redesigned Light Version */}
+            <div className="bg-white rounded-3xl p-8 text-center relative overflow-hidden group cursor-pointer border-2 border-[#81D7B4]/20 hover:border-[#81D7B4]/50 transition-all shadow-sm hover:shadow-lg">
+              {/* Accent Edges */}
+              <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-[#81D7B4]/20 to-transparent rounded-br-full -ml-4 -mt-4"></div>
+              <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tl from-[#81D7B4]/20 to-transparent rounded-tl-full -mr-4 -mb-4"></div>
+              
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-4 border border-[#81D7B4]/20">
+                  <HiOutlineLockClosed className="w-8 h-8 text-[#81D7B4]" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">More Quests Coming Soon</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">
+                  We're preparing new challenges for you to earn more rewards. Stay tuned!
+                </p>
+                <button className="px-6 py-2 rounded-full bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold text-sm transition-all shadow-md shadow-[#81D7B4]/20">
+                  Coming Soon
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
     </div>
   );

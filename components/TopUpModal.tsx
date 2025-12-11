@@ -459,7 +459,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
             chain: currentNetwork,
             savingsname: savingsPlanName,
             useraddress: address,
-            transaction_type: "deposit",
+            transaction_type: "topup",
             currency: tokenNameToUse
           },
           {
@@ -647,7 +647,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
             chain: currentNetwork,
             savingsname: savingsPlanName,
             useraddress: address,
-            transaction_type: "deposit",
+            transaction_type: "topup",
             currency: "ETH"
           },
           {

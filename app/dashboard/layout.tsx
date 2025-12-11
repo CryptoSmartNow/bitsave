@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Exo } from 'next/font/google';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import CustomConnectButton from '@/components/CustomConnectButton';
 import { HiOutlineHome, HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineUserGroup, HiOutlineTrophy, HiOutlineUserPlus, HiOutlinePlus, HiOutlineCog, HiOutlineArrowRightOnRectangle, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
 import { FiMenu, FiX } from 'react-icons/fi';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -32,25 +32,10 @@ export default function DashboardLayout({
   const { disconnect, isDisconnecting } = useOptimizedDisconnect();
   const router = useRouter();
   const pathname = usePathname();
-  const connectButtonRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (mounted && !isConnected) {
-      const timer = setTimeout(() => {
-        if (connectButtonRef.current && !isConnected) {
-          const button = connectButtonRef.current.querySelector('button');
-          if (button) {
-            button.click();
-          }
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isConnected, mounted]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -377,8 +362,15 @@ export default function DashboardLayout({
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+            <div className="flex flex-col items-center justify-center min-h-screen gap-6 p-4 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#81D7B4] to-[#66C4A3] rounded-2xl flex items-center justify-center shadow-lg mb-2">
+                 <HiOutlineTrophy className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your Wallet</h2>
+                <p className="text-gray-500 max-w-md mx-auto">Please connect your wallet to access your BitSave dashboard and manage your savings.</p>
+              </div>
+              <CustomConnectButton />
             </div>
           )
         ) : (
@@ -387,13 +379,6 @@ export default function DashboardLayout({
           </div>
         )}
       </div>
-
-      {/* RainbowKit Connect Button - Hidden but available for modal triggering */}
-      {!isConnected && mounted && (
-        <div ref={connectButtonRef} className="fixed top-4 right-4 z-50 opacity-0 pointer-events-none">
-          <ConnectButton />
-        </div>
-      )}
       
       {/* Modal-only connection experience: no custom overlay or network UI */}
     </div>

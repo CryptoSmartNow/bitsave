@@ -1,26 +1,14 @@
 "use client";
 
- import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { base, celo, avalanche } from 'viem/chains';
-import { RainbowKitProvider, lightTheme, darkTheme, useConnectModal, useAccountModal, useChainModal } from '@rainbow-me/rainbowkit';
-import { connectorsForWallets } from '@rainbow-me/rainbowkit';
-import {
-  walletConnectWallet,
-  coinbaseWallet,
-  zerionWallet,
-  rabbyWallet,
-  metaMaskWallet,
-  trustWallet,
-} from '@rainbow-me/rainbowkit/wallets';
+import { createConfig, http } from 'wagmi';
+import { base, celo, avalanche, mainnet } from 'viem/chains';
 import { ThemeProvider, useTheme } from 'next-themes';
-// import { HashConnectProvider } from './providers/HashConnectProvider';
+import { PrivyProvider } from '@privy-io/react-auth';
+import { WagmiProvider } from '@privy-io/wagmi';
 
-// Import Rainbow Kit styles
-import '@rainbow-me/rainbowkit/styles.css';
-
-// Define the project ID for WalletConnect
+// Define the project ID for WalletConnect (used by Privy if configured, or internally)
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
 
 // Define custom Lisk chain
@@ -55,28 +43,7 @@ const hedera = {
 } as const;
 
 // Define the supported chains
-const chains = [base, celo, avalanche, lisk, hedera] as const;
-
-// Create wallet groups with connectorsForWallets - Only supported wallets
-const connectors = connectorsForWallets(
-  [
-    {
-      groupName: 'Compatible Wallets - Fully Supported by BitSave',
-      wallets: [
-        walletConnectWallet,
-        coinbaseWallet,
-        zerionWallet,
-        rabbyWallet,
-        metaMaskWallet,
-        trustWallet,
-      ],
-    },
-  ],
-  {
-    appName: 'BitSave',
-    projectId,
-  }
-);
+const chains = [base, celo, avalanche, lisk, hedera, mainnet] as const;
 
 const config = createConfig({
   chains,
@@ -87,45 +54,52 @@ const config = createConfig({
     [avalanche.id]: http(),
     [lisk.id]: http(),
     [hedera.id]: http(),
+    [mainnet.id]: http(),
   },
-  connectors,
 });
 
 const queryClient = new QueryClient();
 
-function ThemedRainbowKit({ children }: { children: ReactNode }) {
+function PrivyWrapper({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
 
   return (
-    <RainbowKitProvider
-      modalSize="wide"
-      theme={
-        theme === 'dark'
-          ? darkTheme({
-              accentColor: '#66C4A3',
-              accentColorForeground: 'white',
-              borderRadius: 'large',
-            })
-          : lightTheme({
-              accentColor: '#81D7B4',
-              accentColorForeground: 'white',
-              borderRadius: 'large',
-            })
-      }
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
+      config={{
+        appearance: {
+          theme: theme === 'dark' ? 'dark' : 'light',
+          accentColor: '#81D7B4', // Matching BitSave green
+          logo: "/bitsavelogo.png",
+          showWalletLoginFirst: true,
+        },
+        embeddedWallets: {
+            ethereum: {
+                createOnLogin: "users-without-wallets",
+            },
+        },
+        loginMethods: ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
+        supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
+        // externalWallets: {
+        //   walletConnect: { projectId },
+        // },
+      }}
     >
-      {children}
-    </RainbowKitProvider>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
+          {children}
+        </WagmiProvider>
+      </QueryClientProvider>
+    </PrivyProvider>
   );
 }
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <WagmiProvider config={config} reconnectOnMount={true}>
-        <QueryClientProvider client={queryClient}>
-          <ThemedRainbowKit>{children}</ThemedRainbowKit>
-        </QueryClientProvider>
-      </WagmiProvider>
+      <PrivyWrapper>
+        {children}
+      </PrivyWrapper>
     </ThemeProvider>
   );
 }

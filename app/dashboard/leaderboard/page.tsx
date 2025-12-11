@@ -11,22 +11,19 @@ import {
   Medal, 
   Award, 
   Crown, 
-  Star, 
-  TrendingUp, 
   Users, 
-  Coins, 
-  Eye,
-  ChevronRight,
   Sparkles,
   Target,
-  Zap,
-  Gift
+  Gift,
+  Calculator,
+  ArrowUpRight
 } from 'lucide-react';
 
-// Initialize the Space Grotesk font
+// Initialize the Exo font
 const exo = Exo({ 
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-exo'
 })
 
 // Helper to ensure safe image URLs for Next.js Image
@@ -50,11 +47,13 @@ interface LeaderboardUser {
 
 export default function LeaderboardPage() {
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  
   useEffect(() => {
     fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche'])
       .then(setNetworkLogos)
       .catch(() => {});
   }, []);
+
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<LeaderboardUser | null>(null)
@@ -74,7 +73,6 @@ export default function LeaderboardPage() {
           const address = accounts[0];
           setCurrentUserAddress(address);
         } else {
-  
           // Set a fallback for development/testing
           setCurrentUserAddress('0x0000000000000000000000000000000000000000');
         }
@@ -143,616 +141,381 @@ export default function LeaderboardPage() {
     setSelectedUser(user)
     setIsDetailsOpen(true)
   }
-  
-  const getRankBadge = (rank: number) => {
-    switch(rank) {
-      case 1:
-        return (
-          <motion.div 
-            className="relative flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#81D7B4] via-[#81D7B4] to-[#6BC4A0] rounded-2xl text-white font-bold text-sm shadow-2xl backdrop-blur-sm border border-[#81D7B4]/30"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Crown className="w-6 h-6" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4]/80 rounded-full flex items-center justify-center">
-            </div>
-          </motion.div>
-        )
-      case 2:
-        return (
-          <motion.div 
-            className="relative flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#81D7B4]/80 via-[#81D7B4] to-[#6BC4A0] rounded-2xl text-white font-bold text-sm shadow-2xl backdrop-blur-sm border border-[#81D7B4]/30"
-            whileHover={{ scale: 1.1, rotate: -5 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Medal className="w-6 h-6" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4]/60 rounded-full flex items-center justify-center">
-            </div>
-          </motion.div>
-        )
-      case 3:
-        return (
-          <motion.div 
-            className="relative flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#6BC4A0] via-[#81D7B4] to-[#4A9B7A] rounded-2xl text-white font-bold text-sm shadow-2xl backdrop-blur-sm border border-[#81D7B4]/30"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Award className="w-6 h-6" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4]/70 rounded-full flex items-center justify-center">
-            </div>
-          </motion.div>
-        )
-      default:
-        return (
-          <motion.div 
-            className="relative flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#81D7B4] via-[#6BC4A0] to-[#4A9B7A] rounded-2xl text-white font-bold text-lg shadow-2xl backdrop-blur-sm border border-[#81D7B4]/30"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            {rank}
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full flex items-center justify-center">
-              <Target className="w-2.5 h-2.5 text-[#4A9B7A]" />
-            </div>
-          </motion.div>
-        )
+
+  // Animation variants
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  const listVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.05 
+      }
     }
-  }
-  
-  // User icon component
-    const UserIcon = ({ rank }: { rank: number }) => {
-      const bgColor = rank === 1 ? 'bg-[#81D7B4]/20' : 
-                      rank === 2 ? 'bg-[#81D7B4]/15' : 
-                      rank === 3 ? 'bg-[#81D7B4]/10' : 'bg-[#81D7B4]/10';
-      const textColor = rank === 1 ? 'text-[#4A9B7A]' : 
-                        rank === 2 ? 'text-[#4A9B7A]' : 
-                        rank === 3 ? 'text-[#4A9B7A]' : 'text-[#4A9B7A]';
-                      
-    return (
-      <div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center ${textColor} border-2 border-white shadow-md`}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-        </svg>
-      </div>
-    );
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 }
   };
   
   return (
-    <div className={`min-h-screen relative overflow-hidden ${exo.className}`} style={{ backgroundColor: '#f2f2f2' }}>
-      {/* Enhanced background decorative elements with brand color accents */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-[#81D7B4]/15 to-[#6BC4A0]/15 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ 
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div 
-          className="absolute top-40 right-20 w-[500px] h-[500px] bg-gradient-to-br from-[#81D7B4]/10 to-[#6BC4A0]/10 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ 
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        />
-        <motion.div 
-          className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC4A0]/20 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ 
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 4
-          }}
-        />
-        <motion.div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#81D7B4]/8 to-[#6BC4A0]/8 rounded-full blur-3xl"
-          animate={{ 
-            rotate: [0, 360],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ 
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-      </div>
+    <div className={`min-h-screen bg-gray-50/50 pb-20 ${exo.variable} font-sans`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
-      {/* Main content container with glassmorphism */}
-      <div className="relative z-10 p-4 sm:p-6 md:p-8">
-      
-      {/* Header with glassmorphism */}
-      <motion.div 
-        className="relative mb-6 md:mb-12"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 border border-white/20 shadow-2xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4 md:mb-0 w-full">
-              <motion.div 
-                className="p-3 md:p-4 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC4A0]/20 rounded-xl md:rounded-2xl backdrop-blur-sm border border-[#81D7B4]/30 self-start sm:self-auto"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Trophy className="w-6 h-6 md:w-8 md:h-8 text-[#81D7B4]" />
-              </motion.div>
-              <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 tracking-tight mb-1 md:mb-2 bg-gradient-to-r from-gray-800 to-[#4A9B7A] bg-clip-text text-transparent leading-tight">
-                  Leaderboard
-                </h1>
-                <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-2xl leading-relaxed">
-                  Top 20 savers on BitSave ranked by points. Earn rewards and climb the ranks by saving more.
-                </p>
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12">
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3 mb-2"
+            >
+              <div className="p-2.5 bg-[#81D7B4]/10 rounded-xl">
+                <Trophy className="w-6 h-6 text-[#81D7B4]" />
               </div>
-            </div>
-           
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Leaderboard</h1>
+            </motion.div>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-gray-500 max-w-xl text-sm sm:text-base"
+            >
+              Top 20 savers on BitSave ranked by points. Save more to climb the ranks and earn exclusive rewards.
+            </motion.p>
           </div>
-        </div>
-      </motion.div>
-      
-      {/* Top 3 Winners Podium */}
-      {leaderboardData.length > 0 && (
-        <>
-          {/* Mobile Top 3 Winners */}
-          <motion.div 
-            className="md:hidden mb-6 relative z-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 shadow-xl">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 text-center flex items-center justify-center space-x-2">
-                <Trophy className="w-5 h-5 text-[#81D7B4]" />
-                <span>Top 3 Savers</span>
-              </h3>
-              <div className="space-y-3">
-                {leaderboardData.slice(0, Math.min(3, leaderboardData.length)).map((user, index) => (
-                  <motion.div 
-                    key={user.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
-                    className="bg-white/40 backdrop-blur-sm rounded-xl p-3 border border-[#81D7B4]/30 flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-3">
-                      {getRankBadge(index + 1)}
-                      <UserIcon rank={index + 1} />
-                      <div>
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
-                        </p>
-                        <p className="text-xs text-gray-600">{user.points || 0} points</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-[#4A9B7A] text-sm">${user.totalamount.toFixed(2)}</p>
-                      <p className="text-xs text-[#6BC4A0]">{(user.points || 0).toFixed(2)} $BTS</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
 
-          {/* Desktop Top 3 Winners Podium */}
           <motion.div 
-            className="hidden md:flex justify-center items-end mb-12 relative z-10"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm"
           >
-          {leaderboardData.slice(0, Math.min(3, leaderboardData.length)).map((user, index) => {
-            const position = index === 0 ? 1 : index === 1 ? 0 : 2; // Reorder for podium (2nd, 1st, 3rd)
-            const user2 = leaderboardData[position < leaderboardData.length ? position : 0];
-            
-            const podiumHeight = position === 0 ? "h-40" : position === 1 ? "h-32" : "h-24";
-            const glowColor = position === 0 ? "from-[#81D7B4]/30 to-[#6BC4A0]/30" : 
-                              position === 1 ? "from-[#81D7B4]/25 to-[#6BC4A0]/25" : 
-                              "from-[#6BC4A0]/30 to-[#4A9B7A]/30";
-            
-            return (
-              <motion.div 
-                key={user2.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.6, 
-                  delay: position * 0.2 + 0.5,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                className={`relative mx-6 ${position === 0 ? 'z-20' : 'z-10'}`}
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex flex-col items-center">
-                  {/* Floating crown for 1st place */}
-                  {position === 0 && (
-                    <motion.div
-                      className="absolute -top-8 left-1/2 transform -translate-x-1/2"
-                      animate={{ 
-                        y: [0, -5, 0],
-                        rotate: [0, 5, -5, 0]
-                      }}
-                      transition={{ 
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <Crown className="w-8 h-8 text-[#81D7B4] drop-shadow-lg" />
-                    </motion.div>
-                  )}
-                  
-                  {/* User Avatar with enhanced glow */}
-                  <motion.div 
-                    className={`relative mb-4 ${position === 0 ? 'scale-125' : ''}`}
-                    whileHover={{ scale: position === 0 ? 1.35 : 1.1 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <div className={`absolute -inset-2 rounded-full blur-xl opacity-60 bg-gradient-to-r ${glowColor}`}></div>
-                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-3 border-white/50 shadow-2xl flex items-center justify-center bg-white/20 backdrop-blur-sm">
-                      <UserIcon rank={user2.rank || position + 1} />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2">
-                      {getRankBadge(user2.rank || position + 1)}
-                    </div>
-                  </motion.div>
-                  
-                  {/* User info with glassmorphism */}
-                  <motion.div 
-                    className="text-center mb-4 bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <p className="font-bold text-white truncate max-w-[140px] text-sm">
-                      {user2.useraddress.slice(0, 6)}...{user2.useraddress.slice(-4)}
-                    </p>
-                    <div className="flex items-center justify-center space-x-1 mt-1">
-                       <Coins className="w-4 h-4 text-[#81D7B4]" />
-                       <p className="text-[#81D7B4] font-bold text-lg">${user2.totalamount.toFixed(2)}</p>
-                     </div>
-                  </motion.div>
-                  
-                  {/* Enhanced Podium */}
-                  <motion.div 
-                    className={`${podiumHeight} w-32 bg-gradient-to-t from-white/20 to-white/10 backdrop-blur-xl rounded-t-3xl border border-white/30 shadow-2xl flex items-center justify-center relative overflow-hidden`}
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-t ${glowColor} opacity-50`}></div>
-                    <div className="relative z-10 flex flex-col items-center">
-                      {position === 0 && <Trophy className="w-8 h-8 text-[#81D7B4] mb-1" />}
-                       {position === 1 && <Medal className="w-7 h-7 text-[#81D7B4] mb-1" />}
-                       {position === 2 && <Award className="w-7 h-7 text-[#6BC4A0] mb-1" />}
-                      <span className="font-bold text-2xl text-white">#{user2.rank}</span>
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-            )
-          })}
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span className="text-xs font-medium text-gray-600">Live Updates</span>
           </motion.div>
-        </>
-      )}
-      
-      {/* Enhanced Leaderboard Table */}
-      <motion.div 
-        className="bg-white/50 backdrop-blur-2xl rounded-3xl border border-[#81D7B4]/30 shadow-2xl overflow-hidden relative z-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-      >
-        {/* Enhanced gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
-        
-        {/* Table Header with glassmorphism */}
-        <div className="bg-white/60 backdrop-blur-sm p-6 border-b border-[#81D7B4]/30 hidden md:grid md:grid-cols-7 text-sm font-semibold text-gray-700">
-          <div className="col-span-1 flex items-center space-x-2">
-            <Trophy className="w-4 h-4 text-[#4A9B7A]" />
-            <span>Rank</span>
-          </div>
-          <div className="col-span-2 flex items-center space-x-2">
-            <Users className="w-4 h-4 text-[#4A9B7A]" />
-            <span>User</span>
-          </div>
-          <div className="col-span-1 flex items-center space-x-2">
-            <Coins className="w-4 h-4 text-[#4A9B7A]" />
-            <span>Total Saved</span>
-          </div>
-          <div className="col-span-1 flex items-center space-x-2">
-            <Star className="w-4 h-4 text-[#4A9B7A]" />
-            <span>Points</span>
-          </div>
-          <div className="col-span-1 flex items-center space-x-2">
-            <Gift className="w-4 h-4 text-[#4A9B7A]" />
-            <span>$BTS</span>
-          </div>
-          <div className="col-span-1 flex items-center space-x-2">
-            <Eye className="w-4 h-4 text-[#4A9B7A]" />
-            <span>Actions</span>
-          </div>
         </div>
-        
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
+      
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          
+          {/* Main Content - Left Side */}
+          <div className="lg:col-span-8 space-y-6 lg:space-y-8">
+            
+            {/* Top 3 Podium (Desktop & Mobile optimized) */}
+            {!isLoading && leaderboardData.length > 0 && (
               <motion.div 
-                key={i} 
-                className="animate-pulse flex items-center p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: i * 0.1 }}
-              >
-                <div className="w-12 h-12 bg-white/20 rounded-2xl mr-4"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-white/20 rounded-xl w-3/4 mb-2"></div>
-                  <div className="h-3 bg-white/15 rounded-lg w-1/2"></div>
-                </div>
-                <div className="w-24 h-6 bg-white/20 rounded-lg"></div>
-              </motion.div>
-            ))}
-          </div>
-        ) : leaderboardData.length === 0 ? (
-          <motion.div 
-            className="p-12 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 border border-[#81D7B4]/30">
-          <Users className="w-16 h-16 text-[#4A9B7A] mx-auto mb-4" />
-              <p className="text-gray-700 text-lg">No leaderboard data available</p>
-              <p className="text-gray-600 text-sm mt-2">Be the first to start saving!</p>
-            </div>
-          </motion.div>
-        ) : (
-          <div className="space-y-3 md:space-y-0 md:divide-y md:divide-[#81D7B4]/20">
-            {leaderboardData.map((user, index) => (
-              <motion.div 
-                key={user.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="md:p-6 md:grid md:grid-cols-7 md:items-center md:hover:bg-white/30 transition-all duration-300 group cursor-pointer"
-                whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.5)" }}
-                whileTap={{ scale: 0.99 }}
+                className="grid grid-cols-3 gap-3 sm:gap-6 items-end mb-8 sm:mb-12"
               >
-                {/* Mobile Card Layout */}
-                <div className="md:hidden bg-white/40 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/30 p-4 shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      {getRankBadge(user.rank || index + 1)}
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      >
-                        <UserIcon rank={user.rank || index + 1} />
-                      </motion.div>
-                      <div>
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
-                        </p>
-                        <div className="flex items-center space-x-1 mt-1">
-                          <div className="w-2 h-2 bg-[#81D7B4] rounded-full"></div>
-                          <p className="text-xs text-gray-600">{user.chain}</p>
+                {/* 2nd Place */}
+                {leaderboardData[1] && (
+                  <div className="flex flex-col items-center group cursor-pointer" onClick={() => openUserDetails(leaderboardData[1])}>
+                    <div className="relative mb-3 transition-transform group-hover:-translate-y-2 duration-300">
+                      <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-white border-4 border-gray-100 p-1 shadow-lg">
+                        <div className="w-full h-full rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-bold text-xl sm:text-2xl">
+                          {leaderboardData[1].useraddress.slice(0, 2)}
                         </div>
                       </div>
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-500 text-white text-xs font-bold px-2 py-0.5 rounded-full border-2 border-white">
+                        #2
+                      </div>
+                    </div>
+                    <div className="text-center mb-3">
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">
+                        {leaderboardData[1].useraddress.slice(0, 6)}...{leaderboardData[1].useraddress.slice(-4)}
+                      </p>
+                      <p className="text-[#81D7B4] font-bold text-xs">{leaderboardData[1].points} pts</p>
+                    </div>
+                    <div className="w-full bg-gradient-to-t from-gray-100 to-white rounded-t-2xl border-x border-t border-gray-200 h-28 sm:h-40 flex items-end justify-center pb-4 shadow-sm relative overflow-hidden group-hover:shadow-md transition-shadow">
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50/50"></div>
+                      <Medal className="w-8 h-8 text-gray-300 opacity-20 absolute top-4" />
+                      <span className="text-2xl sm:text-4xl font-bold text-gray-300/50">2</span>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="bg-white/50 rounded-xl p-3">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Coins className="w-4 h-4 text-[#4A9B7A]" />
-                        <span className="text-xs text-gray-600">Saved</span>
+                )}
+
+                {/* 1st Place */}
+                {leaderboardData[0] && (
+                  <div className="flex flex-col items-center z-10 group cursor-pointer" onClick={() => openUserDetails(leaderboardData[0])}>
+                    <div className="relative mb-3 transition-transform group-hover:-translate-y-2 duration-300">
+                      <Crown className="w-8 h-8 text-yellow-400 absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce drop-shadow-sm" />
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border-4 border-yellow-100 p-1 shadow-xl ring-4 ring-yellow-50/50">
+                        <div className="w-full h-full rounded-full bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center text-yellow-600 font-bold text-2xl sm:text-3xl">
+                          {leaderboardData[0].useraddress.slice(0, 2)}
+                        </div>
                       </div>
-                      <p className="font-bold text-[#4A9B7A] text-sm">${user.totalamount.toFixed(2)}</p>
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-white text-xs font-bold px-3 py-0.5 rounded-full border-2 border-white shadow-sm">
+                        #1
+                      </div>
                     </div>
-                    
-                    <div className="bg-white/50 rounded-xl p-3">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Star className="w-4 h-4 text-[#81D7B4]" />
-                        <span className="text-xs text-gray-600">Points</span>
-                      </div>
-                      <p className="font-bold text-[#81D7B4] text-sm">{user.points || 0}</p>
+                    <div className="text-center mb-3">
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[140px]">
+                        {leaderboardData[0].useraddress.slice(0, 6)}...{leaderboardData[0].useraddress.slice(-4)}
+                      </p>
+                      <p className="text-yellow-500 font-bold text-xs">{leaderboardData[0].points} pts</p>
+                    </div>
+                    <div className="w-full bg-gradient-to-t from-yellow-50/50 to-white rounded-t-2xl border-x border-t border-yellow-200 h-36 sm:h-52 flex items-end justify-center pb-4 shadow-lg shadow-yellow-100/50 relative overflow-hidden group-hover:shadow-xl transition-shadow">
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-yellow-50/30"></div>
+                      <Trophy className="w-10 h-10 text-yellow-300 opacity-30 absolute top-6" />
+                      <span className="text-3xl sm:text-5xl font-bold text-yellow-400/30">1</span>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between pt-3 border-t border-[#81D7B4]/30">
-                    <div className="flex items-center space-x-2">
-                      <Gift className="w-4 h-4 text-[#6BC4A0]" />
-                      <span className="text-sm text-gray-700 font-medium">{(user.points || 0).toFixed(2)} $BTS</span>
+                )}
+
+                {/* 3rd Place */}
+                {leaderboardData[2] && (
+                  <div className="flex flex-col items-center group cursor-pointer" onClick={() => openUserDetails(leaderboardData[2])}>
+                    <div className="relative mb-3 transition-transform group-hover:-translate-y-2 duration-300">
+                      <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-white border-4 border-orange-100 p-1 shadow-lg">
+                        <div className="w-full h-full rounded-full bg-orange-50 flex items-center justify-center text-orange-400 font-bold text-xl sm:text-2xl">
+                          {leaderboardData[2].useraddress.slice(0, 2)}
+                        </div>
+                      </div>
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full border-2 border-white">
+                        #3
+                      </div>
                     </div>
-                    <motion.button 
+                    <div className="text-center mb-3">
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">
+                        {leaderboardData[2].useraddress.slice(0, 6)}...{leaderboardData[2].useraddress.slice(-4)}
+                      </p>
+                      <p className="text-[#81D7B4] font-bold text-xs">{leaderboardData[2].points} pts</p>
+                    </div>
+                    <div className="w-full bg-gradient-to-t from-orange-50/30 to-white rounded-t-2xl border-x border-t border-orange-100 h-20 sm:h-32 flex items-end justify-center pb-4 shadow-sm relative overflow-hidden group-hover:shadow-md transition-shadow">
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-orange-50/20"></div>
+                      <Award className="w-8 h-8 text-orange-300 opacity-20 absolute top-4" />
+                      <span className="text-2xl sm:text-4xl font-bold text-orange-300/50">3</span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* List View */}
+            <motion.div 
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden"
+            >
+              {/* Table Header */}
+              <div className="relative z-20 grid grid-cols-12 gap-4 p-5 border-b border-gray-100 bg-gray-50/50 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <div className="col-span-2 sm:col-span-1 text-center">Rank</div>
+                <div className="col-span-6 sm:col-span-5">User</div>
+                <div className="col-span-4 sm:col-span-3 text-right">Points</div>
+                <div className="hidden sm:block col-span-3 text-right">Total Saved</div>
+              </div>
+
+              {isLoading ? (
+                <div className="p-4 space-y-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="flex items-center gap-4 animate-pulse px-2">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full"></div>
+                      <div className="flex-1 h-10 bg-gray-50 rounded-xl"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : leaderboardData.length === 0 ? (
+                <div className="p-16 text-center">
+                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-10 h-10 text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">No Data Available</h3>
+                  <p className="text-gray-500">Be the first to join the leaderboard!</p>
+                </div>
+              ) : (
+                <motion.div 
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="divide-y divide-gray-50"
+                >
+                  {leaderboardData.map((user, index) => (
+                    <motion.div 
+                      key={user.id}
+                      variants={itemVariants}
+                      className={`grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50/80 transition-all duration-200 cursor-pointer group ${
+                        user.useraddress.toLowerCase() === currentUserAddress.toLowerCase() ? 'bg-[#81D7B4]/5' : ''
+                      }`}
                       onClick={() => openUserDetails(user)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="bg-[#81D7B4] hover:bg-[#6BC4A0] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1"
                     >
-                      <Eye className="w-3 h-3" />
-                      <span>View</span>
-                    </motion.button>
+                      {/* Rank */}
+                      <div className="col-span-2 sm:col-span-1 flex justify-center">
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${
+                          index === 0 ? 'bg-yellow-100 text-yellow-700' : 
+                          index === 1 ? 'bg-gray-100 text-gray-700' : 
+                          index === 2 ? 'bg-orange-100 text-orange-700' : 'text-gray-500'
+                        }`}>
+                          {index + 1}
+                        </div>
+                      </div>
+
+                      {/* User */}
+                      <div className="col-span-6 sm:col-span-5 flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          index === 0 ? 'bg-yellow-50 text-yellow-600' :
+                          index === 1 ? 'bg-gray-100 text-gray-600' :
+                          index === 2 ? 'bg-orange-50 text-orange-600' : 'bg-[#81D7B4]/10 text-[#81D7B4]'
+                        }`}>
+                          <Users className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 text-sm group-hover:text-[#2D5A4A] transition-colors flex items-center gap-2">
+                            {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
+                            {user.useraddress.toLowerCase() === currentUserAddress.toLowerCase() && (
+                              <span className="text-[10px] bg-[#81D7B4] text-white px-1.5 py-0.5 rounded-full">YOU</span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Image
+                              src={ensureImageUrl(
+                                networkLogos[user.chain?.toLowerCase()]?.logoUrl ||
+                                networkLogos[user.chain?.toLowerCase()]?.fallbackUrl ||
+                                `/${user.chain.toLowerCase()}.svg`
+                              )}
+                              alt={user.chain}
+                              width={14}
+                              height={14}
+                              className="rounded-full"
+                            />
+                            <span className="text-xs text-gray-400 capitalize">{user.chain}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Points */}
+                      <div className="col-span-4 sm:col-span-3 text-right">
+                        <div className="font-bold text-[#2D5A4A]">{user.points}</div>
+                        <div className="text-[10px] text-gray-400 uppercase font-medium">Points</div>
+                      </div>
+
+                      {/* Total Saved (Hidden on mobile) */}
+                      <div className="hidden sm:block col-span-3 text-right">
+                        <div className="font-bold text-gray-900">${user.totalamount.toFixed(2)}</div>
+                        <div className="text-[10px] text-gray-400 uppercase font-medium">Saved</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Sidebar - Right Side */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* Current User Stats Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-[#81D7B4]/10 p-6 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#81D7B4]/20 to-transparent rounded-bl-full -mr-10 -mt-10"></div>
+              
+              <h3 className="font-bold text-gray-900 mb-6 relative z-10 flex items-center gap-2">
+                <Target className="w-5 h-5 text-[#81D7B4]" />
+                Your Performance
+              </h3>
+              
+              {currentUserPosition ? (
+                <div className="space-y-5 relative z-10">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div>
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Current Rank</span>
+                      <span className="font-bold text-3xl text-[#2D5A4A]">#{currentUserPosition.rank}</span>
+                    </div>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#81D7B4] shadow-sm">
+                      <Trophy className="w-6 h-6" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                      <span className="text-gray-400 text-xs font-bold uppercase block mb-1">Points</span>
+                      <span className="font-bold text-lg text-gray-900">{currentUserPosition.points}</span>
+                    </div>
+                    <div className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                      <span className="text-gray-400 text-xs font-bold uppercase block mb-1">Saved</span>
+                      <span className="font-bold text-lg text-gray-900">${currentUserPosition.totalamount.toFixed(0)}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-500 text-sm font-medium">$BTS Earned</span>
+                      <span className="font-bold text-[#81D7B4] text-lg">{(currentUserPosition.points || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div className="bg-[#81D7B4] h-full rounded-full w-3/4"></div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2 text-right">Keep saving to earn more!</p>
                   </div>
                 </div>
+              ) : (
+                <div className="text-center py-8 relative z-10">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                    <Target className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-900 font-bold mb-1">Not Ranked Yet</p>
+                  <p className="text-sm text-gray-500 mb-6 max-w-[200px] mx-auto">Start saving at least $10 to join the leaderboard and earn rewards.</p>
+                  <Link 
+                    href="/dashboard/create-savings"
+                    className="block w-full py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#81D7B4]/20 hover:shadow-xl hover:shadow-[#81D7B4]/30"
+                  >
+                    Start Saving Now
+                  </Link>
+                </div>
+              )}
+            </motion.div>
 
-                {/* Desktop Grid Layout */}
-                <div className="hidden md:contents">
-                  {/* Rank */}
-                  <div className="col-span-1 flex items-center">
-                    {getRankBadge(user.rank || index + 1)}
+            {/* Info Cards */}
+            <div className="grid grid-cols-1 gap-4">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-[#81D7B4]/10 rounded-xl shrink-0 text-[#81D7B4]">
+                    <Calculator className="w-6 h-6" />
                   </div>
-                  
-                  {/* User */}
-                  <div className="col-span-2 flex items-center">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      <UserIcon rank={user.rank || index + 1} />
-                    </motion.div>
-                    <div className="ml-4">
-                      <p className="font-semibold text-gray-800 group-hover:text-[#4A9B7A] transition-colors">
-                        {user.useraddress.slice(0, 6)}...{user.useraddress.slice(-4)}
-                      </p>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <div className="w-2 h-2 bg-[#81D7B4] rounded-full"></div>
-                        <p className="text-xs text-gray-600">Chain: {user.chain}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Total Saved */}
-                  <div className="col-span-1">
-                    <div className="flex items-center space-x-2">
-                      <Coins className="w-4 h-4 text-[#4A9B7A]" />
-                      <p className="font-bold text-[#4A9B7A] text-lg">${user.totalamount.toFixed(2)}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Points */}
-                  <div className="col-span-1">
-                    <div className="flex items-center space-x-2">
-                      <Star className="w-4 h-4 text-[#81D7B4]" />
-                      <p className="font-bold text-[#81D7B4]">{user.points || 0}</p>
-                    </div>
-                  </div>
-                  
-                  {/* $BTS */}
-                  <div className="col-span-1">
-                    <div className="flex items-center space-x-2">
-                      <Gift className="w-4 h-4 text-[#6BC4A0]" />
-                      <p className="font-bold text-[#6BC4A0]">{(user.points || 0).toFixed(2)}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Details Button */}
-                  <div className="col-span-1 flex justify-end">
-                    <motion.button
-                      onClick={() => openUserDetails(user)}
-                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      className="bg-white/60 backdrop-blur-md text-gray-700 font-medium py-2 px-4 rounded-xl border border-[#81D7B4]/50 shadow-lg hover:shadow-xl transition-all duration-300 text-sm flex items-center group"
-                    >
-                      <Eye className="w-4 h-4 mr-2 text-[#4A9B7A] group-hover:text-[#4A9B7A] transition-colors" />
-                      View Details
-                      <ChevronRight className="w-4 h-4 ml-2 text-gray-500 group-hover:text-gray-700 group-hover:translate-x-1 transition-all duration-200" />
-                    </motion.button>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm mb-1">How Scoring Works</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Earn <span className="font-bold text-gray-700">5 points</span> for every $1 you save. Points are calculated in real-time based on your total savings balance.
+                    </p>
                   </div>
                 </div>
               </motion.div>
-            ))}
-          </div>
-        )}
-      </motion.div>
-      
-      {/* Your Position Card */}
-      <div className="mt-6 md:mt-8 bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC4A0]/20 backdrop-blur-xl rounded-2xl border border-[#81D7B4]/40 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] p-4 sm:p-6 relative z-10 overflow-hidden">
-  {/* Noise background removed per redesign spec */}
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#81D7B4]/20 rounded-full blur-3xl"></div>
-        
-        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center justify-between">
-          <div className="text-center md:text-left">
-            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-1">Your Position</h3>
-            <p className="text-gray-600 text-sm">
-              {currentUserPosition 
-                ? `You're ranked #${currentUserPosition.rank} on the leaderboard!` 
-                : "Start saving to appear on the leaderboard!"}
-            </p>
-          </div>
-          
-          {/* Mobile Layout */}
-          <div className="md:hidden grid grid-cols-2 gap-3">
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
-              <p className="text-xs text-gray-500 mb-1">Current Rank</p>
-              <p className="font-bold text-xl text-gray-800 flex items-center justify-center">
-                {currentUserPosition ? `#${currentUserPosition.rank}` : "-"}
-              </p>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-gradient-to-br from-orange-50 to-white rounded-2xl border border-orange-100 p-5 shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-orange-100 rounded-xl shrink-0 text-orange-500">
+                    <Gift className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm mb-1">Weekly Rewards</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Top 3 savers earn exclusive badges and bonus $BTS tokens distributed every Monday.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
-              <p className="text-xs text-gray-500 mb-1">Points</p>
-              <p className="font-bold text-xl text-gray-800 text-center">
-                {currentUserPosition 
-                  ? currentUserPosition.points || 0
-                  : "0"}
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
-              <p className="text-xs text-gray-500 mb-1">$BTS</p>
-              <p className="font-bold text-xl text-gray-800 text-center">
-                {currentUserPosition 
-                  ? (currentUserPosition.points || 0).toFixed(2)
-                  : "0.00"}
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
-              <p className="text-xs text-gray-500 mb-1">Total Saved</p>
-              <p className="font-bold text-xl text-gray-800 text-center">
-                {currentUserPosition 
-                  ? `$${currentUserPosition.totalamount.toFixed(2)}` 
-                  : "$0.00"}
-              </p>
-            </div>
-          </div>
-          
-          {/* Desktop Layout */}
-          <div className="hidden md:flex items-center">
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm mr-4">
-              <p className="text-xs text-gray-500 mb-1">Current Rank</p>
-              <p className="font-bold text-2xl text-gray-800 flex items-center">
-                {currentUserPosition ? `#${currentUserPosition.rank}` : "-"}
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm mr-4">
-              <p className="text-xs text-gray-500 mb-1">Points</p>
-              <p className="font-bold text-2xl text-gray-800">
-                {currentUserPosition 
-                  ? currentUserPosition.points || 0
-                  : "0"}
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm mr-4">
-              <p className="text-xs text-gray-500 mb-1">$BTS</p>
-              <p className="font-bold text-2xl text-gray-800">
-                {currentUserPosition 
-                  ? (currentUserPosition.points || 0).toFixed(2)
-                  : "0.00"}
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-white/60 shadow-sm">
-              <p className="text-xs text-gray-500 mb-1">Total Saved</p>
-              <p className="font-bold text-2xl text-gray-800">
-                {currentUserPosition 
-                  ? `$${currentUserPosition.totalamount.toFixed(2)}` 
-                  : "$0.00"}
-              </p>
-            </div>
+
           </div>
         </div>
       </div>
@@ -764,60 +527,66 @@ export default function LeaderboardPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setIsDetailsOpen(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white/90 backdrop-blur-xl rounded-2xl border border-white/60 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={(_e) => _e.stopPropagation()}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Header with user info */}
-              <div className="p-6 border-b border-gray-200/50 relative">
-  {/* Noise background removed per redesign spec */}
-                
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <div className={`absolute -inset-1 rounded-full blur-md opacity-70 ${
-                      selectedUser.rank === 1 ? 'bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0]' :
-                selectedUser.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-gray-300' :
-                selectedUser.rank === 3 ? 'bg-gradient-to-r from-[#6BC4A0] to-[#4A9B7A]' : 
-                      'bg-gradient-to-r from-[#81D7B4]/50 to-[#81D7B4]/30'
-                    }`}></div>
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center bg-white">
-                      <UserIcon rank={selectedUser.rank || 1} />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2">
-                      {getRankBadge(selectedUser.rank || 1)}
-                    </div>
-                  </div>
-                  
-
-                  
+              {/* Decorative Background */}
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-[#81D7B4]/20 to-transparent"></div>
+              
+              <div className="relative p-6">
+                <div className="flex justify-end mb-4">
                   <button 
                     onClick={() => setIsDetailsOpen(false)}
-                    className="ml-auto bg-gray-100 hover:bg-gray-200 rounded-full p-2 text-gray-500 transition-colors"
+                    className="w-8 h-8 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    ✕
                   </button>
                 </div>
-              </div>
-              
-              {/* Stats Grid */}
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Total Saved</p>
-                    <p className="font-bold text-2xl text-gray-800">${selectedUser.totalamount.toFixed(2)}</p>
+                
+                <div className="flex flex-col items-center mb-8">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-lg ${
+                    selectedUser.rank === 1 ? 'bg-yellow-50 text-yellow-600' :
+                    selectedUser.rank === 2 ? 'bg-gray-100 text-gray-600' :
+                    selectedUser.rank === 3 ? 'bg-orange-50 text-orange-600' : 'bg-[#81D7B4]/10 text-[#81D7B4]'
+                  }`}>
+                    <Users className="w-10 h-10" />
                   </div>
                   
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Network</p>
-                    <div className="flex items-center">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                      selectedUser.rank === 1 ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                      selectedUser.rank === 2 ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                      selectedUser.rank === 3 ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-gray-50 text-gray-600 border-gray-100'
+                    }`}>
+                      Rank #{selectedUser.rank}
+                    </span>
+                  </div>
+                  
+                  <h3 className="font-bold text-2xl text-gray-900 truncate max-w-[280px] text-center">
+                    {selectedUser.useraddress}
+                  </h3>
+                  <p className="text-gray-400 text-sm">Saver Profile</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">Total Points</p>
+                    <p className="font-bold text-xl text-[#2D5A4A]">{selectedUser.points}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">Total Saved</p>
+                    <p className="font-bold text-xl text-gray-900">${selectedUser.totalamount.toFixed(2)}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">Network</p>
+                    <div className="flex items-center gap-2">
                       <Image
                         src={ensureImageUrl(
                           networkLogos[selectedUser.chain?.toLowerCase()]?.logoUrl ||
@@ -827,114 +596,29 @@ export default function LeaderboardPage() {
                         alt={selectedUser.chain}
                         width={20}
                         height={20}
-                        className="w-5 h-5 mr-2"
+                        className="rounded-full"
                       />
-                      <span className="font-medium text-gray-800">{selectedUser.chain}</span>
+                      <span className="font-bold text-gray-900 capitalize">{selectedUser.chain}</span>
                     </div>
                   </div>
-                  
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Rank</p>
-                    <p className="font-medium text-gray-800">#{selectedUser.rank || '-'}</p>
-                  </div>
-                  
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">User ID</p>
-                    <p className="font-medium text-gray-800 truncate">
-                      {selectedUser.useraddress.slice(0, 6)}...{selectedUser.useraddress.slice(-4)}
-                    </p>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">$BTS Earned</p>
+                    <p className="font-bold text-xl text-[#81D7B4]">{(selectedUser.points || 0).toFixed(2)}</p>
                   </div>
                 </div>
                 
-                {/* Removed wallet address with copy button section */}
-              </div>
-              
-              {/* Footer with action buttons */}
-              <div className="p-6 border-t border-gray-200/50 flex justify-end space-x-3">
-                <button 
-                  onClick={() => setIsDetailsOpen(false)}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+                <button
+                  onClick={() => window.open(`https://etherscan.io/address/${selectedUser.useraddress}`, '_blank')}
+                  className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
                 >
-                  Close
+                  View on Explorer
+                  <ArrowUpRight className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {/* Removed Tips Section */}
-      
-      {/* FAQ Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="mt-8 bg-white/50 backdrop-blur-xl rounded-3xl border border-[#81D7B4]/30 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] p-8 relative z-10"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl"></div>
-  {/* Noise background removed per redesign spec */}
-        
-        <div className="relative z-10">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC4A0]/20 rounded-xl backdrop-blur-sm border border-[#81D7B4]/30">
-              <Target className="w-6 h-6 text-[#4A9B7A]" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-800">Frequently Asked Questions</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
-              className="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 transition-all duration-300"
-            >
-              <p className="font-semibold text-gray-800 mb-2 flex items-center">
-                <Sparkles className="w-4 h-4 mr-2 text-[#4A9B7A]" />
-                How is the leaderboard calculated?
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed">The leaderboard ranks users based on points calculated from their total savings amount. Points are earned at a rate of 5 points per $1 saved. Only users with $10+ in savings are eligible for the leaderboard.</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
-              className="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 transition-all duration-300"
-            >
-              <p className="font-semibold text-gray-800 mb-2 flex items-center">
-                <Zap className="w-4 h-4 mr-2 text-[#4A9B7A]" />
-                How often is the leaderboard updated?
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed">The leaderboard is updated in real-time as users make deposits and withdrawals to their savings plans.</p>
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
-      
-      {/* Call to Action */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.0 }}
-        className="mt-12 mb-8 text-center"
-      >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <Link 
-            href="/dashboard/create-savings" 
-            className="inline-flex items-center bg-gradient-to-r from-[#81D7B4] via-[#81D7B4] to-[#6BC4A0] text-white font-semibold py-4 px-8 rounded-2xl shadow-[0_8px_32px_rgba(129,215,180,0.4)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.6)] transition-all duration-300 backdrop-blur-sm border border-white/20"
-          >
-            <div className="p-1 bg-white/20 rounded-lg mr-3">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            Start Saving to Climb the Ranks
-            <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-          </Link>
-        </motion.div>
-        <p className="mt-4 text-sm text-gray-600">Create a new savings plan and start climbing the leaderboard today!</p>
-      </motion.div>
-      </div>
     </div>
   )
 }

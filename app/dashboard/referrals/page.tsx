@@ -54,7 +54,10 @@ export default function ReferralsPage() {
   // Logic: Check if user has at least $5 in savings
   const totalSavings = parseFloat(savingsData?.totalLocked || '0');
   const isLocked = totalSavings < 5;
-  const isLoading = !mounted || referralsLoading || savingsLoading;
+  // If we have referral data, we are loaded regardless of referralsLoading flag
+  // This prevents the spinner from showing when we already have data but a refresh might be happening
+  // Or if we know the user is locked, we can show the UI immediately
+  const isLoading = !mounted || (referralsLoading && !referralData && !error) || savingsLoading;
 
   if (isLoading) {
     return (

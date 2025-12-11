@@ -1,11 +1,11 @@
 "use client";
 
-import { PrivyProvider } from "@privy-io/react-auth";
-import { WagmiProvider, createConfig } from '@privy-io/wagmi';
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createConfig } from '@privy-io/wagmi';
 import { http } from "wagmi";
 import { base, mainnet } from "viem/chains";
 
+// We keep this export in case other files import it, but we don't use it in the provider wrapper anymore
+// since the global provider handles it.
 export const privyConfig = createConfig({
     chains: [mainnet, base],
     transports: {
@@ -14,34 +14,12 @@ export const privyConfig = createConfig({
     },
 });
 
-const queryClient = new QueryClient();
-
 export default function BizFiProviders({ children }: { children: React.ReactNode }) {
-    // Replace with environment variable later
-    const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
-
+    // The global layout now provides PrivyProvider, WagmiProvider, and QueryClientProvider.
+    // We just pass through the children.
     return (
-        <PrivyProvider
-            appId={appId}
-            config={{
-                appearance: {
-                    theme: "dark",
-                    accentColor: "#81D7B4",
-                    logo: "/bitsavelogo.png", // Ensure this exists or remove if not needed
-                },
-                embeddedWallets: {
-                    ethereum: {
-                        createOnLogin: "users-without-wallets",
-                    },
-                },
-                loginMethods: ['email', 'wallet', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
-            }}
-        >
-            <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={privyConfig}>
-                    {children}
-                </WagmiProvider>
-            </QueryClientProvider>
-        </PrivyProvider>
+        <>
+            {children}
+        </>
     );
 }

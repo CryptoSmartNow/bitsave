@@ -828,16 +828,14 @@ export default function CreateSavingsPage() {
   if (!mounted) return null
 
   return (
-    <div className={`${exo.className} min-h-screen bg-gradient-to-b from-white to-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden`}>
+    <div className={`${exo.className} min-h-screen bg-[#F7FCFA] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden relative`}>
       {/* Network Detection Component */}
       <NetworkDetection />
 
-      {/* Enhanced decorative elements */}
-      <div className="fixed -top-40 -right-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
-      <div className="fixed top-1/4 -left-20 w-60 h-60 bg-[#81D7B4]/5 rounded-full blur-3xl"></div>
-      <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-3xl"></div>
-      <div className="fixed bottom-1/3 right-0 w-72 h-72 bg-[#81D7B4]/8 rounded-full blur-3xl"></div>
-      {/* Noise background removed per redesign spec */}
+      {/* Modern Background Elements */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#81D7B4]/5 via-transparent to-transparent pointer-events-none"></div>
+      <div className="fixed -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#81D7B4]/10 to-transparent blur-3xl pointer-events-none"></div>
+      <div className="fixed -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tr from-[#81D7B4]/10 to-transparent blur-3xl pointer-events-none"></div>
 
       {/* Transaction Status Notifications */}
       {showTransactionModal && (

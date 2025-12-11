@@ -1,24 +1,30 @@
 'use client'
 
 import { useEffect } from 'react';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { usePrivy } from '@privy-io/react-auth';
+import CustomConnectButton from '@/components/CustomConnectButton';
 
 export default function ConnectPage() {
-  const { openConnectModal } = useConnectModal();
+  const { login, ready, authenticated } = usePrivy();
 
   useEffect(() => {
-    openConnectModal?.();
-  }, [openConnectModal]);
+    // If ready and not authenticated, we can optionally trigger login.
+    // However, for better UX, we let the user click the button unless directed otherwise.
+    // Given the previous code tried to auto-open, we can do it here too, but gently.
+    if (ready && !authenticated) {
+        // login(); // Uncomment to auto-open
+    }
+  }, [ready, authenticated, login]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      {/* Fallback in case auto-open is blocked */}
-      <div className="text-center space-y-4">
-        <h1 className="text-xl font-semibold text-gray-900">Connect your wallet</h1>
-        <p className="text-sm text-gray-600">If the modal didn’t open, use the button below.</p>
-        <div className="inline-block">
-          <ConnectButton />
+      <div className="text-center space-y-6 p-4">
+        <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-gray-900">Connect to BitSave</h1>
+            <p className="text-gray-500">Please connect your wallet to continue.</p>
+        </div>
+        <div className="flex justify-center">
+          <CustomConnectButton />
         </div>
       </div>
     </div>
