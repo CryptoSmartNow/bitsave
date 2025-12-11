@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-import path from "path";
-
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
@@ -25,29 +23,21 @@ const nextConfig: NextConfig = {
 
   webpack(config) {
     // --- FIX #1: Ignore ALL test files inside ANY node_modules ---
-    // config.module.rules.push({
-    //   test: /thread-stream\/test\/indexes\.js$/,
-    //   use: "ignore-loader",
-    // });
+    config.module.rules.push({
+      test: /thread-stream\/test\/.*\.js$/,
+      use: "null-loader",
+    });
 
     // --- FIX #2: Prevent optional test-only deps from resolving ---
-    config.resolve.alias = {
-      ...config.resolve.alias,
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "pino-elasticsearch": false,
       tape: false,
       "why-is-node-running": false,
       "real-require": false,
       "pino-pretty": false,
       "lokijs": false,
       "encoding": false,
-      "pino-elasticsearch": false,
-    };
-
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      // fallback is still needed for some polyfills
-      fs: false,
-      net: false,
-      tls: false,
     };
 
     // --- FIX #3: Silence nested warnings from Privy + WalletConnect ---

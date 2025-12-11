@@ -108,7 +108,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
       } else if (isTablet) {
         dropdownWidth = Math.max(rect.width, 240); // Slightly wider on tablet
       } else {
-        dropdownWidth = Math.max(rect.width, 200); // Minimum width on desktop
+        dropdownWidth = Math.max(rect.width, 180); // Compact width on desktop
       }
       
       // Calculate initial position
@@ -187,23 +187,30 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
     setIsOpen(false);
 
     // Handle routing
-    const currentPath = pathname;
-    const localePattern = new RegExp(`^\/(${supportedLocales.join('|')})`);
-    const pathWithoutLocale = currentPath.replace(localePattern, '') || '/';
-    
-    const currentLocaleMatch = currentPath.match(/^\/(en|es|fr|de|zh|ja|ko|pt|ru|ar|hi|it|nl|sv|tr)/);
-    const currentLocale = currentLocaleMatch ? currentLocaleMatch[1] : null;
-    
-    if (currentLocale !== languageCode) {
-      const newPath = `/${languageCode}${pathWithoutLocale}`;
-      router.push(newPath);
+    // Simply update the language without changing the URL path for BizFi
+    // This avoids 404s since we don't have localized routes for /bizfi
+    if (!pathname.startsWith('/bizfi')) {
+        const currentPath = pathname;
+        const localePattern = new RegExp(`^\/(${supportedLocales.join('|')})`);
+        const pathWithoutLocale = currentPath.replace(localePattern, '') || '/';
+        
+        const currentLocaleMatch = currentPath.match(/^\/(en|es|fr|de|zh|ja|ko|pt|ru|ar|hi|it|nl|sv|tr)/);
+        const currentLocale = currentLocaleMatch ? currentLocaleMatch[1] : null;
+        
+        if (currentLocale !== languageCode) {
+        const newPath = `/${languageCode}${pathWithoutLocale}`;
+        router.push(newPath);
+        }
     }
 
     // Handle Google Translate based on language selection
     setTimeout(() => {
+      const isBizFi = pathname.startsWith('/bizfi');
+
       if (languageCode === 'en') {
         // For English: Clear Google Translate and reset to original content
         document.cookie = `googtrans=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        document.cookie = `googtrans=; path=/;`;
         
         // Reset Google Translate widget to original language
         const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
@@ -213,6 +220,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
         }
         
         // Force reload to ensure clean English content
+        // On BizFi, we reload to clear the translation fully
         setTimeout(() => {
           window.location.reload();
         }, 100);
@@ -220,11 +228,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
         // For other languages: Set Google Translate cookie and trigger translation
         const cookieValue = `/en/${languageCode}`;
         document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname}`;
+        document.cookie = `googtrans=${cookieValue}; path=/;`;
         
         const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
         if (selectElement) {
           selectElement.value = languageCode;
           selectElement.dispatchEvent(new Event('change'));
+        }
+
+        // On BizFi, if we just set the cookie but the widget didn't pick it up (common issue),
+        // a reload might be needed to force the translation layer to apply initial state
+        // However, we try to avoid reload if possible.
+        // If the widget was found and event dispatched, it should work.
+        // If not, we might need to reload.
+        if (isBizFi && !selectElement) {
+            setTimeout(() => {
+                 window.location.reload();
+            }, 500);
         }
       }
     }, 500);
@@ -287,7 +307,21 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
   return (
     <>
       <style jsx global>{`
-        .goog-te-gadget {
+        .goog-te-banner-frame,
+        .goog-te-menu-frame,
+        .goog-te-ftab,
+        .goog-te-balloon-frame,
+        .goog-te-menu2,
+        .goog-te-menu-value,
+        .goog-te-gadget,
+        .goog-te-combo,
+        .skiptranslate,
+        #google_translate_element,
+        #google_translate_element *,
+        .goog-te-spinner-pos,
+        .goog-tooltip,
+        .goog-tooltip *,
+        .goog-text-highlight {
           display: none !important;
           visibility: hidden !important;
           opacity: 0 !important;
@@ -339,23 +373,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
             whileTap={{ scale: 0.98 }}
             onClick={toggleDropdown}
             disabled={!isLoaded || isDetectingLocation}
-            className="w-full bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-left shadow-2xl hover:bg-white/30 hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden"
+            className="w-full bg-[#1A2538]/80 backdrop-blur-xl border border-[#7B8B9A]/20 rounded-xl px-3 py-2 text-left shadow-lg hover:bg-[#1A2538] hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden"
           >
             {/* Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/20 to-white/10 pointer-events-none"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/5 via-transparent to-white/10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 via-transparent to-transparent pointer-events-none"></div>
             
-            <div className="relative flex items-center space-x-2 sm:space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] rounded-xl flex items-center justify-center shadow-lg">
-                <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+            <div className="relative flex items-center space-x-2">
+              <div className="w-6 h-6 bg-[#81D7B4]/10 rounded-lg flex items-center justify-center border border-[#81D7B4]/20">
+                <Globe className="w-3.5 h-3.5 text-[#81D7B4]" />
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-base sm:text-lg">{selectedLang.flag}</span>
-                <span className="font-medium text-gray-800 text-sm sm:text-base">{selectedLang.name}</span>
+                <span className="text-base">{selectedLang.flag}</span>
+                <span className="font-medium text-[#F9F9FB] text-sm hidden sm:inline-block">{selectedLang.name}</span>
+                <span className="font-medium text-[#F9F9FB] text-sm sm:hidden">{selectedLang.code.toUpperCase()}</span>
               </div>
             </div>
             
-            <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-[#7B8B9A] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           </motion.button>
 
 
@@ -363,11 +397,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
 
         {/* Loading indicator */}
         {(!isLoaded || isDetectingLocation) && (
-          <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#1A2538]/80 backdrop-blur-xl rounded-xl flex items-center justify-center border border-[#7B8B9A]/20">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#81D7B4]"></div>
               {isDetectingLocation && (
-                <span className="text-xs text-gray-600">Detecting location...</span>
+                <span className="text-xs text-[#7B8B9A]">Detecting...</span>
               )}
             </div>
           </div>
@@ -391,7 +425,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed bg-white/95 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_20px_40px_-15px_rgba(129,215,180,0.3)] z-[10000] max-h-64 sm:max-h-72 overflow-y-auto"
+              className="fixed bg-[#1A2538] backdrop-blur-xl border border-[#7B8B9A]/20 rounded-xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] z-[10000] max-h-64 sm:max-h-72 overflow-y-auto"
               style={{
                 top: dropdownPosition.top,
                 left: dropdownPosition.left,
@@ -399,13 +433,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
               }}
             >
               {/* Enhanced Gradient Overlays for Better Integration */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-white/30 to-white/20 pointer-events-none rounded-2xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#81D7B4]/5 via-transparent to-white/20 pointer-events-none rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 via-transparent to-transparent pointer-events-none rounded-xl"></div>
               
-              {/* Visual Connection Line to Button */}
-              <div className="absolute -top-1 left-4 right-4 h-1 bg-gradient-to-r from-transparent via-[#81D7B4]/20 to-transparent"></div>
-              
-              <div className="relative p-2 sm:p-3">
+              <div className="relative p-1.5 sm:p-2">
                   {languages.map((language, index) => (
                     <motion.button
                       key={language.code}
@@ -415,27 +445,24 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
                       whileHover={{ scale: 1.02, x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleLanguageChange(language.code)}
-                      className={`w-full flex items-center space-x-2 sm:space-x-3 px-3 py-2 sm:px-4 sm:py-3 rounded-xl transition-all duration-200 group touch-manipulation ${
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 group touch-manipulation ${
                         selectedLanguage === language.code
-                          ? 'bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC7A0]/20 text-[#2D5A4A] shadow-lg border border-[#81D7B4]/20'
-                          : 'hover:bg-white/50 text-gray-700 hover:text-gray-900 hover:shadow-md active:bg-white/60'
+                          ? 'bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20'
+                          : 'hover:bg-[#7B8B9A]/10 text-[#9BA8B5] hover:text-[#F9F9FB]'
                       }`}
                     >
-                      <span className="text-base sm:text-lg transition-transform duration-200 group-hover:scale-110">{language.flag}</span>
-                      <span className="font-medium flex-1 text-left text-sm sm:text-base">{language.name}</span>
+                      <span className="text-lg transition-transform duration-200 group-hover:scale-110">{language.flag}</span>
+                      <span className="font-medium flex-1 text-left text-sm">{language.name}</span>
                       {selectedLanguage === language.code && (
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#81D7B4] rounded-full shadow-sm"
+                          className="w-2 h-2 bg-[#81D7B4] rounded-full shadow-[0_0_10px_rgba(129,215,180,0.5)]"
                         />
                       )}
                     </motion.button>
                   ))}
               </div>
-              
-              {/* Bottom Visual Enhancement */}
-              <div className="absolute -bottom-1 left-4 right-4 h-1 bg-gradient-to-r from-transparent via-[#81D7B4]/10 to-transparent"></div>
             </motion.div>
           </AnimatePresence>
         </>,

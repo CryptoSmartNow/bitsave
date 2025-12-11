@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { usePrivy } from '@privy-io/react-auth';
 import {
     HiOutlineRocketLaunch,
     HiOutlineFire,
@@ -68,7 +68,8 @@ const TIERS: Array<{
 
 export default function BizFiDashboardPage() {
     const router = useRouter();
-    const { address } = useAccount();
+    const { user, authenticated, login } = usePrivy();
+    const address = user?.wallet?.address;
     const [mounted, setMounted] = useState(false);
     const [selectedTier, setSelectedTier] = useState(TIERS[0]);
     const [referralCode, setReferralCode] = useState('');
@@ -158,7 +159,26 @@ export default function BizFiDashboardPage() {
                     </div>
                 </motion.div>
 
-                {/* Pre-Listing Assessment Form */}
+                {!authenticated ? (
+                    <div className="flex flex-col items-center justify-center py-20 px-4">
+                        <div className="backdrop-blur-sm rounded-2xl border p-8 max-w-lg w-full text-center" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
+                            <div className="p-4 rounded-full inline-block mb-4" style={{ backgroundColor: 'rgba(129, 215, 180, 0.1)' }}>
+                                <HiOutlineRocketLaunch className="w-10 h-10 text-[#81D7B4]" />
+                            </div>
+                            <h2 className="text-2xl font-bold mb-4" style={{ color: '#F9F9FB' }}>Connect Your Wallet</h2>
+                            <p className="mb-8" style={{ color: '#7B8B9A' }}>
+                                You need to connect your wallet to list your business and access the dashboard features.
+                            </p>
+                            <button
+                                onClick={login}
+                                className="w-full py-3.5 font-bold rounded-xl transition-all shadow-lg hover:scale-[1.02]"
+                                style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
+                            >
+                                Connect Wallet to Continue
+                            </button>
+                        </div>
+                    </div>
+                ) : (
                 <div className="grid lg:grid-cols-3 gap-8">
                     {/* Form Section */}
                     <div className="lg:col-span-2 space-y-6">
@@ -260,7 +280,7 @@ export default function BizFiDashboardPage() {
                             <ul className="space-y-3">
                                 <li className="flex gap-3">
                                     <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global capital from crypto investors.</p>
+                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global investors from the web3 space.</p>
                                 </li>
                                 <li className="flex gap-3">
                                     <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
@@ -278,18 +298,37 @@ export default function BizFiDashboardPage() {
                             <p className="text-sm mb-4" style={{ color: '#7B8B9A' }}>
                                 Not sure which tier fits you? Book a free consultancy session with our experts.
                             </p>
-                            <button
-                                onClick={() => setShowConsultancyModal(true)}
-                                className="w-full py-3 font-bold rounded-lg transition-all"
+                            
+                            <a
+                                href="https://calendly.com/cryptosmartnow/15min"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full py-3 mb-3 font-bold rounded-lg transition-all text-center"
                                 style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
                             >
                                 Schedule Call
-                            </button>
+                            </a>
+
+                            <div className="pt-3 border-t border-[#81D7B4]/20">
+                                <p className="text-xs mb-3 text-[#7B8B9A]">Join our community for updates and support:</p>
+                                <a
+                                    href="https://t.me/bitsaveprotocol"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 w-full py-2.5 font-bold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10"
+                                >
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.638z"/>
+                                    </svg>
+                                    Join Telegram
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
+                )}
             </div>
 
             {/* Consultancy Modal */}
