@@ -2,6 +2,22 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { Github, Linkedin, Globe, MessageSquare } from 'lucide-react'
+
+// Custom Farcaster Icon since it's not in Lucide
+const FarcasterIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 1000 1000" fill="currentColor">
+    <path d="M257.778 155.556H742.222V844.444H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333S337.446 441.677 329.586 528.889H328.889V844.444H257.778V155.556Z" />
+    <path d="M128.889 253.333L157.778 253.333V746.667H128.889V253.333Z" />
+    <path d="M842.222 253.333H871.111V746.667H842.222V253.333Z" />
+  </svg>
+)
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+)
 
 const teamMembers = [
   {
@@ -30,7 +46,6 @@ const teamMembers = [
     socials: {
       twitter: "https://twitter.com/xpanvictor",
       github: "https://github.com/xpanvictor",
-
     }
   },
   {
@@ -58,7 +73,7 @@ const teamMembers = [
     }
   },
   {
-    name: "Emmanuel Nwafor ",
+    name: "Emmanuel Nwafor",
     role: "Software Engineer",
     avatar: "/images/emma.jpeg",
     socials: {
@@ -67,286 +82,100 @@ const teamMembers = [
       github: "https://gitHub.com/emmo00",
     }
   }
-
 ];
 
 export default function Team() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 30,
-      scale: 0.95
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number]
-      }
-    }
-  }
-
   return (
-    <section id="team" className="py-32 px-4 md:px-8 lg:px-16 relative overflow-hidden">
-      {/* Enhanced Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50/30 to-white"></div>
+    <section id="team" className="py-24 px-4 md:px-8 lg:px-16 relative bg-white">
+      <div className="container mx-auto max-w-7xl">
 
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Enhanced Gradient Orbs */}
-        <motion.div
-          className="absolute top-20 left-10 w-72 h-72 bg-[#81D7B4]/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: [0, 30, 0],
-            y: [0, -20, 0]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        ></motion.div>
-        <motion.div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-[#6bc4a1]/15 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.15, 0.3, 0.15],
-            x: [0, -40, 0],
-            y: [0, 25, 0]
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        ></motion.div>
-        <motion.div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#81D7B4]/10 to-[#6bc4a1]/10 rounded-full blur-3xl"
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.05, 1]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        ></motion.div>
-
-        {/* Dynamic Floating Particles */}
-        {[...Array(8)].map((_, i) => (
+        {/* Header */}
+        <div className="text-center mb-20">
           <motion.div
-            key={i}
-            className={`absolute w-${i % 2 === 0 ? '2' : '1'} h-${i % 2 === 0 ? '2' : '1'} bg-[#81D7B4]/${30 + i * 5} rounded-full`}
-            style={{
-              left: `${10 + i * 12}%`,
-              top: `${20 + (i * 15) % 60}%`
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, 15, 0],
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{
-              duration: 4 + i * 0.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.3
-            }}
-          />
-        ))}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-100 shadow-sm mb-6"
+          >
+            <div className="w-2 h-2 rounded-full bg-[#81D7B4]"></div>
+            <span className="text-sm font-semibold text-gray-600 tracking-wide uppercase">The Builders</span>
+          </motion.div>
 
-        {/* Geometric Shapes */}
-        <motion.div
-          className="absolute top-1/4 right-1/4 w-8 h-8 border-2 border-[#81D7B4]/30 rotate-45"
-          animate={{
-            rotate: [45, 405],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/3 left-1/5 w-6 h-6 bg-[#6bc4a1]/20 rounded-full"
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.2, 0.5, 0.2]
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
-          }}
-        />
-      </div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-5xl font-bold mb-6 text-gray-900"
+          >
+            Meet the <span className="text-[#81D7B4]">Team</span>
+          </motion.h2>
 
-      {/* Subtle Ambient Light */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#81D7B4]/3 rounded-full blur-[120px] pointer-events-none"></div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-gray-500 text-lg max-w-2xl mx-auto"
+          >
+            Passionate builders and DeFi experts dedicated to making onchain savings accessible to everyone.
+          </motion.p>
+        </div>
 
-      <div className="container mx-auto max-w-6xl relative z-10">
-        {/* Header Section */}
-        <motion.div
-          className="text-center mb-24"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-          {/* Section Label */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.06)] mb-10">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#81D7B4]"></div>
-            <span className="text-sm font-medium text-gray-600 tracking-wide">Meet Our Team</span>
-          </div>
-
-          {/* Main Heading */}
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-semibold mb-8 tracking-tight leading-[1.1] font-system">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900">
-              The Minds Behind
-            </span>
-            <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1]">
-              BitSave
-            </span>
-          </h2>
-
-          {/* Subtitle */}
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed font-light tracking-wide">
-            A passionate team of DeFi experts and builders dedicated to revolutionizing crypto savings.
-          </p>
-        </motion.div>
-
-        {/* Team Grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10 max-w-7xl mx-auto"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-        >
-          {teamMembers.map((member) => (
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {teamMembers.map((member, index) => (
             <motion.div
               key={member.name}
-              variants={itemVariants}
-              whileHover={{
-                y: -12,
-                scale: 1.02,
-                transition: { duration: 0.4, ease: "easeOut" }
-              }}
-              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
               className="group relative"
             >
-              {/* Modern Card with Gradient Background */}
-              <div className="relative p-8 rounded-3xl bg-gradient-to-br from-white via-[#f8fafa] to-[#f0f9f6] border-2 border-gray-100 hover:border-[#81D7B4]/30 transition-all duration-500 hover:shadow-2xl overflow-hidden">
+              <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#81D7B4]/30 transition-all duration-300 flex flex-col items-center text-center">
 
-                {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
-
-                {/* Content */}
-                <div className="relative z-10">
-                  {/* Avatar */}
-                  <div className="relative w-24 h-24 mx-auto mb-6">
-                    <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-xl group-hover:shadow-2xl group-hover:shadow-[#81D7B4]/20 transition-all duration-500">
-                      <Image
-                        src={member.avatar}
-                        alt={member.name}
-                        width={96}
-                        height={96}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Member Info */}
-                  <div className="text-center space-y-4">
-                    {/* Name */}
-                    <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-                      {member.name}
-                    </h3>
-
-                    {/* Role Badge */}
-                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20">
-                      <span className="text-sm font-semibold text-[#81D7B4] tracking-wide">{member.role}</span>
-                    </div>
-
-                    {/* Social Links */}
-                    <div className="flex justify-center items-center gap-3 pt-4">
-                      {Object.entries(member.socials).map(([platform, url]) => (
-                        <motion.a
-                          key={platform}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="relative group/social"
-                          whileHover={{
-                            scale: 1.15,
-                            rotate: 5,
-                            transition: { duration: 0.2, ease: "easeOut" }
-                          }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 shadow-sm flex items-center justify-center transition-all duration-300 hover:bg-[#81D7B4]/10 hover:shadow-md hover:border-[#81D7B4]/30">
-                            <div className="text-gray-600 group-hover/social:text-[#81D7B4] transition-colors duration-300">
-                              {platform === 'twitter' && (
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                              )}
-                              {platform === 'github' && (
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.300 24 12c0-6.627-5.373-12-12-12z" />
-                                </svg>
-                              )}
-                              {platform === 'farcaster' && (
-                                <svg className="w-4 h-4" viewBox="0 0 1000 1000" fill="currentColor">
-                                  <path d="M257.778 155.556H742.222V844.444H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333S337.446 441.677 329.586 528.889H328.889V844.444H257.778V155.556Z" />
-                                  <path d="M128.889 253.333L157.778 253.333V746.667H128.889V253.333Z" />
-                                  <path d="M842.222 253.333H871.111V746.667H842.222V253.333Z" />
-                                </svg>
-                              )}
-                            </div>
-                          </div>
-                        </motion.a>
-                      ))}
-                    </div>
+                {/* Avatar */}
+                <div className="w-24 h-24 mb-6 relative">
+                  <div className="absolute inset-0 bg-[#81D7B4]/20 rounded-full blur-xl group-hover:bg-[#81D7B4]/40 transition-colors opacity-0 group-hover:opacity-100" />
+                  <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:scale-105 transition-transform duration-300">
+                    <Image
+                      src={member.avatar}
+                      alt={member.name}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
 
-                {/* Decorative corner */}
-                <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-[#81D7B4]/20 rounded-br-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Info */}
+                <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
+                <p className="text-[#81D7B4] font-medium text-sm mb-4">{member.role}</p>
+
+                {/* Socials */}
+                <div className="flex gap-3 justify-center mt-auto pt-4 border-t border-gray-50 w-full">
+                  {member.socials.twitter && (
+                    <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-black hover:bg-black/5 transition-colors" title="X (Formerly Twitter)">
+                      <XIcon className="w-4 h-4" />
+                    </a>
+                  )}
+                  {member.socials.farcaster && (
+                    <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-[#8465CB] hover:bg-[#8465CB]/10 transition-colors" title="Farcaster">
+                      <FarcasterIcon className="w-4 h-4" />
+                    </a>
+                  )}
+                  {member.socials.github && (
+                    <a href={member.socials.github} target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-200 transition-colors" title="GitHub">
+                      <Github className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-      `}</style>
+      </div>
     </section>
-  );
+  )
 }

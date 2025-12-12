@@ -51,42 +51,39 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-[#f8fafa]">
+    <footer className="relative overflow-hidden bg-[#f8fafa] pb-32 pt-16">
       {/* Clean page background */}
       <div className="absolute inset-0 bg-[url('/grain-texture.png')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
 
       {/* Subtle "BitSave" watermark centered within footer container */}
       <svg
-        className="absolute left-0 bottom-[-2rem] w-full h-[40vh] pointer-events-none select-none z-0"
+        className="absolute left-0 bottom-0 w-full h-[20vh] md:h-[40vh] pointer-events-none select-none z-0"
         viewBox="0 0 100 20"
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
         style={{
           WebkitMaskImage:
-            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.3) 80%, transparent 100%)',
+            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.5) 80%, transparent 100%)',
           maskImage:
-            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.3) 80%, transparent 100%)'
+            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.5) 80%, transparent 100%)'
         }}
       >
         <defs>
-          <linearGradient id="footerWatermarkGradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="rgba(17,24,39,0.10)" />
-            <stop offset="50%" stopColor="rgba(31,41,55,0.08)" />
-            <stop offset="100%" stopColor="rgba(17,24,39,0.10)" />
+          <linearGradient id="footerWatermarkGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#81D7B4" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#81D7B4" stopOpacity="0.1" />
           </linearGradient>
         </defs>
         <text
           x="50%"
           textAnchor="middle"
-          y="70%"
+          y="75%"
           dominantBaseline="middle"
           fill="url(#footerWatermarkGradient)"
-          fontWeight="900"
-          fontFamily="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', 'Noto Sans', Arial, 'Apple Color Emoji', 'Segoe UI Emoji'"
-          fontSize="12"
-          letterSpacing="0.02em"
-          textLength="80"
-          lengthAdjust="spacingAndGlyphs"
+          fontWeight="Bold"
+          fontFamily="var(--font-exo)"
+          fontSize="15"
+          letterSpacing="0.05em"
         >
           BitSave
         </text>

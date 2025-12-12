@@ -74,14 +74,14 @@ function PrivyWrapper({ children }: { children: ReactNode }) {
           showWalletLoginFirst: true,
         },
         embeddedWallets: {
-            ethereum: {
-                createOnLogin: "users-without-wallets",
-            },
+          ethereum: {
+            createOnLogin: "users-without-wallets",
+          },
         },
         loginMethods: ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
         supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
-            walletConnect: { enabled: true },
+          walletConnect: { enabled: true },
         },
       }}
     >
@@ -94,10 +94,24 @@ function PrivyWrapper({ children }: { children: ReactNode }) {
   );
 }
 
+import PageLoader from './components/PageLoader';
+import { useState, useEffect } from 'react';
+
 export function Providers({ children }: { children: ReactNode }) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial loading for smooth entrance
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <PrivyWrapper>
+        {loading && <PageLoader />}
         {children}
       </PrivyWrapper>
     </ThemeProvider>
