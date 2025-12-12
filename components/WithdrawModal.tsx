@@ -480,18 +480,29 @@ const WithdrawModal = memo(function WithdrawModal({
                       : 'Your withdrawal failed. Please try again.'}
                   </p>
                   {!success && error && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl text-left">
-                      <p className="text-xs font-bold text-red-800 uppercase mb-1">Error Details</p>
-                      <p className="text-sm text-red-600">{error}</p>
-                      <button
-                        onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
-                        className="mt-3 text-xs font-medium text-[#0088cc] hover:underline flex items-center"
-                      >
-                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z" />
-                        </svg>
-                        Get Help on Telegram
-                      </button>
+                    <div className="mt-6 bg-gradient-to-br from-red-50 to-red-50/50 border-2 border-red-200 rounded-2xl p-5 text-left">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-red-900 mb-1">Error Details</p>
+                          <p className="text-sm text-red-700 leading-relaxed">{error}</p>
+                        </div>
+                      </div>
+                      <div className="pt-3 border-t border-red-200">
+                        <button
+                          onClick={() => window.open('https://t.me/bitsaveprotocol/2', '_blank')}
+                          className="w-full py-2.5 px-4 bg-white hover:bg-red-50 border border-red-200 rounded-xl text-sm font-semibold text-red-700 transition-all duration-200 flex items-center justify-center gap-2 group"
+                        >
+                          <svg className="w-4 h-4 text-[#0088cc] group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z" />
+                          </svg>
+                          Get Help on Telegram
+                        </button>
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -605,8 +616,8 @@ const WithdrawModal = memo(function WithdrawModal({
                       transition={{ type: "spring", stiffness: 400 }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l-5 5-5-5" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l-3-3m0 0l3-3m-3 3h12" />
                       </svg>
                     </motion.div>
                     <div className="flex-1 min-w-0">
