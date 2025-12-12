@@ -77,37 +77,42 @@ const TwitterCard = ({ url, index }: { url: string; index: number }) => {
         if (containerRef.current && isMountedRef.current) {
           // IMPORTANT: Check if we already have content to avoid recreation
           // and the dreaded "removeChild" error from React/DOM conflicts
-          if (isLoaded && containerRef.current.children.length > 0) {
+          if (containerRef.current.childElementCount > 0) {
              return;
           }
 
           // Safe clear
           if (containerRef.current) {
              try {
-                containerRef.current.replaceChildren(); // Modern safe clear
+                // Using replaceChildren() is safer than innerHTML = ''
+                containerRef.current.replaceChildren(); 
              } catch (e) {
                 containerRef.current.innerHTML = '';
              }
           }
           
           try {
-             const tweetElement = await window.twttr.widgets.createTweet(tweetId, containerRef.current, {
+             // Use a temporary container first to avoid React hydration issues
+             const tempContainer = document.createElement('div');
+             const tweetElement = await window.twttr.widgets.createTweet(tweetId, tempContainer, {
                 theme: 'light',
                 dnt: true,
                 conversation: 'none'
-             })
+             });
 
              if (isMountedRef.current) {
-                if (tweetElement) {
-                   setIsLoaded(true)
-                   setError(false)
-                   clearTimeout(fallbackTimeout)
-                } else {
-                   setError(true)
-                }
+               if (tweetElement) {
+                 containerRef.current.appendChild(tweetElement);
+                 setIsLoaded(true);
+                 setError(false);
+                 setLoadingTimeout(false);
+                 clearTimeout(fallbackTimeout);
+               } else {
+                 setError(true);
+               }
              }
-          } catch (createError) {
-             console.error("Twitter widget create error", createError);
+          } catch (err) {
+             console.error("Error creating tweet:", err);
              if (isMountedRef.current) setError(true);
           }
         }

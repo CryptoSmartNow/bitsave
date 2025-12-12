@@ -3,6 +3,7 @@
 import { useState, useEffect, memo } from 'react';
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
+import { useWallets } from '@privy-io/react-auth';
 import Image from 'next/image';
 import childContractABI from '../app/abi/childContractABI.js';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
@@ -69,11 +70,28 @@ const WithdrawModal = memo(function WithdrawModal({
   const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base');
   const [currentTokenName, setCurrentTokenName] = useState(isEth ? 'ETH' : 'USDC');
   const { address } = useAccount();
+  const { wallets } = useWallets();
 
   useEffect(() => {
     const detectNetwork = async () => {
-      if (window.ethereum) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+      // Use Privy wallet provider if available
+      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
+      let provider;
+
+      if (activeWallet) {
+          try {
+              const ethereumProvider = await activeWallet.getEthereumProvider();
+              provider = new ethers.BrowserProvider(ethereumProvider);
+          } catch (e) {
+              console.error("Failed to get provider from Privy wallet", e);
+          }
+      } 
+      
+      if (!provider && window.ethereum) {
+          provider = new ethers.BrowserProvider(window.ethereum);
+      }
+
+      if (provider) {
         const network = await provider.getNetwork();
         const BASE_CHAIN_ID = BigInt(8453);
         const CELO_CHAIN_ID = BigInt(42220);
@@ -177,15 +195,25 @@ const WithdrawModal = memo(function WithdrawModal({
     setError('');
 
     try {
-      if (!window.ethereum) {
-        throw new Error("Ethereum provider not found. Please install MetaMask.");
+      // Use Privy wallet provider if available
+      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
+      let provider;
+      let signer;
+
+      if (activeWallet) {
+          const ethereumProvider = await activeWallet.getEthereumProvider();
+          provider = new ethers.BrowserProvider(ethereumProvider);
+          signer = await provider.getSigner();
+      } else if (window.ethereum) {
+          provider = new ethers.BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+      } else {
+          throw new Error("No wallet provider detected.");
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-
       const contractAddress = getContractAddress();
+      const userAddress = await signer.getAddress();
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
       const userChildContractAddress = await contract.getUserChildContractAddress();
@@ -286,12 +314,23 @@ const WithdrawModal = memo(function WithdrawModal({
     setError('');
 
     try {
-      if (!window.ethereum) {
-        throw new Error("Ethereum provider not found. Please install MetaMask.");
+      // Use Privy wallet provider if available
+      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
+      let provider;
+      let signer;
+
+      if (activeWallet) {
+          const ethereumProvider = await activeWallet.getEthereumProvider();
+          provider = new ethers.BrowserProvider(ethereumProvider);
+          signer = await provider.getSigner();
+      } else if (window.ethereum) {
+          provider = new ethers.BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+      } else {
+          throw new Error("No wallet provider detected.");
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
 
       const contractAddress = getContractAddress();

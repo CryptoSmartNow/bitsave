@@ -6,6 +6,7 @@ import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import { useAccount } from 'wagmi';
+import { useWallets } from '@privy-io/react-auth';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
@@ -86,6 +87,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base')
   const modalRef = useRef<HTMLDivElement>(null)
   const { address, isConnected } = useAccount()
+  const { wallets } = useWallets()
 
   // Wallet balance checking states
   const [walletBalance, setWalletBalance] = useState<string>('0')
@@ -96,8 +98,24 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
   useEffect(() => {
     const detectNetwork = async () => {
-      if (window.ethereum) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+      // Try to use Privy wallet first
+      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
+      
+      let provider;
+      if (activeWallet) {
+         try {
+           const ethereumProvider = await activeWallet.getEthereumProvider();
+           provider = new ethers.BrowserProvider(ethereumProvider);
+         } catch (e) {
+           console.error("Failed to get provider from Privy wallet", e);
+         }
+      } 
+      
+      if (!provider && window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+      }
+
+      if (provider) {
         const network = await provider.getNetwork();
         const BASE_CHAIN_ID = BigInt(8453);
         const CELO_CHAIN_ID = BigInt(42220);
@@ -298,13 +316,22 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         throw new Error("Invalid amount entered.");
       }
 
-      if (!window.ethereum) {
-        throw new Error("No Ethereum wallet detected. Please install MetaMask.");
-      }
+      // Use Privy wallet provider if available
+      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
+      let provider;
+      let signer;
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
+      if (activeWallet) {
+          const ethereumProvider = await activeWallet.getEthereumProvider();
+          provider = new ethers.BrowserProvider(ethereumProvider);
+          signer = await provider.getSigner();
+      } else if (window.ethereum) {
+          provider = new ethers.BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+      } else {
+          throw new Error("No wallet provider detected.");
+      }
 
       const network = await provider.getNetwork();
       const BASE_CHAIN_ID = BigInt(8453);
@@ -418,8 +445,16 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       }
 
       const approveERC20 = async (tokenAddress: string, amount: ethers.BigNumberish, signer: ethers.Signer) => {
+        // Contract to approve is determined by network
+        const network = await signer.provider?.getNetwork();
+        const chainId = network?.chainId;
+        
+        let targetContract = BASE_CONTRACT_ADDRESS;
+        if (chainId && Number(chainId) === 42220) targetContract = CELO_CONTRACT_ADDRESS;
+        if (chainId && Number(chainId) === 1135) targetContract = LISK_CONTRACT_ADDRESS;
+
         const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
-        const tx = await erc20Contract.approve(contractAddress, amount);
+        const tx = await erc20Contract.approve(targetContract, amount);
         await tx.wait();
         console.log(`${tokenNameToUse} approval transaction completed`);
       };
