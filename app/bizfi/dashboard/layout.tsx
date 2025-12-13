@@ -65,25 +65,21 @@ export default function BizFiDashboardLayout({
             )}
 
             {/* Sidebar */}
-            <div className={`fixed left-0 top-0 h-full border-r z-40 flex flex-col transition-all duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            <div className={`fixed left-0 top-0 h-full border-r border-gray-800 z-40 flex flex-col transition-all duration-300 lg:translate-x-0 bg-gray-900/95 backdrop-blur-xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 } ${isCollapsed ? 'w-20' : 'w-64'}`}
-                style={{ backgroundColor: 'rgba(26, 37, 56, 0.95)', borderColor: 'rgba(123, 139, 154, 0.2)' }}
             >
                 {/* Logo */}
-                <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(123, 139, 154, 0.2)' }}>
+                <div className="p-6 border-b border-gray-800 flex items-center justify-between">
                     <Link href="/bizfi" className={`flex items-center gap-3 ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#81D7B4' }}>
-                            <HiOutlineRocketLaunch className="w-6 h-6" style={{ color: '#0F1825' }} />
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#81D7B4]">
+                            <HiOutlineRocketLaunch className="w-6 h-6 text-[#0F1825]" />
                         </div>
-                        {!isCollapsed && <span className="text-xl font-bold" style={{ color: '#F9F9FB' }}>BizFi</span>}
+                        {!isCollapsed && <span className="text-xl font-bold text-[#F9F9FB]">BizFi</span>}
                     </Link>
                     {/* Collapse Button - Desktop Only */}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="hidden lg:block p-1 rounded-lg transition-colors"
-                        style={{ color: '#7B8B9A' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        className="hidden lg:block p-1 rounded-lg transition-colors text-[#7B8B9A] hover:bg-gray-800 hover:text-white"
                     >
                         {isCollapsed ? (
                             <HiOutlineChevronRight className="w-5 h-5" />
@@ -95,51 +91,32 @@ export default function BizFiDashboardLayout({
 
                 {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-2">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsSidebarOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isCollapsed ? 'justify-center' : ''}`}
-                            style={{
-                                backgroundColor: isActive(item.href) ? 'rgba(129, 215, 180, 0.1)' : 'transparent',
-                                color: isActive(item.href) ? '#81D7B4' : '#7B8B9A'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!isActive(item.href)) {
-                                    e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)';
-                                    e.currentTarget.style.color = '#F9F9FB';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!isActive(item.href)) {
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.color = '#7B8B9A';
-                                }
-                            }}
-                            title={isCollapsed ? item.label : undefined}
-                        >
-                            <item.icon className="w-5 h-5 flex-shrink-0" />
-                            {!isCollapsed && <span className="font-medium">{item.label}</span>}
-                        </Link>
-                    ))}
+                    {menuItems.map((item) => {
+                        const active = isActive(item.href);
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setIsSidebarOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isCollapsed ? 'justify-center' : ''} ${active
+                                        ? 'bg-[#81D7B4]/10 text-[#81D7B4]'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                                    }`}
+                                title={isCollapsed ? item.label : undefined}
+                            >
+                                <item.icon className="w-5 h-5 flex-shrink-0" />
+                                {!isCollapsed && <span className="font-medium">{item.label}</span>}
+                            </Link>
+                        );
+                    })}
 
                     <button
                         onClick={() => {
                             setShowMoreModal(true);
                             setIsSidebarOpen(false);
                         }}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors w-full ${isCollapsed ? 'justify-center' : ''
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-gray-400 hover:text-white hover:bg-gray-800/50 ${isCollapsed ? 'justify-center' : ''
                             }`}
-                        style={{ color: '#7B8B9A' }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)';
-                            e.currentTarget.style.color = '#F9F9FB';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = '#7B8B9A';
-                        }}
                         title={isCollapsed ? "More" : undefined}
                     >
                         <HiOutlineEllipsisVertical className="w-5 h-5 flex-shrink-0" />
@@ -148,9 +125,9 @@ export default function BizFiDashboardLayout({
                 </nav>
 
                 {/* Create Business Button */}
-                <div className="p-4 border-t" style={{ borderColor: 'rgba(123, 139, 154, 0.2)' }}>
+                <div className="p-4 border-t border-gray-800">
                     <button
-                        className={`w-full py-3 font-bold rounded-xl transition-all ${isCollapsed ? 'px-0' : ''}`}
+                        className={`w-full py-3 font-bold rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 ${isCollapsed ? 'px-0' : ''}`}
                         style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
@@ -163,7 +140,7 @@ export default function BizFiDashboardLayout({
             {/* Main Content */}
             <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
                 {/* Header */}
-                <div className="relative z-10 border-b backdrop-blur-md sticky top-0" style={{ borderColor: 'rgba(123, 139, 154, 0.2)', backgroundColor: 'rgba(26, 37, 56, 0.8)' }}>
+                <div className="relative z-10 border-b border-gray-800 backdrop-blur-md sticky top-0 bg-gray-900/80">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">

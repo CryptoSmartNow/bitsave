@@ -717,7 +717,7 @@ export default function BizFiPage() {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
                         <div className="text-center">
                             <p className="text-sm" style={{ color: '#7B8B9A' }}>
-                                © {new Date().getFullYear()} Bitsave BizMarket. All rights reserved.
+                                © {new Date().getFullYear()} Bitsave Bizfi. All rights reserved.
                             </p>
                         </div>
                     </div>

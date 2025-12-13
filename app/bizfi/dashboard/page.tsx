@@ -88,10 +88,7 @@ export default function BizFiDashboardPage() {
                 setBusinessCount(data.count);
             } catch (error) {
                 console.error('Failed to fetch business counter:', error);
-                // Fallback to localStorage if API fails
-                const currentCount = parseInt(localStorage.getItem('bizfi_business_count') || '1000');
-                setBusinessCount(currentCount + 1);
-                localStorage.setItem('bizfi_business_count', (currentCount + 1).toString());
+                // No mock fallback
             }
         };
 
@@ -100,12 +97,9 @@ export default function BizFiDashboardPage() {
 
     const handleReferralCheck = (code: string) => {
         setReferralCode(code);
-        // Mock validation
-        if (code.length > 3) {
-            setIsReferralValid(true);
-        } else {
-            setIsReferralValid(false);
-        }
+        // Real validation would happen via API here
+        // For now, we strictly disable mock validation
+        setIsReferralValid(false);
     };
 
     if (!mounted) {
@@ -179,155 +173,146 @@ export default function BizFiDashboardPage() {
                         </div>
                     </div>
                 ) : (
-                <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Form Section */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="backdrop-blur-sm rounded-2xl border p-8" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>
-                                    <HiOutlineClipboardDocumentCheck className="w-6 h-6 text-[#81D7B4]" />
+                    <div className="grid lg:grid-cols-3 gap-8">
+                        {/* Form Section */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-8">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>
+                                        <HiOutlineClipboardDocumentCheck className="w-6 h-6 text-[#81D7B4]" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>List Your Business</h2>
+                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Fill the form to bring your business onchain</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>List Your Business</h2>
-                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Fill the form to bring your business onchain</p>
+
+                                <div className="mb-6 p-4 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(129, 215, 180, 0.1) 0%, transparent 100%)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
+                                    <p className="text-sm leading-relaxed" style={{ color: '#F9F9FB' }}>
+                                        Fill the Form to Bring your business onchain, <span className="text-[#81D7B4] font-bold">raise capital</span> to expand globally, and get new customers.
+                                    </p>
                                 </div>
-                            </div>
 
-                            <div className="mb-6 p-4 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(129, 215, 180, 0.1) 0%, transparent 100%)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
-                                <p className="text-sm leading-relaxed" style={{ color: '#F9F9FB' }}>
-                                    Fill the Form to Bring your business onchain, <span className="text-[#81D7B4] font-bold">raise capital</span> to expand globally, and get new customers.
-                                </p>
-                            </div>
+                                {/* Tier Selection */}
+                                <div className="mb-8">
+                                    <label className="block text-sm font-medium mb-3 text-gray-400">Select Your Business Tier</label>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        {TIERS.map((tier) => (
+                                            <button
+                                                key={tier.id}
+                                                onClick={() => setSelectedTier(tier)}
+                                                className={`text-left p-4 rounded-xl border transition-all duration-300 ${selectedTier.id === tier.id
+                                                    ? ''
+                                                    : ''
+                                                    }`}
+                                                style={{
+                                                    backgroundColor: selectedTier.id === tier.id ? 'rgba(129, 215, 180, 0.1)' : 'rgba(31, 41, 55, 0.5)',
+                                                    borderColor: selectedTier.id === tier.id ? '#81D7B4' : 'rgba(55, 65, 81, 0.5)',
+                                                    boxShadow: selectedTier.id === tier.id ? '0 0 0 1px #81D7B4' : 'none'
+                                                }}
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="font-bold" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB' }}>
+                                                        {tier.name}
+                                                    </span>
+                                                    <span className="text-sm font-mono" style={{ color: '#7B8B9A' }}>${tier.price}</span>
+                                                </div>
+                                                <p className="text-xs leading-relaxed" style={{ color: '#7B8B9A' }}>{tier.description}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                            {/* Tier Selection */}
-                            <div className="mb-8">
-                                <label className="block text-sm font-medium mb-3" style={{ color: '#9BA8B5' }}>Select Your Business Tier</label>
-                                <div className="grid sm:grid-cols-2 gap-4">
-                                    {TIERS.map((tier) => (
-                                        <button
-                                            key={tier.id}
-                                            onClick={() => setSelectedTier(tier)}
-                                            className={`text-left p-4 rounded-xl border transition-all duration-300 ${selectedTier.id === tier.id
-                                                ? ''
-                                                : ''
-                                                }`}
-                                            style={{
-                                                backgroundColor: selectedTier.id === tier.id ? 'rgba(129, 215, 180, 0.1)' : 'rgba(44, 62, 93, 0.3)',
-                                                borderColor: selectedTier.id === tier.id ? '#81D7B4' : 'rgba(123, 139, 154, 0.3)',
-                                                boxShadow: selectedTier.id === tier.id ? '0 0 0 1px #81D7B4' : 'none'
-                                            }}
-                                        >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="font-bold" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB' }}>
-                                                    {tier.name}
-                                                </span>
-                                                <span className="text-sm font-mono" style={{ color: '#7B8B9A' }}>${tier.price}</span>
+                                {/* Referral Code */}
+                                <div className="mb-8 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-[#81D7B4]">Have a Referral Code?</label>
+                                        <span className="text-xs font-bold px-2 py-1 rounded" style={{ color: '#81D7B4', backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>Save up to 40%</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter code to save on listing fees"
+                                            value={referralCode}
+                                            onChange={(e) => handleReferralCheck(e.target.value)}
+                                            className="flex-1 px-4 py-2 rounded-lg focus:outline-none bg-gray-800 border border-gray-700 text-white"
+                                            onFocus={(e) => e.currentTarget.style.borderColor = '#81D7B4'}
+                                            onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(55, 65, 81, 1)'}
+                                        />
+                                        {isReferralValid && (
+                                            <div className="flex items-center gap-1 text-sm font-bold px-3" style={{ color: '#81D7B4' }}>
+                                                <HiOutlineCheckCircle className="w-5 h-5" />
+                                                <span>-${selectedTier.price - selectedTier.referralPrice}</span>
                                             </div>
-                                            <p className="text-xs leading-relaxed" style={{ color: '#7B8B9A' }}>{tier.description}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Referral Code */}
-                            <div className="mb-8 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="block text-sm font-medium text-[#81D7B4]">Have a Referral Code?</label>
-                                    <span className="text-xs font-bold px-2 py-1 rounded" style={{ color: '#81D7B4', backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>Save up to 40%</span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter code to save on listing fees"
-                                        value={referralCode}
-                                        onChange={(e) => handleReferralCheck(e.target.value)}
-                                        className="flex-1 px-4 py-2 rounded-lg focus:outline-none"
-                                        style={{
-                                            backgroundColor: 'rgba(26, 37, 56, 0.8)',
-                                            border: '1px solid rgba(123, 139, 154, 0.3)',
-                                            color: '#F9F9FB'
-                                        }}
-                                        onFocus={(e) => e.currentTarget.style.borderColor = '#81D7B4'}
-                                        onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(123, 139, 154, 0.3)'}
-                                    />
+                                        )}
+                                    </div>
                                     {isReferralValid && (
-                                        <div className="flex items-center gap-1 text-sm font-bold px-3" style={{ color: '#81D7B4' }}>
-                                            <HiOutlineCheckCircle className="w-5 h-5" />
-                                            <span>-${selectedTier.price - selectedTier.referralPrice}</span>
-                                        </div>
+                                        <p className="text-xs mt-2" style={{ color: '#81D7B4' }}>
+                                            Code applied! You pay <span className="font-bold">${selectedTier.referralPrice}</span> instead of ${selectedTier.price}.
+                                        </p>
                                     )}
                                 </div>
-                                {isReferralValid && (
-                                    <p className="text-xs mt-2" style={{ color: '#81D7B4' }}>
-                                        Code applied! You pay <span className="font-bold">${selectedTier.referralPrice}</span> instead of ${selectedTier.price}.
-                                    </p>
-                                )}
                             </div>
+
+                            {/* Wizard Form */}
+                            <WizardForm
+                                selectedTier={selectedTier}
+                                referralCode={referralCode}
+                                isReferralValid={isReferralValid}
+                            />
                         </div>
 
-                        {/* Wizard Form */}
-                        <WizardForm
-                            selectedTier={selectedTier}
-                            referralCode={referralCode}
-                            isReferralValid={isReferralValid}
-                        />
-                    </div>
+                        {/* Sidebar / Info */}
+                        <div className="space-y-6">
+                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
+                                <h3 className="text-lg font-bold mb-4" style={{ color: '#F9F9FB' }}>Why List on BizFi?</h3>
+                                <ul className="space-y-3">
+                                    <li className="flex gap-3">
+                                        <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
+                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global investors from the web3 space.</p>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
+                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Tokenize equity or revenue streams easily.</p>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
+                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Automated compliance and investor management.</p>
+                                    </li>
+                                </ul>
+                            </div>
 
-                    {/* Sidebar / Info */}
-                    <div className="space-y-6">
-                        <div className="backdrop-blur-sm rounded-2xl border p-6" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
-                            <h3 className="text-lg font-bold mb-4" style={{ color: '#F9F9FB' }}>Why List on BizFi?</h3>
-                            <ul className="space-y-3">
-                                <li className="flex gap-3">
-                                    <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global investors from the web3 space.</p>
-                                </li>
-                                <li className="flex gap-3">
-                                    <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Tokenize equity or revenue streams easily.</p>
-                                </li>
-                                <li className="flex gap-3">
-                                    <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
-                                    <p className="text-sm" style={{ color: '#7B8B9A' }}>Automated compliance and investor management.</p>
-                                </li>
-                            </ul>
-                        </div>
+                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
+                                <h3 className="text-lg font-bold mb-2 text-white">Need Help?</h3>
+                                <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                                    Not sure which tier fits you? Book a free consultancy session with our experts.
+                                </p>
 
-                        <div className="rounded-2xl border p-6" style={{ background: 'linear-gradient(135deg, rgba(129, 215, 180, 0.15) 0%, rgba(44, 62, 93, 0.4) 100%)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
-                            <h3 className="text-lg font-bold mb-2" style={{ color: '#F9F9FB' }}>Need Help?</h3>
-                            <p className="text-sm mb-4" style={{ color: '#7B8B9A' }}>
-                                Not sure which tier fits you? Book a free consultancy session with our experts.
-                            </p>
-                            
-                            <a
-                                href="https://calendly.com/cryptosmartnow/15min"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block w-full py-3 mb-3 font-bold rounded-lg transition-all text-center"
-                                style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
-                            >
-                                Schedule Call
-                            </a>
-
-                            <div className="pt-3 border-t border-[#81D7B4]/20">
-                                <p className="text-xs mb-3 text-[#7B8B9A]">Join our community for updates and support:</p>
                                 <a
-                                    href="https://t.me/bitsaveprotocol"
+                                    href="https://calendly.com/cryptosmartnow/15min"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full py-2.5 font-bold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10"
+                                    className="block w-full py-3 px-4 font-bold rounded-xl text-center transition-all bg-transparent border border-[#81D7B4] text-[#81D7B4] hover:bg-[#81D7B4] hover:text-[#0F1825]"
                                 >
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.638z"/>
-                                    </svg>
-                                    Join Telegram
+                                    Schedule Call
                                 </a>
+                                <div className="pt-3 mt-6 border-t border-[#81D7B4]/20">
+                                    <p className="text-xs mb-3 text-[#7B8B9A]">Join our community for updates and support:</p>
+                                    <a
+                                        href="https://t.me/bitsaveprotocol"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 w-full py-2.5 font-bold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.638z" />
+                                        </svg>
+                                        Join Telegram
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 )}
             </div>
 

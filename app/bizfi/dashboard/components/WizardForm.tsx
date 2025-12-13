@@ -1,12 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     HiOutlineCheckCircle,
     HiOutlineArrowRight,
     HiOutlineArrowLeft,
-    HiOutlineRocketLaunch
+    HiOutlineRocketLaunch,
+    HiOutlineExclamationCircle
 } from "react-icons/hi2";
+import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
+import { parseUnits, zeroAddress, toHex } from "viem";
+
+
+import { initOnRamp } from '@coinbase/cbpay-js';
 
 type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
 
@@ -65,6 +71,92 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<any>({});
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const { registerBusiness, loading, error, address } = useBizFi(); // Destructure address from hook if available, or imports
+
+    // Load saved data from API on mount/address change
+    useEffect(() => {
+        const loadDraft = async () => {
+            if (!address) return;
+            try {
+                const res = await fetch(`/api/bizfi/draft?address=${address}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.formData) {
+                        setFormData(data.formData);
+                        // Optionally restore step
+                        // if (data.step) setCurrentStep(data.step);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load draft:", e);
+            }
+        };
+        loadDraft();
+    }, [address]);
+
+    // Save data to API on change (debounced ideally, but simple effect here)
+    useEffect(() => {
+        const saveDraft = async () => {
+            if (!address || Object.keys(formData).length === 0) return;
+            try {
+                await fetch('/api/bizfi/draft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address,
+                        formData,
+                        step: currentStep
+                    })
+                });
+            } catch (e) {
+                console.error("Failed to save draft:", e);
+            }
+        };
+
+        // Debounce slightly to avoid spamming API on every keystroke if typing fast
+        const timeoutId = setTimeout(saveDraft, 1000);
+        return () => clearTimeout(timeoutId);
+
+    }, [formData, currentStep, address]);
+
+    const handleBuyCrypto = async () => {
+        if (!address) return;
+        try {
+            const res = await fetch('/api/bizfi/pay/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address })
+            });
+            const data = await res.json();
+
+            // The API returns the whole session response, usually { session_token: ..., ... }
+            // or the SDK output.
+            // We use the generated session URL or token.
+
+            // Standard CB Pay Init
+            initOnRamp({
+                appId: process.env.NEXT_PUBLIC_COINBASE_CDP_PROJECT_ID || 'your-project-id',
+                widgetParameters: {
+                    destinationWallets: [{
+                        address: address,
+                        blockchains: ["base", "ethereum", "polygon", "solana"],
+                    }],
+                },
+                onSuccess: () => {
+                    console.log('Onramp success');
+                },
+                onExit: () => {
+                    console.log('Onramp exit');
+                },
+            }, (error, instance) => {
+                if (instance) instance.open();
+            });
+
+        } catch (e) {
+            console.error("Failed to start onramp:", e);
+            alert("Could not start Coinbase Pay. Please try again.");
+        }
+    };
 
     const steps = TIER_STEPS[selectedTier.id];
     const isLastStep = currentStep === steps.length;
@@ -82,11 +174,66 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         }
     };
 
-    const handleSubmit = () => {
-        console.log("Form submitted:", formData);
-        alert("Form submitted successfully! Redirecting to payment...");
-    };
+    const handleSubmit = async () => {
+        try {
+            console.log("Submitting form...", formData);
 
+            // Prepare referral data if applicable
+            let referralData: {
+                code: string;
+                discountPercent: number;
+                signature?: `0x${string}`;
+                referralData?: ReferralDiscount;
+            } | undefined;
+
+            if (isReferralValid && referralCode) {
+                // TODO: Implementation for real referral signing via backend API
+                // For now, we must not send mock data as requested
+                console.warn("Referral code provided but backend signature service is not connected. Proceeding without discount.");
+                referralData = undefined;
+            }
+
+            const receipt = await registerBusiness(
+                formData.businessName || formData.name, // Use business name or personal name
+                formData,
+                selectedTier.id,
+                referralData
+            );
+
+            console.log("Registration successful!", receipt);
+            alert("Registration successful! Welcome to BizFi.");
+
+            // Save final business data to MongoDB
+            try {
+                await fetch('/api/bizfi/business', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transactionHash: receipt.transactionHash,
+                        owner: address,
+                        businessName: formData.businessName || formData.name,
+                        metadata: formData,
+                        tier: selectedTier.id,
+                        feePaid: isReferralValid ? selectedTier.referralPrice : selectedTier.price
+                    })
+                });
+            } catch (saveErr) {
+                console.error("Failed to save business record to DB", saveErr);
+                // Don't block success UI, but maybe log this critical failure
+            }
+
+            // Clear saved data
+            if (address) {
+                await fetch(`/api/bizfi/draft?address=${address}`, { method: 'DELETE' });
+            }
+            setFormData({});
+            setCurrentStep(1);
+
+        } catch (err: any) {
+            console.error("Submission failed:", err);
+            alert("Registration failed: " + (err.message || "Unknown error"));
+        }
+    };
     const updateFormData = (field: string, value: any) => {
         setFormData({ ...formData, [field]: value });
     };
@@ -174,15 +321,47 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     Previous
                 </button>
 
-                {isLastStep ? (
+                {isLastStep && (
                     <button
-                        onClick={handleSubmit}
-                        disabled={!agreedToTerms}
-                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleBuyCrypto}
+                        className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-all"
                     >
-                        Submit & Pay ${isReferralValid ? selectedTier.referralPrice : selectedTier.price}
-                        <HiOutlineRocketLaunch className="w-5 h-5" />
+                        <span className="font-semibold">Insufficient Funds? Buy Crypto</span>
                     </button>
+                )}
+
+                {isLastStep ? (
+                    <div className="flex flex-col items-end gap-2">
+                        <button
+                            onClick={handleSubmit}
+                            disabled={!agreedToTerms || loading}
+                            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <>Processing...</>
+                            ) : (
+                                <>
+                                    Pay ${isReferralValid ? selectedTier.referralPrice : selectedTier.price}
+                                    <HiOutlineRocketLaunch className="w-5 h-5" />
+                                </>
+                            )}
+                        </button>
+
+                        {/* Mobile Buy Crypto Link */}
+                        <button
+                            onClick={handleBuyCrypto}
+                            className="md:hidden text-xs text-[#81D7B4] hover:underline"
+                        >
+                            Need Crypto? Buy Instantly
+                        </button>
+
+                        {error && (
+                            <div className="flex items-center gap-2 text-red-400 text-xs">
+                                <HiOutlineExclamationCircle className="w-4 h-4" />
+                                {error}
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <button
                         onClick={handleNext}
