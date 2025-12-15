@@ -124,16 +124,17 @@ export default function BizFiDashboardLayout({
                     </button>
                 </nav>
 
-                {/* Create Business Button */}
+                {/* Return to SaveFi Button */}
                 <div className="p-4 border-t border-gray-800">
-                    <button
-                        className={`w-full py-3 font-bold rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 ${isCollapsed ? 'px-0' : ''}`}
+                    <Link
+                        href="/dashboard"
+                        className={`block w-full py-3 font-bold rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 text-center ${isCollapsed ? 'px-0' : ''}`}
                         style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
                     >
-                        {isCollapsed ? '+' : 'Create Business'}
-                    </button>
+                        {isCollapsed ? '←' : 'Return to SaveFi'}
+                    </Link>
                 </div>
             </div>
 

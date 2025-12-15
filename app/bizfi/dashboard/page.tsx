@@ -260,9 +260,9 @@ export default function BizFiDashboardPage() {
                             <div className="p-4 rounded-full inline-block mb-4" style={{ backgroundColor: 'rgba(129, 215, 180, 0.1)' }}>
                                 <HiOutlineRocketLaunch className="w-10 h-10 text-[#81D7B4]" />
                             </div>
-                            <h2 className="text-2xl font-bold mb-4" style={{ color: '#F9F9FB' }}>Connect Your Wallet</h2>
+                            <h2 className="text-2xl font-bold mb-4" style={{ color: '#F9F9FB' }}>Login to BizFi</h2>
                             <p className="mb-8" style={{ color: '#7B8B9A' }}>
-                                You need to connect your wallet to list your business and access the dashboard features.
+                                Log in with your Email, X (Twitter), or connect a wallet to list your business and access the dashboard features.
                             </p>
                             <button
                                 onClick={login}

@@ -151,21 +151,6 @@ export default function DashboardLayout({
                  </div>
                  {!sidebarCollapsed && <span className="ml-3 text-sm font-medium truncate">My Plans</span>}
                </Link>
-
-               <Link href="/dashboard/withdraw" onClick={handleMobileNavClick} className={`group flex items-center ${sidebarCollapsed ? 'px-3 py-4 justify-center' : 'px-3 xs:px-4 py-3 xs:py-4'} mb-1 xs:mb-2 rounded-xl mx-1 transition-all duration-300 ${
-                 isActive('/dashboard/withdraw') 
-                   ? 'bg-gradient-to-r from-[#81D7B4]/30 to-[#6BC7A0]/20 text-[#2D5A4A] shadow-lg backdrop-blur-sm border border-[#81D7B4]/30' 
-                   : 'hover:bg-white/40 text-gray-700 hover:text-gray-900 hover:shadow-md hover:backdrop-blur-sm hover:border hover:border-white/40 transform hover:scale-[1.02]'
-               }`}>
-                 <div className="relative">
-                   <HiOutlineArrowRightOnRectangle className="w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
-                   {isActive('/dashboard/withdraw') && (
-                     <div className="absolute -inset-1 bg-[#81D7B4]/20 rounded-lg blur-sm"></div>
-                   )}
-                 </div>
-                 {!sidebarCollapsed && <span className="ml-3 text-sm font-medium truncate">Withdraw</span>}
-               </Link>
-
      
           
                <Link href="/dashboard/activity" onClick={handleMobileNavClick} className={`group flex items-center ${sidebarCollapsed ? 'px-3 py-4 justify-center' : 'px-3 xs:px-4 py-3 xs:py-4'} mb-1 xs:mb-2 rounded-xl mx-1 transition-all duration-300 ${

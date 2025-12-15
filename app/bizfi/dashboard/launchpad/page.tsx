@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { usePrivy } from '@privy-io/react-auth';
 import {
     HiOutlineCheckCircle,
     HiOutlineClock,
@@ -17,8 +18,8 @@ import {
 } from "react-icons/hi2";
 import "../../bizfi-colors.css";
 
-// Dashboard Metrics Data
-const DASHBOARD_METRICS = [
+// Dashboard Metrics Data (Initial State)
+const INITIAL_METRICS = [
     {
         label: "Token Price",
         value: "$0.00",
@@ -84,8 +85,46 @@ const INSTRUMENT_TYPES = [
 ];
 
 export default function LaunchPadPage() {
+    const { user } = usePrivy();
+    const address = user?.wallet?.address;
     const [applicationStatus, setApplicationStatus] = useState<"draft" | "submitted" | "under_review" | "approved" | "rejected">("draft");
     const [selectedInstrument, setSelectedInstrument] = useState<string | null>(null);
+    const [metrics, setMetrics] = useState(INITIAL_METRICS);
+    const [businessData, setBusinessData] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchBusinessData = async () => {
+            if (!address) return;
+            try {
+                const response = await fetch(`/api/bizfi/business?owner=${address}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const business = data[0]; // Get the latest business
+                        setBusinessData(business);
+                        setApplicationStatus("submitted"); // Assume submitted if record exists
+
+                        // Update Metrics based on business data
+                        const newMetrics = [...INITIAL_METRICS];
+                        
+                        // Map fields from metadata to metrics
+                        // Monthly Revenue
+                        const revenue = business.metadata?.monthlyRevenue || "0";
+                        newMetrics[4] = { ...newMetrics[4], value: `$${revenue}` };
+
+                        // Compliance Status
+                        newMetrics[7] = { ...newMetrics[7], value: "Under Review" };
+                        
+                        setMetrics(newMetrics);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch business data:", error);
+            }
+        };
+
+        fetchBusinessData();
+    }, [address]);
 
     const getStatusConfig = (status: typeof applicationStatus) => {
         switch (status) {
@@ -110,7 +149,9 @@ export default function LaunchPadPage() {
             {/* Header */}
             <div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2" style={{ color: '#F9F9FB' }}>LaunchPad</h1>
-                <p style={{ color: '#7B8B9A' }}>Track your business listing progress and metrics</p>
+                <p style={{ color: '#7B8B9A' }}>
+                    {businessData ? `Track ${businessData.businessName}'s listing progress` : "Track your business listing progress and metrics"}
+                </p>
             </div>
 
             {/* Listing Status & Readiness */}
@@ -180,7 +221,7 @@ export default function LaunchPadPage() {
             >
                 <h2 className="text-xl font-bold text-white mb-4">Business Metrics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {DASHBOARD_METRICS.map((metric, index) => {
+                    {metrics.map((metric, index) => {
                         const Icon = metric.icon;
                         return (
                             <motion.div
@@ -198,44 +239,11 @@ export default function LaunchPadPage() {
                                         {metric.change}
                                     </span>
                                 </div>
-                                <p className="text-2xl font-bold text-white mb-1">{metric.value}</p>
-                                <p className="text-sm text-gray-400">{metric.label}</p>
+                                <p className="text-sm text-gray-400 mb-1">{metric.label}</p>
+                                <p className="text-xl font-bold text-white">{metric.value}</p>
                             </motion.div>
                         );
                     })}
-                </div>
-            </motion.div>
-
-            {/* Soon to Come */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gradient-to-br from-[#81D7B4]/10 to-transparent rounded-2xl border border-[#81D7B4]/30 p-6"
-            >
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <HiOutlineRocketLaunch className="w-6 h-6 text-[#81D7B4]" />
-                    Soon to Come!
-                </h2>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-700 p-4">
-                        <HiOutlineShieldCheck className="w-8 h-8 text-[#81D7B4] mb-3" />
-                        <h3 className="text-lg font-bold text-white mb-2">KYC/KYB Verification</h3>
-                        <p className="text-sm text-gray-400">Complete identity and business verification for compliance</p>
-                    </div>
-
-                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-700 p-4">
-                        <HiOutlineChartBar className="w-8 h-8 text-[#81D7B4] mb-3" />
-                        <h3 className="text-lg font-bold text-white mb-2">Milestones & Roadmap Planner</h3>
-                        <p className="text-sm text-gray-400">Track your business goals and share progress with investors</p>
-                    </div>
-
-                    <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-700 p-4">
-                        <HiOutlineDocumentText className="w-8 h-8 text-[#81D7B4] mb-3" />
-                        <h3 className="text-lg font-bold text-white mb-2">Risk Assessment Report</h3>
-                        <p className="text-sm text-gray-400">Comprehensive risk analysis for investor transparency</p>
-                    </div>
                 </div>
             </motion.div>
         </div>
