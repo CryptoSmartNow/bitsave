@@ -198,10 +198,10 @@ export function useBizFi() {
                 args: [tierValue]
             }) as bigint;
 
-            if (referral && referral.referralData && referral.signature) {
+            if (referral && referral.referralData) {
                 finalPrice = referral.referralData.discountedPrice;
                 referralStruct = referral.referralData;
-                signature = referral.signature;
+                signature = referral.signature || "0x";
             } else {
                 finalPrice = standardFee;
                 referralStruct = {

@@ -241,7 +241,7 @@ export default function BizFiPage() {
                         <div className="flex items-center gap-8">
                             <Link href="/bizfi/dashboard" className="flex items-center gap-2 text-[#F9F9FB] font-bold text-xl hover:opacity-80 transition-opacity">
                                 <div className="w-8 h-8 rounded-lg bg-[#81D7B4] flex items-center justify-center text-[#0F1825]">
-                                    <HiOutlineCubeTransparent className="w-5 h-5" />
+                                    <HiOutlineRocketLaunch className="w-5 h-5" />
                                 </div>
                                 BizFi
                             </Link>
