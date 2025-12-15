@@ -386,7 +386,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         {/* Mobile Buy Crypto Button */}
                         <button
                             onClick={handleBuyCrypto}
-                            className="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 w-full"
+                            className="md:hidden flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 w-full whitespace-nowrap"
                             style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
                         >
                             <HiOutlineCurrencyDollar className="w-4 h-4" />

@@ -95,9 +95,9 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                             <div className="relative bg-gray-800/40 rounded-2xl p-5 border border-gray-700/50 backdrop-blur-sm">
                                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Connected Address</p>
                                 <div className="flex flex-col gap-3">
-                                    <code className="text-sm sm:text-base font-mono text-white truncate leading-relaxed">
-                                        {address}
-                                    </code>
+                                    <code className="text-sm sm:text-base font-mono text-white leading-relaxed">
+                                    {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : ''}
+                                </code>
                                     <button 
                                         onClick={handleCopy}
                                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gray-700/50 hover:bg-[#81D7B4]/10 border border-gray-600/50 hover:border-[#81D7B4]/50 text-gray-300 hover:text-[#81D7B4] transition-all font-medium text-sm group/btn"
@@ -181,9 +181,9 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 href={`https://basescan.org/address/${address}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group flex items-center justify-center gap-2 p-4 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 text-white font-medium transition-all border border-gray-700/50 hover:border-gray-600 hover:-translate-y-0.5"
+                                className="group flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 text-white font-medium transition-all border border-gray-700/50 hover:border-gray-600 hover:-translate-y-0.5"
                             >
-                                <div className="p-1.5 rounded-lg bg-gray-700/50 group-hover:bg-gray-600/50 transition-colors">
+                                <div className="p-1 rounded-lg bg-gray-700/50 group-hover:bg-gray-600/50 transition-colors">
                                     <HiOutlineArrowTopRightOnSquare className="w-5 h-5 text-gray-300 group-hover:text-white" />
                                 </div>
                                 <span>History</span>
@@ -194,9 +194,9 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                     window.dispatchEvent(event);
                                     onClose();
                                 }}
-                                className="group flex items-center justify-center gap-2 p-4 rounded-2xl bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-white font-medium transition-all border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 hover:-translate-y-0.5"
+                                className="group flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-white font-medium transition-all border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 hover:-translate-y-0.5 whitespace-nowrap"
                             >
-                                <div className="p-1.5 rounded-lg bg-[#81D7B4]/20 group-hover:bg-[#81D7B4]/30 transition-colors">
+                                <div className="p-1 rounded-lg bg-[#81D7B4]/20 group-hover:bg-[#81D7B4]/30 transition-colors">
                                     <HiOutlineCreditCard className="w-5 h-5 text-[#81D7B4]" />
                                 </div>
                                 <span>Buy Crypto</span>

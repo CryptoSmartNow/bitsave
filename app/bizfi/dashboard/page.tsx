@@ -206,7 +206,7 @@ export default function BizFiDashboardPage() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowConsultancyModal(true)}
-                            className="flex items-center gap-2 px-4 sm:px-6 py-3 font-bold rounded-xl transition-all"
+                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 font-bold rounded-lg transition-all whitespace-nowrap"
                             style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
@@ -219,20 +219,21 @@ export default function BizFiDashboardPage() {
                             <>
                                 <button
                                     onClick={() => setShowWalletModal(true)}
-                                    className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:bg-[#81D7B4]/10 border border-gray-700 hover:border-[#81D7B4]"
+                                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium transition-all hover:bg-[#81D7B4]/10 border border-gray-700 hover:border-[#81D7B4] whitespace-nowrap"
                                     style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#9BA8B5' }}
                                 >
                                     <HiOutlineUsers className="w-4 h-4" />
-                                    <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
+                                    <span className="hidden sm:inline">{address.slice(0, 6)}...{address.slice(-4)}</span>
+                                    <span className="sm:hidden">Wallet</span>
                                 </button>
                                 <button
                                     onClick={logout}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:bg-gray-700/50 border border-gray-700 hover:border-gray-600"
+                                    className="flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-medium transition-all hover:bg-gray-700/50 border border-gray-700 hover:border-gray-600 whitespace-nowrap"
                                     style={{ color: '#9BA8B5' }}
                                     title="Logout"
                                 >
                                     <HiOutlineArrowRightOnRectangle className="w-5 h-5" />
-                                    <span className="hidden lg:inline">Logout</span>
+                                    <span>Logout</span>
                                 </button>
                             </>
                         )}
@@ -245,9 +246,9 @@ export default function BizFiDashboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8 text-center"
                 >
-                    <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full border" style={{ background: 'linear-gradient(90deg, rgba(44, 62, 93, 0.5) 0%, rgba(129, 215, 180, 0.1) 100%)', borderColor: 'rgba(129, 215, 180, 0.3)' }}>
-                        <HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" />
-                        <p className="text-base sm:text-lg leading-relaxed" style={{ color: '#7B8B9A' }}>
+                    <div className="inline-flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(44, 62, 93, 0.5) 0%, rgba(129, 215, 180, 0.1) 100%)', borderColor: 'rgba(129, 215, 180, 0.3)' }}>
+                        <HiOutlineCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4]" />
+                        <p className="text-xs sm:text-base md:text-lg leading-relaxed whitespace-nowrap" style={{ color: '#7B8B9A' }}>
                             <span className="text-[#81D7B4] font-bold">{(1000 + businessCount).toLocaleString()}</span> Real World Businesses have listed Onchain
                         </p>
                     </div>
