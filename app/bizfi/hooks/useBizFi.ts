@@ -214,6 +214,26 @@ export function useBizFi() {
                 };
             }
 
+            // Check ETH Balance for gas
+            const ethBalance = await publicClient.getBalance({ address });
+            if (ethBalance === BigInt(0)) {
+                throw new Error("Insufficient ETH. You need ETH on Base network to pay for gas fees.");
+            }
+
+            // Check USDC Balance
+            const usdcBalance = await publicClient.readContract({
+                address: USDC_ADDRESS,
+                abi: ERC20_ABI,
+                functionName: 'balanceOf',
+                args: [address]
+            });
+
+            if (usdcBalance < finalPrice) {
+                const required = formatUnits(finalPrice, 6); // USDC has 6 decimals
+                const available = formatUnits(usdcBalance, 6);
+                throw new Error(`Insufficient USDC balance. You have ${available} USDC but need ${required} USDC.`);
+            }
+
             // Check Allowance
             const hasAllowance = await checkAllowance(finalPrice);
             if (!hasAllowance) {

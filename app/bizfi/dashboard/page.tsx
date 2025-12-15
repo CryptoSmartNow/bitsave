@@ -19,6 +19,7 @@ import {
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import WizardForm from "./components/WizardForm";
+import WalletDetailsModal from "./components/WalletDetailsModal";
 import "../bizfi-colors.css";
 
 const exo = Exo({
@@ -81,6 +82,7 @@ export default function BizFiDashboardPage() {
     const [businessCount, setBusinessCount] = useState(1000);
     const [copiedAddress, setCopiedAddress] = useState(false);
     const [showBuyCryptoModal, setShowBuyCryptoModal] = useState(false);
+    const [showWalletModal, setShowWalletModal] = useState(false);
     const [validatingReferral, setValidatingReferral] = useState(false);
 
     useEffect(() => {
@@ -216,21 +218,12 @@ export default function BizFiDashboardPage() {
                         {address && (
                             <>
                                 <button
-                                    onClick={handleCopyAddress}
+                                    onClick={() => setShowWalletModal(true)}
                                     className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:bg-[#81D7B4]/10 border border-gray-700 hover:border-[#81D7B4]"
-                                    style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: copiedAddress ? '#81D7B4' : '#9BA8B5' }}
+                                    style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#9BA8B5' }}
                                 >
-                                    {copiedAddress ? (
-                                        <>
-                                            <HiOutlineCheckCircle className="w-4 h-4" />
-                                            <span>Copied!</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <HiOutlineClipboard className="w-4 h-4" />
-                                            <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
-                                        </>
-                                    )}
+                                    <HiOutlineUsers className="w-4 h-4" />
+                                    <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
                                 </button>
                                 <button
                                     onClick={logout}
@@ -594,6 +587,13 @@ export default function BizFiDashboardPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <WalletDetailsModal
+                isOpen={showWalletModal}
+                onClose={() => setShowWalletModal(false)}
+                address={address as `0x${string}` | undefined}
+                logout={logout}
+            />
         </div>
     );
 }

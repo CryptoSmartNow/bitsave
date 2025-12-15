@@ -371,7 +371,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         <button
                             onClick={handleSubmit}
                             disabled={!agreedToTerms || loading}
-                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                         >
                             {loading ? (
                                 <>Processing...</>
