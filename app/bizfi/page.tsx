@@ -275,7 +275,7 @@ export default function BizFiPage() {
                                         onClick={logout}
                                         className="text-xs text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
                                     >
-                                        Disconnect
+                                        Logout
                                     </button>
                                 </div>
                             ) : (
@@ -283,7 +283,7 @@ export default function BizFiPage() {
                                     onClick={login}
                                     className="px-4 py-2 text-sm font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl hover:bg-[#6BC4A0] transition-colors"
                                 >
-                                    Connect Wallet
+                                    Login
                                 </button>
                             )}
 

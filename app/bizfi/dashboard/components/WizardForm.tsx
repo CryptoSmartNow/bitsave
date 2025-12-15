@@ -6,7 +6,9 @@ import {
     HiOutlineArrowRight,
     HiOutlineArrowLeft,
     HiOutlineRocketLaunch,
-    HiOutlineExclamationCircle
+    HiOutlineExclamationCircle,
+    HiOutlineCurrencyDollar,
+    HiOutlineXMark
 } from "react-icons/hi2";
 import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
 import { parseUnits, zeroAddress, toHex } from "viem";
@@ -71,7 +73,13 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<any>({});
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const { registerBusiness, loading, error, address } = useBizFi(); // Destructure address from hook if available, or imports
+    const { registerBusiness, loading, error, address } = useBizFi();
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationConfig, setNotificationConfig] = useState<{
+        type: 'success' | 'error';
+        title: string;
+        message: string;
+    }>({ type: 'success', title: '', message: '' });
 
     // Load saved data from API on mount/address change
     useEffect(() => {
@@ -119,7 +127,13 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
     }, [formData, currentStep, address]);
 
-    const handleBuyCrypto = async () => {
+    const handleBuyCrypto = () => {
+        // Trigger the Buy Crypto modal in the parent dashboard component
+        const event = new CustomEvent('openBuyCryptoModal');
+        window.dispatchEvent(event);
+    };
+
+    const openCoinbasePay = async () => {
         if (!address) return;
         try {
             const res = await fetch('/api/bizfi/pay/session', {
@@ -128,10 +142,6 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 body: JSON.stringify({ address })
             });
             const data = await res.json();
-
-            // The API returns the whole session response, usually { session_token: ..., ... }
-            // or the SDK output.
-            // We use the generated session URL or token.
 
             // Standard CB Pay Init
             initOnRamp({
@@ -154,9 +164,23 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
         } catch (e) {
             console.error("Failed to start onramp:", e);
-            alert("Could not start Coinbase Pay. Please try again.");
+            setNotificationConfig({
+                type: 'error',
+                title: 'Coinbase Pay Error',
+                message: 'Could not start Coinbase Pay. Please try again.'
+            });
+            setShowNotification(true);
         }
     };
+
+    // Listen for Coinbase Pay event from modal
+    useEffect(() => {
+        const handleOpenCoinbasePay = () => {
+            openCoinbasePay();
+        };
+        window.addEventListener('openCoinbasePay', handleOpenCoinbasePay);
+        return () => window.removeEventListener('openCoinbasePay', handleOpenCoinbasePay);
+    }, [address]);
 
     const steps = TIER_STEPS[selectedTier.id];
     const isLastStep = currentStep === steps.length;
@@ -201,7 +225,12 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             );
 
             console.log("Registration successful!", receipt);
-            alert("Registration successful! Welcome to BizFi.");
+            setNotificationConfig({
+                type: 'success',
+                title: 'Registration Successful!',
+                message: 'Welcome to BizFi. Your business has been successfully listed onchain.'
+            });
+            setShowNotification(true);
 
             // Save final business data to MongoDB
             try {
@@ -231,7 +260,12 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
         } catch (err: any) {
             console.error("Submission failed:", err);
-            alert("Registration failed: " + (err.message || "Unknown error"));
+            setNotificationConfig({
+                type: 'error',
+                title: 'Registration Failed',
+                message: err.message || 'An unknown error occurred. Please try again.'
+            });
+            setShowNotification(true);
         }
     };
     const updateFormData = (field: string, value: any) => {
@@ -311,31 +345,33 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             </AnimatePresence>
 
             {/* Navigation Buttons */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                 <button
                     onClick={handlePrevious}
                     disabled={isFirstStep}
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
                 >
                     <HiOutlineArrowLeft className="w-5 h-5" />
-                    Previous
+                    <span>Previous</span>
                 </button>
 
                 {isLastStep && (
                     <button
                         onClick={handleBuyCrypto}
-                        className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-all"
+                        className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border-2 border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 hover:border-[#81D7B4] backdrop-blur-sm order-3 sm:order-2"
+                        style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
                     >
-                        <span className="font-semibold">Insufficient Funds? Buy Crypto</span>
+                        <HiOutlineCurrencyDollar className="w-5 h-5" />
+                        <span>Insufficient Funds? Buy Crypto</span>
                     </button>
                 )}
 
                 {isLastStep ? (
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-col items-stretch sm:items-end gap-2 sm:gap-3 order-1 sm:order-3 w-full sm:w-auto">
                         <button
                             onClick={handleSubmit}
                             disabled={!agreedToTerms || loading}
-                            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                         >
                             {loading ? (
                                 <>Processing...</>
@@ -347,31 +383,122 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                             )}
                         </button>
 
-                        {/* Mobile Buy Crypto Link */}
+                        {/* Mobile Buy Crypto Button */}
                         <button
                             onClick={handleBuyCrypto}
-                            className="md:hidden text-xs text-[#81D7B4] hover:underline"
+                            className="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 w-full"
+                            style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
                         >
-                            Need Crypto? Buy Instantly
+                            <HiOutlineCurrencyDollar className="w-4 h-4" />
+                            <span>Need Crypto? Buy Instantly</span>
                         </button>
 
                         {error && (
-                            <div className="flex items-center gap-2 text-red-400 text-xs">
-                                <HiOutlineExclamationCircle className="w-4 h-4" />
-                                {error}
+                            <div className="mt-2 p-4 rounded-xl border border-red-500/30 bg-red-500/5 backdrop-blur-sm max-w-md">
+                                <div className="flex items-start gap-3">
+                                    <HiOutlineExclamationCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-semibold text-red-400 mb-1">Transaction Error</p>
+                                        <p className="text-xs text-red-300/80 leading-relaxed break-words">{error}</p>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
                 ) : (
                     <button
                         onClick={handleNext}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all"
                     >
                         Next
                         <HiOutlineArrowRight className="w-5 h-5" />
                     </button>
                 )}
             </div>
+
+            {/* Notification Modal */}
+            <AnimatePresence>
+                {showNotification && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+                        style={{ backgroundColor: 'rgba(15, 24, 37, 0.9)' }}
+                        onClick={() => setShowNotification(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded-2xl border shadow-2xl w-full max-w-md mx-auto overflow-hidden"
+                            style={{
+                                backgroundColor: 'rgba(26, 37, 56, 0.98)',
+                                borderColor: notificationConfig.type === 'success' ? 'rgba(129, 215, 180, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+                            }}
+                        >
+                            <div className="p-6 sm:p-8">
+                                <div className="flex items-start gap-3 sm:gap-4">
+                                    <div
+                                        className="p-2 sm:p-3 rounded-full flex-shrink-0"
+                                        style={{
+                                            backgroundColor: notificationConfig.type === 'success' ? 'rgba(129, 215, 180, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+                                        }}
+                                    >
+                                        {notificationConfig.type === 'success' ? (
+                                            <HiOutlineCheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-[#81D7B4]" />
+                                        ) : (
+                                            <HiOutlineExclamationCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-lg sm:text-xl font-bold mb-2 pr-8" style={{ color: '#F9F9FB' }}>
+                                            {notificationConfig.title}
+                                        </h3>
+                                        <p
+                                            className="text-xs sm:text-sm leading-relaxed mb-6 break-words overflow-wrap-anywhere"
+                                            style={{
+                                                color: '#9BA8B5',
+                                                wordBreak: 'break-word',
+                                                overflowWrap: 'anywhere',
+                                                hyphens: 'auto'
+                                            }}
+                                        >
+                                            {notificationConfig.message}
+                                        </p>
+                                        <button
+                                            onClick={() => setShowNotification(false)}
+                                            className="w-full py-2.5 sm:py-3 rounded-xl font-bold transition-all text-sm sm:text-base"
+                                            style={{
+                                                backgroundColor: notificationConfig.type === 'success' ? '#81D7B4' : 'rgba(239, 68, 68, 0.8)',
+                                                color: notificationConfig.type === 'success' ? '#0F1825' : '#FFFFFF'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = notificationConfig.type === 'success' ? '#6BC4A0' : 'rgba(239, 68, 68, 1)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = notificationConfig.type === 'success' ? '#81D7B4' : 'rgba(239, 68, 68, 0.8)';
+                                            }}
+                                        >
+                                            {notificationConfig.type === 'success' ? 'Continue' : 'Close'}
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowNotification(false)}
+                                        className="transition-colors flex-shrink-0 -mt-1 -mr-1"
+                                        style={{ color: '#7B8B9A' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
+                                    >
+                                        <HiOutlineXMark className="w-5 h-5 sm:w-6 sm:h-6" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -1985,21 +2112,20 @@ function renderDeclarationSection(agreedToTerms: boolean, setAgreedToTerms: (val
             </div>
 
             <div className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl space-y-4">
-                <div className="flex items-start gap-3">
+                <label className="flex items-start gap-3 cursor-pointer group p-4 sm:p-6 rounded-xl border border-gray-700 hover:border-[#81D7B4]/50 transition-all bg-gray-900/30">
                     <input
                         type="checkbox"
-                        id="agreeTerms"
                         checked={agreedToTerms}
                         onChange={(e) => setAgreedToTerms(e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-600 text-[#81D7B4] focus:ring-[#81D7B4]"
+                        className="mt-1 w-5 h-5 rounded border-gray-600 text-[#81D7B4] focus:ring-[#81D7B4] focus:ring-offset-0 flex-shrink-0"
                     />
-                    <label htmlFor="agreeTerms" className="text-sm text-gray-300 cursor-pointer">
+                    <span className="text-xs sm:text-sm text-gray-300 leading-relaxed">
                         I confirm that all the information provided in this application is accurate and truthful to the best of my knowledge.
                         I consent to Bitsave accessing, verifying, and processing all the details and information I have provided for the purpose
                         of evaluating my business listing application. I understand that providing false information may result in the rejection
                         of my application or removal from the platform.
-                    </label>
-                </div>
+                    </span>
+                </label>
             </div>
 
             <div className="p-4 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-lg">

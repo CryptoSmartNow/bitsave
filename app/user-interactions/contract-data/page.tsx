@@ -175,7 +175,7 @@ export default function ContractDataPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#81D7B4] to-[ #81D7B4] bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] bg-clip-text text-transparent">
                   Contract Data
                 </h1>
                 <p className="text-gray-300 mt-2">Monitor Total Value Locked and contract metrics across networks</p>
@@ -183,7 +183,7 @@ export default function ContractDataPage() {
               <button
                 onClick={fetchAllNetworkData}
                 disabled={isRefreshing}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[ #81D7B4] text-gray-900 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>Refresh Data</span>

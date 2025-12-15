@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from 'react';
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
-import { getContract, formatUnits, parseUnits, keccak256, toBytes, zeroAddress } from 'viem';
+import { useAccount, usePublicClient } from 'wagmi';
+import { useWallets } from '@privy-io/react-auth';
+import { getContract, formatUnits, parseUnits, keccak256, toBytes, zeroAddress, encodeFunctionData } from 'viem';
 import BizFiABI from '../../abi/BizFi.json';
 
 const BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770";
@@ -57,22 +58,63 @@ export interface ReferralDiscount {
     deadline: bigint;
 }
 
+// Helper function to parse error messages into user-friendly format
+function parseErrorMessage(error: any): string {
+    const errorMessage = error?.message || error?.toString() || 'An unknown error occurred';
+
+    // Check for common error patterns
+    if (errorMessage.includes('insufficient funds')) {
+        return 'Insufficient funds in your wallet. Please add ETH to cover gas fees and try again.';
+    }
+
+    if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
+        return 'Transaction was cancelled. Please try again when ready.';
+    }
+
+    if (errorMessage.includes('network') || errorMessage.includes('Network')) {
+        return 'Network connection issue. Please check your internet and try again.';
+    }
+
+    if (errorMessage.includes('nonce')) {
+        return 'Transaction conflict detected. Please refresh the page and try again.';
+    }
+
+    if (errorMessage.includes('gas')) {
+        return 'Gas estimation failed. You may not have enough ETH for transaction fees.';
+    }
+
+    // For other errors, extract the most relevant part
+    // Look for "Details:" section which usually has the core error
+    const detailsMatch = errorMessage.match(/Details:\s*([^Version]+)/);
+    if (detailsMatch) {
+        return detailsMatch[1].trim();
+    }
+
+    // If error is too long, truncate and add technical details note
+    if (errorMessage.length > 200) {
+        const shortMessage = errorMessage.substring(0, 150) + '...';
+        return `${shortMessage}\n\nFor technical details, please contact support.`;
+    }
+
+    return errorMessage;
+}
+
 export function useBizFi() {
     const { address } = useAccount();
-    const { data: walletClient } = useWalletClient();
+    const { wallets } = useWallets();
     const publicClient = usePublicClient();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Get contract instance helper
-    const getBizFiContract = useCallback(() => {
-        if (!publicClient) return null;
-        return getContract({
-            address: BIZFI_PROXY_ADDRESS,
-            abi: BizFiABI,
-            client: { public: publicClient, wallet: walletClient }
-        });
-    }, [publicClient, walletClient]);
+    // Get Privy wallet client (embedded wallet)
+    const getWalletClient = useCallback(async () => {
+        const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === 'privy');
+        if (!embeddedWallet) {
+            throw new Error("Privy embedded wallet not found");
+        }
+        await embeddedWallet.switchChain(8453); // Base chain
+        return await embeddedWallet.getEthereumProvider();
+    }, [wallets]);
 
     // Check USDC Allowance
     const checkAllowance = useCallback(async (amount: bigint) => {
@@ -93,26 +135,37 @@ export function useBizFi() {
 
     // Approve USDC
     const approveUSDC = useCallback(async (amount: bigint) => {
-        if (!walletClient || !address) throw new Error("Wallet not connected");
+        if (!address) throw new Error("Wallet not connected");
 
         try {
             setLoading(true);
-            const hash = await walletClient.writeContract({
-                address: USDC_ADDRESS,
-                abi: ERC20_ABI,
-                functionName: 'approve',
-                args: [BIZFI_PROXY_ADDRESS, amount]
+            const provider = await getWalletClient();
+
+            // Use eth_sendTransaction via the provider
+            const hash = await provider.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: address,
+                    to: USDC_ADDRESS,
+                    data: encodeFunctionData({
+                        abi: ERC20_ABI,
+                        functionName: 'approve',
+                        args: [BIZFI_PROXY_ADDRESS, amount]
+                    })
+                }]
             });
-            await publicClient?.waitForTransactionReceipt({ hash });
+
+            await publicClient?.waitForTransactionReceipt({ hash: hash as `0x${string}` });
             return true;
         } catch (err: any) {
             console.error("Approval error:", err);
-            setError(err.message || "Failed to approve USDC");
-            throw err;
+            const userFriendlyMessage = parseErrorMessage(err);
+            setError(userFriendlyMessage);
+            throw new Error(userFriendlyMessage);
         } finally {
             setLoading(false);
         }
-    }, [walletClient, address, publicClient]);
+    }, [address, publicClient, getWalletClient]);
 
     // Register Business
     const registerBusiness = useCallback(async (
@@ -121,22 +174,17 @@ export function useBizFi() {
         tier: TierType,
         referral?: {
             code: string;
-            discountPercent: number; // e.g., 20 for 20%
-            signature?: `0x${string}`; // EIP-712 signature from backend
-            referralData?: ReferralDiscount; // Full referral struct from backend
+            discountPercent: number;
+            signature?: `0x${string}`;
+            referralData?: ReferralDiscount;
         }
     ) => {
-        if (!walletClient || !publicClient || !address) throw new Error("Wallet not connected");
+        if (!publicClient || !address) throw new Error("Wallet not connected");
         setError(null);
         setLoading(true);
 
         try {
             const tierValue = TIER_MAPPING[tier];
-
-            // 1. Get Listing Fee
-            // In a real app with backend, we would get the discounted price and signature from the API
-            // For now, we will fetch the on-chain fee to ensure we have enough funds/allowance
-            // If referral exists, we use the discounted price (logic should match backend)
 
             let finalPrice: bigint;
             let referralStruct: ReferralDiscount;
@@ -151,12 +199,10 @@ export function useBizFi() {
             }) as bigint;
 
             if (referral && referral.referralData && referral.signature) {
-                // Use backend provided data
                 finalPrice = referral.referralData.discountedPrice;
                 referralStruct = referral.referralData;
                 signature = referral.signature;
             } else {
-                // No referral or invalid
                 finalPrice = standardFee;
                 referralStruct = {
                     recipient: zeroAddress,
@@ -168,42 +214,51 @@ export function useBizFi() {
                 };
             }
 
-            // 2. Check Allowance
+            // Check Allowance
             const hasAllowance = await checkAllowance(finalPrice);
             if (!hasAllowance) {
                 await approveUSDC(finalPrice);
             }
 
-            // 3. Hash Metadata
-            // Simplification: Hash the stringified JSON
+            // Hash Metadata
             const metadataString = JSON.stringify(metadata);
             const metadataHash = keccak256(toBytes(metadataString));
 
-            // 4. Register
-            const hash = await walletClient.writeContract({
-                address: BIZFI_PROXY_ADDRESS,
-                abi: BizFiABI,
-                functionName: 'registerBusiness',
-                args: [
-                    name,
-                    metadataHash,
-                    tierValue,
-                    referralStruct,
-                    signature
-                ]
+            // Get Privy wallet provider
+            const provider = await getWalletClient();
+
+            // Register using Privy provider
+            const hash = await provider.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: address,
+                    to: BIZFI_PROXY_ADDRESS,
+                    data: encodeFunctionData({
+                        abi: BizFiABI,
+                        functionName: 'registerBusiness',
+                        args: [
+                            name,
+                            metadataHash,
+                            tierValue,
+                            referralStruct,
+                            signature
+                        ]
+                    })
+                }]
             });
 
-            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
             return receipt;
 
         } catch (err: any) {
             console.error("Registration error:", err);
-            setError(err.message || "Failed to register business");
-            throw err;
+            const userFriendlyMessage = parseErrorMessage(err);
+            setError(userFriendlyMessage);
+            throw new Error(userFriendlyMessage);
         } finally {
             setLoading(false);
         }
-    }, [walletClient, publicClient, address, checkAllowance, approveUSDC]);
+    }, [publicClient, address, checkAllowance, approveUSDC, getWalletClient]);
 
     return {
         registerBusiness,
