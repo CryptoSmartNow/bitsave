@@ -106,15 +106,28 @@ export function useBizFi() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Get Privy wallet client (embedded wallet)
+    // Get Wallet Client (Embedded or External)
     const getWalletClient = useCallback(async () => {
-        const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === 'privy');
-        if (!embeddedWallet) {
-            throw new Error("Privy embedded wallet not found");
+        // First try to find the wallet matching the current active address
+        let wallet = wallets.find((w) => w.address.toLowerCase() === address?.toLowerCase());
+
+        // If not found, try to find any embedded wallet as fallback
+        if (!wallet) {
+            wallet = wallets.find((w) => w.walletClientType === 'privy');
         }
-        await embeddedWallet.switchChain(8453); // Base chain
-        return await embeddedWallet.getEthereumProvider();
-    }, [wallets]);
+
+        // If still not found and we have at least one wallet, use the first one
+        if (!wallet && wallets.length > 0) {
+            wallet = wallets[0];
+        }
+
+        if (!wallet) {
+            throw new Error("No connected wallet found to sign transaction");
+        }
+
+        await wallet.switchChain(8453); // Base chain
+        return await wallet.getEthereumProvider();
+    }, [wallets, address]);
 
     // Check USDC Allowance
     const checkAllowance = useCallback(async (amount: bigint) => {
