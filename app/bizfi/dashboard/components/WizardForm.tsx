@@ -91,8 +91,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     const data = await res.json();
                     if (data && data.formData) {
                         setFormData(data.formData);
-                        // Optionally restore step
-                        // if (data.step) setCurrentStep(data.step);
+                        if (data.step) setCurrentStep(data.step);
                     }
                 }
             } catch (e) {
@@ -102,10 +101,11 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         loadDraft();
     }, [address]);
 
-    // Save data to API on change (debounced ideally, but simple effect here)
+    // Auto-save draft on changes
     useEffect(() => {
-        const saveDraft = async () => {
-            if (!address || Object.keys(formData).length === 0) return;
+        if (!address || Object.keys(formData).length === 0) return;
+
+        const timer = setTimeout(async () => {
             try {
                 await fetch('/api/bizfi/draft', {
                     method: 'POST',
@@ -117,14 +117,11 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     })
                 });
             } catch (e) {
-                console.error("Failed to save draft:", e);
+                console.error("Failed to auto-save draft:", e);
             }
-        };
+        }, 2000); // 2 second debounce
 
-        // Debounce slightly to avoid spamming API on every keystroke if typing fast
-        const timeoutId = setTimeout(saveDraft, 1000);
-        return () => clearTimeout(timeoutId);
-
+        return () => clearTimeout(timer);
     }, [formData, currentStep, address]);
 
     const handleBuyCrypto = () => {
@@ -186,7 +183,51 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     const isLastStep = currentStep === steps.length;
     const isFirstStep = currentStep === 1;
 
+    const validateStep = (step: number): boolean => {
+        const requiredFields: Record<string, string[]> = {
+            '1': ['name', 'email', 'phone', 'birthday', 'bio', 'ownsBusiness'],
+        };
+
+        // Add tier-specific required fields
+        if (selectedTier.id === 'micro') {
+            if (step === 2) requiredFields['2'] = ['businessName', 'isRegistered', 'businessType', 'businessDescription', 'yearStarted', 'countryOfOperation', 'cityOfOperation', 'businessAddress', 'ownerName', 'businessEmail', 'businessPhone'];
+            if (step === 3) requiredFields['3'] = ['monthlyRevenue', 'monthlyExpenses', 'customersPerMonth', 'salesChannels', 'repeatCustomers', 'hasFinancialRecords'];
+            if (step === 4) requiredFields['4'] = ['biggestChallenge', 'raiseAmount', 'fundUsage', 'vision12Months'];
+        } else if (selectedTier.id === 'builder') {
+            if (step === 2) requiredFields['2'] = ['startupName', 'startupRegistered', 'ideaSummary', 'developmentStage', 'problemSolving', 'targetCustomer', 'solutionWork', 'validation'];
+            if (step === 3) requiredFields['3'] = ['hasRevenue', 'capitalUsage'];
+            if (step === 4) requiredFields['4'] = ['whyBuilding', 'successVision'];
+        } else if (selectedTier.id === 'growth') {
+            if (step === 2) requiredFields['2'] = ['registeredBusinessName', 'countryOfRegistration', 'operatingName', 'industry', 'yearsInOperation', 'teamSize', 'ceoName', 'ceoEmail', 'operatingLocations'];
+            if (step === 3) requiredFields['3'] = ['revenueRange', 'growthExpenses', 'netProfit', 'customerBaseSize', 'returningCustomersPercent', 'hasDebts'];
+            if (step === 4) requiredFields['4'] = ['mainProducts', 'revenueChannels', 'toolsUsed', 'keyMetrics', 'growthChallenge', 'growthRaiseAmount', 'fundsUsage', 'expectedImpact'];
+        } else if (selectedTier.id === 'enterprise') {
+            if (step === 2) requiredFields['2'] = ['entRegisteredName', 'entCompanyName', 'entCountry', 'companySector', 'projectLocation', 'entYearsInOperation', 'entTeamSize', 'entCeoName', 'entCeoEmail', 'entOperatingLocations'];
+            if (step === 3) requiredFields['3'] = ['projectDescription', 'currentStage', 'projectTimeline', 'projectRisks', 'investorProtection'];
+            if (step === 4) requiredFields['4'] = ['totalCapitalNeeded', 'raiseOnBizMarket', 'currentAssets', 'currentLiabilities', 'expectedROI', 'revenueModel', 'annualProjection'];
+            if (step === 5) requiredFields['5'] = ['fundsUsagePlan', 'expectedMilestones', 'tokenGrowthCorrelation', 'projectAssets'];
+        }
+
+        const fieldsToCheck = requiredFields[step.toString()];
+        if (!fieldsToCheck) return true;
+
+        const missingFields = fieldsToCheck.filter(field => !formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === ''));
+
+        if (missingFields.length > 0) {
+            setNotificationConfig({
+                type: 'error',
+                title: 'Missing Fields',
+                message: `Please fill in all required fields before proceeding: ${missingFields.join(', ')}`
+            });
+            setShowNotification(true);
+            return false;
+        }
+
+        return true;
+    };
+
     const handleNext = () => {
+        if (!validateStep(currentStep)) return;
         if (currentStep < steps.length) {
             setCurrentStep(currentStep + 1);
         }
@@ -199,6 +240,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     };
 
     const handleSubmit = async () => {
+        if (!validateStep(currentStep)) return;
         try {
             console.log("Submitting form...", formData);
 
@@ -225,18 +267,20 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     code: referralCode,
                     discountPercent: 0,
                     referralData: {
-                        recipient: zeroAddress, // Placeholder
+                        recipient: address as `0x${string}`, // Must match msg.sender
                         tier: tierValue,
                         discountedPrice: parseUnits(selectedTier.referralPrice.toString(), 6),
-                        businessName: formData.businessName || formData.name || "",
-                        nonce: BigInt(0),
-                        deadline: BigInt(0)
+                        businessName: formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "",
+                        nonce: BigInt(Math.floor(Date.now() / 1000)), // Better than 0
+                        deadline: BigInt(Math.floor(Date.now() / 1000) + 86400 * 7) // 7 days
                     }
                 };
             }
 
+            const finalBusinessName = formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "";
+
             const receipt = await registerBusiness(
-                formData.businessName || formData.name, // Use business name or personal name
+                finalBusinessName,
                 formData,
                 selectedTier.id,
                 referralData

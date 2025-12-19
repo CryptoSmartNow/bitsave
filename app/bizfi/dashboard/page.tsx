@@ -156,6 +156,12 @@ export default function BizFiDashboardPage() {
 
     const handleReferralCheck = (code: string) => {
         setReferralCode(code);
+        
+        if (!code || code.trim().length === 0) {
+            setIsReferralValid(false);
+            return;
+        }
+
         // Debounce validation
         const timeoutId = setTimeout(() => {
             validateReferralCode(code);

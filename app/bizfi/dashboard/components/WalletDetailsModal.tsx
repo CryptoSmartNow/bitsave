@@ -56,7 +56,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                     onClick={onClose}
                     className="absolute inset-0 backdrop-blur-sm bg-gray-900/80"
                 />
-                
+
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -79,7 +79,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 </span>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={onClose}
                             className="p-2 rounded-full hover:bg-gray-700/50 text-gray-400 hover:text-white transition-all"
                         >
@@ -96,9 +96,9 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Connected Address</p>
                                 <div className="flex flex-col gap-3">
                                     <code className="text-sm sm:text-base font-mono text-white leading-relaxed">
-                                    {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : ''}
-                                </code>
-                                    <button 
+                                        {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : ''}
+                                    </code>
+                                    <button
                                         onClick={handleCopy}
                                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gray-700/50 hover:bg-[#81D7B4]/10 border border-gray-600/50 hover:border-[#81D7B4]/50 text-gray-300 hover:text-[#81D7B4] transition-all font-medium text-sm group/btn"
                                     >
@@ -122,7 +122,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                         <div className="space-y-4">
                             <div className="flex items-center justify-between px-1">
                                 <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Your Assets</h4>
-                                <button 
+                                <button
                                     onClick={refreshBalances}
                                     disabled={isRefreshing}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-800 text-xs font-medium text-[#81D7B4] hover:text-[#6BC4A0] transition-colors disabled:opacity-50"
@@ -131,18 +131,18 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                     <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
                                 </button>
                             </div>
-                            
+
                             <div className="grid gap-3">
                                 {/* ETH */}
                                 <div className="group flex items-center justify-between p-4 rounded-2xl bg-gray-800/30 hover:bg-gray-800/50 border border-gray-700/50 transition-all duration-300">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-[#627EEA]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                                             <svg className="w-6 h-6 text-[#627EEA]" viewBox="0 0 32 32" fill="currentColor">
-                                                <path d="M15.925 23.96l-9.819-5.796L15.925 32l9.83-13.836-9.83 5.796zM16.075 0L6.255 16.332l9.82 5.806 9.82-5.806L16.075 0zm0 20.686l-8.48-5.013 8.48-14.103 8.486 14.103-8.486 5.013z"/>
+                                                <path d="M15.925 23.96l-9.819-5.796L15.925 32l9.83-13.836-9.83 5.796zM16.075 0L6.255 16.332l9.82 5.806 9.82-5.806L16.075 0zm0 20.686l-8.48-5.013 8.48-14.103 8.486 14.103-8.486 5.013z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <p className="font-bold text-white text-sm">Ethereum</p>
+                                            <p className="font-bold text-white text-sm">Base ETH</p>
                                             <p className="text-xs text-gray-400">Gas Token</p>
                                         </div>
                                     </div>
@@ -177,7 +177,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
 
                         {/* Actions */}
                         <div className="grid grid-cols-2 gap-4">
-                            <a 
+                            <a
                                 href={`https://basescan.org/address/${address}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -188,7 +188,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 </div>
                                 <span>History</span>
                             </a>
-                            <button 
+                            <button
                                 onClick={() => {
                                     const event = new CustomEvent('openBuyCryptoModal');
                                     window.dispatchEvent(event);
@@ -205,7 +205,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
 
                         {/* Logout */}
                         <div className="pt-2 border-t border-gray-700/30">
-                            <button 
+                            <button
                                 onClick={() => {
                                     logout();
                                     onClose();
