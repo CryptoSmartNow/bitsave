@@ -108,24 +108,37 @@ export function useBizFi() {
 
     // Get Wallet Client (Embedded or External)
     const getWalletClient = useCallback(async () => {
-        // First try to find the wallet matching the current active address
+        // Log available wallets for debugging
+        console.log("Available wallets:", wallets.map(w => ({ type: w.walletClientType, address: w.address })));
+
+        // 1. Try to find the specific wallet matching the current active address
         let wallet = wallets.find((w) => w.address.toLowerCase() === address?.toLowerCase());
 
-        // If not found, try to find any embedded wallet as fallback
+        // 2. If not found, look for any external (non-privy) wallet first as priority for "normal" wallets
         if (!wallet) {
-            wallet = wallets.find((w) => w.walletClientType === 'privy');
+            wallet = wallets.find((w) => w.walletClientType !== 'privy');
         }
 
-        // If still not found and we have at least one wallet, use the first one
+        // 3. Fallback to any available wallet
         if (!wallet && wallets.length > 0) {
             wallet = wallets[0];
         }
 
         if (!wallet) {
-            throw new Error("No connected wallet found to sign transaction");
+            throw new Error("No connected wallet found to sign transaction. Please connect your wallet.");
         }
 
-        await wallet.switchChain(8453); // Base chain
+        console.log("Using wallet:", wallet.walletClientType, wallet.address);
+
+        // Ensure we are on Base Mainnet
+        if (wallet.chainId !== 'eip155:8453') {
+            try {
+                await wallet.switchChain(8453);
+            } catch (switchErr) {
+                console.warn("Failed to switch chain via wallet, proceeding anyway:", switchErr);
+            }
+        }
+
         return await wallet.getEthereumProvider();
     }, [wallets, address]);
 
@@ -241,10 +254,20 @@ export function useBizFi() {
                 args: [address]
             });
 
+            console.log("Registration Check:", {
+                tier,
+                standardFee: formatUnits(standardFee, 6),
+                referralProvided: !!referral,
+                referralDataProvided: !!referral?.referralData,
+                finalPrice: formatUnits(finalPrice, 6),
+                usdcBalance: formatUnits(usdcBalance, 6)
+            });
+
             if (usdcBalance < finalPrice) {
                 const required = formatUnits(finalPrice, 6); // USDC has 6 decimals
                 const available = formatUnits(usdcBalance, 6);
-                throw new Error(`Insufficient USDC balance. You have ${available} USDC but need ${required} USDC.`);
+                const isDiscounted = referral && referral.referralData;
+                throw new Error(`Insufficient USDC balance. You have ${available} USDC but need ${required} USDC${isDiscounted ? ' (Discount Applied)' : ' (Standard Fee)'}.`);
             }
 
             // Check Allowance
