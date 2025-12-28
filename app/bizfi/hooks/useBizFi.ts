@@ -1,53 +1,48 @@
 "use client";
 
-import { useState, useCallback } from 'react';
-import { useAccount, usePublicClient } from 'wagmi';
+import { useState, useCallback, useMemo } from 'react';
+import { useAccount } from 'wagmi';
 import { useWallets } from '@privy-io/react-auth';
-import { getContract, formatUnits, parseUnits, keccak256, toBytes, zeroAddress, encodeFunctionData } from 'viem';
+import { getContract, formatUnits, parseUnits, keccak256, toBytes, zeroAddress, encodeFunctionData, createPublicClient, http } from 'viem';
+import { base } from 'viem/chains';
 import BizFiABI from '../../abi/BizFi.json';
+import { parseErrorMessage } from '@/lib/utils';
 
+// Base Mainnet Configuration
 const BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770";
-const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // USDC on Base Mainnet
 
-// Minimal ERC20 ABI for approval and allowance
 const ERC20_ABI = [
     {
-        "inputs": [
-            { "name": "spender", "type": "address" },
-            { "name": "amount", "type": "uint256" }
-        ],
-        "name": "approve",
-        "outputs": [{ "name": "", "type": "bool" }],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        constant: true,
+        inputs: [{ name: "owner", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "balance", type: "uint256" }],
+        type: "function",
     },
     {
-        "inputs": [
-            { "name": "owner", "type": "address" },
-            { "name": "spender", "type": "address" }
+        constant: true,
+        inputs: [
+            { name: "owner", type: "address" },
+            { name: "spender", type: "address" },
         ],
-        "name": "allowance",
-        "outputs": [{ "name": "", "type": "uint256" }],
-        "stateMutability": "view",
-        "type": "function"
+        name: "allowance",
+        outputs: [{ name: "remaining", type: "uint256" }],
+        type: "function",
     },
     {
-        "inputs": [{ "name": "account", "type": "address" }],
-        "name": "balanceOf",
-        "outputs": [{ "name": "", "type": "uint256" }],
-        "stateMutability": "view",
-        "type": "function"
-    }
+        constant: false,
+        inputs: [
+            { name: "spender", type: "address" },
+            { name: "value", type: "uint256" },
+        ],
+        name: "approve",
+        outputs: [{ name: "success", type: "bool" }],
+        type: "function",
+    },
 ] as const;
 
 export type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
-
-const TIER_MAPPING: Record<TierType, number> = {
-    'micro': 0,
-    'builder': 1,
-    'growth': 2,
-    'enterprise': 3
-};
 
 export interface ReferralDiscount {
     recipient: `0x${string}`;
@@ -58,71 +53,30 @@ export interface ReferralDiscount {
     deadline: bigint;
 }
 
-// Helper function to parse error messages into user-friendly format
-function parseErrorMessage(error: any): string {
-    const errorMessage = error?.message || error?.toString() || 'An unknown error occurred';
-
-    // Check for common error patterns
-    if (errorMessage.includes('insufficient funds')) {
-        return 'Insufficient funds in your wallet. Please add ETH to cover gas fees and try again.';
-    }
-
-    if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
-        return 'Transaction was cancelled. Please try again when ready.';
-    }
-
-    if (errorMessage.includes('network') || errorMessage.includes('Network')) {
-        return 'Network connection issue. Please check your internet and try again.';
-    }
-
-    if (errorMessage.includes('nonce')) {
-        return 'Transaction conflict detected. Please refresh the page and try again.';
-    }
-
-    if (errorMessage.includes('gas')) {
-        return 'Gas estimation failed. You may not have enough ETH for transaction fees.';
-    }
-
-    // For other errors, extract the most relevant part
-    // Look for "Details:" section which usually has the core error
-    const detailsMatch = errorMessage.match(/Details:\s*([^Version]+)/);
-    if (detailsMatch) {
-        return detailsMatch[1].trim();
-    }
-
-    // If error is too long, truncate and add technical details note
-    if (errorMessage.length > 200) {
-        const shortMessage = errorMessage.substring(0, 150) + '...';
-        return `${shortMessage}\n\nFor technical details, please contact support.`;
-    }
-
-    return errorMessage;
-}
+const TIER_MAPPING: Record<TierType, number> = {
+    micro: 0,
+    builder: 1,
+    growth: 2,
+    enterprise: 3
+};
 
 export function useBizFi() {
     const { address } = useAccount();
     const { wallets } = useWallets();
-    const publicClient = usePublicClient();
+    const wallet = useMemo(() => wallets.find((w) => w.walletClientType === 'privy') || wallets[0], [wallets]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Create a dedicated public client for Base Mainnet
+    const publicClient = useMemo(() => createPublicClient({
+        chain: base,
+        transport: http(),
+    }), []);
 
     // Get Wallet Client (Embedded or External)
     const getWalletClient = useCallback(async () => {
-        // Log available wallets for debugging
-        console.log("Available wallets:", wallets.map(w => ({ type: w.walletClientType, address: w.address })));
+        // ... (Log wallets)
 
-        // 1. Try to find the specific wallet matching the current active address
-        let wallet = wallets.find((w) => w.address.toLowerCase() === address?.toLowerCase());
-
-        // 2. If not found, look for any external (non-privy) wallet first as priority for "normal" wallets
-        if (!wallet) {
-            wallet = wallets.find((w) => w.walletClientType !== 'privy');
-        }
-
-        // 3. Fallback to any available wallet
-        if (!wallet && wallets.length > 0) {
-            wallet = wallets[0];
-        }
+        // ... (Find wallet logic)
 
         if (!wallet) {
             throw new Error("No connected wallet found to sign transaction. Please connect your wallet.");
@@ -151,7 +105,7 @@ export function useBizFi() {
                 abi: ERC20_ABI,
                 functionName: 'allowance',
                 args: [address, BIZFI_PROXY_ADDRESS]
-            });
+            }) as bigint;
             return allowance >= amount;
         } catch (err) {
             console.error("Error checking allowance:", err);
@@ -252,7 +206,7 @@ export function useBizFi() {
                 abi: ERC20_ABI,
                 functionName: 'balanceOf',
                 args: [address]
-            });
+            }) as bigint;
 
             console.log("Registration Check:", {
                 tier,
@@ -304,6 +258,11 @@ export function useBizFi() {
             });
 
             const receipt = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
+
+            if (receipt.status === 'reverted') {
+                throw new Error("Transaction failed on-chain. Please check block explorer for details or contact support.");
+            }
+
             return receipt;
 
         } catch (err: any) {
@@ -315,6 +274,9 @@ export function useBizFi() {
             setLoading(false);
         }
     }, [publicClient, address, checkAllowance, approveUSDC, getWalletClient]);
+
+
+
 
     return {
         registerBusiness,
