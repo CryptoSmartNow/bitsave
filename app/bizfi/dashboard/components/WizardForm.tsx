@@ -12,7 +12,7 @@ import {
 } from "react-icons/hi2";
 import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
 import { parseUnits, zeroAddress, toHex } from "viem";
-
+import PaymentSummaryModal from "./PaymentSummaryModal";
 
 import { initOnRamp } from '@coinbase/cbpay-js';
 
@@ -75,6 +75,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const { registerBusiness, loading, error, address } = useBizFi();
     const [showNotification, setShowNotification] = useState(false);
+    const [showPaymentSummary, setShowPaymentSummary] = useState(false);
     const [notificationConfig, setNotificationConfig] = useState<{
         type: 'success' | 'error';
         title: string;
@@ -146,7 +147,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 widgetParameters: {
                     destinationWallets: [{
                         address: address,
-                        blockchains: ["base", "ethereum", "polygon", "solana"],
+                        blockchains: ["base"],
                     }],
                 },
                 onSuccess: () => {
@@ -252,10 +253,10 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 referralData?: ReferralDiscount;
             } | undefined;
 
+            const finalBusinessName = formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "";
+
             if (isReferralValid && referralCode) {
-                // Construct referral data for discount
-                // Note: Signature is missing, so transaction might revert if contract enforces it,
-                // but this allows the UI to show the correct discounted price in checks.
+                // Fetch valid signature and data from API
                 const tierValue = {
                     'micro': 0,
                     'builder': 1,
@@ -263,21 +264,39 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     'enterprise': 3
                 }[selectedTier.id] || 0;
 
+                const apiResponse = await fetch('/api/bizfi/referral/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        referralCode,
+                        recipient: address,
+                        tier: tierValue,
+                        businessName: finalBusinessName
+                    })
+                });
+
+                const apiData = await apiResponse.json();
+
+                if (!apiData.valid || !apiData.signature) {
+                    throw new Error("Failed to verify referral code or generate signature. Please try again.");
+                }
+
                 referralData = {
                     code: referralCode,
-                    discountPercent: 0,
+                    discountPercent: apiData.discountPercent,
+                    signature: apiData.signature,
                     referralData: {
-                        recipient: address as `0x${string}`, // Must match msg.sender
-                        tier: tierValue,
-                        discountedPrice: parseUnits(selectedTier.referralPrice.toString(), 6),
-                        businessName: formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "",
-                        nonce: BigInt(Math.floor(Date.now() / 1000)), // Better than 0
-                        deadline: BigInt(Math.floor(Date.now() / 1000) + 86400 * 7) // 7 days
+                        recipient: apiData.referralData.recipient,
+                        tier: apiData.referralData.tier,
+                        discountedPrice: BigInt(apiData.referralData.discountedPrice),
+                        businessName: apiData.referralData.businessName,
+                        nonce: BigInt(apiData.referralData.nonce),
+                        deadline: BigInt(apiData.referralData.deadline)
                     }
                 };
             }
 
-            const finalBusinessName = formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "";
+
 
             const receipt = await registerBusiness(
                 finalBusinessName,
@@ -305,7 +324,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         businessName: formData.businessName || formData.name,
                         metadata: formData,
                         tier: selectedTier.id,
-                        feePaid: isReferralValid ? selectedTier.referralPrice : selectedTier.price
+                        feePaid: isReferralValid ? selectedTier.referralPrice : selectedTier.price,
+                        referralCode: referralCode || ""
                     })
                 });
             } catch (saveErr) {
@@ -411,7 +431,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 <button
                     onClick={handlePrevious}
                     disabled={isFirstStep}
-                    className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1 whitespace-nowrap"
                 >
                     <HiOutlineArrowLeft className="w-5 h-5" />
                     <span>Previous</span>
@@ -420,7 +440,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 {isLastStep && (
                     <button
                         onClick={handleBuyCrypto}
-                        className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border-2 border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 hover:border-[#81D7B4] backdrop-blur-sm order-3 sm:order-2"
+                        className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border-2 border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 hover:border-[#81D7B4] backdrop-blur-sm order-3 sm:order-2 whitespace-nowrap"
                         style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
                     >
                         <HiOutlineCurrencyDollar className="w-5 h-5" />
@@ -431,15 +451,18 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 {isLastStep ? (
                     <div className="flex flex-col items-stretch sm:items-end gap-2 sm:gap-3 order-1 sm:order-3 w-full sm:w-auto">
                         <button
-                            onClick={handleSubmit}
+                            onClick={() => {
+                                if (!validateStep(currentStep)) return;
+                                setShowPaymentSummary(true);
+                            }}
                             disabled={!agreedToTerms || loading}
-                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto whitespace-nowrap"
                         >
                             {loading ? (
                                 <>Processing...</>
                             ) : (
                                 <>
-                                    Pay ${isReferralValid ? selectedTier.referralPrice : selectedTier.price}
+                                    Review & Pay ${isReferralValid ? selectedTier.referralPrice : selectedTier.price}
                                     <HiOutlineRocketLaunch className="w-5 h-5" />
                                 </>
                             )}
@@ -470,7 +493,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 ) : (
                     <button
                         onClick={handleNext}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all order-1 sm:order-3"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all order-1 sm:order-3 whitespace-nowrap"
                     >
                         Next
                         <HiOutlineArrowRight className="w-5 h-5" />
@@ -561,6 +584,21 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Payment Summary Modal */}
+            <PaymentSummaryModal
+                isOpen={showPaymentSummary}
+                onClose={() => setShowPaymentSummary(false)}
+                onConfirm={() => {
+                    setShowPaymentSummary(false);
+                    handleSubmit();
+                }}
+                isLoading={loading}
+                tier={selectedTier}
+                businessName={formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || formData.entRegisteredName || ''}
+                isReferralValid={isReferralValid}
+                referralCode={referralCode}
+            />
         </div>
     );
 }

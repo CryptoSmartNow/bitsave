@@ -6,11 +6,12 @@ import { base, mainnet } from "viem/chains";
 
 // We keep this export in case other files import it, but we don't use it in the provider wrapper anymore
 // since the global provider handles it.
+// Mainnet Configuration
 export const privyConfig = createConfig({
-    chains: [mainnet, base],
+    chains: [base, mainnet], // Base Mainnet primary
     transports: {
-        [mainnet.id]: http(),
         [base.id]: http(),
+        [mainnet.id]: http(),
     },
 });
 

@@ -36,6 +36,7 @@
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "ethereum-identity-kit": "^0.2.53",
     "ethers": "^6.15.0",
     "framer-motion": "^12.18.1",

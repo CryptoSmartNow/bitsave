@@ -12,6 +12,7 @@ interface WalletDetailsModalProps {
     logout: () => void;
 }
 
+// Base Mainnet USDC
 const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 export default function WalletDetailsModal({ isOpen, onClose, address, logout }: WalletDetailsModalProps) {

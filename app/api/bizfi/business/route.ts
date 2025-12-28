@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
             businessName,
             metadata,
             tier,
-            feePaid
+            feePaid,
+            referralCode
         } = body;
 
         if (!transactionHash || !owner || !businessName) {
@@ -31,8 +32,9 @@ export async function POST(req: NextRequest) {
             metadata, // Full form data
             tier,
             feePaid,
+            referralCode: referralCode || "",
             createdAt: new Date(),
-            status: "REGISTERED" // Initial status
+            status: "pending" // Initial status
         };
 
         // Insert the business record

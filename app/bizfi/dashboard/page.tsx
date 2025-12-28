@@ -156,7 +156,7 @@ export default function BizFiDashboardPage() {
 
     const handleReferralCheck = (code: string) => {
         setReferralCode(code);
-        
+
         if (!code || code.trim().length === 0) {
             setIsReferralValid(false);
             return;
@@ -333,7 +333,12 @@ export default function BizFiDashboardPage() {
                                 {/* Referral Code */}
                                 <div className="mb-8 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="block text-sm font-medium text-[#81D7B4]">Have a Referral Code?</label>
+                                        <label className="flex items-center text-sm font-medium text-[#81D7B4]">
+                                            Have a Referral Code?
+                                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20 animate-pulse">
+                                                Save up to 40%
+                                            </span>
+                                        </label>
                                     </div>
                                     <div className="flex gap-2">
                                         <input
