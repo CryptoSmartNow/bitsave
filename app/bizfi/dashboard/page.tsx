@@ -283,6 +283,19 @@ export default function BizFiDashboardPage() {
                     <div className="grid lg:grid-cols-3 gap-8">
                         {/* Form Section */}
                         <div className="lg:col-span-2 space-y-6">
+                            {/* Intro Video */}
+                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-1 overflow-hidden relative group">
+                                <div className="relative pt-[56.25%] rounded-xl overflow-hidden bg-black">
+                                    <iframe
+                                        className="absolute top-0 left-0 w-full h-full"
+                                        src="https://www.youtube.com/embed/yxEQHPaM6MU?rel=0"
+                                        title="Introduction to BizFi"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
+                            </div>
+
                             <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-8">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>

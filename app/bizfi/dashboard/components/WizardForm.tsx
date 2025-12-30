@@ -81,6 +81,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         title: string;
         message: string;
     }>({ type: 'success', title: '', message: '' });
+    const [attestationData, setAttestationData] = useState<{ easUid: string, transactionHash: string } | null>(null);
+    const [isRegistered, setIsRegistered] = useState(false);
 
     // Load saved data from API on mount/address change
     useEffect(() => {
@@ -296,8 +298,6 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 };
             }
 
-
-
             const receipt = await registerBusiness(
                 finalBusinessName,
                 formData,
@@ -306,12 +306,21 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             );
 
             console.log("Registration successful!", receipt);
-            setNotificationConfig({
-                type: 'success',
-                title: 'Registration Successful!',
-                message: 'Welcome to BizFi. Your business has been successfully listed onchain.'
-            });
-            setShowNotification(true);
+
+            let businessId: string | null = null;
+            if (receipt && receipt.logs) {
+                for (const log of receipt.logs) {
+                    if (log.topics && log.topics.length >= 2) {
+                        if (log.address.toLowerCase() === "0x7c24a938e086d01d252f1cde36783c105784c770") {
+                            const topicOne = log.topics[1];
+                            if (topicOne) {
+                                businessId = BigInt(topicOne).toString();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             // Save final business data to MongoDB
             try {
@@ -330,7 +339,31 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 });
             } catch (saveErr) {
                 console.error("Failed to save business record to DB", saveErr);
-                // Don't block success UI, but maybe log this critical failure
+            }
+
+            if (businessId) {
+                try {
+                    const attestRes = await fetch('/api/bizfi/attest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            businessId: businessId,
+                            recipient: address,
+                            verificationData: formData
+                        })
+                    });
+
+                    const attestData = await attestRes.json();
+
+                    if (attestData.success && attestData.easUid) {
+                        setAttestationData({
+                            easUid: attestData.easUid,
+                            transactionHash: attestData.transactionHash
+                        });
+                    }
+                } catch (attestErr) {
+                    console.error("Attestation failed during post-registration:", attestErr);
+                }
             }
 
             // Clear saved data
@@ -339,6 +372,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             }
             setFormData({});
             setCurrentStep(1);
+            setIsRegistered(true);
 
         } catch (err: any) {
             console.error("Submission failed:", err);
@@ -360,6 +394,63 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         if (revenue === 0) return "0.00";
         return (((revenue - expenses) / revenue) * 100).toFixed(2);
     };
+
+    if (isRegistered) {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 text-center space-y-6">
+                <div className="w-20 h-20 bg-[#81D7B4]/10 rounded-full flex items-center justify-center mb-2">
+                    <HiOutlineCheckCircle className="w-10 h-10 text-[#81D7B4]" />
+                </div>
+
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-2">Registration Successful!</h2>
+                    <p className="text-gray-400 max-w-lg mx-auto">
+                        Welcome to BizFi. Your business has been successfully listed onchain and attested.
+                    </p>
+                </div>
+
+                {attestationData && (
+                    <div className="bg-gray-800/50 rounded-xl p-4 w-full max-w-md border border-gray-700">
+                        <p className="text-sm text-gray-400 mb-2">Attestation UID</p>
+                        <div className="flex items-center justify-between gap-2 bg-gray-900 rounded-lg p-3 border border-gray-800">
+                            <code className="text-[#81D7B4] text-xs truncate">
+                                {attestationData.easUid}
+                            </code>
+                            <a
+                                href={`https://base.easscan.org/attestation/${attestationData.easUid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-gray-500 hover:text-white underline transition-colors"
+                            >
+                                View
+                            </a>
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                    <a
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("We’ve officially listed our business on BizMarket by @BitsaveProtocol. Taking the first step toward raising capital onchain and expanding globally. Build globally. Raise globally. Own globally.")}&url=${encodeURIComponent(attestationData ? `https://base.easscan.org/attestation/${attestationData.easUid}` : 'https://bizfi.io')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-100 transition-all"
+                    >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                        Share to X
+                    </a>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="flex-1 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all"
+                    >
+                        Go to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
