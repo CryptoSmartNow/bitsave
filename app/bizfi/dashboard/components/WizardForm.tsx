@@ -417,7 +417,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                 {attestationData.easUid}
                             </code>
                             <a
-                                href={`https://base.easscan.org/attestation/${attestationData.easUid}`}
+                                href={`https://base.easscan.org/attestation/view/${attestationData.easUid}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-xs text-gray-500 hover:text-white underline transition-colors"
@@ -430,7 +430,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
                     <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("We’ve officially listed our business on BizMarket by @BitsaveProtocol. Taking the first step toward raising capital onchain and expanding globally. Build globally. Raise globally. Own globally.")}&url=${encodeURIComponent(attestationData ? `https://base.easscan.org/attestation/${attestationData.easUid}` : 'https://bizfi.io')}`}
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("We’ve officially listed our business on BizMarket by @BitsaveProtocol. Taking the first step toward raising capital onchain and expanding globally. Build globally. Raise globally. Own globally.")}&url=${encodeURIComponent(attestationData ? `https://base.easscan.org/attestation/view/${attestationData.easUid}` : 'https://bizfi.io')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-100 transition-all"
