@@ -349,7 +349,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         body: JSON.stringify({
                             businessId: businessId,
                             recipient: address,
-                            verificationData: formData
+                            verificationData: formData,
+                            transactionHash: receipt.transactionHash
                         })
                     });
 
@@ -376,6 +377,24 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
         } catch (err: any) {
             console.error("Submission failed:", err);
+
+            // Log to server
+            try {
+                await fetch('/api/bizfi/logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        level: 'error',
+                        message: err.message || JSON.stringify(err),
+                        stack: err.stack,
+                        context: 'WizardForm.handleSubmit (Registration)',
+                        user: address
+                    })
+                });
+            } catch (logErr) {
+                console.error("Failed to send log to server", logErr);
+            }
+
             setNotificationConfig({
                 type: 'error',
                 title: 'Registration Failed',

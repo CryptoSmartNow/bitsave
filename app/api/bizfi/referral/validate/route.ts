@@ -44,8 +44,10 @@ const REFERRAL_PRICES: Record<number, number> = {
 };
 
 export async function POST(request: NextRequest) {
+    let body;
     try {
-        const body = await request.json();
+        body = await request.json();
+        console.log("Validating referral request:", JSON.stringify(body));
         const { referralCode, recipient, tier, businessName } = body;
 
         if (!referralCode || typeof referralCode !== 'string') {
@@ -67,6 +69,7 @@ export async function POST(request: NextRequest) {
 
         // Check if referral code exists in users collection
         const user = await usersCollection.findOne({ referralCode: referralCode.trim() });
+        console.log(`Referral lookup for '${referralCode}':`, user ? "Found" : "Not Found");
 
         if (!user) {
             return NextResponse.json({
@@ -87,7 +90,7 @@ export async function POST(request: NextRequest) {
 
         // Generate Signature Logic
         if (!PRIVATE_KEY) {
-            console.error("Missing PRIVATE_KEY in env");
+            console.error("Missing PRIVATE_KEY in env during signature generation");
             return NextResponse.json({ valid: false, message: "Server configuration error" }, { status: 500 });
         }
 
@@ -133,6 +136,8 @@ export async function POST(request: NextRequest) {
             message: referralData
         });
 
+        console.log("Signature generated successfully for:", recipient);
+
         // Convert BigInt to string for JSON serialization
         const serializedReferralData = {
             ...referralData,
@@ -150,8 +155,12 @@ export async function POST(request: NextRequest) {
             referralData: serializedReferralData
         });
 
-    } catch (error) {
-        console.error('Error validating referral code:', error);
+    } catch (error: any) {
+        const timestamp = new Date().toISOString();
+        console.error(`[Referral API Error] ${timestamp} | Context: Validate Code`);
+        console.error(`[Referral API Error] Payload:`, JSON.stringify(body || {}, null, 2));
+        console.error(`[Referral API Error] Details:`, error);
+
         return NextResponse.json(
             { valid: false, message: 'Internal server error' },
             { status: 500 }

@@ -10,7 +10,8 @@ import {
     HiOutlineUsers,
     HiOutlineGlobeAlt,
     HiOutlineBriefcase,
-    HiOutlineLightBulb
+    HiOutlineLightBulb,
+    HiOutlineClipboardDocumentCheck
 } from "react-icons/hi2";
 
 interface BusinessDetailsModalProps {
@@ -302,7 +303,18 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 md:px-8 py-5 border-t border-gray-800 bg-[#0A1016] flex justify-end">
+                    <div className="px-4 md:px-8 py-5 border-t border-gray-800 bg-[#0A1016] flex flex-col md:flex-row gap-4 justify-end">
+                        {data.attestationUid && (
+                            <a
+                                href={`https://base.easscan.org/attestation/view/${data.attestationUid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full md:w-auto bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-[#81D7B4] px-8 py-3 rounded-xl text-sm font-bold transition-all border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 flex items-center justify-center gap-2"
+                            >
+                                <HiOutlineClipboardDocumentCheck className="w-5 h-5" />
+                                View Attestation
+                            </a>
+                        )}
                         <button
                             onClick={onClose}
                             className="w-full md:w-auto bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 rounded-xl text-sm font-bold transition-colors border border-gray-700 hover:border-gray-600"

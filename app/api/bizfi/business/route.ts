@@ -4,8 +4,9 @@ import { getDatabase } from "@/lib/mongodb";
 const COLLECTION_NAME = "businesses";
 
 export async function POST(req: NextRequest) {
+    let body;
     try {
-        const body = await req.json();
+        body = await req.json();
         const {
             transactionHash,
             owner,
@@ -41,8 +42,11 @@ export async function POST(req: NextRequest) {
         await db.collection(COLLECTION_NAME).insertOne(businessRecord);
 
         return NextResponse.json({ success: true, id: businessRecord.transactionHash });
-    } catch (e) {
-        console.error("Failed to save business record", e);
+    } catch (e: any) {
+        const timestamp = new Date().toISOString();
+        console.error(`[Business API Error] ${timestamp} | Context: Save Record`);
+        console.error(`[Business API Error] Payload Summary: Owner=${body?.owner}, Name=${body?.businessName}`);
+        console.error(`[Business API Error] Details:`, e);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
