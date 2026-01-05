@@ -1,13 +1,17 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { ethers } from "ethers";
 import BizFiABI from "@/app/abi/BizFi.json";
+import { getDatabase } from "@/lib/mongodb";
 
 const BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770";
 
 export async function POST(req: NextRequest) {
+    let businessId, recipient;
     try {
-        const { businessId, recipient, verificationData } = await req.json();
+        const body = await req.json();
+        businessId = body.businessId;
+        recipient = body.recipient;
+        const { verificationData, transactionHash } = body;
 
         if (!businessId || !recipient || !verificationData) {
             return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
@@ -20,14 +24,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Initialize provider and signer
-        // Using Base Mainnet RPC widely available or fallback to a standard one if env not set
-        // ideally should use process.env.NEXT_PUBLIC_RPC_URL or similar if available
         const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || "https://mainnet.base.org");
         const signer = new ethers.Wallet(privateKey, provider);
         const bizfiContract = new ethers.Contract(BIZFI_PROXY_ADDRESS, BizFiABI, signer);
 
         // 1. Hash the verification data
-        // Removing circular references if any, though likely simple JSON
         const dataString = JSON.stringify(verificationData);
         const dataHash = ethers.keccak256(ethers.toUtf8Bytes(dataString));
 
@@ -50,13 +51,9 @@ export async function POST(req: NextRequest) {
         const receipt = await tx.wait();
 
         // 4. Extract EAS UID from logs
-        // We look for the AttestationCreated event
-        // event AttestationCreated(uint256 indexed attestationId, uint256 indexed businessId, bytes32 indexed easUid, AttestationType attestationType, address attestor);
-
         let easUid = null;
         let attestationId = null;
 
-        // Use the interface to parse logs
         const iface = new ethers.Interface(BizFiABI);
 
         for (const log of receipt.logs) {
@@ -76,6 +73,29 @@ export async function POST(req: NextRequest) {
             throw new Error("Failed to retrieve EAS UID from transaction logs");
         }
 
+        // 5. Update Database with Attestation UID
+        if (transactionHash) {
+            try {
+                const db = await getDatabase();
+                if (db) {
+                    await db.collection("businesses").updateOne(
+                        { transactionHash: transactionHash },
+                        {
+                            $set: {
+                                attestationUid: easUid,
+                                attestationId: attestationId,
+                                businessId: businessId.toString()
+                            }
+                        }
+                    );
+                    console.log(`Updated business record for tx ${transactionHash} with UID ${easUid}`);
+                }
+            } catch (dbErr) {
+                console.error("Failed to update business record with attestation:", dbErr);
+                // We don't fail the request if DB update fails, as consistent on-chain state is more important
+            }
+        }
+
         return NextResponse.json({
             success: true,
             attestationId,
@@ -84,7 +104,10 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("Attestation failed:", error);
+        const timestamp = new Date().toISOString();
+        console.error(`[Attestation API Error] ${timestamp} | Context: Create Attestation (Business ID: ${businessId || 'unknown'})`);
+        console.error(`[Attestation API Error] Details:`, error);
+
         return NextResponse.json({
             error: error.message || "Failed to create attestation",
             details: error.toString()
