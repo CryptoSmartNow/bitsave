@@ -275,11 +275,95 @@ export function useBizFi() {
         }
     }, [publicClient, address, checkAllowance, approveUSDC, getWalletClient]);
 
+    // Transfer Token (ETH or USDC)
+    const transferToken = useCallback(async (
+        recipient: string,
+        amount: string,
+        tokenType: 'ETH' | 'USDC'
+    ) => {
+        if (!address) throw new Error("Wallet not connected");
+        if (!recipient || !amount) throw new Error("Recipient and amount required");
 
+        setLoading(true);
+        setError(null);
 
+        try {
+            const provider = await getWalletClient();
+            let hash;
+
+            if (tokenType === 'ETH') {
+                // Native ETH Transfer
+                const value = parseUnits(amount, 18);
+                // Check Balance
+                const balance = await publicClient.getBalance({ address });
+                if (balance < value) {
+                    throw new Error(`Insufficient ETH balance. You have ${formatUnits(balance, 18)} ETH.`);
+                }
+
+                hash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: address,
+                        to: recipient as `0x${string}`,
+                        value: `0x${value.toString(16)}`
+                    }]
+                });
+            } else {
+                // USDC Transfer
+                const value = parseUnits(amount, 6); // USDC is 6 decimals
+                // Check Balance
+                const balance = await publicClient.readContract({
+                    address: USDC_ADDRESS,
+                    abi: ERC20_ABI,
+                    functionName: 'balanceOf',
+                    args: [address]
+                }) as bigint;
+
+                if (balance < value) {
+                    throw new Error(`Insufficient USDC balance. You have ${formatUnits(balance, 6)} USDC.`);
+                }
+
+                const data = encodeFunctionData({
+                    abi: [{
+                        name: 'transfer',
+                        type: 'function',
+                        stateMutability: 'nonpayable',
+                        inputs: [
+                            { name: 'recipient', type: 'address' },
+                            { name: 'amount', type: 'uint256' }
+                        ],
+                        outputs: [{ type: 'bool' }]
+                    }],
+                    functionName: 'transfer',
+                    args: [recipient as `0x${string}`, value]
+                });
+
+                hash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: address,
+                        to: USDC_ADDRESS,
+                        data
+                    }]
+                });
+            }
+
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+            return receipt;
+
+        } catch (err: any) {
+            console.error("Transfer error:", err);
+            const msg = parseErrorMessage(err);
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setLoading(false);
+        }
+    }, [address, publicClient, getWalletClient]);
 
     return {
         registerBusiness,
+        transferToken,
         loading,
         error,
         address

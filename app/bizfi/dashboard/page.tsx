@@ -15,7 +15,8 @@ import {
     HiOutlineCheckCircle,
     HiOutlineClipboard,
     HiOutlineArrowRightOnRectangle,
-    HiOutlineArrowRight
+    HiOutlineArrowRight,
+    HiOutlineWallet
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import WizardForm from "./components/WizardForm";
@@ -228,7 +229,7 @@ export default function BizFiDashboardPage() {
                                     className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium transition-all hover:bg-[#81D7B4]/10 border border-gray-700 hover:border-[#81D7B4] whitespace-nowrap"
                                     style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#9BA8B5' }}
                                 >
-                                    <HiOutlineUsers className="w-4 h-4" />
+                                    <HiOutlineWallet className="w-4 h-4" />
                                     <span className="hidden sm:inline">{address.slice(0, 6)}...{address.slice(-4)}</span>
                                     <span className="sm:hidden">Wallet</span>
                                 </button>
