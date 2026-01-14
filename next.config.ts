@@ -88,7 +88,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/docs",
-        destination: "https://bitloans.gitbook.io/bitsave",
+        destination: "https://proxy.gitbook.site/sites/site_qixqW",
         permanent: true,
       },
     ];
