@@ -83,6 +83,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async redirects() {
+    return [
+      {
+        source: "/docs",
+        destination: "https://bitloans.gitbook.io/bitsave",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(withPWA(nextConfig));
