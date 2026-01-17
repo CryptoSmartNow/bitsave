@@ -67,9 +67,27 @@ npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
 
+# Proxy Server
+npm run proxy        # Start the dedicated proxy server (default port 3001)
+
 # Database
 node scripts/migrate-to-mongodb.js  # Migrate data to MongoDB
 ```
+
+## 🛡️ Proxy Solution (ISP Bypass)
+
+This project includes a robust proxy solution to bypass ISP restrictions on Coinbase and other RPC endpoints.
+
+### 1. Integrated Next.js Proxy (Recommended)
+The application automatically routes blocked domains through `/api/coinbase-proxy`. This works out-of-the-box when deployed to Vercel or any cloud provider not blocked by your ISP.
+- **Enabled by default**: See `app/providers.tsx` (`USE_PROXY = true`).
+- **Features**: Automatic retries, domain whitelisting, and global fetch interception for SDKs.
+
+### 2. Standalone Proxy Server
+If you need a dedicated proxy server (e.g., for local development or separate hosting):
+1. Run `npm run proxy`.
+2. The proxy will start on `http://localhost:3001` (or set `PORT` env var).
+3. Configure your client to point to this proxy server.
 
 ## 🌐 Supported Networks & Tokens
 

@@ -11,6 +11,8 @@ import {
     HiOutlineXMark
 } from "react-icons/hi2";
 import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
+import { useAccount } from "wagmi";
+import { useEvmAddress, useIsSignedIn } from "@coinbase/cdp-hooks";
 import { parseUnits, zeroAddress, toHex } from "viem";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 
@@ -73,7 +75,13 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<any>({});
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const { registerBusiness, loading, error, address } = useBizFi();
+
+    const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
+    const { evmAddress } = useEvmAddress();
+    const { isSignedIn } = useIsSignedIn();
+    const address = isWagmiConnected ? wagmiAddress : evmAddress;
+
+    const { registerBusiness, loading, error } = useBizFi();
     const [showNotification, setShowNotification] = useState(false);
     const [showPaymentSummary, setShowPaymentSummary] = useState(false);
     const [notificationConfig, setNotificationConfig] = useState<{
@@ -143,24 +151,41 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             });
             const data = await res.json();
 
-            // Standard CB Pay Init
-            initOnRamp({
-                appId: process.env.NEXT_PUBLIC_COINBASE_CDP_PROJECT_ID || 'your-project-id',
-                widgetParameters: {
-                    destinationWallets: [{
-                        address: address,
-                        blockchains: ["base"],
-                    }],
-                },
-                onSuccess: () => {
-                    console.log('Onramp success');
-                },
-                onExit: () => {
-                    console.log('Onramp exit');
-                },
-            }, (error, instance) => {
-                if (instance) instance.open();
-            });
+            if (res.ok && data.sessionToken) {
+                // Secure CB Pay Init with Session Token
+                initOnRamp({
+                    sessionToken: data.sessionToken,
+                    onSuccess: () => {
+                        console.log('Onramp success');
+                    },
+                    onExit: () => {
+                        console.log('Onramp exit');
+                    },
+                }, (error, instance) => {
+                    if (instance) instance.open();
+                    if (error) console.error("Onramp error:", error);
+                });
+            } else {
+                // Fallback to Standard CB Pay Init
+                initOnRamp({
+                    appId: process.env.NEXT_PUBLIC_COINBASE_CDP_PROJECT_ID || process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "8fb8463e-ce60-41f1-8dda-e5b2308db356",
+                    widgetParameters: {
+                        destinationWallets: [{
+                            address: address,
+                            blockchains: ["ethereum", "optimism", "base", "polygon"],
+                        }],
+                    },
+                    onSuccess: () => {
+                        console.log('Onramp success');
+                    },
+                    onExit: () => {
+                        console.log('Onramp exit');
+                    },
+                }, (error, instance) => {
+                    if (instance) instance.open();
+                    if (error) console.error("Onramp error:", error);
+                });
+            }
 
         } catch (e) {
             console.error("Failed to start onramp:", e);

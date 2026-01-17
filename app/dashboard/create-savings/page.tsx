@@ -10,7 +10,7 @@ import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
-import { useWallets } from '@privy-io/react-auth';
+// import { useWallets } from '@privy-io/react-auth';
 import axios from 'axios';
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import erc20ABIFile from '@/app/abi/erc20ABI.json';
@@ -305,7 +305,7 @@ const fetchCeloPrice = async () => {
 export default function CreateSavingsPage() {
   const router = useRouter()
   const { address } = useAccount()
-  const { wallets } = useWallets()
+  // const { wallets } = useWallets()
   const { referralData, generateReferralCode, markReferralConversion } = useReferrals()
   const { savingsData } = useSavingsData()
   const { walletInfo, shouldShowModal, dismissRecommendation } = useWalletDetection()
@@ -656,21 +656,14 @@ export default function CreateSavingsPage() {
       const tokenObj = selectedNetwork?.tokens.find(t => t.symbol === currency);
       if (!selectedNetwork || !tokenObj) throw new Error('Selected network or token is not supported.');
 
-      // Get provider and signer from Privy wallet
-      const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase());
-      if (!activeWallet) {
-          // Fallback to window.ethereum if strictly needed, but better to fail if Privy is source of truth
-          // throw new Error('Active wallet not found in Privy.');
-          // Or just continue and let createSavingsGeneric try window.ethereum
-          console.warn('Active wallet not found in Privy wallets, falling back to default provider detection');
-      }
+      // Use Wagmi provider/signer if available, or fall back to window.ethereum
+      // Since we are using OnchainKit/Wagmi, the user should be connected via that.
+      // createSavingsGeneric handles the fallback to window.ethereum if no overrides are provided.
 
       let providerOverride, signerOverride;
-      if (activeWallet) {
-          const ethereumProvider = await activeWallet.getEthereumProvider();
-          providerOverride = new ethers.BrowserProvider(ethereumProvider);
-          signerOverride = await providerOverride.getSigner();
-      }
+      // We can rely on createSavingsGeneric's default behavior which uses window.ethereum
+      // Or we can try to get the signer from the Wagmi config if we wanted to be more explicit,
+      // but for now, the default behavior of createSavingsGeneric should work for injected wallets.
 
       // Calculate maturity timestamp and other params from current inputs
       const maturity = calculateMaturityTime();
@@ -1120,10 +1113,10 @@ export default function CreateSavingsPage() {
               <div className="flex w-full gap-3 sm:gap-4 flex-col sm:flex-row">
                 <button
                   className={`group relative w-full py-3 sm:py-3.5 rounded-2xl text-white text-sm sm:text-base font-semibold transition-all duration-300 transform hover:scale-105 ${success
-                      ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] hover:shadow-lg hover:shadow-green-500/25'
-                      : error === 'Error creating savings user rejected'
-                        ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 hover:shadow-lg hover:shadow-yellow-500/25'
-                        : 'bg-gradient-to-r from-gray-700 to-gray-800 hover:shadow-lg hover:shadow-gray-500/25'
+                    ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] hover:shadow-lg hover:shadow-green-500/25'
+                    : error === 'Error creating savings user rejected'
+                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 hover:shadow-lg hover:shadow-yellow-500/25'
+                      : 'bg-gradient-to-r from-gray-700 to-gray-800 hover:shadow-lg hover:shadow-gray-500/25'
                     }`}
                   onClick={handleCloseTransactionModal}
                   aria-label="Close modal"
@@ -1285,8 +1278,8 @@ export default function CreateSavingsPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4, duration: 0.6 }}
                             className={`w-full max-w-xs sm:max-w-md inline-flex items-center justify-center px-6 sm:px-10 py-4 sm:py-5 font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl transition-all duration-300 text-lg sm:text-xl ${name.trim()
-                                ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white shadow-[#81D7B4]/30 hover:shadow-[#81D7B4]/40 cursor-pointer'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-inner'
+                              ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white shadow-[#81D7B4]/30 hover:shadow-[#81D7B4]/40 cursor-pointer'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-inner'
                               }`}
                           >
                             <motion.span
@@ -1360,8 +1353,8 @@ export default function CreateSavingsPage() {
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: index * 0.1, duration: 0.4 }}
                                   className={`relative group p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-3 transition-all duration-300 overflow-hidden ${name === preset.name
-                                      ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] border-[#81D7B4] text-white shadow-lg sm:shadow-2xl shadow-[#81D7B4]/30 transform scale-105'
-                                      : 'bg-white/70 border-gray-200 text-gray-700 hover:border-white hover:bg-white/90 hover:shadow-lg sm:hover:shadow-xl backdrop-blur-sm'
+                                    ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] border-[#81D7B4] text-white shadow-lg sm:shadow-2xl shadow-[#81D7B4]/30 transform scale-105'
+                                    : 'bg-white/70 border-gray-200 text-gray-700 hover:border-white hover:bg-white/90 hover:shadow-lg sm:hover:shadow-xl backdrop-blur-sm'
                                     }`}
                                 >
                                   {/* Background gradient overlay for unselected state */}
@@ -1376,8 +1369,8 @@ export default function CreateSavingsPage() {
                                   >
                                     <motion.div
                                       className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${name === preset.name
-                                          ? 'bg-white/20 backdrop-blur-sm'
-                                          : 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] shadow-md sm:shadow-lg'
+                                        ? 'bg-white/20 backdrop-blur-sm'
+                                        : 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] shadow-md sm:shadow-lg'
                                         }`}
                                       whileHover={{
                                         rotate: 360,

@@ -1,8 +1,15 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePrivy } from '@privy-io/react-auth';
+import {
+    ConnectWallet,
+    Wallet,
+} from '@coinbase/onchainkit/wallet';
+import { BizFiAuthButton } from "@/components/BizFiAuth";
+import { useAccount, useDisconnect } from "wagmi";
+import { useIsSignedIn, useEvmAddress, useSignOut as useCdpSignOut } from "@coinbase/cdp-hooks";
 import {
     HiOutlineRocketLaunch,
     HiOutlineFire,
@@ -16,7 +23,8 @@ import {
     HiOutlineClipboard,
     HiOutlineArrowRightOnRectangle,
     HiOutlineArrowRight,
-    HiOutlineWallet
+    HiOutlineWallet,
+    HiOutlinePlay
 } from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import WizardForm from "./components/WizardForm";
@@ -71,10 +79,28 @@ const TIERS: Array<{
         }
     ];
 
+
+
 export default function BizFiDashboardPage() {
     const router = useRouter();
-    const { user, authenticated, login, logout } = usePrivy();
-    const address = user?.wallet?.address;
+    const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
+    const { isSignedIn: isCdpSignedIn } = useIsSignedIn();
+    const { evmAddress } = useEvmAddress();
+    const { disconnect: wagmiDisconnect } = useDisconnect();
+    const { signOut: cdpSignOut } = useCdpSignOut();
+
+    // Combined auth state
+    const address = isWagmiConnected ? wagmiAddress : evmAddress;
+    const authenticated = isWagmiConnected || isCdpSignedIn;
+
+    const handleLogout = () => {
+        if (isWagmiConnected) {
+            wagmiDisconnect();
+        } else {
+            cdpSignOut();
+        }
+    };
+
     const [mounted, setMounted] = useState(false);
     const [selectedTier, setSelectedTier] = useState(TIERS[0]);
     const [referralCode, setReferralCode] = useState('');
@@ -109,10 +135,13 @@ export default function BizFiDashboardPage() {
                 const res = await fetch(`/api/bizfi/draft?address=${address}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.referralCode) {
-                        setReferralCode(data.referralCode);
-                        // Validate the loaded referral code
-                        validateReferralCode(data.referralCode);
+                    if (data) {
+                        // Check both root and formData for referralCode
+                        const savedCode = data.referralCode || (data.formData && data.formData.referralCode);
+                        if (savedCode) {
+                            setReferralCode(savedCode);
+                            validateReferralCode(savedCode);
+                        }
                     }
                 }
             } catch (e) {
@@ -173,7 +202,8 @@ export default function BizFiDashboardPage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         address,
-                        referralCode: code,
+                        formData: { referralCode: code },
+                        referralCode: code, // keep both for compatibility
                         step: 1
                     })
                 }).catch(e => console.error('Failed to save referral code:', e));
@@ -203,46 +233,42 @@ export default function BizFiDashboardPage() {
 
     return (
         <div className={`${exo.variable} font-sans`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)', minHeight: '100vh' }}>
-            {/* Header */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#F9F9FB' }}>Business Dashboard</h1>
-                        <p className="text-sm sm:text-base" style={{ color: '#7B8B9A' }}>Manage your business listing and track performance</p>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-12">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl tracking-tight" style={{ color: '#F9F9FB', fontWeight: 500 }}>Business Dashboard</h1>
+                        <p className="text-sm sm:text-base font-medium" style={{ color: '#7B8B9A' }}>Manage your business listing and track performance</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4 flex-1">
                         <button
                             onClick={() => setShowConsultancyModal(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 font-bold rounded-lg transition-all whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 font-bold rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 active:scale-95 whitespace-nowrap"
                             style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6BC4A0'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81D7B4'}
                         >
-                            <HiOutlineChatBubbleLeftRight className="w-5 h-5" />
-                            <span className="hidden sm:inline">Book Consultancy</span>
-                            <span className="sm:hidden">Book</span>
+                            <HiOutlineChatBubbleLeftRight className="w-4 h-4" />
+                            <span className="text-xs sm:text-sm">
+                                <span className="sm:hidden">Book</span>
+                                <span className="hidden sm:inline">Book Consultancy</span>
+                            </span>
                         </button>
-                        {address && (
-                            <>
+                        {authenticated && address && (
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setShowWalletModal(true)}
-                                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium transition-all hover:bg-[#81D7B4]/10 border border-gray-700 hover:border-[#81D7B4] whitespace-nowrap"
-                                    style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#9BA8B5' }}
+                                    className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all bg-gray-900/40 border border-gray-800 hover:border-white/50 group active:scale-95 flex items-center gap-2 shadow-inner min-w-fit"
                                 >
-                                    <HiOutlineWallet className="w-4 h-4" />
-                                    <span className="hidden sm:inline">{address.slice(0, 6)}...{address.slice(-4)}</span>
-                                    <span className="sm:hidden">Wallet</span>
+                                    <HiOutlineWallet className="w-4 h-4 text-white" />
+                                    <span className="text-xs font-bold text-gray-300">{address.slice(0, 4)}...{address.slice(-4)}</span>
                                 </button>
                                 <button
-                                    onClick={logout}
-                                    className="flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-medium transition-all hover:bg-gray-700/50 border border-gray-700 hover:border-gray-600 whitespace-nowrap"
-                                    style={{ color: '#9BA8B5' }}
+                                    onClick={() => handleLogout()}
+                                    className="px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all bg-transparent border-none text-gray-400 hover:text-red-400 active:scale-95 flex items-center gap-1.5 sm:gap-2 min-w-fit"
                                     title="Logout"
                                 >
-                                    <HiOutlineArrowRightOnRectangle className="w-5 h-5" />
-                                    <span>Logout</span>
+                                    <HiOutlineArrowRightOnRectangle className="w-4 h-4 font-bold" />
+                                    <span className="hidden sm:inline text-xs font-bold">Logout</span>
                                 </button>
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -271,33 +297,28 @@ export default function BizFiDashboardPage() {
                             <p className="mb-8" style={{ color: '#7B8B9A' }}>
                                 Log in with your Email, X (Twitter), or connect a wallet to list your business and access the dashboard features.
                             </p>
-                            <button
-                                onClick={login}
-                                className="w-full py-3.5 font-bold rounded-xl transition-all shadow-lg hover:scale-[1.02]"
-                                style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
-                            >
-                                Login
-                            </button>
+                            <div className="flex justify-center w-full">
+                                <BizFiAuthButton className="w-full" />
+                            </div>
                         </div>
                     </div>
                 ) : (
                     <div className="grid lg:grid-cols-3 gap-8">
                         {/* Form Section */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                             {/* Intro Video */}
-                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-1 overflow-hidden relative group">
-                                <div className="relative pt-[56.25%] rounded-xl overflow-hidden bg-black">
+                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-gray-800 p-1 sm:p-4 overflow-hidden relative group">
+                                <div className="relative pt-[56.25%] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-2xl">
                                     <iframe
                                         className="absolute top-0 left-0 w-full h-full"
-                                        src="https://www.youtube.com/embed/yxEQHPaM6MU?rel=0"
+                                        src="https://www.youtube.com/embed/yxEQHPaM6MU?rel=0&autoplay=0"
                                         title="Introduction to BizFi"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
                                     ></iframe>
                                 </div>
                             </div>
-
-                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-8">
+                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-gray-800 p-4 sm:p-8">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>
                                         <HiOutlineClipboardDocumentCheck className="w-6 h-6 text-[#81D7B4]" />
@@ -389,7 +410,6 @@ export default function BizFiDashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Wizard Form */}
                             <WizardForm
                                 selectedTier={selectedTier}
                                 referralCode={referralCode}
@@ -618,8 +638,8 @@ export default function BizFiDashboardPage() {
                 isOpen={showWalletModal}
                 onClose={() => setShowWalletModal(false)}
                 address={address as `0x${string}` | undefined}
-                logout={logout}
+                logout={() => handleLogout()}
             />
-        </div>
+        </div >
     );
 }
