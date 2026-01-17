@@ -11,7 +11,7 @@ import PageLoader from './components/PageLoader';
 
 // Proxy configuration
 const PROXY_ENDPOINT = process.env.NODE_ENV === 'development' 
-  ? 'https://bitsave.io/api/coinbase-proxy' 
+  ? 'https://bitsave-git-beta-primidacs-projects.vercel.app/api/coinbase-proxy' 
   : '/api/coinbase-proxy';
 const USE_PROXY = true; // Toggle this to enable/disable proxy
 
