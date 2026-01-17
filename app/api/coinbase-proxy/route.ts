@@ -57,6 +57,18 @@ export async function GET(req: NextRequest) {
   return handleProxy(req);
 }
 
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, coinbase-omnistack-source, cb-wallet-api-key, x-cb-project-id, x-cb-sdk-version',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 async function handleProxy(req: NextRequest) {
   const url = new URL(req.url);
   const targetUrlStr = url.searchParams.get('url');
@@ -105,19 +117,15 @@ async function handleProxy(req: NextRequest) {
       cache: 'no-store'
     });
 
-    // Prepare response
+    // Return response with CORS headers
     const responseHeaders = new Headers(response.headers);
-    // Ensure CORS
     responseHeaders.set('Access-Control-Allow-Origin', '*');
-    responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
+    
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
     });
-
   } catch (error: any) {
     console.error('[Proxy] Fatal error:', error);
     return NextResponse.json(
@@ -127,13 +135,3 @@ async function handleProxy(req: NextRequest) {
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-csrf-token',
-    },
-  });
-}

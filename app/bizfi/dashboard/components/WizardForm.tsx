@@ -282,7 +282,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
             const finalBusinessName = formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "";
 
-            if (isReferralValid && referralCode) {
+            if (referralCode && referralCode.trim().length > 0) {
                 // Fetch valid signature and data from API
                 const tierValue = {
                     'micro': 0,
