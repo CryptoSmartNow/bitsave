@@ -15,7 +15,9 @@ const ALLOWED_DOMAINS = [
   'base-mainnet.g.alchemy.com',
   'keys.coinbase.com',
   'pay.coinbase.com',
-  'bc.coinbase.com'
+  'bc.coinbase.com',
+  'api.cdp.coinbase.com',
+  'cca-lite.coinbase.com'
 ];
 
 async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_RETRIES): Promise<Response> {

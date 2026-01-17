@@ -27,15 +27,20 @@ function ProxyInterceptor() {
     if (!USE_PROXY) return;
 
     const originalFetch = window.fetch;
+    const originalOpen = XMLHttpRequest.prototype.open;
+    
     const blockedDomains = [
       'api.coinbase.com',
       'api.developer.coinbase.com',
       'keys.coinbase.com',
       'pay.coinbase.com',
       'bc.coinbase.com',
-      'mainnet.base.org'
+      'mainnet.base.org',
+      'api.cdp.coinbase.com',
+      'cca-lite.coinbase.com'
     ];
 
+    // Patch Fetch
     window.fetch = async (...args) => {
       let [resource, config] = args;
       
@@ -45,7 +50,7 @@ function ProxyInterceptor() {
       const shouldProxy = blockedDomains.some(domain => url.includes(domain));
       
       if (shouldProxy && !url.includes(PROXY_ENDPOINT)) {
-        console.log(`[ProxyInterceptor] Redirecting ${url} through proxy`);
+        console.log(`[ProxyInterceptor] Redirecting fetch ${url} through proxy`);
         const newUrl = proxify(url);
         
         if (resource instanceof Request) {
@@ -78,8 +83,25 @@ function ProxyInterceptor() {
       return originalFetch(resource, config);
     };
 
+    // Patch XHR
+    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...args: any[]) {
+      const urlStr = url.toString();
+      const shouldProxy = blockedDomains.some(domain => urlStr.includes(domain));
+      
+      if (shouldProxy && !urlStr.includes(PROXY_ENDPOINT)) {
+        console.log(`[ProxyInterceptor] Redirecting XHR ${urlStr} through proxy`);
+        const newUrl = proxify(urlStr);
+        // @ts-ignore
+        return originalOpen.call(this, method, newUrl, ...args);
+      }
+      
+      // @ts-ignore
+      return originalOpen.call(this, method, url, ...args);
+    };
+
     return () => {
       window.fetch = originalFetch;
+      XMLHttpRequest.prototype.open = originalOpen;
     };
   }, []);
 
