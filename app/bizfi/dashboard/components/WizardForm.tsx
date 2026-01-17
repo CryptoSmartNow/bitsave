@@ -161,7 +161,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     onExit: () => {
                         console.log('Onramp exit');
                     },
-                }, (error, instance) => {
+                } as any, (error, instance) => {
                     if (instance) instance.open();
                     if (error) console.error("Onramp error:", error);
                 });
