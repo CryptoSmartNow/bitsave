@@ -84,6 +84,9 @@ async function handleProxy(req: NextRequest) {
     headers.delete('host');
     headers.delete('connection');
     headers.delete('content-length');
+    // Important: Don't forward origin/referer to avoid CORS issues at Coinbase
+    headers.delete('origin');
+    headers.delete('referer');
     
     // Read body for non-GET requests
     let body: BodyInit | null = null;

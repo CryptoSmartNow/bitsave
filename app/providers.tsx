@@ -49,11 +49,27 @@ function ProxyInterceptor() {
         const newUrl = proxify(url);
         
         if (resource instanceof Request) {
-          // Recreate Request with new URL
-          resource = new Request(newUrl, {
-            ...resource,
-            // We might need to adjust headers if they are immutable on the original Request
-          });
+          // Clone the request to modify it
+          // Note: Request objects are immutable, so we must create a new one
+          // We also need to strip credentials/mode if they cause issues with CORS in the proxy flow
+          const requestInit: RequestInit = {
+            method: resource.method,
+            headers: resource.headers,
+            body: resource.body,
+            // Don't use 'no-cors' as we need the response
+            mode: 'cors', 
+            credentials: 'omit', // Important: let the proxy handle auth if needed, or pass explicitly
+            cache: resource.cache,
+            redirect: resource.redirect,
+            referrer: resource.referrer,
+            integrity: resource.integrity,
+          };
+
+          // If body is used, we might need to read it. 
+          // However, reading body from a Request that's already being used is tricky.
+          // For now, let's assume the SDK creates fresh requests we can intercept.
+          
+          resource = new Request(newUrl, requestInit);
         } else {
           resource = newUrl;
         }
