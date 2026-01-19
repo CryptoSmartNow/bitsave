@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify({
                 destination_addresses: [{
                     address: address,
-                    blockchains: ["base", "ethereum", "polygon", "solana", "avalanche-c-chain", "optimism"]
+                    blockchains: ["ethereum", "optimism", "base", "polygon"]
                 }]
             })
         });

@@ -8,6 +8,7 @@ import { ThemeProvider, useTheme } from 'next-themes';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { usePathname } from 'next/navigation';
+import { injected } from 'wagmi/connectors';
 
 // Define the project ID for WalletConnect (used by Privy if configured, or internally)
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
@@ -57,15 +58,18 @@ const config = createConfig({
     [hedera.id]: http(),
     [mainnet.id]: http(),
   },
+  connectors: [
+    injected(),
+  ],
 });
 
 const queryClient = new QueryClient();
 
-function PrivyWrapper({ children }: { children: ReactNode }) {
+export function Providers({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   const pathname = usePathname();
   const isBizFi = pathname?.startsWith('/bizfi');
-  
+
   // Force dark theme for BizFi pages
   const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
 
@@ -93,33 +97,11 @@ function PrivyWrapper({ children }: { children: ReactNode }) {
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
-          {children}
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
+          </ThemeProvider>
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
-  );
-}
-
-import PageLoader from './components/PageLoader';
-import { useState, useEffect } from 'react';
-
-export function Providers({ children }: { children: ReactNode }) {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate initial loading for smooth entrance
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <PrivyWrapper>
-        {loading && <PageLoader />}
-        {children}
-      </PrivyWrapper>
-    </ThemeProvider>
   );
 }

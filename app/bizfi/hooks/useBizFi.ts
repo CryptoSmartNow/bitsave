@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from 'react';
-import { useAccount } from 'wagmi';
-import { useWallets } from '@privy-io/react-auth';
+import { useAccount, useWalletClient, useSwitchChain } from 'wagmi';
+import { useEvmAddress } from '@coinbase/cdp-hooks';
 import { getContract, formatUnits, parseUnits, keccak256, toBytes, zeroAddress, encodeFunctionData, createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 import BizFiABI from '../../abi/BizFi.json';
@@ -61,9 +61,11 @@ const TIER_MAPPING: Record<TierType, number> = {
 };
 
 export function useBizFi() {
-    const { address } = useAccount();
-    const { wallets } = useWallets();
-    const wallet = useMemo(() => wallets.find((w) => w.walletClientType === 'privy') || wallets[0], [wallets]);
+    const { address: wagmiAddress } = useAccount();
+    const { evmAddress } = useEvmAddress();
+    const address = wagmiAddress || evmAddress;
+    const { data: walletClient } = useWalletClient();
+    const { switchChainAsync } = useSwitchChain();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     // Create a dedicated public client for Base Mainnet
@@ -74,27 +76,23 @@ export function useBizFi() {
 
     // Get Wallet Client (Embedded or External)
     const getWalletClient = useCallback(async () => {
-        // ... (Log wallets)
-
-        // ... (Find wallet logic)
-
-        if (!wallet) {
+        if (!walletClient) {
             throw new Error("No connected wallet found to sign transaction. Please connect your wallet.");
         }
 
-        console.log("Using wallet:", wallet.walletClientType, wallet.address);
+        console.log("Using wallet:", walletClient.account.address);
 
         // Ensure we are on Base Mainnet
-        if (wallet.chainId !== 'eip155:8453') {
+        if (walletClient.chain.id !== 8453) {
             try {
-                await wallet.switchChain(8453);
+                await switchChainAsync({ chainId: 8453 });
             } catch (switchErr) {
                 console.warn("Failed to switch chain via wallet, proceeding anyway:", switchErr);
             }
         }
 
-        return await wallet.getEthereumProvider();
-    }, [wallets, address]);
+        return walletClient;
+    }, [walletClient, switchChainAsync]);
 
     // Check USDC Allowance
     const checkAllowance = useCallback(async (amount: bigint) => {

@@ -3,7 +3,10 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAccount, useDisconnect } from "wagmi";
+import { BizFiAuthButton } from "@/components/BizFiAuth";
+
+// import { usePrivy } from "@privy-io/react-auth";
 import {
     HiOutlineRocketLaunch,
     HiOutlineTrophy,
@@ -172,8 +175,8 @@ function NotifyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 }
 
 export default function BizFiPage() {
-    const router = useRouter();
-    const { login, authenticated, user, logout } = usePrivy();
+    const { address, isConnected } = useAccount();
+    const { disconnect } = useDisconnect();
     const [mounted, setMounted] = useState(false);
     const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -235,25 +238,22 @@ export default function BizFiPage() {
                                 Back to SaveFi
                             </Link>
 
-                            {authenticated && user?.wallet ? (
+                            {isConnected && address ? (
                                 <div className="flex items-center gap-2">
                                     <div className="px-3 py-1.5 rounded-full border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5]">
-                                        {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
+                                        {address.slice(0, 6)}...{address.slice(-4)}
                                     </div>
                                     <button
-                                        onClick={logout}
+                                        onClick={() => disconnect()}
                                         className="text-xs text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
                                     >
                                         Logout
                                     </button>
                                 </div>
                             ) : (
-                                <button
-                                    onClick={login}
-                                    className="px-4 py-2 text-sm font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl hover:bg-[#6BC4A0] transition-colors"
-                                >
-                                    Login
-                                </button>
+                                <div className="flex items-center">
+                                    <BizFiAuthButton />
+                                </div>
                             )}
 
                             {/* Mobile Menu Button */}
@@ -264,33 +264,35 @@ export default function BizFiPage() {
                                 {isMobileMenuOpen ? <HiOutlineXMark className="w-6 h-6" /> : <HiOutlineBars3 className="w-6 h-6" />}
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </div >
+                </div >
 
                 {/* Mobile Menu Dropdown */}
                 <AnimatePresence>
-                    {isMobileMenuOpen && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="md:hidden border-t border-[#7B8B9A]/10 bg-[#0F1825]/95 backdrop-blur-xl overflow-hidden"
-                        >
-                            <div className="px-4 py-6 space-y-4">
-                                <LanguageSelector className="w-full" />
-                                <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">How It Works</a>
-                                <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">Features</a>
-                                <a href="#products" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">Products</a>
-                                <div className="h-px bg-[#7B8B9A]/20 my-4"></div>
-                                <Link href="/dashboard" className="flex items-center gap-2 text-[#7B8B9A]">
-                                    <HiOutlineArrowLeft className="w-5 h-5" />
-                                    Back to SaveFi
-                                </Link>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                    {
+                        isMobileMenuOpen && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="md:hidden border-t border-[#7B8B9A]/10 bg-[#0F1825]/95 backdrop-blur-xl overflow-hidden"
+                            >
+                                <div className="px-4 py-6 space-y-4">
+                                    <LanguageSelector className="w-full" />
+                                    <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">How It Works</a>
+                                    <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">Features</a>
+                                    <a href="#products" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">Products</a>
+                                    <div className="h-px bg-[#7B8B9A]/20 my-4"></div>
+                                    <Link href="/dashboard" className="flex items-center gap-2 text-[#7B8B9A]">
+                                        <HiOutlineArrowLeft className="w-5 h-5" />
+                                        Back to SaveFi
+                                    </Link>
+                                </div>
+                            </motion.div>
+                        )
+                    }
+                </AnimatePresence >
+            </div >
 
             <div className="relative z-10 px-4 pt-24 pb-12 md:pt-32 md:pb-16 max-w-[1400px] mx-auto">
                 {/* Hero Section */}
