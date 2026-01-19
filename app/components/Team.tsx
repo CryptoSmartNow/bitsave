@@ -2,20 +2,14 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { Github, Linkedin, Globe, MessageSquare } from 'lucide-react'
+import { Github, Linkedin, Twitter } from 'lucide-react'
 
-// Custom Farcaster Icon since it's not in Lucide
+// Custom Farcaster Icon
 const FarcasterIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 1000 1000" fill="currentColor">
     <path d="M257.778 155.556H742.222V844.444H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333S337.446 441.677 329.586 528.889H328.889V844.444H257.778V155.556Z" />
     <path d="M128.889 253.333L157.778 253.333V746.667H128.889V253.333Z" />
     <path d="M842.222 253.333H871.111V746.667H842.222V253.333Z" />
-  </svg>
-)
-
-const XIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 )
 
@@ -37,6 +31,14 @@ const teamMembers = [
     socials: {
       twitter: "https://twitter.com/primidac",
       github: "https://github.com/primidac",
+    }
+  },
+  {
+    name: "Abidemi Ademola",
+    role: "CFO",
+    avatar: "/images/abidemi.jpeg",
+    socials: {
+      linkedin: "https://www.linkedin.com/in/abidemiademok21/",
     }
   },
   {
@@ -86,19 +88,20 @@ const teamMembers = [
 
 export default function Team() {
   return (
-    <section id="team" className="py-24 px-4 md:px-8 lg:px-16 relative bg-white">
+    <section id="team" className="py-32 px-4 md:px-8 lg:px-16 relative bg-[#FAFAFA]">
       <div className="container mx-auto max-w-7xl">
 
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="flex flex-col items-center justify-center text-center mb-24">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-100 shadow-sm mb-6"
+            className="mb-6"
           >
-            <div className="w-2 h-2 rounded-full bg-[#81D7B4]"></div>
-            <span className="text-sm font-semibold text-gray-600 tracking-wide uppercase">The Builders</span>
+            <span className="px-5 py-2.5 rounded-full bg-white border border-gray-200 text-sm font-semibold text-gray-900 shadow-sm uppercase tracking-wider">
+              Our Team
+            </span>
           </motion.div>
 
           <motion.h2
@@ -106,9 +109,9 @@ export default function Team() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold mb-6 text-gray-900"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight mb-8"
           >
-            Meet the <span className="text-[#81D7B4]">Team</span>
+            Built by <span className="text-[#81D7B4]">Builders</span>.
           </motion.h2>
 
           <motion.p
@@ -116,14 +119,14 @@ export default function Team() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-gray-500 text-lg max-w-2xl mx-auto"
+            className="text-gray-500 text-xl max-w-3xl mx-auto leading-relaxed font-light"
           >
-            Passionate builders and DeFi experts dedicated to making onchain savings accessible to everyone.
+            Passionate experts from across the globe, united by a mission to make onchain savings accessible, secure, and rewarding for everyone.
           </motion.p>
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
           {teamMembers.map((member, index) => (
             <motion.div
               key={member.name}
@@ -131,42 +134,50 @@ export default function Team() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group relative"
+              className="group"
             >
-              <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#81D7B4]/30 transition-all duration-300 flex flex-col items-center text-center">
+              <div className="flex flex-col items-center text-center">
 
-                {/* Avatar */}
-                <div className="w-24 h-24 mb-6 relative">
-                  <div className="absolute inset-0 bg-[#81D7B4]/20 rounded-full blur-xl group-hover:bg-[#81D7B4]/40 transition-colors opacity-0 group-hover:opacity-100" />
-                  <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:scale-105 transition-transform duration-300">
+                {/* Avatar Container */}
+                <div className="relative mb-6">
+                  <div className="w-40 h-40 relative rounded-full overflow-hidden border-4 border-white shadow-2xl group-hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] transition-all duration-300 group-hover:-translate-y-2">
                     <Image
                       src={member.avatar}
                       alt={member.name}
                       fill
-                      className="object-cover"
+                      className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
+
+                  {/* Decorative faint ring */}
+                  <div className="absolute inset-0 rounded-full border border-gray-900/5 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500" />
                 </div>
 
                 {/* Info */}
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
-                <p className="text-[#81D7B4] font-medium text-sm mb-4">{member.role}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
+                <p className="text-sm font-semibold text-[#81D7B4] uppercase tracking-widest mb-4">{member.role}</p>
 
-                {/* Socials */}
-                <div className="flex gap-3 justify-center mt-auto pt-4 border-t border-gray-50 w-full">
+                {/* Socials - Minimal */}
+                <div className="flex gap-4 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
                   {member.socials.twitter && (
-                    <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-black hover:bg-black/5 transition-colors" title="X (Formerly Twitter)">
-                      <XIcon className="w-4 h-4" />
+                    <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors" title="X (Twitter)">
+                      <Twitter className="w-5 h-5" />
                     </a>
                   )}
                   {member.socials.farcaster && (
-                    <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-[#8465CB] hover:bg-[#8465CB]/10 transition-colors" title="Farcaster">
-                      <FarcasterIcon className="w-4 h-4" />
+                    <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#8465CB] transition-colors" title="Farcaster">
+                      <FarcasterIcon className="w-5 h-5" />
                     </a>
                   )}
                   {member.socials.github && (
-                    <a href={member.socials.github} target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-200 transition-colors" title="GitHub">
-                      <Github className="w-4 h-4" />
+                    <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-black transition-colors" title="GitHub">
+                      <Github className="w-5 h-5" />
+                    </a>
+                  )}
+                  {member.socials.linkedin && (
+                    <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#0077b5] transition-colors" title="LinkedIn">
+                      <Linkedin className="w-5 h-5" />
                     </a>
                   )}
                 </div>

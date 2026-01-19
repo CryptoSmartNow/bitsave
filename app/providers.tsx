@@ -7,6 +7,7 @@ import { base, celo, avalanche, mainnet } from 'viem/chains';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
+import { usePathname } from 'next/navigation';
 
 // Define the project ID for WalletConnect (used by Privy if configured, or internally)
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
@@ -62,13 +63,18 @@ const queryClient = new QueryClient();
 
 function PrivyWrapper({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
+  const pathname = usePathname();
+  const isBizFi = pathname?.startsWith('/bizfi');
+  
+  // Force dark theme for BizFi pages
+  const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
 
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
       config={{
         appearance: {
-          theme: theme === 'dark' ? 'dark' : 'light',
+          theme: effectiveTheme,
           accentColor: '#81D7B4', // Matching BitSave green
           logo: "/bitsavelogo.png",
           showWalletLoginFirst: true,
