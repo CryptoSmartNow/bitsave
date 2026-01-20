@@ -65,7 +65,7 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
-export function Providers({ children }: { children: ReactNode }) {
+function InnerProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   const pathname = usePathname();
   const isBizFi = pathname?.startsWith('/bizfi');
@@ -78,8 +78,8 @@ export function Providers({ children }: { children: ReactNode }) {
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
       config={{
         appearance: {
-          theme: effectiveTheme,
-          accentColor: '#81D7B4', // Matching BitSave green
+          theme: effectiveTheme as 'light' | 'dark',
+          accentColor: '#81D7B4',
           logo: "/bitsavelogo.png",
           showWalletLoginFirst: true,
         },
@@ -97,11 +97,19 @@ export function Providers({ children }: { children: ReactNode }) {
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-          </ThemeProvider>
+          {children}
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
+  );
+}
+
+export function Providers({ children }: { children: ReactNode }) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <InnerProviders>
+        {children}
+      </InnerProviders>
+    </ThemeProvider>
   );
 }

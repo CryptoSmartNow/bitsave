@@ -74,9 +74,11 @@ export default function RootLayout({
     <html lang="en" className={`${exo.variable}`} suppressHydrationWarning>
       <body className={`${exo.className}`}>
         <Providers>
-          <ReferralTracker />
-          <InstallPWA />
-          {children}
+          <>
+            <ReferralTracker />
+            <InstallPWA />
+            {children}
+          </>
         </Providers>
       </body>
     </html>
