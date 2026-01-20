@@ -3,13 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-    ConnectWallet,
-    Wallet,
-} from '@coinbase/onchainkit/wallet';
+// Coinbase OnchainKit wallet components removed as we use Privy
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 import { useAccount, useDisconnect } from "wagmi";
-import { useIsSignedIn, useEvmAddress, useSignOut as useCdpSignOut } from "@coinbase/cdp-hooks";
+import { usePrivy } from "@privy-io/react-auth";
 import {
     HiOutlineRocketLaunch,
     HiOutlineFire,
@@ -84,21 +81,19 @@ const TIERS: Array<{
 export default function BizFiDashboardPage() {
     const router = useRouter();
     const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
-    const { isSignedIn: isCdpSignedIn } = useIsSignedIn();
-    const { evmAddress } = useEvmAddress();
+    const { user, authenticated: isPrivyAuthenticated, logout: privyLogout, ready } = usePrivy();
     const { disconnect: wagmiDisconnect } = useDisconnect();
-    const { signOut: cdpSignOut } = useCdpSignOut();
 
     // Combined auth state
-    const address = isWagmiConnected ? wagmiAddress : evmAddress;
-    const authenticated = isWagmiConnected || isCdpSignedIn;
+    // If wagmi is connected, use that address. Otherwise fallback to Privy wallet address.
+    const address = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
+    const authenticated = ready && (isWagmiConnected || isPrivyAuthenticated);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         if (isWagmiConnected) {
             wagmiDisconnect();
-        } else {
-            cdpSignOut();
         }
+        await privyLogout();
     };
 
     const [mounted, setMounted] = useState(false);

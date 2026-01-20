@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useAccount, useWalletClient, useSwitchChain } from 'wagmi';
-import { useEvmAddress } from '@coinbase/cdp-hooks';
+import { usePrivy } from '@privy-io/react-auth';
 import { getContract, formatUnits, parseUnits, keccak256, toBytes, zeroAddress, encodeFunctionData, createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 import BizFiABI from '../../abi/BizFi.json';
@@ -62,8 +62,9 @@ const TIER_MAPPING: Record<TierType, number> = {
 
 export function useBizFi() {
     const { address: wagmiAddress } = useAccount();
-    const { evmAddress } = useEvmAddress();
-    const address = wagmiAddress || evmAddress;
+    const { user } = usePrivy();
+    // Prioritize wagmi address (external wallet), fallback to Privy embedded wallet
+    const address = wagmiAddress || user?.wallet?.address as `0x${string}` | undefined;
     const { data: walletClient } = useWalletClient();
     const { switchChainAsync } = useSwitchChain();
     const [loading, setLoading] = useState(false);

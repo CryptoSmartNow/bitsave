@@ -12,7 +12,7 @@ import {
 } from "react-icons/hi2";
 import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
 import { useAccount } from "wagmi";
-import { useEvmAddress, useIsSignedIn } from "@coinbase/cdp-hooks";
+import { usePrivy } from "@privy-io/react-auth";
 import { parseUnits, zeroAddress, toHex } from "viem";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 
@@ -77,9 +77,11 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
-    const { evmAddress } = useEvmAddress();
-    const { isSignedIn } = useIsSignedIn();
-    const address = isWagmiConnected ? wagmiAddress : evmAddress;
+    const { user, authenticated: isPrivyAuthenticated } = usePrivy();
+
+    // Address derivation: Wagmi first, then Privy wallet
+    const address = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
+    const isSignedIn = isWagmiConnected || isPrivyAuthenticated;
 
     const { registerBusiness, loading, error } = useBizFi();
     const [showNotification, setShowNotification] = useState(false);
