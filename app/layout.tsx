@@ -71,12 +71,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${exo.variable}`}>
+    <html lang="en" className={`${exo.variable}`} suppressHydrationWarning>
       <body className={`${exo.className}`}>
         <Providers>
-          <ReferralTracker />
-          <InstallPWA />
-          {children}
+          <>
+            <ReferralTracker />
+            <InstallPWA />
+            {children}
+          </>
         </Providers>
       </body>
     </html>

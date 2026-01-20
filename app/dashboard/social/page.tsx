@@ -60,46 +60,67 @@ const twitterLinks = [
 
 const savvyFinanceVideos = [
   {
-    id: 'PdwOltnBznE',
-    title: 'Video Title',
-    thumbnail: 'https://img.youtube.com/vi/PdwOltnBznE/maxresdefault.jpg',
-    creator: 'Savvy Finance',
-    embedUrl: 'https://www.youtube.com/embed/PdwOltnBznE',
-    url: 'https://youtu.be/PdwOltnBznE?si=UK15zqZUVEid9qt4',
+    id: 'yxEQHPaM6MU',
+    title: 'How to Tokenise Your Business on BizMarket and Raise Capital from the Web3 Space.',
+    creator: 'Bitsave Protocol',
+    embedUrl: 'https://www.youtube.com/embed/yxEQHPaM6MU',
+    url: 'https://www.youtube.com/watch?v=yxEQHPaM6MU',
+    views: '1.2K',
+    duration: '2:45'
   },
   {
-    id: 'z1zvOmhfA0k',
-    title: 'Video Title',
-    thumbnail: 'https://img.youtube.com/vi/z1zvOmhfA0k/maxresdefault.jpg',
-    creator: 'Savvy Finance',
-    embedUrl: 'https://www.youtube.com/embed/z1zvOmhfA0k',
-    url: 'https://youtube.com/shorts/z1zvOmhfA0k?feature=share',
+    id: 'kTGV7mCBF_s',
+    title: 'How to innovate your business with tech in 2026',
+    creator: 'Bitsave Protocol',
+    embedUrl: 'https://www.youtube.com/embed/kTGV7mCBF_s',
+    url: 'https://www.youtube.com/watch?v=kTGV7mCBF_s',
+    views: '850',
+    duration: '3:12'
   },
   {
-    id: 'CWRQ7rgtHzU',
-    title: 'Video Title',
-    thumbnail: 'https://img.youtube.com/vi/CWRQ7rgtHzU/maxresdefault.jpg',
-    creator: 'Savvy Finance',
-    embedUrl: 'https://www.youtube.com/embed/CWRQ7rgtHzU',
-    url: 'https://youtube.com/shorts/CWRQ7rgtHzU?feature=share',
+    id: 'DMtgJmsRj8w',
+    title: 'Earn up to $1,000 Monthly as a BizFi Merchant',
+    creator: 'Bitsave Protocol',
+    embedUrl: 'https://www.youtube.com/embed/DMtgJmsRj8w',
+    url: 'https://www.youtube.com/watch?v=DMtgJmsRj8w',
+    views: '2.1K',
+    duration: '1:58'
   },
   {
-    id: '2QzgDb-27BQ',
-    title: 'Video Title',
-    thumbnail: 'https://img.youtube.com/vi/2QzgDb-27BQ/maxresdefault.jpg',
-    creator: 'Savvy Finance',
-    embedUrl: 'https://www.youtube.com/embed/2QzgDb-27BQ',
-    url: 'https://youtube.com/shorts/2QzgDb-27BQ?si=zcTRpALVASP_WcSl',
+    id: 'DmcrSzhP0uA',
+    title: 'How to Raise Capital Without Banks in 2026',
+    creator: 'Bitsave Protocol',
+    embedUrl: 'https://www.youtube.com/embed/DmcrSzhP0uA',
+    url: 'https://www.youtube.com/watch?v=DmcrSzhP0uA',
+    views: '1.5K',
+    duration: '4:20'
   },
-
-]
+  {
+    id: 'DmwqIOPQ70A',
+    title: 'Your Government Is Tokenizing Assets — Why Isn’t Your Business?',
+    creator: 'Bitsave Protocol',
+    embedUrl: 'https://www.youtube.com/embed/DmwqIOPQ70A',
+    url: 'https://www.youtube.com/watch?v=DmwqIOPQ70A',
+    views: '920',
+    duration: '3:35'
+  },
+  {
+    id: '0tYXxQOHvFA',
+    title: 'Bitsave\'s BizMarket Is Live: The New Way Businesses Raise Capital Onchain',
+    creator: 'Bitsave Protocol',
+    embedUrl: 'https://www.youtube.com/embed/0tYXxQOHvFA',
+    url: 'https://www.youtube.com/watch?v=0tYXxQOHvFA',
+    views: '3.4K',
+    duration: '5:10'
+  },
+];
 
 export default function SavvySpacePage() {
   const [userData] = useState(MOCK_USER_DATA)
   const [showModal, setShowModal] = useState(false)
   const { referralData, loading: referralLoading, generateReferralCode } = useReferrals()
   const { savingsData } = useSavingsData()
-  
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -110,16 +131,16 @@ export default function SavvySpacePage() {
       console.error('Failed to copy text: ', err)
     }
   }
-  
+
   // Generate referral code on component mount if user doesn't have one
   useEffect(() => {
     if (!referralData && !referralLoading) {
       generateReferralCode()
     }
   }, [referralData, referralLoading, generateReferralCode])
-  
+
   const referralLink = referralData?.referralLink || 'https://bitsave.io'
-  
+
   const totalSavings = parseFloat(savingsData.totalLocked.replace(/[^0-9.-]+/g, ''))
   const showReferral = totalSavings >= 5
 
@@ -167,9 +188,9 @@ export default function SavvySpacePage() {
                 Unlock your referral link by saving at least <span className="font-bold text-gray-900">$5</span>.
               </p>
               <div className="hidden sm:block">
-                 <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
-                   Locked
-                 </span>
+                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                  Locked
+                </span>
               </div>
             </div>
           )}
@@ -178,7 +199,7 @@ export default function SavvySpacePage() {
 
       {/* Main Content Area */}
       <div className="space-y-16">
-        
+
         {/* Videos Section */}
         <section>
           <div className="flex items-center justify-between mb-8">
@@ -191,10 +212,10 @@ export default function SavvySpacePage() {
             </div>
             {/* <button className="text-[#81D7B4] font-bold text-sm hover:underline">View All</button> */}
           </div>
-          
+
           <Suspense fallback={<div className="h-64 bg-gray-50 rounded-2xl animate-pulse" />}>
-             <SavvyFinanceVideos videos={savvyFinanceVideos} />
-           </Suspense>
+            <SavvyFinanceVideos videos={savvyFinanceVideos} />
+          </Suspense>
         </section>
 
         {/* Social Feed Section */}
@@ -207,20 +228,20 @@ export default function SavvySpacePage() {
               </h2>
               <p className="text-gray-500 mt-1 ml-4 text-sm">See what's happening in the Bitsave ecosystem</p>
             </div>
-            <a 
-              href="https://x.com/bitsaveprotocol" 
-              target="_blank" 
+            <a
+              href="https://x.com/bitsaveprotocol"
+              target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full text-sm font-bold hover:bg-gray-800 transition-colors"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
               Follow Us
             </a>
           </div>
-          
+
           <Suspense fallback={<div className="h-96 bg-gray-50 rounded-2xl animate-pulse" />}>
-             <TwitterFeed links={twitterLinks} />
-           </Suspense>
+            <TwitterFeed links={twitterLinks} />
+          </Suspense>
         </section>
 
       </div>
@@ -230,18 +251,18 @@ export default function SavvySpacePage() {
   return (
     <div className={`${exo.className} min-h-screen bg-gray-50/50 text-gray-800`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
+
         {/* Page Header */}
         <header className="mb-12 text-center sm:text-left sm:flex sm:items-end sm:justify-between">
           <div>
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2"
             >
               Savvy Space
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
@@ -250,8 +271,8 @@ export default function SavvySpacePage() {
               Your hub for community, learning, and rewards.
             </motion.p>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}

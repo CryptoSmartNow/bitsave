@@ -7,6 +7,8 @@ import { base, celo, avalanche, mainnet } from 'viem/chains';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
+import { usePathname } from 'next/navigation';
+import { injected } from 'wagmi/connectors';
 
 // Define the project ID for WalletConnect (used by Privy if configured, or internally)
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
@@ -56,20 +58,28 @@ const config = createConfig({
     [hedera.id]: http(),
     [mainnet.id]: http(),
   },
+  connectors: [
+    injected(),
+  ],
 });
 
 const queryClient = new QueryClient();
 
-function PrivyWrapper({ children }: { children: ReactNode }) {
+function InnerProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
+  const pathname = usePathname();
+  const isBizFi = pathname?.startsWith('/bizfi');
+
+  // Force dark theme for BizFi pages
+  const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
 
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
       config={{
         appearance: {
-          theme: theme === 'dark' ? 'dark' : 'light',
-          accentColor: '#81D7B4', // Matching BitSave green
+          theme: effectiveTheme as 'light' | 'dark',
+          accentColor: '#81D7B4',
           logo: "/bitsavelogo.png",
           showWalletLoginFirst: true,
         },
@@ -94,26 +104,12 @@ function PrivyWrapper({ children }: { children: ReactNode }) {
   );
 }
 
-import PageLoader from './components/PageLoader';
-import { useState, useEffect } from 'react';
-
 export function Providers({ children }: { children: ReactNode }) {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate initial loading for smooth entrance
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <PrivyWrapper>
-        {loading && <PageLoader />}
+      <InnerProviders>
         {children}
-      </PrivyWrapper>
+      </InnerProviders>
     </ThemeProvider>
   );
 }

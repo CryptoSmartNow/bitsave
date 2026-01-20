@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from "wagmi";
 import {
     HiOutlineCheckCircle,
     HiOutlineClock,
@@ -20,8 +20,7 @@ import "../../bizfi-colors.css";
 import BusinessDetailsModal from "./BusinessDetailsModal";
 
 export default function LaunchPadPage() {
-    const { user } = usePrivy();
-    const address = user?.wallet?.address;
+    const { address } = useAccount();
     const [businesses, setBusinesses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedBusiness, setSelectedBusiness] = useState<any>(null);

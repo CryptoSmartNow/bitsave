@@ -1,10 +1,19 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 export default function PageLoader() {
+    const pathname = usePathname();
+    const isBizFi = pathname?.startsWith('/bizfi');
+
+    // BizFi Colors
+    const bgColor = isBizFi ? 'bg-[#0F1825]' : 'bg-white';
+    const circleBg = isBizFi ? 'bg-[#1A2538]' : 'bg-white';
+    const progressBg = isBizFi ? 'bg-[#1A2538]' : 'bg-gray-100';
+
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+        <div className={`fixed inset-0 z-[9999] flex items-center justify-center ${bgColor}`}>
             <div className="relative flex flex-col items-center">
                 {/* Logo Container */}
                 <motion.div
@@ -42,7 +51,7 @@ export default function PageLoader() {
 
                     {/* Center Logo/Icon */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm">
+                        <div className={`w-16 h-16 rounded-full overflow-hidden flex items-center justify-center ${circleBg} shadow-sm`}>
                             <img src="/bitsavelogo.png" alt="BitSave" className="w-10 h-10 object-contain" />
                         </div>
                     </div>
@@ -59,7 +68,7 @@ export default function PageLoader() {
                     <img src="/bitsavelogo.png" alt="BitSave" className="h-8 object-contain" />
 
                     {/* Progress Bar */}
-                    <div className="w-48 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`w-48 h-1.5 ${progressBg} rounded-full overflow-hidden`}>
                         <motion.div
                             className="h-full bg-[#81D7B4] rounded-full"
                             initial={{ x: "-100%" }}
