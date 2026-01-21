@@ -83,16 +83,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-
-  async redirects() {
-    return [
-      {
-        source: "/docs",
-        destination: "https://proxy.gitbook.site/sites/site_qixqW",
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default withNextIntl(withPWA(nextConfig));
