@@ -16,10 +16,15 @@ import { trackTransaction, trackError } from '@/lib/interactionTracker';
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13"
+const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932"
 const ETH_TOKEN_ADDRESS = "0x0000000000000000000000000000000000000000"
 const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDC_LISK_ADDRESS = "0xf242275d3a6527d877f2c927a82d9b057609cc71"
+const USDC_BSC_ADDRESS = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"
+const USDT_BSC_ADDRESS = "0x55d398326f99059fF775485246999027B3197955"
 const USDGLO_CELO_ADDRESS = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3"
+const CNGN_BASE_ADDRESS = "0x46C85152bFe9f96829aA94755D9f915F9B10EF5F"
+const CNGN_LISK_ADDRESS = "0x999E3A32eF3F9EAbF133186512b5F29fADB8a816"
 
 import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import CHILD_CONTRACT_ABI from '@/app/abi/childContractABI.js';
@@ -74,6 +79,7 @@ const getTokenLogo = (name: string, logoUrl: string) => {
   if (name === 'ETH') return '/eth.png';
   if (name === 'USDC') return '/usdclogo.png';
   if (name === 'cUSD') return '/cusd.png';
+  if (name === 'cNGN') return '/cngn.png';
   if (name === 'Gooddollar' || name === '$G') return '/gooddollar.png';
   return '/default-token.png';
 }
@@ -85,7 +91,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
-  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base')
+  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk' | 'bsc'>('base')
   const modalRef = useRef<HTMLDivElement>(null)
 
   const { address, isConnected } = useAccount()
@@ -105,6 +111,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         if (chainId === 8453) setCurrentNetwork('base');
         else if (chainId === 42220) setCurrentNetwork('celo');
         else if (chainId === 1135) setCurrentNetwork('lisk');
+        else if (chainId === 56) setCurrentNetwork('bsc');
         else setCurrentNetwork('base'); // Default
       }
     };
@@ -124,12 +131,17 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
   };
 
   // Wallet balance checking utilities
-  const getTokenAddress = (tokenName: string, network: 'base' | 'celo' | 'lisk') => {
+  const getTokenAddress = (tokenName: string, network: 'base' | 'celo' | 'lisk' | 'bsc') => {
     if (network === 'base') {
+      if (tokenName === 'cNGN') return CNGN_BASE_ADDRESS;
       return USDC_BASE_ADDRESS; // USDC on Base
     } else if (network === 'lisk') {
-      // Lisk network - only USDC supported
+      // Lisk network - USDC and cNGN supported
+      if (tokenName === 'cNGN') return CNGN_LISK_ADDRESS;
       return USDC_LISK_ADDRESS; // USDC on Lisk
+    } else if (network === 'bsc') {
+      if (tokenName === 'USDT') return USDT_BSC_ADDRESS;
+      return USDC_BSC_ADDRESS; // USDC on BSC
     } else {
       // Celo network
       switch (tokenName?.toLowerCase()) {
@@ -300,12 +312,15 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       const BASE_CHAIN_ID = BigInt(8453);
       const CELO_CHAIN_ID = BigInt(42220);
       const LISK_CHAIN_ID = BigInt(1135);
+      const BSC_CHAIN_ID = BigInt(56);
 
       let networkType = 'celo'; // default
       if (network.chainId === BASE_CHAIN_ID) {
         networkType = 'base';
       } else if (network.chainId === LISK_CHAIN_ID) {
         networkType = 'lisk';
+      } else if (network.chainId === BSC_CHAIN_ID) {
+        networkType = 'bsc';
       } else if (network.chainId === CELO_CHAIN_ID) {
         networkType = 'celo';
       }
@@ -323,6 +338,10 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         contractAddress = LISK_CONTRACT_ADDRESS;
         tokenAddress = USDC_LISK_ADDRESS;
         tokenNameToUse = "USDC";
+      } else if (networkType === 'bsc') {
+        contractAddress = BSC_CONTRACT_ADDRESS;
+        tokenAddress = USDC_BSC_ADDRESS;
+        tokenNameToUse = "USDC";
       } else {
         contractAddress = CELO_CONTRACT_ADDRESS;
         tokenAddress = USDGLO_CELO_ADDRESS;
@@ -333,7 +352,6 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       // I will only update the repetitive provider logic
 
       if (networkType === 'base' && tokenName) {
-        // ... existing logic ...
         if (tokenName === 'USDGLO') {
           tokenAddress = "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3";
           decimals = 18;
@@ -342,12 +360,30 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           tokenAddress = USDC_BASE_ADDRESS;
           decimals = 6;
           tokenNameToUse = 'USDC';
+        } else if (tokenName === 'cNGN') {
+          tokenAddress = "0x46C85152bFe9f96829aA94755D9f915F9B10EF5F";
+          decimals = 6;
+          tokenNameToUse = 'cNGN';
         }
       } else if (networkType === 'lisk' && tokenName) {
         if (tokenName === 'USDC') {
           tokenAddress = USDC_LISK_ADDRESS;
           decimals = 6;
           tokenNameToUse = 'USDC';
+        } else if (tokenName === 'cNGN') {
+          tokenAddress = "0x999E3A32eF3F9EAbF133186512b5F29fADB8a816";
+          decimals = 6;
+          tokenNameToUse = 'cNGN';
+        }
+      } else if (networkType === 'bsc' && tokenName) {
+        if (tokenName === 'USDC') {
+          tokenAddress = USDC_BSC_ADDRESS;
+          decimals = 18;
+          tokenNameToUse = 'USDC';
+        } else if (tokenName === 'USDT') {
+          tokenAddress = USDT_BSC_ADDRESS;
+          decimals = 18;
+          tokenNameToUse = 'USDT';
         }
       } else if (networkType === 'celo' && tokenName) {
         if (tokenName === 'cUSD') {
@@ -414,6 +450,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         let targetContract = BASE_CONTRACT_ADDRESS;
         if (chainId && Number(chainId) === 42220) targetContract = CELO_CONTRACT_ADDRESS;
         if (chainId && Number(chainId) === 1135) targetContract = LISK_CONTRACT_ADDRESS;
+        if (chainId && Number(chainId) === 56) targetContract = BSC_CONTRACT_ADDRESS;
 
         const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
         const tx = await erc20Contract.approve(targetContract, amount);
@@ -541,12 +578,15 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       const BASE_CHAIN_ID = BigInt(8453);
       const CELO_CHAIN_ID = BigInt(42220);
       const LISK_CHAIN_ID = BigInt(1135);
+      const BSC_CHAIN_ID = BigInt(56);
 
       let networkType = 'celo'; // default
       if (network.chainId === BASE_CHAIN_ID) {
         networkType = 'base';
       } else if (network.chainId === LISK_CHAIN_ID) {
         networkType = 'lisk';
+      } else if (network.chainId === BSC_CHAIN_ID) {
+        networkType = 'bsc';
       } else if (network.chainId === CELO_CHAIN_ID) {
         networkType = 'celo';
       }
@@ -556,6 +596,8 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         contractAddress = BASE_CONTRACT_ADDRESS;
       } else if (networkType === 'lisk') {
         contractAddress = LISK_CONTRACT_ADDRESS;
+      } else if (networkType === 'bsc') {
+        contractAddress = BSC_CONTRACT_ADDRESS;
       } else {
         contractAddress = CELO_CONTRACT_ADDRESS;
       }

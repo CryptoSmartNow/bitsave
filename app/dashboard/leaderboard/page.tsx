@@ -49,7 +49,7 @@ export default function LeaderboardPage() {
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
   
   useEffect(() => {
-    fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche'])
+    fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'bsc'])
       .then(setNetworkLogos)
       .catch(() => {});
   }, []);

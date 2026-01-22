@@ -23,6 +23,7 @@ const SUPPORTED_NETWORKS = {
   BASE: { chainId: 8453, name: 'Base' },
   CELO: { chainId: 42220, name: 'Celo' },
   LISK: { chainId: 1135, name: 'Lisk' },
+  BSC: { chainId: 56, name: 'Binance Smart Chain' },
   AVALANCHE: { chainId: 43114, name: 'Avalanche' },
   HEDERA: { chainId: 296, name: 'Hedera Testnet' }
 } as const;
@@ -53,6 +54,15 @@ const getNetworkParams = (networkName: string) => {
         nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
         rpcUrls: ['https://rpc.api.lisk.com'],
         blockExplorerUrls: ['https://blockscout.lisk.com'],
+      };
+    case 'Binance Smart Chain':
+    case 'BSC':
+      return {
+        chainIdHex: `0x${SUPPORTED_NETWORKS.BSC.chainId.toString(16)}`,
+        chainName: 'Binance Smart Chain',
+        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+        blockExplorerUrls: ['https://bscscan.com'],
       };
     case 'Avalanche':
       return {
@@ -85,6 +95,7 @@ export function useNetworkSync(): UseNetworkSyncReturn {
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
+    isBSCNetwork,
     isAvalancheNetwork,
     refetch: refetchSavingsData,
     forceRefreshNetworkState
@@ -121,12 +132,14 @@ export function useNetworkSync(): UseNetworkSyncReturn {
         return isCeloNetwork;
       case SUPPORTED_NETWORKS.LISK.chainId:
         return isLiskNetwork;
+      case SUPPORTED_NETWORKS.BSC.chainId:
+        return isBSCNetwork;
       case SUPPORTED_NETWORKS.AVALANCHE.chainId:
         return isAvalancheNetwork;
       default:
         return false;
     }
-  }, [chainId, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
+  }, [chainId, isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork]);
 
   // Get current network name
   const currentNetworkName = getCurrentNetworkName(chainId);

@@ -16,6 +16,7 @@ import { getTweetButtonProps } from '@/utils/tweetUtils';
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
+const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
 
 // Helper function to ensure image URLs are properly formatted for Next.js Image
 const ensureImageUrl = (url: string | undefined): string => {
@@ -69,7 +70,7 @@ const WithdrawModal = memo(function WithdrawModal({
   const [success, setSuccess] = useState(false);
   const [txHash, setTxHash] = useState('');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk'>('base');
+  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk' | 'bsc'>('base');
   const [currentTokenName, setCurrentTokenName] = useState(isEth ? 'ETH' : 'USDC');
 
   const { address } = useAccount();
@@ -86,6 +87,8 @@ const WithdrawModal = memo(function WithdrawModal({
           setCurrentNetwork('celo');
         } else if (chainId === 1135) {
           setCurrentNetwork('lisk');
+        } else if (chainId === 56) {
+          setCurrentNetwork('bsc');
         } else {
           setCurrentNetwork('base'); // default fallback
         }
@@ -105,6 +108,8 @@ const WithdrawModal = memo(function WithdrawModal({
             setCurrentTokenName('USDC');
           } else if (currentNetwork === 'lisk') {
             setCurrentTokenName('USDC');
+          } else if (currentNetwork === 'bsc') {
+            setCurrentTokenName('USDC');
           } else {
             setCurrentTokenName('USDGLO'); // Celo default
           }
@@ -122,6 +127,8 @@ const WithdrawModal = memo(function WithdrawModal({
       return BASE_CONTRACT_ADDRESS;
     } else if (currentNetwork === 'lisk') {
       return LISK_CONTRACT_ADDRESS;
+    } else if (currentNetwork === 'bsc') {
+      return BSC_CONTRACT_ADDRESS;
     } else {
       return CELO_CONTRACT_ADDRESS;
     }
@@ -132,19 +139,10 @@ const WithdrawModal = memo(function WithdrawModal({
       return 'https://basescan.org/tx/';
     } else if (currentNetwork === 'lisk') {
       return 'https://blockscout.lisk.com/tx/';
+    } else if (currentNetwork === 'bsc') {
+      return 'https://bscscan.com/tx/';
     } else {
       return 'https://explorer.celo.org/mainnet/tx/';
-    }
-  };
-
-  // Get the network name
-  const getNetworkName = () => {
-    if (currentNetwork === 'base') {
-      return 'Base';
-    } else if (currentNetwork === 'lisk') {
-      return 'Lisk';
-    } else {
-      return 'Celo';
     }
   };
 
@@ -215,7 +213,7 @@ const WithdrawModal = memo(function WithdrawModal({
           body: JSON.stringify({
             amount: parseFloat(amount),
             txnhash: receipt.hash,
-            chain: getNetworkName().toLowerCase(),
+            chain: currentNetwork,
             savingsname: nameOfSavings,
             useraddress: userAddress,
             transaction_type: "withdrawal",
@@ -233,7 +231,7 @@ const WithdrawModal = memo(function WithdrawModal({
           type: 'withdrawal',
           amount: amount,
           currency: 'ETH',
-          chain: getNetworkName().toLowerCase(),
+          chain: currentNetwork,
           planName: nameOfSavings,
           txHash: receipt.hash
         });
@@ -285,7 +283,14 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
-      const amount = ethers.formatUnits(savingData.amount, 6);
+      
+      // Determine decimals based on token name
+      let decimals = 6; // Default to 6 (USDC, cNGN)
+      if (currentTokenName === 'USDGLO' || currentTokenName === 'cUSD' || currentTokenName === 'Gooddollar' || currentTokenName === '$G') {
+        decimals = 18;
+      }
+      
+      const amount = ethers.formatUnits(savingData.amount, decimals);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);
 
@@ -311,7 +316,7 @@ const WithdrawModal = memo(function WithdrawModal({
           body: JSON.stringify({
             amount: parseFloat(amount),
             txnhash: receipt.hash,
-            chain: getNetworkName().toLowerCase(),
+            chain: currentNetwork,
             savingsname: nameOfSavings,
             useraddress: userAddress,
             transaction_type: "withdrawal",

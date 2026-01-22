@@ -8,7 +8,8 @@ import {
     HiOutlineRocketLaunch,
     HiOutlineExclamationCircle,
     HiOutlineCurrencyDollar,
-    HiOutlineXMark
+    HiOutlineXMark,
+    HiOutlineArrowTopRightOnSquare
 } from "react-icons/hi2";
 import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
 import { useAccount } from "wagmi";
@@ -170,7 +171,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             } else {
                 // Fallback to Standard CB Pay Init
                 initOnRamp({
-                    appId: process.env.NEXT_PUBLIC_COINBASE_CDP_PROJECT_ID || process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "8fb8463e-ce60-41f1-8dda-e5b2308db356",
+                    appId: process.env.NEXT_PUBLIC_COINBASE_CDP_PROJECT_ID || process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "",
                     widgetParameters: {
                         destinationWallets: [{
                             address: address,
@@ -456,21 +457,26 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 </div>
 
                 {attestationData && (
-                    <div className="bg-gray-800/50 rounded-xl p-4 w-full max-w-md border border-gray-700">
-                        <p className="text-sm text-gray-400 mb-2">Attestation UID</p>
-                        <div className="flex items-center justify-between gap-2 bg-gray-900 rounded-lg p-3 border border-gray-800">
-                            <code className="text-[#81D7B4] text-xs truncate">
-                                {attestationData.easUid}
-                            </code>
-                            <a
-                                href={`https://base.easscan.org/attestation/view/${attestationData.easUid}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-gray-500 hover:text-white underline transition-colors"
-                            >
-                                View
-                            </a>
-                        </div>
+                    <div className="w-full max-w-md">
+                        <p className="text-sm text-gray-400 mb-2 text-left">View Attestation</p>
+                        <a
+                            href={`https://base.easscan.org/attestation/view/${attestationData.easUid}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-3 bg-gray-900 rounded-xl p-4 border border-gray-800 hover:border-[#81D7B4]/50 hover:bg-gray-800/80 transition-all group cursor-pointer"
+                        >
+                            <div className="flex-1 min-w-0 flex flex-col items-start">
+                                <code className="text-[#81D7B4] text-xs sm:text-sm font-mono truncate w-full text-left">
+                                    {attestationData.easUid}
+                                </code>
+                                <span className="text-[10px] text-gray-500 mt-1 group-hover:text-[#81D7B4] transition-colors flex items-center gap-1">
+                                    View on EAS Scan <HiOutlineArrowTopRightOnSquare className="w-3 h-3" />
+                                </span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-[#81D7B4]/10 group-hover:bg-[#81D7B4]/20 transition-colors">
+                                <HiOutlineArrowTopRightOnSquare className="w-5 h-5 text-[#81D7B4]" />
+                            </div>
+                        </a>
                     </div>
                 )}
 
