@@ -123,7 +123,7 @@ export default function PlansPage() {
   useEffect(() => {
     const loadNetworkLogos = async () => {
       try {
-        const logos = await fetchMultipleNetworkLogos(['ethereum', 'base', 'celo', 'lisk', 'avalanche', 'solana']);
+        const logos = await fetchMultipleNetworkLogos(['ethereum', 'base', 'celo', 'lisk', 'avalanche', 'solana', 'bsc']);
         setNetworkLogos(logos);
       } catch (error) {
         console.error('Error fetching network logos:', error);

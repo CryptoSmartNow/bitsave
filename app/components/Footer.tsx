@@ -17,7 +17,7 @@ const footerLinks = {
     { name: 'Explore', href: '#explore' },
     { name: 'Learn', href: '#learn' },
     { name: 'Blog', href: '#blog' },
-    { name: 'Docs', href: '#docs' }
+    { name: 'Docs', href: '/docs' }
   ],
   company: [
     { name: 'About', href: '#about' },
@@ -51,13 +51,13 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-[#f8fafa] pb-32 pt-16">
+    <footer className="relative overflow-hidden bg-[#f8fafa] pb-10 md:pb-20 pt-16">
       {/* Clean page background */}
       <div className="absolute inset-0 bg-[url('/grain-texture.png')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
 
       {/* Subtle "BitSave" watermark centered within footer container */}
       <svg
-        className="absolute left-0 bottom-0 w-full h-[20vh] md:h-[40vh] pointer-events-none select-none z-0"
+        className="absolute left-0 bottom-0 w-full h-64 md:h-96 pointer-events-none select-none z-0"
         viewBox="0 0 100 20"
         preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
@@ -126,9 +126,9 @@ export default function Footer() {
                   <ul role="list" className="mt-6 space-y-3">
                     {footerLinks.product.map((item) => (
                       <li key={item.name}>
-                        <a href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
+                        <Link href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
                           {item.name}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -140,9 +140,9 @@ export default function Footer() {
                   <ul role="list" className="mt-6 space-y-3">
                     {footerLinks.resources.map((item) => (
                       <li key={item.name}>
-                        <a href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
+                        <Link href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
                           {item.name}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -154,9 +154,9 @@ export default function Footer() {
                   <ul role="list" className="mt-6 space-y-3">
                     {footerLinks.company.map((item) => (
                       <li key={item.name}>
-                        <a href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
+                        <Link href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
                           {item.name}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>

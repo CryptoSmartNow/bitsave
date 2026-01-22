@@ -36,6 +36,7 @@ const DEBUG = process.env.NODE_ENV === 'development';
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
+const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
 const HEDERA_CONTRACT_ADDRESS = "0x2f33f1f07f6e56c11fd48a4f3596d9dadfe67409";
 const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 
@@ -43,6 +44,7 @@ const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const BASE_CHAIN_ID = BigInt(8453);
 const CELO_CHAIN_ID = BigInt(42220);
 const LISK_CHAIN_ID = BigInt(1135);
+const BSC_CHAIN_ID = BigInt(56);
 const HEDERA_CHAIN_ID = BigInt(296);
 const AVALANCHE_CHAIN_ID = BigInt(43114);
 
@@ -71,6 +73,7 @@ interface UseSavingsDataReturn {
   isBaseNetwork: boolean;
   isCeloNetwork: boolean;
   isLiskNetwork: boolean;
+  isBSCNetwork: boolean;
   isHederaNetwork: boolean;
   isAvalancheNetwork: boolean;
   isCorrectNetwork: boolean;
@@ -107,6 +110,7 @@ export function useSavingsData(): UseSavingsDataReturn {
   const [isBaseNetwork, setIsBaseNetwork] = useState(false);
   const [isCeloNetwork, setIsCeloNetwork] = useState(false);
   const [isLiskNetwork, setIsLiskNetwork] = useState(false);
+  const [isBSCNetwork, setIsBSCNetwork] = useState(false);
   const [isHederaNetwork, setIsHederaNetwork] = useState(false);
   const [isAvalancheNetwork, setIsAvalancheNetwork] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
@@ -127,6 +131,7 @@ export function useSavingsData(): UseSavingsDataReturn {
       setIsBaseNetwork(false);
       setIsCeloNetwork(false);
       setIsLiskNetwork(false);
+      setIsBSCNetwork(false);
       setIsHederaNetwork(false);
       setIsAvalancheNetwork(false);
       setIsCorrectNetwork(false);
@@ -137,6 +142,7 @@ export function useSavingsData(): UseSavingsDataReturn {
     const isBase = chainIdBigInt === BASE_CHAIN_ID;
     const isCelo = chainIdBigInt === CELO_CHAIN_ID;
     const isLisk = chainIdBigInt === LISK_CHAIN_ID;
+    const isBSC = chainIdBigInt === BSC_CHAIN_ID;
     const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
     const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
@@ -144,9 +150,10 @@ export function useSavingsData(): UseSavingsDataReturn {
     setIsBaseNetwork(isBase);
     setIsCeloNetwork(isCelo);
     setIsLiskNetwork(isLisk);
+    setIsBSCNetwork(isBSC);
     setIsHederaNetwork(isHedera);
     setIsAvalancheNetwork(isAvalanche);
-    setIsCorrectNetwork(isBase || isCelo || isLisk || isHedera || isAvalanche);
+    setIsCorrectNetwork(isBase || isCelo || isLisk || isBSC || isHedera || isAvalanche);
   }, [chainId]);
 
   // Handle initial loading state when wallet connection changes
@@ -165,9 +172,9 @@ export function useSavingsData(): UseSavingsDataReturn {
       const response = await axios.get(
         "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
       );
-      return response.data.ethereum.usd;
+      return response.data?.ethereum?.usd || 3500;
     } catch (error) {
-      if (DEBUG) console.error("Error fetching ETH price:", error);
+      if (DEBUG) console.warn("Using fallback ETH price (API Error)");
       return 3500; // Fallback price
     }
   }, []);
@@ -178,10 +185,10 @@ export function useSavingsData(): UseSavingsDataReturn {
       const response = await axios.get(
         "https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd"
       );
-      return response.data.gooddollar?.usd || 0.00001;
+      return response.data?.gooddollar?.usd || 0.0001086;
     } catch (error) {
-      if (DEBUG) console.error("Error fetching GoodDollar price:", error);
-      return 0.00001; // Fallback price
+      if (DEBUG) console.warn("Using fallback GoodDollar price (API Error)");
+      return 0.0001086; // Fallback price
     }
   }, []);
 
@@ -216,6 +223,7 @@ export function useSavingsData(): UseSavingsDataReturn {
         if (chainIdBig === BASE_CHAIN_ID) return 'https://base.publicnode.com';
         if (chainIdBig === CELO_CHAIN_ID) return 'https://forno.celo.org';
         if (chainIdBig === LISK_CHAIN_ID) return 'https://rpc.api.lisk.com';
+        if (chainIdBig === BSC_CHAIN_ID) return 'https://bsc-dataseed.binance.org/';
         if (chainIdBig === HEDERA_CHAIN_ID) return 'https://mainnet.hashio.io/api';
         if (chainIdBig === AVALANCHE_CHAIN_ID) return 'https://api.avax.network/ext/bc/C/rpc';
         return 'https://forno.celo.org';
@@ -236,7 +244,7 @@ export function useSavingsData(): UseSavingsDataReturn {
       setCurrentNetwork({ chainId: chainIdBig });
 
       // Validate network
-      if (chainIdBig !== BASE_CHAIN_ID && chainIdBig !== CELO_CHAIN_ID && chainIdBig !== LISK_CHAIN_ID && chainIdBig !== HEDERA_CHAIN_ID && chainIdBig !== AVALANCHE_CHAIN_ID) {
+      if (chainIdBig !== BASE_CHAIN_ID && chainIdBig !== CELO_CHAIN_ID && chainIdBig !== LISK_CHAIN_ID && chainIdBig !== BSC_CHAIN_ID && chainIdBig !== HEDERA_CHAIN_ID && chainIdBig !== AVALANCHE_CHAIN_ID) {
         throw new Error("Please switch to a supported network");
       }
       const fromAddress: string | undefined = address ?? undefined;
@@ -248,9 +256,11 @@ export function useSavingsData(): UseSavingsDataReturn {
           ? CELO_CONTRACT_ADDRESS
           : (chainIdBig === LISK_CHAIN_ID)
             ? LISK_CONTRACT_ADDRESS
-            : (chainIdBig === HEDERA_CHAIN_ID)
-              ? HEDERA_CONTRACT_ADDRESS
-              : AVALANCHE_CONTRACT_ADDRESS;
+            : (chainIdBig === BSC_CHAIN_ID)
+              ? BSC_CONTRACT_ADDRESS
+              : (chainIdBig === HEDERA_CHAIN_ID)
+                ? HEDERA_CONTRACT_ADDRESS
+                : AVALANCHE_CONTRACT_ADDRESS;
 
       // Initialize contract
       const contract = new ethers.Contract(contractAddress, BitSaveABI, provider);
@@ -438,12 +448,20 @@ export function useSavingsData(): UseSavingsDataReturn {
                   tokenName = "USDGLO";
                   decimals = 18;
                   tokenLogo = '/usdglo.png';
+                } else if (tokenId.toLowerCase() === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
+                  tokenName = "cNGN";
+                  decimals = 6;
+                  tokenLogo = '/cngn.png';
                 }
               } else if (chainIdBig === LISK_CHAIN_ID) {
                 if (tokenId.toLowerCase() === "0xf242275d3a6527d877f2c927a82d9b057609cc71") {
                   tokenName = "USDC";
                   decimals = 6;
                   tokenLogo = '/usdclogo.png';
+                } else if (tokenId.toLowerCase() === "0x999e3a32ef3f9eabf133186512b5f29fadb8a816") {
+                  tokenName = "cNGN";
+                  decimals = 6;
+                  tokenLogo = '/cngn.png';
                 }
               } else if (chainIdBig === HEDERA_CHAIN_ID) {
                 const tokenInfo = HEDERA_TOKEN_MAP[(tokenId as string).toLowerCase()];
@@ -530,7 +548,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                 penaltyPercentage,
                 tokenName,
                 tokenLogo,
-                network: isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isHederaNetwork ? 'Hedera' : isAvalancheNetwork ? 'Avalanche' : 'Unknown'
+                network: isBaseNetwork ? 'Base' : isCeloNetwork ? 'Celo' : isLiskNetwork ? 'Lisk' : isBSCNetwork ? 'BSC' : isHederaNetwork ? 'Hedera' : isAvalancheNetwork ? 'Avalanche' : 'Unknown'
               };
 
               // Validate required fields before adding to arrays
@@ -692,15 +710,17 @@ export function useSavingsData(): UseSavingsDataReturn {
       const isBase = chainIdBigInt === BASE_CHAIN_ID;
       const isCelo = chainIdBigInt === CELO_CHAIN_ID;
       const isLisk = chainIdBigInt === LISK_CHAIN_ID;
+      const isBSC = chainIdBigInt === BSC_CHAIN_ID;
       const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
       const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
       setIsBaseNetwork(isBase);
       setIsCeloNetwork(isCelo);
       setIsLiskNetwork(isLisk);
+      setIsBSCNetwork(isBSC);
       setIsHederaNetwork(isHedera);
       setIsAvalancheNetwork(isAvalanche);
-      setIsCorrectNetwork(isBase || isCelo || isLisk || isHedera || isAvalanche);
+      setIsCorrectNetwork(isBase || isCelo || isLisk || isBSC || isHedera || isAvalanche);
     }
   }, [chainId]);
 
@@ -724,6 +744,7 @@ export function useSavingsData(): UseSavingsDataReturn {
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
+    isBSCNetwork,
     isHederaNetwork,
     isAvalancheNetwork,
     isCorrectNetwork,

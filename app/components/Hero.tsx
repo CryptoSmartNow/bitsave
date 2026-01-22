@@ -39,7 +39,7 @@ const Hero = memo(() => {
   const chains = [
     {
       name: 'Base',
-      logo: ensureImageUrl(networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg'),
+      logo: ensureImageUrl(networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.png'),
       description: 'Coinbase L2',
       tokens: ['USDC', 'USDGLO'],
       accentColor: '#0052FF',
@@ -139,7 +139,7 @@ const Hero = memo(() => {
               Your <span className="text-gray-900 font-medium">Onchain Savings Nest</span>.
               The SaveFi Protocol helping income earners save securely, earn rewards, and build wealth across
               <span className="inline-flex -bottom-1 relative mx-2">
-                <img src="/base.svg" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
+                <img src="/base.png" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
                 <img src="/celo.png" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
                 <img src="/lisk-logo.png" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
               </span>

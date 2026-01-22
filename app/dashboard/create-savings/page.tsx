@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -45,6 +45,7 @@ const ensureImageUrl = (url: string | undefined): string => {
 const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
+const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932"
 
 const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
 
@@ -81,6 +82,7 @@ const NETWORKS: NetworkConfig[] = [
     tokens: [
       { symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals: 6 }, // Correct Base USDC address
       { symbol: 'USDGLO', address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },
+      { symbol: 'cNGN', address: '0x46C85152bFe9f96829aA94755D9f915F9B10EF5F', decimals: 6 },
     ],
   },
   {
@@ -96,12 +98,23 @@ const NETWORKS: NetworkConfig[] = [
     ],
   },
   {
+    id: 'bsc',
+    name: 'BSC',
+    chainId: 56,
+    contractAddress: BSC_CONTRACT_ADDRESS,
+    tokens: [
+      { symbol: 'USDC', address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', decimals: 18 },
+      { symbol: 'USDT', address: '0x55d398326f99059fF775485246999027B3197955', decimals: 18 },
+    ],
+  },
+  {
     id: 'lisk',
     name: 'Lisk',
     chainId: 1135,
     contractAddress: LISK_CONTRACT_ADDRESS,
     tokens: [
       { symbol: 'USDC', address: '0xf242275d3a6527d877f2c927a82d9b057609cc71', decimals: 6 },
+      { symbol: 'cNGN', address: '0x999E3A32eF3F9EAbF133186512b5F29fADB8a816', decimals: 6 },
     ],
   },
   {
@@ -263,7 +276,10 @@ const approveERC20 = async (
     // Contract to approve is determined by network or can be made generic
     const network = await signer.provider?.getNetwork();
     const chainId = network?.chainId;
-    const contractToApprove = Number(chainId) === 42220 ? CELO_CONTRACT_ADDRESS : CONTRACT_ADDRESS;
+    // const contractToApprove = Number(chainId) === 42220 ? CELO_CONTRACT_ADDRESS : CONTRACT_ADDRESS;
+    // Dynamic lookup for contract address
+    const contractToApprove = NETWORKS.find(n => n.chainId === Number(chainId))?.contractAddress || CONTRACT_ADDRESS;
+
     const erc20Contract = new ethers.Contract(
       tokenAddress,
       erc20ABI,
@@ -318,6 +334,22 @@ export default function CreateSavingsPage() {
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('USDC')
   const [chain, setChain] = useState('base')
+  const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
+  const networkDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (networkDropdownRef.current && !networkDropdownRef.current.contains(event.target as Node)) {
+        setIsNetworkDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const [startDate] = useState<Date | null>(new Date())
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [calendarNavigateDate, setCalendarNavigateDate] = useState<Date | null>(null)
@@ -504,6 +536,30 @@ export default function CreateSavingsPage() {
               });
             }
           }
+        } else if (networkName === 'bsc') {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x38' }], // BSC chainId in hex (56)
+            });
+          } catch (switchError: unknown) {
+            if ((switchError as { code: number }).code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x38',
+                  chainName: 'Binance Smart Chain',
+                  nativeCurrency: {
+                    name: 'BNB',
+                    symbol: 'BNB',
+                    decimals: 18,
+                  },
+                  rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                  blockExplorerUrls: ['https://bscscan.com'],
+                }],
+              });
+            }
+          }
         }
       }
     } catch (error) {
@@ -515,7 +571,7 @@ export default function CreateSavingsPage() {
     {
       id: 'base',
       name: 'Base',
-      logo: networkLogos['base']?.logoUrl || '/base.svg',
+      logo: networkLogos['base']?.logoUrl || '/base.png',
       color: 'bg-[#81D7B4]/10',
       textColor: 'text-[#81D7B4]'
     },
@@ -541,6 +597,14 @@ export default function CreateSavingsPage() {
       logo: networkLogos['avalanche']?.logoUrl || '/eth.png',
       color: 'bg-red-100',
       textColor: 'text-red-600',
+      active: true
+    },
+    {
+      id: 'bsc',
+      name: 'Binance Smart Chain',
+      logo: networkLogos['bsc']?.logoUrl || '/bsc.png',
+      color: 'bg-yellow-100',
+      textColor: 'text-yellow-600',
       active: true
     },
     {
@@ -576,10 +640,12 @@ export default function CreateSavingsPage() {
           valid = false
         }
       }
+      // Ensure chain and currency are selected (defaults usually handle this, but good to check)
+      if (!chain) valid = false;
+      if (!currency) valid = false;
     }
 
     if (step === 2) {
-      // Validate amount on Step 2 (moved from Step 1)
       if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
         newErrors.amount = 'Please enter a valid amount'
         valid = false
@@ -817,7 +883,7 @@ export default function CreateSavingsPage() {
     const loadNetworkLogos = async () => {
       try {
         setIsLoadingLogos(true);
-        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche']);
+        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'bsc']);
         setNetworkLogos(logos);
       } catch (error) {
         console.error('Error loading network logos:', error);
@@ -1057,7 +1123,9 @@ export default function CreateSavingsPage() {
                           ? `https://blockscout.lisk.com/tx/${txHash}`
                           : chain === 'avalanche'
                             ? `https://snowtrace.io/tx/${txHash}`
-                            : `https://basescan.org/tx/${txHash}`,
+                            : chain === 'bsc'
+                              ? `https://bscscan.com/tx/${txHash}`
+                              : `https://basescan.org/tx/${txHash}`,
                       '_blank'
                     )}
                   >
@@ -1132,13 +1200,69 @@ export default function CreateSavingsPage() {
         </div>
       )}
 
-      {/* Progress bar moved to top */}
-      <div className="max-w-3xl mx-auto mt-2 sm:mt-4 mb-6 sm:mb-8">
-        <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-1 bg-[#81D7B4] transition-all duration-500"
+      {/* Enhanced Stepper Progress Indicator */}
+      <div className="max-w-3xl mx-auto mt-6 sm:mt-8 mb-8 sm:mb-12 px-4">
+        <div className="relative flex items-center justify-between">
+          {/* Connecting Line */}
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full -z-10"></div>
+          <div 
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#81D7B4] rounded-full -z-10 transition-all duration-500 ease-out"
             style={{ width: `${((step - 1) / 2) * 100}%` }}
-          />
+          ></div>
+
+          {/* Step 1 */}
+          <div className="flex flex-col items-center">
+            <div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${
+                step >= 1 
+                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110' 
+                  : 'bg-white border-gray-200 text-gray-400'
+              }`}
+            >
+              {step > 1 ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <span className="font-bold">1</span>
+              )}
+            </div>
+            <span className={`mt-2 text-xs sm:text-sm font-semibold transition-colors duration-300 ${step >= 1 ? 'text-[#2D5A4A]' : 'text-gray-400'}`}>Plan Details</span>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex flex-col items-center">
+            <div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${
+                step >= 2 
+                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110' 
+                  : 'bg-white border-gray-200 text-gray-400'
+              }`}
+            >
+              {step > 2 ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <span className="font-bold">2</span>
+              )}
+            </div>
+            <span className={`mt-2 text-xs sm:text-sm font-semibold transition-colors duration-300 ${step >= 2 ? 'text-[#2D5A4A]' : 'text-gray-400'}`}>Configuration</span>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex flex-col items-center">
+            <div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${
+                step >= 3 
+                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110' 
+                  : 'bg-white border-gray-200 text-gray-400'
+              }`}
+            >
+              <span className="font-bold">3</span>
+            </div>
+            <span className={`mt-2 text-xs sm:text-sm font-semibold transition-colors duration-300 ${step >= 3 ? 'text-[#2D5A4A]' : 'text-gray-400'}`}>Review</span>
+          </div>
         </div>
       </div>
       <motion.div
@@ -1174,7 +1298,7 @@ export default function CreateSavingsPage() {
               </motion.div>
             ) : (
               <>
-                {/* Step 1: Plan Details - Modern Design with Presets */}
+                {/* Step 1: Plan Fundamentals (Name, Network, Token) */}
                 {step === 1 && (
                   <motion.div
                     key="step1"
@@ -1182,237 +1306,210 @@ export default function CreateSavingsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="p-4 sm:p-6 md:p-8 lg:p-12"
+                    className="p-4 sm:p-6 md:p-8"
                   >
-                    <motion.div
-                      className="space-y-8 sm:space-y-12"
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
+                    <motion.div 
+                      className="text-center mb-8"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
                     >
-                      <div className="flex flex-col items-center gap-8 sm:gap-12">
-                        <motion.div variants={itemVariants} className="text-center max-w-3xl">
-                          <motion.div
-                            className="inline-flex items-center px-3 py-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-[#81D7B4]/10 via-[#81D7B4]/5 to-[#6bc5a0]/10 rounded-full border border-[#81D7B4]/20 mb-6 sm:mb-8 backdrop-blur-sm"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <motion.div
-                              className="w-5 h-5 sm:w-6 sm:h-6 text-[#81D7B4] mr-2 sm:mr-3 flex items-center justify-center"
-                              initial={{ scale: 0.8 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <HiOutlineDocumentText className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </motion.div>
-                            <span className="text-xs sm:text-sm font-bold text-[#81D7B4]">Step 1 of 3</span>
-                          </motion.div>
-                          <motion.h2
-                            className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3 sm:mb-4"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1, duration: 0.6 }}
-                          >
-                            Name Your Savings Plan
-                          </motion.h2>
-                          <motion.p
-                            className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl mx-auto font-medium px-4 sm:px-0"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
-                          >
-                            Give your savings goal a meaningful name. This helps you stay motivated and track your progress.
-                          </motion.p>
-                        </motion.div>
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] rounded-full mb-4 shadow-lg">
+                        <HiOutlineDocumentText className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Plan Details</h2>
+                      <p className="text-gray-600 max-w-md mx-auto">Start by naming your plan and choosing your network.</p>
+                    </motion.div>
 
-                        <motion.div variants={itemVariants} className="flex flex-col items-center gap-6 sm:gap-8 w-full max-w-2xl">
-                          <motion.div
-                            className="relative w-full group"
-                            whileHover={{ scale: 1.02 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <div className="absolute inset-y-0 left-0 pl-4 sm:pl-5 flex items-center pointer-events-none">
-                              <motion.svg
-                                className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors duration-300"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </motion.svg>
+                    <div className="space-y-8 max-w-3xl mx-auto">
+                      {/* Name Input */}
+                      <motion.div 
+                        variants={itemVariants}
+                        className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg"
+                      >
+                         <label htmlFor="planName" className="block text-sm font-bold text-gray-700 mb-2">Plan Name</label>
+                         <div className="relative group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
                             </div>
-                            <motion.input
+                            <input
                               type="text"
                               id="planName"
                               value={name}
                               onChange={(e) => setName(e.target.value)}
-                              placeholder="My dream vacation fund..."
-                              className={`w-full pl-12 sm:pl-14 pr-4 sm:pr-6 py-4 sm:py-5 bg-white/80 backdrop-blur-md rounded-xl sm:rounded-2xl border-2 sm:border-3 text-gray-900 text-lg sm:text-xl placeholder-gray-500 font-medium shadow-lg focus:shadow-xl transition-all duration-300 ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 hover:border-gray-300 focus:ring-[#81D7B4] focus:border-[#81D7B4]'}`}
-                              whileFocus={{ scale: 1.01 }}
-                              transition={{ duration: 0.2 }}
+                              placeholder="e.g. Dream Vacation, New Laptop"
+                              className={`w-full pl-12 pr-4 py-4 bg-white rounded-xl border-2 text-gray-900 text-lg sm:text-xl font-medium shadow-sm focus:outline-none focus:ring-4 focus:ring-[#81D7B4]/10 transition-all ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#81D7B4]'}`}
                             />
-                            <motion.div
-                              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
-                              initial={false}
-                              animate={{ opacity: name ? 0.3 : 0 }}
-                            />
-                          </motion.div>
+                            {errors.name && <p className="mt-2 text-sm text-red-500">{errors.name}</p>}
+                         </div>
+                         
+                         {/* Quick Presets */}
+                         <div className="mt-4 flex flex-wrap gap-2">
+                            {['Emergency Fund', 'Rent', 'Fees', 'Vacation', 'Car', 'Gadget'].map((preset) => (
+                              <motion.button
+                                key={preset}
+                                type="button"
+                                onClick={() => setName(preset)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:border-[#81D7B4] hover:text-[#81D7B4] hover:shadow-sm transition-all"
+                              >
+                                {preset}
+                              </motion.button>
+                            ))}
+                         </div>
+                      </motion.div>
 
-                          {/* Continue Button - Under Input Field */}
+                      {/* Network Selection */}
+                      <motion.div 
+                        variants={itemVariants}
+                        className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg relative z-20"
+                      >
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Select Network</h3>
+                        <div className="relative" ref={networkDropdownRef}>
                           <motion.button
                             type="button"
-                            onClick={handleNext}
-                            disabled={!name.trim()}
-                            whileHover={{
-                              scale: name.trim() ? 1.08 : 1,
-                              y: name.trim() ? -4 : 0,
-                              transition: { duration: 0.2 }
-                            }}
-                            whileTap={{
-                              scale: name.trim() ? 0.95 : 1,
-                              y: name.trim() ? -1 : 0
-                            }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4, duration: 0.6 }}
-                            className={`w-full max-w-xs sm:max-w-md inline-flex items-center justify-center px-6 sm:px-10 py-4 sm:py-5 font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl transition-all duration-300 text-lg sm:text-xl ${name.trim()
-                              ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white shadow-[#81D7B4]/30 hover:shadow-[#81D7B4]/40 cursor-pointer'
-                              : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-inner'
-                              }`}
+                            onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
+                            className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 bg-white ${isNetworkDropdownOpen ? 'border-[#81D7B4] ring-2 ring-[#81D7B4]/20' : 'border-gray-200 hover:border-[#81D7B4]/50'}`}
+                            aria-haspopup="listbox"
+                            aria-expanded={isNetworkDropdownOpen}
                           >
-                            <motion.span
-                              animate={{
-                                scale: name.trim() ? [1, 1.05, 1] : 1
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: name.trim() ? Infinity : 0,
-                                repeatType: "reverse"
-                              }}
-                            >
-                              Continue to Settings
-                            </motion.span>
-                            <motion.svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-7 w-7 ml-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
+                            <div className="flex items-center">
+                              <div className="relative w-8 h-8 mr-3 flex-shrink-0 bg-white rounded-full p-0.5 border border-gray-100 shadow-sm">
+                                <Image 
+                                  src={chains.find(c => c.id === chain)?.logo || '/default-network.png'} 
+                                  alt={chains.find(c => c.id === chain)?.name || 'Network'} 
+                                  fill 
+                                  className="object-contain p-0.5" 
+                                />
+                              </div>
+                              <span className="font-bold text-gray-900 text-lg">
+                                {chains.find(c => c.id === chain)?.name || 'Select Network'}
+                              </span>
+                            </div>
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${isNetworkDropdownOpen ? 'rotate-180' : ''}`} 
+                              fill="none" 
+                              viewBox="0 0 24 24" 
                               stroke="currentColor"
-                              animate={{
-                                x: name.trim() ? [0, 4, 0] : 0,
-                                scale: name.trim() ? [1, 1.1, 1] : 1
-                              }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: name.trim() ? Infinity : 0,
-                                repeatType: "reverse"
-                              }}
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </motion.svg>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </motion.button>
 
-                          {/* Preset Savings Name Options */}
-                          <motion.div
-                            className="w-full space-y-4 sm:space-y-6"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3, duration: 0.6 }}
-                          >
-                            <motion.p
-                              className="text-base sm:text-lg font-bold text-gray-700 text-center bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent"
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              Or choose from popular goals:
-                            </motion.p>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                              {[
-                                { name: 'House Rent', icon: HiHome },
-                                { name: 'School Fees', icon: HiAcademicCap },
-                                { name: 'Car Savings', icon: HiTruck },
-                                { name: 'Emergency Fund', icon: HiBriefcase },
-                                { name: 'Vacation', icon: HiSun },
-                                { name: 'Gaming Setup', icon: FaGamepad },
-                                { name: 'Wedding Fund', icon: HiHeart },
-                                { name: 'Business Capital', icon: HiRocketLaunch }
-                              ].map((preset, index) => (
-                                <motion.button
-                                  key={preset.name}
-                                  type="button"
-                                  onClick={() => setName(preset.name)}
-                                  whileHover={{
-                                    scale: 1.08,
-                                    y: -4,
-                                    transition: { duration: 0.2 }
-                                  }}
-                                  whileTap={{ scale: 0.95, y: -1 }}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: index * 0.1, duration: 0.4 }}
-                                  className={`relative group p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-3 transition-all duration-300 overflow-hidden ${name === preset.name
-                                    ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] border-[#81D7B4] text-white shadow-lg sm:shadow-2xl shadow-[#81D7B4]/30 transform scale-105'
-                                    : 'bg-white/70 border-gray-200 text-gray-700 hover:border-white hover:bg-white/90 hover:shadow-lg sm:hover:shadow-xl backdrop-blur-sm'
-                                    }`}
-                                >
-                                  {/* Background gradient overlay for unselected state */}
-                                  {name !== preset.name && (
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                                  )}
-
-                                  {/* Icon with enhanced animation */}
-                                  <motion.div
-                                    className="flex flex-col items-center space-y-3"
-                                    whileHover={{ scale: 1.1 }}
-                                  >
-                                    <motion.div
-                                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${name === preset.name
-                                        ? 'bg-white/20 backdrop-blur-sm'
-                                        : 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] shadow-md sm:shadow-lg'
-                                        }`}
-                                      whileHover={{
-                                        rotate: 360,
-                                        scale: 1.2,
-                                        transition: { duration: 0.4 }
+                          <AnimatePresence>
+                            {isNetworkDropdownOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute z-20 top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
+                              >
+                                <div className="max-h-64 overflow-y-auto py-1">
+                                  {chains.map((c) => (
+                                    <button
+                                      key={c.id}
+                                      type="button"
+                                      disabled={c.isComingSoon}
+                                      onClick={() => {
+                                        if (!c.isComingSoon) {
+                                          setChain(c.id);
+                                          switchToNetwork(c.id);
+                                          setIsNetworkDropdownOpen(false);
+                                        }
                                       }}
+                                      className={`w-full flex items-center justify-between p-3 px-4 hover:bg-gray-50 transition-colors ${chain === c.id ? 'bg-[#81D7B4]/5' : ''} ${c.isComingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                      role="option"
+                                      aria-selected={chain === c.id}
                                     >
-                                      <preset.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                                    </motion.div>
-                                    <span className={`text-xs sm:text-sm font-bold ${name === preset.name ? 'text-white' : 'text-gray-700 group-hover:text-gray-900'
-                                      }`}>
-                                      {preset.name}
-                                    </span>
-                                  </motion.div>
+                                      <div className="flex items-center">
+                                        <div className="relative w-8 h-8 mr-3 flex-shrink-0 bg-white rounded-full p-0.5 border border-gray-100">
+                                          <Image src={c.logo} alt={c.name} fill className="object-contain p-0.5" />
+                                        </div>
+                                        <div className="flex flex-col items-start">
+                                          <span className={`font-medium ${chain === c.id ? 'text-[#2D5A4A]' : 'text-gray-900'}`}>{c.name}</span>
+                                          {c.isComingSoon && <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">Coming Soon</span>}
+                                        </div>
+                                      </div>
+                                      {chain === c.id && (
+                                        <HiCheckCircle className="w-5 h-5 text-[#81D7B4]" />
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </motion.div>
 
-                                  {/* Selection indicator */}
-                                  {name === preset.name && (
-                                    <motion.div
-                                      className="absolute top-2 right-2 w-3 h-3 bg-white rounded-full shadow-lg"
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                                    />
-                                  )}
-                                </motion.button>
-                              ))}
-                            </div>
-                          </motion.div>
-
-                          {errors.name && (
-                            <motion.p
-                              className="text-sm text-red-500 text-center font-medium bg-red-50 px-3 sm:px-4 py-2 rounded-lg border border-red-200"
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ type: "spring", stiffness: 300 }}
+                      {/* Token Selection */}
+                      <motion.div 
+                        variants={itemVariants}
+                        className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg"
+                      >
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Select Currency</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                          {NETWORKS.find(n => n.id === chain)?.tokens.map((curr) => (
+                            <motion.button
+                              key={curr.symbol}
+                              type="button"
+                              onClick={() => setCurrency(curr.symbol)}
+                              aria-label={`Select ${curr.symbol} currency`}
+                              aria-pressed={currency === curr.symbol}
+                              whileHover={{ scale: 1.05, y: -2 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all relative ${currency === curr.symbol ? 'border-[#81D7B4] bg-[#81D7B4]/5 ring-1 ring-[#81D7B4] shadow-md' : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'}`}
                             >
-                              {errors.name}
-                            </motion.p>
-                          )}
-                        </motion.div>
+                               {currency === curr.symbol && (
+                                 <div className="absolute top-2 right-2 text-[#81D7B4]">
+                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                   </svg>
+                                 </div>
+                               )}
+                               <div className="relative w-12 h-12 mb-3 bg-white rounded-full p-1 shadow-sm border border-gray-100">
+                                  <Image 
+                                    src={
+                                      curr.symbol === 'Gooddollar' ? '/$g.png'
+                                      : curr.symbol === 'cUSD' ? '/cusd.png'
+                                      : curr.symbol === 'USDGLO' ? '/usdglo.png'
+                                      : curr.symbol === 'USDC' ? '/usdclogo.png'
+                                      : curr.symbol === 'cNGN' ? '/cngn.png'
+                                      : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
+                                    }
+                                    alt={curr.symbol} 
+                                    fill 
+                                    className="object-contain p-1" 
+                                  />
+                               </div>
+                               <div className="font-bold text-gray-900 text-lg">{curr.symbol}</div>
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+
+                      <div className="pt-4 flex justify-end">
+                        <motion.button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={!name.trim()}
+                          aria-label="Go to next step"
+                          whileHover={name.trim() ? { scale: 1.02, x: 2 } : {}}
+                          whileTap={name.trim() ? { scale: 0.98 } : {}}
+                          className={`inline-flex items-center px-8 py-4 rounded-xl font-bold text-white shadow-lg transition-all ${name.trim() ? 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] hover:shadow-xl' : 'bg-gray-300 cursor-not-allowed'}`}
+                        >
+                          Next Step
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </motion.button>
                       </div>
-                    </motion.div>
+                    </div>
                   </motion.div>
                 )}
 
@@ -1449,7 +1546,7 @@ export default function CreateSavingsPage() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                       >
-                        Set your savings amount, choose your currency and network, and define your timeline
+                        Set your savings amount and define your timeline
                       </motion.p>
                     </motion.div>
 
@@ -1473,9 +1570,9 @@ export default function CreateSavingsPage() {
                           </div>
                         </div>
 
-                        <div className="relative mb-4">
+                        <div className="relative mb-6">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <span className="text-gray-500 text-xl font-medium">$</span>
+                            <span className="text-gray-400 text-2xl font-bold">$</span>
                           </div>
                           <input
                             type="text"
@@ -1483,8 +1580,18 @@ export default function CreateSavingsPage() {
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="0.00"
-                            className={`w-full pl-10 pr-4 py-5 bg-white rounded-xl border-2 text-gray-900 text-xl sm:text-2xl font-semibold ${errors.amount ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-[#81D7B4] focus:border-[#81D7B4]'} shadow-sm focus:outline-none focus:ring-2 transition-all`}
+                            aria-label="Savings Amount"
+                            className={`w-full pl-10 pr-24 py-5 bg-white rounded-xl border-2 text-gray-900 text-3xl font-bold tracking-tight shadow-sm focus:outline-none focus:ring-4 focus:ring-[#81D7B4]/10 transition-all ${errors.amount ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#81D7B4]'}`}
                           />
+                          <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <div className="bg-gray-100 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+                              {currency === 'Gooddollar' ? (
+                                <Image src="/$g.png" alt="$G" width={20} height={20} className="w-5 h-5" />
+                              ) : (
+                                <span className="text-sm font-bold text-gray-600">{currency}</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
                         {/* Quick amount cards - Enhanced */}
@@ -1499,11 +1606,12 @@ export default function CreateSavingsPage() {
                               key={option.value}
                               type="button"
                               onClick={() => setAmount(option.value)}
-                              whileHover={{ scale: 1.02, y: -2 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={`w-full p-4 rounded-xl border transition-all duration-200 text-center ${amount === option.value
-                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                              aria-label={`Select $${option.value} amount`}
+                              whileHover={{ scale: 1.05, y: -2 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-center ${amount === option.value
+                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#2D5A4A] shadow-md'
+                                : 'bg-white border-gray-100 text-gray-600 hover:border-[#81D7B4]/50 hover:shadow-sm'
                                 }`}
                             >
                               <div className="font-bold text-lg sm:text-xl">${option.value}</div>
@@ -1544,161 +1652,9 @@ export default function CreateSavingsPage() {
                         )}
                       </motion.div>
 
-                      {/* Chain - Base primary, others in dropdown */}
-                      <motion.div variants={itemVariants} className="relative z-[100] bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg py-4 my-3">
-                        <div className="flex items-center justify-between mb-8">
-                          <div>
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Select Network</h3>
-                            <p className="text-sm text-gray-600">Choose the blockchain for your savings plan</p>
-                          </div>
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                            </svg>
-                          </div>
-                        </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4 w-full">
-                          {/* Main network (Base) */}
-                          <motion.button
-                            type="button"
-                            onClick={async () => {
-                              await switchToNetwork('base');
-                              setChain('base');
-                            }}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`flex items-center justify-center px-6 py-4 rounded-xl border transition-all duration-200 flex-1 text-sm ${chain === 'base'
-                              ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'} font-medium`}
-                          >
-                            <Image src="/base.svg" alt="Base" width={20} height={20} className="w-5 h-5 mr-2" />
-                            <div className="text-left">
-                              <div className="font-bold">Base</div>
-                              <div className="text-xs opacity-75">Low fees, fast</div>
-                            </div>
-                          </motion.button>
 
-                          {/* Dropdown for other networks - show selected network if not base */}
-                          <div className="relative flex-1">
-                            <motion.button
-                              type="button"
-                              whileHover={{ scale: 1.02, y: -2 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={`flex items-center justify-center px-6 py-4 rounded-xl border transition-all duration-200 w-full text-sm font-medium group ${chain !== 'base'
-                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}
-                              onClick={() => {
-                                const el = document.getElementById('network-dropdown');
-                                if (el) el.classList.toggle('hidden');
-                              }}
-                            >
-                              {chain !== 'base' ? (
-                                <>
-                                  <Image src={chains.find(c => c.id === chain)?.logo || ''} alt={chains.find(c => c.id === chain)?.name || ''} width={24} height={24} className="w-6 h-6 mr-3" />
-                                  <div className="text-left flex-1">
-                                    <div className="font-bold">{chains.find(c => c.id === chain)?.name || 'Other Networks'}</div>
-                                    <div className="text-xs opacity-75">{chains.find(c => c.id === chain)?.name === 'Celo' ? 'Mobile-first' : 'Alternative'}</div>
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="text-left flex-1">
-                                    <div className="font-bold">Other Networks</div>
-                                    <div className="text-xs opacity-75">More options</div>
-                                  </div>
-                                  <svg className="w-5 h-5 ml-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                </>
-                              )}
-                            </motion.button>
-                            <div id="network-dropdown" className="hidden absolute left-0 right-0 mt-3 w-full bg-white rounded-xl shadow-2xl border border-gray-200 z-[1000] overflow-hidden backdrop-blur-sm sm:left-0 sm:right-auto">
-                              {chains.filter(c => c.id !== 'base').map((c) => (
-                                <motion.button
-                                  key={c.id}
-                                  type="button"
-                                  onClick={async () => {
-                                    if (c.isComingSoon) return;
-                                    await switchToNetwork(c.id);
-                                    setChain(c.id);
-                                    document.getElementById('network-dropdown')?.classList.add('hidden');
-                                  }}
-                                  disabled={c.isComingSoon}
-                                  whileHover={!c.isComingSoon ? { backgroundColor: '#f9fafb' } : {}}
-                                  className={`flex items-center w-full px-4 py-3 border-b border-gray-100 last:border-b-0 text-sm ${chain === c.id ? 'bg-[#81D7B4]/10 text-[#81D7B4]' : c.isComingSoon ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-50 text-gray-700'} font-medium`}
-                                >
-                                  <Image src={c.logo} alt={c.name} width={20} height={20} className="w-5 h-5 mr-2 flex-shrink-0" />
-                                  <span className="flex-1 min-w-0 truncate">{c.name}</span>
-                                  {c.isComingSoon && (
-                                    <span className="ml-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-[10px] sm:text-xs font-bold rounded-full shadow-md whitespace-nowrap flex-shrink-0">
-                                      Coming Soon
-                                    </span>
-                                  )}
-                                </motion.button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
 
-                      {/* Currency - Enhanced with visual cards */}
-                      <motion.div variants={itemVariants} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Choose Your Currency</h3>
-                            <p className="text-sm text-gray-600">Select the token you want to save in</p>
-                          </div>
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 rounded-xl flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {NETWORKS.find(n => n.id === chain)?.tokens.map((curr) => (
-                            <motion.button
-                              key={curr.symbol}
-                              type="button"
-                              onClick={() => setCurrency(curr.symbol)}
-                              whileHover={{ scale: 1.02, y: -2 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={`p-4 rounded-xl border transition-all duration-200 text-left ${currency === curr.symbol
-                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                }`}
-                            >
-                              <div className="flex items-center">
-                                <div className="relative">
-                                  <Image
-                                    src={
-                                      curr.symbol === 'Gooddollar' ? '/$g.png'
-                                        : curr.symbol === 'cUSD' ? '/cusd.png'
-                                          : curr.symbol === 'USDGLO' ? '/usdglo.png'
-                                            : curr.symbol === 'USDC' ? '/usdclogo.png'
-                                              : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
-                                    }
-                                    alt={curr.symbol}
-                                    width={20}
-                                    height={20}
-                                    className="w-5 h-5"
-                                  />
-                                  {currency === curr.symbol && (
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full flex items-center justify-center">
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="ml-2 flex-1">
-                                  <div className="font-bold text-sm">{curr.symbol}</div>
-                                  <div className="text-xs opacity-75">{curr.symbol} Token</div>
-                                </div>
-                              </div>
-                            </motion.button>
-                          ))}
-                        </div>
-                      </motion.div>
 
                       {/* Date selection - enhanced */}
                       <motion.div variants={itemVariants} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg">
@@ -1714,8 +1670,11 @@ export default function CreateSavingsPage() {
                           </div>
                         </div>
 
-                        <p className="text-sm text-gray-600 mb-6">
-                          Your savings will start today and end on your selected date. Choose an end date at least 30 days from now.
+                        <p className="text-sm text-gray-600 mb-6 bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          Your savings will start today. Choose an end date at least 30 days from now to maximize your returns.
                         </p>
 
                         {/* Quick preset buttons */}
@@ -1738,22 +1697,34 @@ export default function CreateSavingsPage() {
                                   setEndDate(presetDate);
                                   setCalendarNavigateDate(presetDate);
                                 }}
-                                whileHover={{ scale: 1.02, y: -1 }}
-                                whileTap={{ scale: 0.98 }}
-                                className={`p-3 rounded-xl border transition-all duration-200 text-center ${isSelected
-                                  ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
-                                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                aria-label={`Select ${preset.label} duration`}
+                                 aria-pressed={!!isSelected}
+                                 whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={`p-3 rounded-xl border-2 transition-all duration-200 text-center relative overflow-hidden ${isSelected
+                                  ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#2D5A4A] shadow-md'
+                                  : 'bg-white border-gray-100 text-gray-600 hover:border-[#81D7B4]/50 hover:shadow-sm'
                                   }`}
                               >
                                 <div className="font-bold text-sm">{preset.label}</div>
                                 <div className="text-xs opacity-75">{preset.days} days</div>
+                                {isSelected && (
+                                  <motion.div
+                                    layoutId="selectedCheck"
+                                    className="absolute top-1 right-1 text-[#81D7B4]"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                  </motion.div>
+                                )}
                               </motion.button>
                             );
                           })
                           }
                         </div>
 
-                        <div className="mb-8">
+                        <div className="mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                           <CustomDatePicker
                             selectedDate={endDate}
                             onSelectDate={(date) => setEndDate(date)}
@@ -1765,40 +1736,48 @@ export default function CreateSavingsPage() {
                           <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 rounded-xl p-4 border border-[#81D7B4]/30"
+                            className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 rounded-xl p-6 border border-[#81D7B4]/30 relative overflow-hidden"
                           >
-                            <div className="flex items-center mb-3">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#81D7B4] mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                              </svg>
-                              <span className="text-sm font-bold text-gray-800">
-                                Duration: {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
+                            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-xl"></div>
+                            
+                            <div className="flex items-center mb-4 relative z-10">
+                              <div className="w-8 h-8 bg-[#81D7B4] rounded-lg flex items-center justify-center mr-3 shadow-sm text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <span className="text-lg font-bold text-gray-800">
+                                Total Duration: <span className="text-[#2D5A4A]">{Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days</span>
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
+                            
+                            <div className="flex items-center justify-between text-sm relative z-10 bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
                               <div className="text-center">
-                                <div className="text-xs text-gray-500 mb-1">Start Date</div>
-                                <div className="bg-white/80 rounded-lg px-3 py-2 font-medium text-gray-700 shadow-sm">
+                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Start Date</div>
+                                <div className="text-gray-900 font-bold text-base">
                                   {format(startDate, 'MMM d, yyyy')}
                                 </div>
                               </div>
-                              <div className="flex-1 px-4">
-                                <div className="h-px bg-gradient-to-r from-gray-300 to-gray-300 relative">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                  </svg>
+                              <div className="flex-1 px-4 flex justify-center">
+                                <div className="w-full max-w-[100px] h-1 bg-gradient-to-r from-gray-200 via-[#81D7B4] to-gray-200 rounded-full relative">
+                                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#81D7B4] rounded-full shadow-sm"></div>
                                 </div>
                               </div>
                               <div className="text-center">
-                                <div className="text-xs text-gray-500 mb-1">End Date</div>
-                                <div className="bg-white/80 rounded-lg px-3 py-2 font-medium text-gray-700 shadow-sm">
+                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">End Date</div>
+                                <div className="text-gray-900 font-bold text-base">
                                   {format(endDate, 'MMM d, yyyy')}
                                 </div>
                               </div>
                             </div>
                           </motion.div>
                         )}
-                        {errors.endDate && <p className="mt-4 text-sm text-red-500 font-medium">{errors.endDate}</p>}
+                        {errors.endDate && <p className="mt-4 text-sm text-red-500 font-bold bg-red-50 p-3 rounded-lg border border-red-100 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errors.endDate}
+                        </p>}
                       </motion.div>
 
                       {/* Penalties - enhanced */}
@@ -1828,15 +1807,27 @@ export default function CreateSavingsPage() {
                               transition={{ delay: 0.1 + (index * 0.05) }}
                               type="button"
                               onClick={() => setPenalty(p)}
-                              whileHover={{ scale: 1.02, y: -2 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={`w-full p-2 sm:p-3 rounded-xl border transition-all duration-200 text-center ${penalty === p
-                                ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 border-[#81D7B4] text-[#81D7B4] shadow-md transform scale-105'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                              aria-label={`Select ${p} penalty`}
+                              aria-pressed={penalty === p}
+                              whileHover={{ scale: 1.05, y: -2 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-center relative overflow-hidden ${penalty === p
+                                ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#2D5A4A] shadow-md'
+                                : 'bg-white border-gray-100 text-gray-600 hover:border-[#81D7B4]/50 hover:shadow-sm'
                                 }`}
                             >
-                              <div className="text-base sm:text-lg font-bold">{p}</div>
-                              <div className="text-xs opacity-75">Penalty</div>
+                              <div className="text-2xl font-bold mb-1">{p}</div>
+                              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Penalty</div>
+                              {penalty === p && (
+                                <motion.div
+                                  layoutId="selectedPenaltyCheck"
+                                  className="absolute top-2 right-2 text-[#81D7B4]"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                </motion.div>
+                              )}
                             </motion.button>
                           ))}
                         </div>
@@ -1844,15 +1835,22 @@ export default function CreateSavingsPage() {
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex items-center text-sm text-gray-600 bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200"
+                          className="flex items-start text-sm text-gray-600 bg-amber-50 p-5 rounded-xl border border-amber-100 shadow-sm"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                          </svg>
+                          <div className="bg-amber-100 p-2 rounded-lg mr-4 flex-shrink-0 text-amber-600">
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                             </svg>
+                          </div>
                           <div>
-                            <div className="font-medium text-amber-800 mb-1">Penalty Impact</div>
-                            <div>
-                              With <span className="font-bold text-amber-700">{penalty}</span> penalty, early withdrawal of <span className="font-bold text-amber-700">${amount || '1000'}</span> would cost you <span className="font-bold text-amber-700">${(Number(amount || '1000') * parseFloat(penalty) / 100).toFixed(2)}</span>.
+                            <div className="font-bold text-amber-900 mb-1 text-base">Penalty Impact Analysis</div>
+                            <div className="leading-relaxed">
+                              With a <span className="font-bold text-amber-700 bg-amber-100 px-1 rounded">{penalty}</span> penalty, if you withdraw early:
+                              <ul className="mt-2 space-y-1 list-disc list-inside text-amber-800/80">
+                                <li>Principal Amount: <strong>${amount || '1000'}</strong></li>
+                                <li>Penalty Fee: <strong className="text-red-600">-${(Number(amount || '1000') * parseFloat(penalty) / 100).toFixed(2)}</strong></li>
+                                <li>You Receive: <strong className="text-green-700">${(Number(amount || '1000') * (100 - parseFloat(penalty)) / 100).toFixed(2)}</strong></li>
+                              </ul>
                             </div>
                           </div>
                         </motion.div>
@@ -1868,6 +1866,7 @@ export default function CreateSavingsPage() {
                       <motion.button
                         type="button"
                         onClick={handlePrevious}
+                        aria-label="Go to previous step"
                         whileHover={{ scale: 1.02, x: -2 }}
                         whileTap={{ scale: 0.98 }}
                         className="inline-flex items-center justify-center px-6 sm:px-8 py-4 bg-white text-gray-700 font-bold rounded-xl border-2 border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition-all duration-200 group"
@@ -1880,11 +1879,12 @@ export default function CreateSavingsPage() {
                       <motion.button
                         type="button"
                         onClick={handleNext}
+                        aria-label="Review savings plan"
                         whileHover={{ scale: 1.02, x: 2 }}
                         whileTap={{ scale: 0.98 }}
-                        className="inline-flex items-center px-6 sm:px-8 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transition-all duration-200 group"
+                        className="inline-flex items-center px-8 sm:px-10 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:brightness-105 transition-all duration-200 group"
                       >
-                        Next
+                        Review Plan
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-3 group-hover:translate-x-[2px] transition-transform" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
@@ -2334,25 +2334,35 @@ export default function CreateSavingsPage() {
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.6 }}
                     >
-                      <button
+                      <motion.button
                         type="button"
                         onClick={handlePrevious}
-                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-all duration-300 transform hover:translate-y-[-2px]"
+                        aria-label="Go to previous step"
+                        whileHover={{ scale: 1.02, x: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center justify-center px-6 sm:px-8 py-4 bg-white text-gray-700 font-bold rounded-xl border-2 border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition-all duration-200 group"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 group-hover:translate-x-[-2px] transition-transform" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
                         Previous
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         type="button"
                         onClick={handleSubmit}
                         disabled={submitting || isLoading || !termsAgreed}
-                        className="inline-flex items-center justify-center px-5 sm:px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4]/90 text-white font-medium rounded-xl shadow-[0_4px_10px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_15px_rgba(129,215,180,0.4)] transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-70 disabled:cursor-not-allowed"
+                        aria-busy={submitting || isLoading}
+                        aria-label={submitting || isLoading ? "Creating Savings Plan" : "Create Savings Plan"}
+                        whileHover={!(submitting || isLoading || !termsAgreed) ? { scale: 1.02, x: 2 } : {}}
+                        whileTap={!(submitting || isLoading || !termsAgreed) ? { scale: 0.98 } : {}}
+                        className={`inline-flex items-center justify-center px-8 sm:px-10 py-4 font-bold rounded-xl shadow-xl transition-all duration-200 group ${submitting || isLoading || !termsAgreed
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+                          : 'bg-gradient-to-r from-[#81D7B4] to-[#6bc5a0] text-white hover:shadow-2xl hover:brightness-105'
+                          }`}
                       >
                         {(submitting || isLoading) ? (
                           <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -2360,13 +2370,13 @@ export default function CreateSavingsPage() {
                           </>
                         ) : (
                           <>
-                            Create Plan
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            Create Savings Plan
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-3 group-hover:translate-x-[2px] transition-transform" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     </motion.div>
                   </motion.div>
                 )}

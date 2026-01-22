@@ -22,6 +22,7 @@ const NETWORK_ID_MAP: { [key: string]: string } = {
   'polygon': 'polygon-pos',
   'arbitrum': 'arbitrum-one',
   'optimism': 'optimistic-ethereum',
+  'bsc': 'binance-smart-chain',
   'binance-smart-chain': 'binance-smart-chain',
   'solana': 'solana',
   'fantom': 'fantom',
@@ -39,7 +40,7 @@ const NETWORK_ID_MAP: { [key: string]: string } = {
 
 // Fallback logo URLs for common networks (can be updated with actual logos)
 const FALLBACK_LOGOS: { [key: string]: string } = {
-  'base': '/base.svg',
+  'base': '/base.png',
   'celo': '/celo.png',
   'lisk': '/lisk-logo.png',
   'avalanche': '/eth.png', // Using ETH logo as fallback for Avalanche

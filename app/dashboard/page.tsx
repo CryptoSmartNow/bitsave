@@ -72,6 +72,7 @@ export default function Dashboard() {
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
+    isBSCNetwork,
     isAvalancheNetwork,
     refetch: refetchSavingsData
   } = useSavingsData();
@@ -344,7 +345,7 @@ export default function Dashboard() {
     const loadNetworkLogos = async () => {
       try {
         setIsLoadingLogos(true);
-        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'solana']);
+        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'solana', 'bsc']);
         setNetworkLogos(logos);
       } catch (error) {
         console.error('Error loading network logos:', error);
@@ -438,20 +439,26 @@ export default function Dashboard() {
 
   // Handle network selection (used by both modal and dropdown)
   const handleNetworkSelect = async (network: { name: string; isActive: boolean }) => {
-    if (network.isActive && isNetworkSynced) {
+    // Handle cNGN as a shortcut to Lisk network
+    const targetNetworkName = network.name === 'cNGN' ? 'Lisk' : network.name;
+    const isTargetActive = network.name === 'cNGN' ? isLiskNetwork : network.isActive;
+
+    if (isTargetActive && isNetworkSynced) {
       await refetchSavingsData();
-    } else if (network.isActive && !isNetworkSynced) {
+    } else if (isTargetActive && !isNetworkSynced) {
       await syncToWalletNetwork();
     } else {
-      await switchToNetwork(network.name);
+      await switchToNetwork(targetNetworkName);
     }
   };
 
   // Network options with dynamic logos (CoinGecko first, then local fallback)
   const networkOptions = useMemo(() => [
-    { name: 'Base', desc: 'Ethereum L2', icon: networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg', isActive: isBaseNetwork },
+    { name: 'Base', desc: 'Ethereum L2', icon: networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.png', isActive: isBaseNetwork },
     { name: 'Celo', desc: 'Mobile-First', icon: networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png', isActive: isCeloNetwork },
     { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
+    { name: 'Binance Smart Chain', desc: 'EVM Mainnet', icon: networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png', isActive: isBSCNetwork },
+    { name: 'cNGN', desc: 'Stablecoin', icon: '/cngn.png', isActive: false },
     { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png', isActive: isAvalancheNetwork },
     { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: false, isComingSoon: true }
   ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
@@ -530,6 +537,7 @@ export default function Dashboard() {
   const getTokenLogo = useCallback((tokenName: string, tokenLogo?: string) => {
     if (tokenLogo) return tokenLogo;
     if (tokenName === 'cUSD') return '/cusd.png';
+    if (tokenName === 'cNGN') return '/cngn.png';
     if (tokenName === 'USDGLO') return '/usdglo.png';
     if (tokenName === '$G' || tokenName === 'Gooddollar') return '/$g.png';
     if (tokenName === 'USDC') return '/usdclogo.png';
