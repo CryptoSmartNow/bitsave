@@ -5,25 +5,24 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FaTelegramPlane } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import { ArrowRight } from 'lucide-react';
 
 const footerLinks = {
   product: [
-    { name: 'Download', href: '#download' },
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Security', href: '#security' },
-    { name: 'Support', href: '#support' },
-    { name: 'Feature Requests', href: '#features' }
+    { name: 'Features', href: '#features' },
+    { name: 'How it Works', href: '#how-it-works' }
   ],
   resources: [
-    { name: 'Explore', href: '#explore' },
-    { name: 'Learn', href: '#learn' },
-    { name: 'Blog', href: '#blog' },
-    { name: 'Docs', href: '/docs' }
+    { name: 'Blog', href: '/blog' },
+    { name: 'Docs', href: 'https://docs.bitsave.finance' },
+    { name: 'FAQ', href: '#faq' }
   ],
   company: [
-    { name: 'About', href: '#about' },
-    { name: 'Terms', href: '#terms' },
-    { name: 'Privacy', href: '#privacy' },
-    { name: 'Careers', href: '#careers' },
+    { name: 'About', href: '#' },
+    { name: 'Terms', href: '#' },
+    { name: 'Privacy', href: '#' }
   ]
 };
 
@@ -46,136 +45,129 @@ export default function Footer() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle newsletter signup
-
     setEmail('');
   };
 
   return (
-    <footer className="relative overflow-hidden bg-[#f8fafa] pb-10 md:pb-20 pt-16">
-      {/* Clean page background */}
-      <div className="absolute inset-0 bg-[url('/grain-texture.png')] opacity-[0.02] mix-blend-overlay pointer-events-none"></div>
+    <footer className="relative bg-white pt-16 md:pt-24 pb-12 overflow-hidden border-t border-gray-100">
+      
+      {/* Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -bottom-[20%] -right-[10%] w-[40%] h-[40%] bg-[#81D7B4]/5 rounded-full blur-[100px]" />
+      </div>
 
-      {/* Subtle "BitSave" watermark centered within footer container */}
-      <svg
-        className="absolute left-0 bottom-0 w-full h-64 md:h-96 pointer-events-none select-none z-0"
-        viewBox="0 0 100 20"
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden="true"
-        style={{
-          WebkitMaskImage:
-            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.5) 80%, transparent 100%)',
-          maskImage:
-            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.5) 80%, transparent 100%)'
-        }}
-      >
-        <defs>
-          <linearGradient id="footerWatermarkGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#81D7B4" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#81D7B4" stopOpacity="0.1" />
-          </linearGradient>
-        </defs>
-        <text
-          x="50%"
-          textAnchor="middle"
-          y="75%"
-          dominantBaseline="middle"
-          fill="url(#footerWatermarkGradient)"
-          fontWeight="Bold"
-          fontFamily="var(--font-exo)"
-          fontSize="15"
-          letterSpacing="0.05em"
-        >
-          BitSave
-        </text>
-      </svg>
-
-      {/* Card Footer (replicated layout) */}
-      <div className="relative mx-auto max-w-6xl px-6 py-16 lg:px-8 z-10">
-        <div className="rounded-3xl bg-white ring-1 ring-gray-200/60 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.25)] p-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Image src="/bitsavelogo.png" alt="BitSave" width={120} height={32} className="h-8 w-auto" />
-              </div>
-              <p className="text-xs text-gray-500 leading-snug max-w-[600px]">
-                Give Tomorrow a Soft Landing
-                Breathe Easier, Save with BitSave
-
-              </p>
-              <div className="mt-6 flex items-center gap-4 text-gray-600">
-                {socialLinks.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className="p-2 rounded-full border border-gray-200/70 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md transition-all"
-                  >
-                    <span className="sr-only">{item.name}</span>
-                    {item.icon}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Link columns grouped right */}
-            <div className="md:col-span-3 flex justify-end">
-              <div className="grid grid-cols-3 gap-10 w-full max-w-[560px] justify-items-start">
-                {/* Product */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Product</h3>
-                  <ul role="list" className="mt-6 space-y-3">
-                    {footerLinks.product.map((item) => (
-                      <li key={item.name}>
-                        <Link href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Resources */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Resources</h3>
-                  <ul role="list" className="mt-6 space-y-3">
-                    {footerLinks.resources.map((item) => (
-                      <li key={item.name}>
-                        <Link href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Company */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Company</h3>
-                  <ul role="list" className="mt-6 space-y-3">
-                    {footerLinks.company.map((item) => (
-                      <li key={item.name}>
-                        <Link href={item.href} className="text-sm text-gray-600 hover:text-gray-900">
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+          
+          {/* Brand Column */}
+          <div className="lg:col-span-4 space-y-6">
+            <Link href="/" className="inline-block">
+              <Image src="/bitsavelogo.png" alt="BitSave" width={140} height={40} className="h-9 w-auto" />
+            </Link>
+            <p className="text-gray-500 leading-relaxed max-w-sm">
+              The decentralized savings protocol helping you build wealth across multiple chains with ease and security.
+            </p>
+            <div className="flex items-center gap-4">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-[#81D7B4] hover:text-white transition-all duration-300"
+                >
+                  {item.icon}
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="mt-8 border-t border-gray-200" />
-
-          {/* Bottom row */}
-          <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs leading-5 text-gray-500">© {new Date().getFullYear()} BitSave. All rights reserved.</p>
-            <div className="flex gap-6 text-xs text-gray-500">
-              <Link href="#privacy" className="hover:underline">Privacy Policy</Link>
-              <Link href="#terms" className="hover:underline">Terms of Service</Link>
-              <Link href="#cookies" className="hover:underline">Cookies Settings</Link>
+          {/* Links Columns */}
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+            {/* Product */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-6">Product</h3>
+              <ul className="space-y-4">
+                {footerLinks.product.map((link) => (
+                  <li key={link.name}>
+                    <Link href={link.href} className="text-gray-500 hover:text-[#81D7B4] transition-colors text-sm font-medium">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
+
+            {/* Resources */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-6">Resources</h3>
+              <ul className="space-y-4">
+                {footerLinks.resources.map((link) => (
+                  <li key={link.name}>
+                    {link.name === 'Docs' ? (
+                      <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#81D7B4] transition-colors text-sm font-medium">
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className="text-gray-500 hover:text-[#81D7B4] transition-colors text-sm font-medium">
+                        {link.name}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-6">Company</h3>
+              <ul className="space-y-4">
+                {footerLinks.company.map((link) => (
+                  <li key={link.name}>
+                    <Link href={link.href} className="text-gray-500 hover:text-[#81D7B4] transition-colors text-sm font-medium">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Newsletter - Simplified */}
+            <div className="col-span-2 md:col-span-1">
+              <h3 className="font-bold text-gray-900 mb-6">Stay Updated</h3>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="relative">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-all"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-2 p-1.5 bg-[#81D7B4] text-white rounded-lg hover:bg-[#6BC5A0] transition-colors"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400">
+                  Subscribe to our newsletter for the latest updates.
+                </p>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500">
+            © {new Date().getFullYear()} Bitsave Protocol. All rights reserved.
+          </p>
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse"></span>
+            All Systems Operational
           </div>
         </div>
       </div>
