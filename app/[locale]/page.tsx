@@ -5,6 +5,7 @@ import Security from '../components/Security';
 import Features from '../components/Features';
 import BlogSection from '../components/BlogSection';
 import Team from '../components/Team';
+import BizFiSection from '../components/BizFiSection';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
 
@@ -17,6 +18,7 @@ export default function Home() {
         <HowItWorks />
         <Security />
         <Features />
+        <BizFiSection />
         <BlogSection />
         <Team />
         <FAQ />

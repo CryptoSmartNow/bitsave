@@ -69,6 +69,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "img.youtube.com", pathname: "/**" },
       { protocol: "https", hostname: "coin-images.coingecko.com", pathname: "/**" },
       { protocol: "https", hostname: "assets.coingecko.com", pathname: "/**" },
+      { protocol: "https", hostname: "raw.githubusercontent.com", pathname: "/**" },
+      { protocol: "https", hostname: "cryptologos.cc", pathname: "/**" },
+    ],
+    localPatterns: [
+      {
+        pathname: '/**',
+      },
     ],
   },
 

@@ -5,7 +5,7 @@ import { useEffect, useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 import Link from 'next/link';
-import { Lock, Gift, Globe, ArrowRight, Play, TrendingUp, Wallet } from 'lucide-react';
+import { Lock, Gift, Globe, ArrowRight, Play, Wallet, ShieldCheck, TrendingUp, Zap } from 'lucide-react';
 
 // Helper function
 const ensureImageUrl = (url: string | undefined): string => {
@@ -19,19 +19,28 @@ const ensureImageUrl = (url: string | undefined): string => {
 }
 
 const Hero = memo(() => {
+
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [notificationIndex, setNotificationIndex] = useState(0);
+
+  const notifications = [
+    { text: "Savings Completed", icon: TrendingUp, color: "bg-green-100", textColor: "text-green-600" },
+    { text: "Rewards Claimed", icon: Gift, color: "bg-green-100", textColor: "text-green-600" },
+    { text: "Auto-Compounded", icon: Lock, color: "bg-green-100", textColor: "text-green-600" }
+  ];
 
   useEffect(() => {
-    fetchMultipleNetworkLogos(['base', 'celo', 'lisk'])
+    fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'bsc'])
       .then(setNetworkLogos)
       .catch(() => { });
   }, []);
 
-  // Auto-rotate the hero cards
+  // Auto-rotate the hero cards and notifications
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveCardIndex((prev) => (prev + 1) % 3);
+      setActiveCardIndex((prev) => (prev + 1) % 5);
+      setNotificationIndex((prev) => (prev + 1) % notifications.length);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -39,11 +48,13 @@ const Hero = memo(() => {
   const chains = [
     {
       name: 'Base',
-      logo: ensureImageUrl(networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.png'),
+      logo: '/base.svg',
       description: 'Coinbase L2',
       tokens: ['USDC', 'USDGLO'],
       accentColor: '#0052FF',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'from-[#81D7B4] to-[#6BC5A0]',
+      savingsLocked: '$12,450.00',
+      floatingBadge: { text: 'High Yield', icon: TrendingUp }
     },
     {
       name: 'Celo',
@@ -51,7 +62,9 @@ const Hero = memo(() => {
       description: 'Mobile-first',
       tokens: ['USDGLO', 'cUSD', 'USDC'],
       accentColor: '#FCFF52',
-      gradient: 'from-yellow-400 to-yellow-500'
+      gradient: 'from-yellow-400 to-yellow-500',
+      savingsLocked: '$8,320.50',
+      floatingBadge: { text: 'Eco-Friendly', icon: Globe }
     },
     {
       name: 'Lisk',
@@ -59,59 +72,54 @@ const Hero = memo(() => {
       description: 'Ethereum L2',
       tokens: ['USDC'],
       accentColor: '#0842D4',
-      gradient: 'from-indigo-500 to-indigo-600'
+      gradient: 'from-[#81D7B4] to-[#6BC5A0]',
+      savingsLocked: '$5,180.25',
+      floatingBadge: { text: 'Low Fees', icon: Wallet }
+    },
+    {
+      name: 'BSC',
+      logo: ensureImageUrl(networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png'),
+      description: 'Binance Smart Chain',
+      tokens: ['USDC', 'USDT'],
+      accentColor: '#F0B90B',
+      gradient: 'from-yellow-400 to-yellow-600',
+      savingsLocked: '$15,750.00',
+      floatingBadge: { text: 'Popular', icon: TrendingUp }
+    },
+    {
+      name: 'Avalanche',
+      logo: '/avalanche-logo.svg',
+      description: 'Fast & Low Cost',
+      tokens: ['USDC', 'USDT'],
+      accentColor: '#E84142',
+      gradient: 'from-red-500 to-red-600',
+      savingsLocked: '$9,940.75',
+      floatingBadge: { text: 'Fast', icon: Zap }
     }
   ];
 
-  const countries = [
-    { name: 'United States', flag: '🇺🇸' },
-    { name: 'United Kingdom', flag: '🇬🇧' },
-    { name: 'Germany', flag: '🇩🇪' },
-    { name: 'France', flag: '🇫🇷' },
-    { name: 'Japan', flag: '🇯🇵' },
-    { name: 'Canada', flag: '🇨🇦' },
-    { name: 'Australia', flag: '🇦🇺' },
-    { name: 'Netherlands', flag: '🇳🇱' },
-    { name: 'Singapore', flag: '🇸🇬' },
-    { name: 'South Korea', flag: '🇰🇷' },
-    { name: 'Brazil', flag: '🇧🇷' },
-    { name: 'India', flag: '🇮🇳' },
-    { name: 'Nigeria', flag: '🇳🇬' },
-    { name: 'Kenya', flag: '🇰🇪' },
-    { name: 'South Africa', flag: '🇿🇦' },
-  ];
-
   return (
-    <div className="relative pt-32 pb-12 sm:pt-40 sm:pb-16 lg:pb-20 px-4 sm:px-6 lg:px-8 max-w-[90rem] mx-auto">
+    <section className="relative w-full min-h-[100dvh] flex items-center justify-center pt-24 pb-12 overflow-hidden bg-white">
+      
+      {/* Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-5%] w-[50%] h-[50%] bg-[#81D7B4]/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#81D7B4]/10 rounded-full blur-[100px]" />
+        <div className="absolute top-[20%] left-[10%] w-64 h-64 bg-[#81D7B4]/5 rounded-full blur-[80px]" />
+      </div>
 
-      {/* Main Distinct Hero Container */}
-      <div className="relative bg-white rounded-[2.5rem] sm:rounded-[3.5rem] border border-gray-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
-
-        {/* Subtle decorative background - very light/neat */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-gray-50/80 to-transparent" />
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#81D7B4]/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-gray-50/50 to-transparent" />
-
-          {/* Grid pattern overlay - extremely subtle */}
-          <div className="absolute inset-0 opacity-[0.015]"
-            style={{
-              backgroundImage: 'radial-gradient(#444 1px, transparent 1px)',
-              backgroundSize: '24px 24px'
-            }}
-          />
-        </div>
-
-        {/* Content Grid */}
-        <div className="relative grid lg:grid-cols-2 gap-12 lg:gap-20 p-8 sm:p-12 lg:p-20 items-center z-10">
-
-          {/* LEFT: Typography & CTAs */}
-          <div className="text-center lg:text-left pt-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[90rem] relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          
+          {/* Left Column: Content */}
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-8 sm:space-y-10">
+            
+            {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-100 mb-8 mx-auto lg:mx-0"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-100 shadow-sm"
             >
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#81D7B4] opacity-75"></span>
@@ -120,246 +128,231 @@ const Hero = memo(() => {
               <span className="text-sm font-semibold text-gray-600 tracking-wide">Decentralized Savings Protocol</span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 leading-[1.1] mb-8"
-            >
-              Give Tomorrow a<br />
-              <span className="text-[#81D7B4]">Soft Landing</span>
-            </motion.h1>
+            {/* Heading */}
+            <div className="space-y-4">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-gray-900 leading-[0.95]"
+              >
+                Give Tomorrow a<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0]">Soft Landing</span>
+              </motion.h1>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg sm:text-xl text-gray-500 font-light leading-relaxed max-w-xl mx-auto lg:mx-0"
+              >
+                Your <span className="text-gray-900 font-medium">Onchain Savings Nest</span>. 
+                Save securely, earn rewards, and build wealth across 
+                <span className="inline-flex items-center align-middle mx-2 gap-1">
+                  <Image src="/base.svg" alt="Base" width={20} height={20} className="w-5 h-5 object-contain" />
+                  <Image src="/celo.png" alt="Celo" width={20} height={20} className="w-5 h-5 object-contain" />
+                  <Image src="/lisk-logo.png" alt="Lisk" width={20} height={20} className="w-5 h-5 object-contain" />
+                  <Image src="/bsc.png" alt="BSC" width={20} height={20} className="w-5 h-5 object-contain" />
+                  <Image src="https://cryptologos.cc/logos/avalanche-avax-logo.svg?v=025" alt="Avalanche" width={20} height={20} className="w-5 h-5 object-contain" />
+                </span>
+                networks.
+              </motion.p>
+            </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl text-gray-500 leading-relaxed mb-10 max-w-xl mx-auto lg:mx-0"
-            >
-              Your <span className="text-gray-900 font-medium">Onchain Savings Nest</span>.
-              The SaveFi Protocol helping income earners save securely, earn rewards, and build wealth across
-              <span className="inline-flex -bottom-1 relative mx-2">
-                <img src="/base.png" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
-                <img src="/celo.png" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
-                <img src="/lisk-logo.png" alt="" className="w-5 h-5 mx-0.5 opacity-60 grayscale hover:grayscale-0 transition-all" />
-              </span>
-              networks.
-            </motion.p>
-
+            {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
+              className="flex flex-col sm:flex-row w-full sm:w-auto gap-4 relative z-20"
             >
               <Link
-                href="/dashboard"
-                className="w-full sm:w-auto px-8 py-4 bg-[#81D7B4] text-white font-semibold text-lg rounded-2xl hover:bg-[#6BC5A0] hover:shadow-lg hover:shadow-[#81D7B4]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 text-center flex items-center justify-center gap-2"
+                href="/dashboard/create-savings"
+                className="group w-full sm:w-auto px-8 py-4 bg-[#81D7B4] text-white font-semibold text-lg rounded-full hover:bg-[#6BC5A0] shadow-lg shadow-[#81D7B4]/25 hover:shadow-[#81D7B4]/40 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
               >
                 Start Saving Now
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a
                 href="https://www.youtube.com/shorts/CWRQ7rgtHzU"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 font-semibold text-lg rounded-2xl border border-gray-200 hover:bg-gray-50 hover:border-[#81D7B4] hover:text-[#81D7B4] transition-all flex items-center justify-center gap-2"
+                className="group w-full sm:w-auto px-8 py-4 bg-white text-gray-900 font-semibold text-lg rounded-full border border-gray-200 hover:border-[#81D7B4] hover:text-[#81D7B4] transition-all flex items-center justify-center gap-2"
               >
-                <Play className="w-5 h-5 fill-current" />
+                <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" />
                 Watch Demo
               </a>
             </motion.div>
 
-            {/* Feature Pills - Clean Row with Icons */}
+            {/* Features */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-12 flex flex-wrap justify-center lg:justify-start gap-3"
+              className="pt-4 flex flex-wrap justify-center lg:justify-start gap-6 text-sm font-medium text-gray-500"
             >
-              {[
-                { icon: <Lock className="w-4 h-4" />, text: 'Locked Savings' },
-                { icon: <Gift className="w-4 h-4" />, text: 'Earn Rewards' },
-                { icon: <Globe className="w-4 h-4" />, text: 'Multi-Chain' }
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100 text-sm font-medium text-gray-600 hover:border-[#81D7B4]/30 hover:bg-[#81D7B4]/5 transition-colors cursor-default">
-                  <span className="text-[#81D7B4]">{item.icon}</span>
-                  {item.text}
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-[#81D7B4]/10 text-[#81D7B4]">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-              ))}
+                Non-Custodial
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-[#81D7B4]/10 text-[#81D7B4]">
+                  <Gift className="w-4 h-4" />
+                </div>
+                Reward Bearing
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-[#81D7B4]/10 text-[#81D7B4]">
+                  <Globe className="w-4 h-4" />
+                </div>
+                Multi-Chain
+              </div>
             </motion.div>
           </div>
 
-          {/* RIGHT: Dynamic Fintech Visual */}
-          <div className="relative h-[480px] lg:h-[600px] w-full flex items-center justify-center lg:justify-end perspective-1000">
-
-            {/* Abstract Background Blotches behind cards */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-gray-100/50 via-white to-gray-100/50 rounded-full blur-3xl -z-10" />
-
-            {/* Main Multi-Chain Card Stack */}
-            <div className="relative w-full max-w-[400px] aspect-[3/4] md:max-w-[420px]">
+          {/* Right Column: Visuals */}
+          <div className="relative h-[400px] sm:h-[500px] lg:h-[700px] w-full flex items-center justify-center lg:justify-end perspective-1000">
+            
+            {/* Card Stack Container */}
+            <div className="relative w-full max-w-[340px] aspect-[3/4] md:max-w-[380px]">
               <AnimatePresence mode="wait">
                 {chains.map((chain, index) => {
-                  const isActive = index === activeCardIndex;
-                  if (!isActive) return null;
+                  if (index !== activeCardIndex) return null;
 
                   return (
                     <motion.div
                       key={chain.name}
-                      initial={{ opacity: 0, scale: 0.95, y: 20, rotateX: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-                      exit={{ opacity: 0, scale: 1.05, y: -20, rotateX: -5 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 1.05, y: -20 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                       className="absolute inset-0 z-20"
                     >
-                      <div className="w-full h-full bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-6 sm:p-8 flex flex-col overflow-hidden relative">
-                        {/* Card Gradient Background - Subtle */}
-                        <div className={`absolute top-0 left-0 w-full h-48 bg-gradient-to-b ${chain.gradient} opacity-[0.03]`} />
+                      {/* Card Body */}
+                      <div className="w-full h-full bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] border border-white/60 p-8 flex flex-col relative overflow-hidden group">
+                        
+                        {/* Ambient Glow - Unified Brand Color */}
+                        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#81D7B4]/10 blur-[60px] rounded-full group-hover:bg-[#81D7B4]/20 transition-colors duration-700" />
+                        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#81D7B4]/10 blur-[60px] rounded-full group-hover:bg-[#81D7B4]/20 transition-colors duration-700" />
 
-                        {/* Top: Network Header */}
-                        <div className="relative flex justify-between items-start shrink-0">
-                          <div>
-                            <p className="text-gray-500 text-sm font-medium mb-1">Network</p>
-                            <h3 className="text-3xl font-bold text-gray-900">{chain.name}</h3>
-                          </div>
-                          <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-lg flex items-center justify-center p-3">
-                            <Image src={chain.logo} alt={chain.name} width={40} height={40} className="object-contain" />
+                        {/* Floating Badge (Unique per chain) */}
+                        <motion.div 
+                          animate={{ y: [0, -5, 0] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                          className="absolute top-8 left-8 z-10"
+                        >
+                           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm">
+                              {chain.floatingBadge && (() => {
+                                const Icon = chain.floatingBadge.icon;
+                                return <Icon className="w-3 h-3 text-[#81D7B4]" />;
+                              })()}
+                              <span className="text-[10px] font-bold text-gray-600">{chain.floatingBadge?.text}</span>
+                           </div>
+                        </motion.div>
+
+                        {/* Top Section: Logo (Chip removed) */}
+                        <div className="relative flex justify-end items-start mb-12">
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+                             <Image src={chain.logo} alt={chain.name} width={20} height={20} className="object-contain" />
+                             <span className="text-xs font-bold text-gray-700">{chain.name}</span>
                           </div>
                         </div>
 
-                        {/* Middle: Stats Visualization */}
-                        <div className="relative flex-1 flex items-center justify-center my-4 sm:my-6">
-                          <div className="w-full p-5 bg-gray-50 rounded-3xl border border-gray-100">
-                            <div className="flex justify-between items-center mb-4">
-                              <span className="text-sm font-medium text-gray-500">Available Assets</span>
-                              <span className="text-xs font-bold px-2 py-1 bg-white rounded-lg border border-gray-200 text-gray-600">
-                                {chain.tokens.length} Tokens
-                              </span>
-                            </div>
-                            <div className="space-y-2.5">
-                              {chain.tokens.slice(0, 3).map((token) => (
-                                <div key={token} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-gray-200 shadow-sm">
-                                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
+                        {/* Middle Section: Balance & Rewards */}
+                        <div className="relative flex-1 flex flex-col justify-center -mt-4">
+                          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Total Savings Locked</p>
+                          <h2 className="text-4xl font-bold text-gray-900 tracking-tight mb-6">{chain.savingsLocked}</h2>
+                          
+                          {/* Rewards Box - Simplified & Unified */}
+                          <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/20">
+                             <div className="flex flex-col">
+                               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Rewards Earned</span>
+                               <div className="flex items-baseline gap-1">
+                                 <span className="text-lg font-bold text-gray-900">+450</span>
+                                 <span className="text-xs font-bold text-[#81D7B4]">$BTS</span>
+                               </div>
+                             </div>
+                             <div className="w-8 h-8 rounded-full bg-[#81D7B4] flex items-center justify-center text-white shadow-md shadow-[#81D7B4]/20">
+                               <Gift className="w-4 h-4" />
+                             </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom Section: Assets */}
+                        <div className="relative mt-auto pt-8">
+                          <div className="flex justify-between items-end">
+                            <div>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Assets</p>
+                              <div className="flex items-center -space-x-2">
+                                {chain.tokens.map((token, i) => (
+                                  <div key={token} className="w-8 h-8 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-bold text-gray-600 z-10 relative">
                                     {token[0]}
                                   </div>
-                                  <span className="font-semibold text-gray-800">{token}</span>
-                                  <div className="ml-auto w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-[#81D7B4] w-2/3 rounded-full" />
-                                  </div>
+                                ))}
+                                <div className="w-8 h-8 rounded-full bg-gray-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-400 z-0 relative">
+                                  +
                                 </div>
-                              ))}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Status</p>
+                               <div className="flex items-center gap-1.5 text-xs font-bold text-[#81D7B4]">
+                                 <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
+                                 Active
+                               </div>
                             </div>
                           </div>
                         </div>
-
-                        {/* Bottom: Action */}
-                        <div className="relative mt-auto shrink-0 pb-2">
-                          <button
-                            className="w-full py-4 rounded-2xl text-white font-bold text-base hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all bg-[#81D7B4]"
-                          >
-                            <span>Start Saving on {chain.name}</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
-                          <p className="text-center text-xs text-gray-400 mt-4 font-medium px-2">
-                            {chain.description} • Secure & Decentralized
-                          </p>
-                        </div>
+                        
                       </div>
                     </motion.div>
                   );
                 })}
               </AnimatePresence>
 
-              {/* Back Card Visuals (Context) */}
-              <div className="absolute top-4 left-4 w-full h-full bg-white rounded-[2.5rem] border border-gray-100 shadow-xl opacity-40 scale-95 -z-10" />
-              <div className="absolute top-8 left-8 w-full h-full bg-white rounded-[2.5rem] border border-gray-100 shadow-lg opacity-20 scale-90 -z-20" />
+              {/* Decorative "Back" Cards - Refined */}
+              <div className="absolute top-4 left-0 w-full h-full bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/40 shadow-xl -z-10 scale-[0.95] translate-y-4" />
+              <div className="absolute top-8 left-0 w-full h-full bg-white/20 backdrop-blur-sm rounded-[2.5rem] border border-white/20 shadow-lg -z-20 scale-[0.90] translate-y-8" />
 
-              {/* Floating Elements - "Fintech Feel" */}
+              {/* Floating Notification */}
               <motion.div
                 animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -right-12 top-20 bg-white p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50 hidden sm:block"
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -right-8 top-20 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 z-30 hidden sm:flex items-center gap-3 min-w-[200px]"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                    <Wallet className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-semibold">Total Savings</p>
-                    <p className="text-lg font-bold text-gray-900">$12,450.00</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute -left-12 bottom-32 bg-white p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50 hidden sm:block"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#81D7B4]/20 flex items-center justify-center text-[#81D7B4]">
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-semibold">$BTS Earned</p>
-                    <p className="text-lg font-bold text-gray-900">500</p>
-                  </div>
-                </div>
+                 <AnimatePresence mode="wait">
+                   {(() => {
+                     const NotificationIcon = notifications[notificationIndex].icon;
+                     return (
+                       <motion.div
+                         key={notificationIndex}
+                         initial={{ opacity: 0, y: 10 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         exit={{ opacity: 0, y: -10 }}
+                         transition={{ duration: 0.3 }}
+                         className="flex items-center gap-3 w-full"
+                       >
+                         <div className={`w-8 h-8 rounded-full ${notifications[notificationIndex].color} flex items-center justify-center ${notifications[notificationIndex].textColor}`}>
+                            <NotificationIcon className="w-4 h-4" />
+                         </div>
+                         <div>
+                            <p className="text-xs font-bold text-gray-900">{notifications[notificationIndex].text}</p>
+                            <p className="text-[10px] text-gray-500">Just now</p>
+                         </div>
+                       </motion.div>
+                     );
+                   })()}
+                 </AnimatePresence>
               </motion.div>
             </div>
           </div>
+
         </div>
-
-        {/* Footer: Trusted Conveyor */}
-        <div className="border-t border-gray-100 bg-gray-50/30 backdrop-blur-sm relative py-8 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 mb-4">
-            <p className="text-center text-sm font-semibold text-gray-400 uppercase tracking-widest">Save From Anywhere in the World</p>
-          </div>
-
-          <div className="relative w-full overflow-hidden mask-fade-sides">
-            <div className="flex animate-scroll-left space-x-8 w-max">
-              {[...countries, ...countries, ...countries].map((country, index) => (
-                <div
-                  key={`${country.name}-${index}`}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors select-none"
-                >
-                  <span className="text-xl grayscale hover:grayscale-0 transition-all">{country.flag}</span>
-                  <span className="text-sm font-bold">{country.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Subtle Accents at edges */}
-        <div className="absolute top-0 left-0 w-24 h-24 border-t-[3px] border-l-[3px] border-[#81D7B4]/20 rounded-tl-[2.5rem] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-24 h-24 border-b-[3px] border-r-[3px] border-[#81D7B4]/20 rounded-br-[2.5rem] pointer-events-none" />
       </div>
-
-      <style jsx>{`
-        .mask-fade-sides {
-          mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-        }
-        @keyframes scroll-left {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.33%); }
-        }
-        .animate-scroll-left {
-          animation: scroll-left 60s linear infinite;
-        }
-        .animate-scroll-left:hover {
-          animation-play-state: paused;
-        }
-        // Force hardware acceleration for smoother animations
-        .perspective-1000 {
-          perspective: 1000px;
-          transform-style: preserve-3d;
-        }
-      `}</style>
-    </div>
+    </section>
   );
 });
-
-Hero.displayName = 'Hero';
 
 export default Hero;

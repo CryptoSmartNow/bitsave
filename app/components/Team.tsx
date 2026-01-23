@@ -88,99 +88,84 @@ const teamMembers = [
 
 export default function Team() {
   return (
-    <section id="team" className="py-32 px-4 md:px-8 lg:px-16 relative bg-[#FAFAFA]">
+    <section id="team" className="py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white">
       <div className="container mx-auto max-w-7xl">
 
         {/* Header */}
-        <div className="flex flex-col items-center justify-center text-center mb-24">
+        <div className="mb-24 md:mb-32">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-6"
+            className="inline-flex items-center gap-2 mb-8"
           >
-            <span className="px-5 py-2.5 rounded-full bg-white border border-gray-200 text-sm font-semibold text-gray-900 shadow-sm uppercase tracking-wider">
-              Our Team
-            </span>
+            <span className="w-12 h-[1px] bg-[#81D7B4]"></span>
+            <span className="text-sm font-bold text-[#81D7B4] tracking-widest uppercase">The Team</span>
           </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight mb-8"
-          >
-            Built by <span className="text-[#81D7B4]">Builders</span>.
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-gray-500 text-xl max-w-3xl mx-auto leading-relaxed font-light"
-          >
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 leading-tight max-w-4xl mb-6">
+            Built by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#5fb392]">Builders</span>
+          </h2>
+          <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
             Passionate experts from across the globe, united by a mission to make onchain savings accessible, secure, and rewarding for everyone.
-          </motion.p>
+          </p>
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16 md:gap-y-24">
           {teamMembers.map((member, index) => (
             <motion.div
               key={member.name}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
               className="group"
             >
-              <div className="flex flex-col items-center text-center">
+              <div className="flex flex-col">
 
                 {/* Avatar Container */}
-                <div className="relative mb-6">
-                  <div className="w-40 h-40 relative rounded-full overflow-hidden border-4 border-white shadow-2xl group-hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] transition-all duration-300 group-hover:-translate-y-2">
-                    <Image
-                      src={member.avatar}
-                      alt={member.name}
-                      fill
-                      className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                <div className="relative mb-8 overflow-hidden rounded-2xl aspect-[4/5] bg-gray-100">
+                  <Image
+                    src={member.avatar}
+                    alt={member.name}
+                    fill
+                    className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  
+                  {/* Overlay Socials */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                    <div className="flex gap-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                      {member.socials.twitter && (
+                        <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
+                          <Twitter className="w-5 h-5" />
+                        </a>
+                      )}
+                      {member.socials.farcaster && (
+                        <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
+                          <FarcasterIcon className="w-5 h-5" />
+                        </a>
+                      )}
+                      {member.socials.github && (
+                        <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
+                          <Github className="w-5 h-5" />
+                        </a>
+                      )}
+                      {member.socials.linkedin && (
+                        <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
+                          <Linkedin className="w-5 h-5" />
+                        </a>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Decorative faint ring */}
-                  <div className="absolute inset-0 rounded-full border border-gray-900/5 scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500" />
                 </div>
 
                 {/* Info */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
-                <p className="text-sm font-semibold text-[#81D7B4] uppercase tracking-widest mb-4">{member.role}</p>
-
-                {/* Socials - Minimal */}
-                <div className="flex gap-4 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-                  {member.socials.twitter && (
-                    <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors" title="X (Twitter)">
-                      <Twitter className="w-5 h-5" />
-                    </a>
-                  )}
-                  {member.socials.farcaster && (
-                    <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#8465CB] transition-colors" title="Farcaster">
-                      <FarcasterIcon className="w-5 h-5" />
-                    </a>
-                  )}
-                  {member.socials.github && (
-                    <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-black transition-colors" title="GitHub">
-                      <Github className="w-5 h-5" />
-                    </a>
-                  )}
-                  {member.socials.linkedin && (
-                    <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#0077b5] transition-colors" title="LinkedIn">
-                      <Linkedin className="w-5 h-5" />
-                    </a>
-                  )}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-[#81D7B4] transition-colors">{member.name}</h3>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{member.role}</p>
                 </div>
+
               </div>
             </motion.div>
           ))}
