@@ -811,6 +811,25 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
                 <h2 className="text-2xl font-bold mb-4">{success ? "Success!" : "Failed"}</h2>
                 <p className="mb-4 text-center">{error || (success ? "Transaction successful." : "")}</p>
+                
+                {success && (
+                  <a
+                    href={getTweetButtonProps('top-up', {
+                      currency: isEth ? 'ETH' : tokenName || 'USDC',
+                      planName: planName,
+                      amount: amount
+                    }).href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 mb-3 flex items-center justify-center gap-2 text-white bg-black hover:bg-gray-800 rounded-xl transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                    Share on X
+                  </a>
+                )}
+                
                 <button className="w-full py-3 bg-[#81D7B4] text-white rounded-xl" onClick={handleCloseTransactionModal}>Close</button>
               </div>
             </motion.div>
@@ -860,6 +879,21 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                         {/* Optional Max button or token logo */}
                       </div>
                     </div>
+
+                    {/* Quick Amount Selection */}
+                    <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
+                      {[10, 20, 50, 100, 500].map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setAmount(val.toString())}
+                          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 hover:border-[#81D7B4] hover:text-[#81D7B4] hover:bg-[#81D7B4]/5 transition-colors whitespace-nowrap"
+                        >
+                          ${val}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Balance display */}
                     <div className="mt-2 text-sm text-gray-500 flex justify-between">
                       <span>Balance: {isEth ? walletBalance : tokenBalance}</span>

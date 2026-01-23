@@ -88,7 +88,9 @@ function InnerProviders({ children }: { children: ReactNode }) {
             createOnLogin: "users-without-wallets",
           },
         },
-        loginMethods: ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
+        loginMethods: isBizFi 
+          ? ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'] 
+          : ['wallet'],
         supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
           walletConnect: { enabled: true },
