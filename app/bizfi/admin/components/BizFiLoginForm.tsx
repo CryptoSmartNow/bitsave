@@ -18,7 +18,7 @@ export default function BizFiLoginForm() {
     setIsLoading(true);
     setError('');
 
-    const success = await login(username, password);
+    const success = await login(password, username);
     if (success) {
       // The layout will handle the redirect/rendering
     } else {

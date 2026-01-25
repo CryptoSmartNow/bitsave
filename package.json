@@ -48,6 +48,8 @@
     "hashconnect": "^3.0.14",
     "ignore-loader": "^0.1.2",
     "jose": "^6.0.13",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.483.0",
     "marked": "^16.2.0",
     "mongodb": "^6.0.0",

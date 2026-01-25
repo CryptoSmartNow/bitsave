@@ -3,88 +3,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth, AuthProvider } from '@/lib/adminAuth';
-
-function LoginForm() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    const success = await login(username, password);
-    if (success) {
-      router.push('/admin');
-    } else {
-      setError('Invalid credentials');
-    }
-    setIsLoading(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8FDFC] via-white to-[#F0F9FF] flex items-center justify-center">
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-[#81D7B4]/10 shadow-lg max-w-md w-full mx-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] mb-2">
-            Admin Login
-          </h1>
-          <p className="text-gray-600">Access the blog management dashboard</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-black focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4]"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-black focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4]"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-[#81D7B4] text-white rounded-xl hover:bg-[#66C4A3] transition-colors font-medium disabled:opacity-50"
-          >
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-[#81D7B4] hover:text-[#66C4A3] text-sm">
-            ← Back to Website
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
+import AdminLoginForm from '@/components/AdminLoginForm';
 
 function AdminSidebar() {
   const { logout } = useAuth();
@@ -159,7 +78,7 @@ function AdminLayoutContent({ children, pathname }: { children: React.ReactNode;
   }
 
   if (!user && pathname !== '/admin/login') {
-    return <LoginForm />;
+    return <AdminLoginForm redirectTo="/admin" />;
   }
 
   if (pathname === '/admin/login' && user) {
@@ -176,7 +95,7 @@ function AdminLayoutContent({ children, pathname }: { children: React.ReactNode;
   }
 
   if (pathname === '/admin/login') {
-    return <LoginForm />;
+    return <AdminLoginForm redirectTo="/admin" />;
   }
 
   return (

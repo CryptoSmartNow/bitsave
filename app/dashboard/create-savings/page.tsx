@@ -776,22 +776,30 @@ export default function CreateSavingsPage() {
         // Don't fail the whole flow if this logging fails
       }
 
+      // Track savings creation locally for analytics
+      if (address) {
+        trackSavingsCreated(address, {
+          amount: amount,
+          currency: currency,
+          chain: chain,
+          planName: name,
+          txHash: receipt.hash
+        });
+      }
+
       setTxHash(receipt.hash);
       setSuccess(true);
     } catch (err) {
       console.error('Error creating savings plan:', err);
-      if (address) {
-        trackError(address, {
-          action: 'create_savings',
-          error: err instanceof Error ? err.message : 'Unknown error',
-          context: {
-            planName: name,
-            amount: amount,
-            currency: currency,
-            chain: chain
-          }
-        });
-      }
+      trackError(address, err instanceof Error ? err.message : 'Unknown error', {
+        action: 'create_savings',
+        context: {
+          planName: name,
+          amount: amount,
+          currency: currency,
+          chain: chain
+        }
+      });
       setSuccess(false);
       // Use contract error handler to extract precise contract error messages
       const errorMessage = handleContractError(err, 'main');

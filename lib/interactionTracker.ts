@@ -140,16 +140,18 @@ export const trackWalletDisconnect = (walletAddress?: string) => {
   }
 };
 
-export const trackPageVisit = (page: string, additionalData?: Partial<PageVisitData>) => {
+export const trackPageVisit = (page: string, additionalData?: Partial<PageVisitData> & { walletAddress?: string }) => {
   if (typeof window !== 'undefined') {
+    const { walletAddress, ...restData } = additionalData || {};
     interactionTracker.trackInteraction({
       type: 'page_visit',
+      walletAddress,
       userAgent: navigator.userAgent,
       data: {
         page,
         url: window.location.href,
         referrer: document.referrer,
-        ...additionalData,
+        ...restData,
       },
     });
   }
@@ -183,10 +185,11 @@ export const trackTransaction = (walletAddress: string, transactionData: Partial
   }
 };
 
-export const trackError = (error: string, additionalData?: Partial<ErrorData>) => {
+export const trackError = (walletAddress: string | undefined, error: string, additionalData?: Partial<ErrorData>) => {
   if (typeof window !== 'undefined') {
     interactionTracker.trackInteraction({
       type: 'error',
+      walletAddress,
       userAgent: navigator.userAgent,
       data: {
         error,

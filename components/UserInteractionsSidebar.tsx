@@ -2,16 +2,18 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/adminAuth';
 import { 
   AlertTriangle, 
   Activity, 
   Users, 
   Database,
-  Settings, 
   Shield, 
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 export type SidebarState = 'closed' | 'collapsed' | 'open';
@@ -62,6 +64,7 @@ export default function UserInteractionsSidebar({
   navigationItems = defaultNavigationItems 
 }: UserInteractionsSidebarProps) {
   const pathname = usePathname();
+  const { logout } = useAuth();
   
   const isOpen = sidebarState === 'open';
   const isCollapsed = sidebarState === 'collapsed';
@@ -100,44 +103,54 @@ export default function UserInteractionsSidebar({
           x: isClosed ? -300 : 0,
         }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className={`fixed left-4 top-4 bottom-4 bg-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl z-50 lg:translate-x-0 ${isClosed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}`}
+        className={`fixed left-4 top-4 bottom-4 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-xl z-50 lg:translate-x-0 ${isClosed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}`}
       >
         <div className={`flex flex-col h-full ${isCollapsed ? 'p-3' : 'p-6'}`}>
           {/* Header */}
           <div className={`flex items-center ${isCollapsed ? 'flex-col space-y-4' : 'justify-between'} mb-8`}>
             {isCollapsed ? (
               <div className="flex flex-col items-center space-y-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] rounded-xl flex items-center justify-center">
-                  <Settings className="w-7 h-7 text-white" />
+                <div className="w-12 h-12 relative flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <Image 
+                    src="/bitsavelogo.png" 
+                    alt="Bitsave" 
+                    fill
+                    className="object-contain p-1"
+                  />
                 </div>
                 <button
                   onClick={toggleSidebar}
-                  className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors"
+                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
-                  <Menu className="w-5 h-5 text-gray-300" />
+                  <Menu className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] rounded-xl flex items-center justify-center">
-                    <Settings className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 relative flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden shrink-0">
+                    <Image 
+                      src="/bitsavelogo.png" 
+                      alt="Bitsave" 
+                      fill
+                      className="object-contain p-1"
+                    />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white">Admin Panel</h2>
-                    <p className="text-xs text-gray-300">Control Center</p>
+                    <h2 className="text-base lg:text-lg font-bold text-slate-800 leading-tight">Interactions Dashboard</h2>
+                    <p className="text-[10px] lg:text-xs text-slate-500 font-medium">Control Center</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={toggleSidebar}
-                    className="hidden lg:block p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors"
+                    className="hidden lg:block p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-300" />
+                    <X className="w-5 h-5 text-gray-600" />
                   </button>
                   <button
                     onClick={() => setSidebarState('closed')}
-                    className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                    className="lg:hidden p-2 text-gray-600 hover:text-slate-900 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -156,8 +169,8 @@ export default function UserInteractionsSidebar({
                   href={item.href}
                   className={`flex items-center ${isCollapsed ? 'justify-center px-3' : 'px-4'} py-3 rounded-xl transition-all duration-200 group ${
                     isActive 
-                      ? 'bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white shadow-lg' 
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                      ? 'bg-[#81D7B4] text-white shadow-md' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-gray-100'
                   }`}
                   title={isCollapsed ? item.name : undefined}
                 >
@@ -167,8 +180,8 @@ export default function UserInteractionsSidebar({
                       <div className="font-medium">{item.name}</div>
                       <div className={`text-xs ${
                         isActive 
-                          ? 'text-white/80' 
-                          : 'text-gray-400 group-hover:text-gray-300'
+                          ? 'text-white/90' 
+                          : 'text-slate-400 group-hover:text-slate-600'
                       }`}>{item.description}</div>
                     </div>
                   )}
@@ -178,20 +191,33 @@ export default function UserInteractionsSidebar({
           </nav>
 
           {/* Footer */}
-          <div className={`mt-auto pt-6 border-t border-gray-700 ${isCollapsed ? 'flex justify-center' : ''}`}>
+          <div className={`mt-auto pt-6 border-t border-gray-200 ${isCollapsed ? 'flex justify-center' : ''}`}>
             {isCollapsed ? (
-              <div className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-gray-400" />
-              </div>
+              <button 
+                onClick={logout}
+                className="w-10 h-10 bg-red-50 hover:bg-red-100 rounded-lg flex items-center justify-center group transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5 text-red-400 group-hover:text-red-500" />
+              </button>
             ) : (
-              <div className="flex items-center space-x-3 text-gray-400">
-                <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
-                  <Shield className="w-4 h-4" />
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-3 text-gray-400">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-medium text-slate-700">Secure Access</div>
+                    <div className="text-xs text-slate-500">Admin authenticated</div>
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <div className="font-medium text-gray-300">Secure Access</div>
-                  <div className="text-xs">Admin authenticated</div>
-                </div>
+                <button
+                  onClick={logout}
+                  className="p-2 hover:bg-red-50 rounded-lg group transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
+                </button>
               </div>
             )}
           </div>
