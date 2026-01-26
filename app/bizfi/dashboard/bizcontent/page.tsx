@@ -23,6 +23,46 @@ const exo = Exo({
 // Real promotional video data
 const CONTENT_ITEMS = [
     {
+        id: "ji1sO_AcSxk",
+        title: "Stablecoins Changed Money. Capital Is Still Broken.",
+        duration: "4:15",
+        views: 120,
+        category: "Updates",
+        uploadDate: "Recently"
+    },
+    {
+        id: "iGbrRMXMMno",
+        title: "Every Serious Business Has Gone Digital. Next Is Tokenization.",
+        duration: "3:30",
+        views: 95,
+        category: "Tutorial",
+        uploadDate: "Recently"
+    },
+    {
+        id: "frhBXU62vmc",
+        title: "Seeing is Not Believing in Business. Believing is Seeing.",
+        duration: "2:55",
+        views: 88,
+        category: "Marketing",
+        uploadDate: "Recently"
+    },
+    {
+        id: "PuYXtLbsa4Q",
+        title: "Making Money is Easy. Keeping It is Hard.",
+        duration: "3:10",
+        views: 110,
+        category: "Tutorial",
+        uploadDate: "Recently"
+    },
+    {
+        id: "ZstO23QRnuE",
+        title: "Your Money is Not in Banks. Your Money is in People.",
+        duration: "3:50",
+        views: 105,
+        category: "Marketing",
+        uploadDate: "Recently"
+    },
+    {
         id: "yxEQHPaM6MU",
         title: "How to Tokenise Your Business on BizMarket and Raise Capital from the Web3 Space.",
         duration: "2:45",
