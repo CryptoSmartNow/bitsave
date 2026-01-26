@@ -94,7 +94,14 @@ const WithdrawModal = memo(function WithdrawModal({
         }
 
         if (isEth) {
-          setCurrentTokenName('ETH');
+          // Set native token name based on chain
+          if (chainId === 56) {
+            setCurrentTokenName('BNB');
+          } else if (chainId === 42220) {
+            setCurrentTokenName('CELO');
+          } else {
+            setCurrentTokenName('ETH');
+          }
         } else if (tokenName) {
           // Handle GoodDollar display name
           if (tokenName === 'Gooddollar' || tokenName === '$G') {
@@ -217,7 +224,7 @@ const WithdrawModal = memo(function WithdrawModal({
             savingsname: nameOfSavings,
             useraddress: userAddress,
             transaction_type: "withdrawal",
-            currency: "ETH"
+            currency: currentTokenName
           })
         });
 
@@ -230,7 +237,7 @@ const WithdrawModal = memo(function WithdrawModal({
         trackTransaction(address, {
           type: 'withdrawal',
           amount: amount,
-          currency: 'ETH',
+          currency: currentTokenName,
           chain: currentNetwork,
           planName: nameOfSavings,
           txHash: receipt.hash
@@ -246,16 +253,13 @@ const WithdrawModal = memo(function WithdrawModal({
       console.error("Error during ETH withdrawal:", error);
 
       // Track ETH withdrawal error
-      if (address) {
-        trackError(address, {
-          action: 'withdrawal_eth',
-          error: error instanceof Error ? error.message : String(error),
-          context: {
-            planName: nameOfSavings,
-            currency: 'ETH'
-          }
-        });
-      }
+      trackError(address, error instanceof Error ? error.message : String(error), {
+        action: 'withdrawal_eth',
+        context: {
+          planName: nameOfSavings,
+          currency: currentTokenName
+        }
+      });
 
       // Use the contract error handler to provide user-friendly error messages
       const errorMessage = handleContractError(error, 'main');
@@ -334,16 +338,13 @@ const WithdrawModal = memo(function WithdrawModal({
       console.error(`Error during ${currentTokenName} withdrawal:`, error);
 
       // Track token withdrawal error
-      if (address) {
-        trackError(address, {
-          action: 'withdrawal_token',
-          error: error instanceof Error ? error.message : String(error),
-          context: {
-            planName: nameOfSavings,
-            currency: currentTokenName
-          }
-        });
-      }
+      trackError(address, error instanceof Error ? error.message : String(error), {
+        action: 'withdrawal_token',
+        context: {
+          planName: nameOfSavings,
+          currency: currentTokenName
+        }
+      });
 
       // Use the contract error handler to provide user-friendly error messages
       const errorMessage = handleContractError(error, 'main');

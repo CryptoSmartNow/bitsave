@@ -6,17 +6,16 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production'
 );
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD 
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 // POST - Admin login
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const { password } = body;
 
     // Validate credentials
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    if (password !== ADMIN_PASSWORD) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create JWT token
-    const token = await new SignJWT({ username, role: 'admin' })
+    const token = await new SignJWT({ username: 'Admin', role: 'admin' })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('24h')
@@ -33,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Set cookie
     const response = NextResponse.json({
       message: 'Login successful',
-      user: { username, role: 'admin' }
+      user: { username: 'Admin', role: 'admin' }
     });
 
     response.cookies.set('admin-token', token, {

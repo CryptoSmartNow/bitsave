@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserInteractionsCollection, UserInteraction } from '@/lib/mongodb';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
   
     const collection = await getUserInteractionsCollection();
+    
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '1000', 10);
     
     // If MongoDB is unavailable, return empty array with warning
     if (!collection) {
@@ -16,7 +19,7 @@ export async function GET() {
     }
     
 
-    const interactions = await collection.find({}).sort({ timestamp: -1 }).toArray();
+    const interactions = await collection.find({}).sort({ timestamp: -1 }).limit(limit).toArray();
 
     
     // If no interactions exist, seed with sample data

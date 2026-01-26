@@ -167,6 +167,10 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     setBalanceWarning(null);
 
     try {
+      let currencyName = 'ETH';
+      if (currentNetwork === 'bsc') currencyName = 'BNB';
+      else if (currentNetwork === 'celo') currencyName = 'CELO';
+
       const provider = signer.provider;
       if (!provider) return;
 
@@ -296,6 +300,8 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     setTxHash(null);
     setSuccess(false);
 
+    let currencyName = 'ETH';
+
     try {
 
       const sanitizedAmount = amount.trim();
@@ -325,6 +331,12 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         networkType = 'celo';
       }
 
+      if (networkType === 'celo') {
+        // currencyName logic moved below
+      } else if (networkType === 'bsc') {
+        // currencyName logic moved below
+      }
+
       let contractAddress;
       let tokenAddress;
       let decimals = 6;
@@ -348,8 +360,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         tokenNameToUse = "USDGLO";
       }
 
-      // ... (Rest of logic remains same but using signer directly)
-      // I will only update the repetitive provider logic
+     
 
       if (networkType === 'base' && tokenName) {
         if (tokenName === 'USDGLO') {
@@ -403,6 +414,11 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           decimals = 6;
           tokenNameToUse = 'USDC';
         }
+      }
+
+      if (tokenNameToUse) {
+        const networkLabel = networkType.charAt(0).toUpperCase() + networkType.slice(1);
+        currencyName = `${networkLabel}(${tokenNameToUse})`;
       }
 
       const code = await provider.getCode(contractAddress);
@@ -527,17 +543,14 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       console.error("Error topping up stablecoin savings plan:", error);
 
       // Track error
-      if (address) {
-        trackError(address, {
-          action: 'top_up',
-          error: error instanceof Error ? error.message : String(error),
-          context: {
-            planName: savingsPlanName,
-            amount: amount,
-            tokenName: tokenName || 'unknown'
-          }
-        });
-      }
+      trackError(address, error instanceof Error ? error.message : String(error), {
+        action: 'top_up',
+        context: {
+          planName: savingsPlanName,
+          amount: amount,
+          tokenName: tokenName || 'unknown'
+        }
+      });
 
       // Enhanced error handling
       let errorMessage: string;
@@ -570,6 +583,8 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
     setTxHash(null);
     setSuccess(false);
 
+    let currencyName = 'ETH';
+
     try {
       const provider = signer.provider;
       if (!provider) throw new Error("No provider found");
@@ -589,6 +604,15 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         networkType = 'bsc';
       } else if (network.chainId === CELO_CHAIN_ID) {
         networkType = 'celo';
+      }
+
+      currencyName = 'Base(ETH)';
+      if (networkType === 'celo') {
+        currencyName = 'Celo(CELO)';
+      } else if (networkType === 'bsc') {
+        currencyName = 'BSC(BNB)';
+      } else if (networkType === 'lisk') {
+        currencyName = 'Lisk(ETH)';
       }
 
       let contractAddress;
@@ -676,7 +700,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
             savingsname: savingsPlanName,
             useraddress: address,
             transaction_type: "topup",
-            currency: "ETH"
+            currency: currencyName
           },
           {
             headers: {
@@ -690,6 +714,18 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         console.error("Error sending transaction data to API:", apiError);
       }
 
+      // Track successful ETH top-up
+      if (address) {
+        trackTransaction(address, {
+          type: 'top_up',
+          amount: amount,
+          currency: currencyName,
+          chain: currentNetwork,
+          planName: savingsPlanName,
+          txHash: receipt.hash
+        });
+      }
+
       setSuccess(true);
       setShowTransactionModal(true);
 
@@ -697,17 +733,14 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       console.error("Error topping up ETH savings plan:", error);
 
       // Track ETH top-up error
-      if (address) {
-        trackError(address, {
-          action: 'top_up_eth',
-          error: error instanceof Error ? error.message : String(error),
-          context: {
-            planName: savingsPlanName,
-            amount: amount,
-            currency: 'ETH'
-          }
-        });
-      }
+      trackError(address, error instanceof Error ? error.message : String(error), {
+        action: 'top_up_eth',
+        context: {
+          planName: savingsPlanName,
+          amount: amount,
+          currency: currencyName
+        }
+      });
 
       // Enhanced error handling
       let errorMessage: string;
@@ -797,7 +830,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           {showTransactionModal ? (
             <motion.div
-              /* ... existing transaction modal JSX ... */
+             
               className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -805,9 +838,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div className="p-8 flex flex-col items-center">
-                {/* ... existing content ... */}
-
-                {/* Simplified for brevity in this full file overwrite, assuming I should keep original UI structure but just fixed logic */}
+            
 
                 <h2 className="text-2xl font-bold mb-4">{success ? "Success!" : "Failed"}</h2>
                 <p className="mb-4 text-center">{error || (success ? "Transaction successful." : "")}</p>
@@ -876,7 +907,6 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                         required
                       />
                       <div className="absolute right-3 top-3">
-                        {/* Optional Max button or token logo */}
                       </div>
                     </div>
 
