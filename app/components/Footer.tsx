@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaTelegramPlane } from 'react-icons/fa';
+import { FaTelegramPlane, FaYoutube } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { ArrowRight } from 'lucide-react';
 

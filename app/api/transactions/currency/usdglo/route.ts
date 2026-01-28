@@ -4,6 +4,11 @@ import clientPromise from '@/lib/mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
+    
+    if (!client) {
+      throw new Error('Database connection failed');
+    }
+
     const db = client.db('bitsave');
     const collection = db.collection('transactions');
 
