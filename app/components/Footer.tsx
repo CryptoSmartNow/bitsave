@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaTelegramPlane } from 'react-icons/fa';
+import { FaTelegramPlane, FaYoutube } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { ArrowRight } from 'lucide-react';
 
@@ -36,6 +36,11 @@ const socialLinks = [
     name: 'Telegram',
     href: 'https://t.me/+YimKRR7wAkVmZGRk',
     icon: <FaTelegramPlane className="w-5 h-5" />
+  },
+  {
+    name: 'YouTube',
+    href: 'https://www.youtube.com/@bitsaveprotocol',
+    icon: <FaYoutube className="w-5 h-5" />
   }
 ];
 

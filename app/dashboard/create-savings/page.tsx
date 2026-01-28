@@ -753,10 +753,9 @@ export default function CreateSavingsPage() {
         localStorage.removeItem('referralCode');
       }
 
-      // Record transaction to bitsaveapi.vercel.app
+      // Record transaction to internal API
       try {
-        const apiKey = "99292ndjnfjfndfn399e933ndnfjnf39993943nfknfdjfnjdn*&&^%$%^&*";
-        await axios.post('https://bitsaveapi.vercel.app/transactions/', {
+        await axios.post('/api/transactions', {
           amount: parseFloat(amount),
           txnhash: receipt.hash,
           chain: chain,
@@ -767,7 +766,6 @@ export default function CreateSavingsPage() {
         }, {
           headers: {
             'accept': 'application/json',
-            'X-API-Key': apiKey,
             'Content-Type': 'application/json'
           }
         });

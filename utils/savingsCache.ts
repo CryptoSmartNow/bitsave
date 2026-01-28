@@ -36,6 +36,7 @@ export interface SavingsPlan {
   tokenName?: string;
   tokenLogo?: string;
   network?: string;
+  chainId?: bigint | string;
 }
 
 export interface SavingsData {

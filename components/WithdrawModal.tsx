@@ -210,11 +210,7 @@ const WithdrawModal = memo(function WithdrawModal({
           "Content-Type": "application/json"
         };
 
-        if (process.env.NEXT_PUBLIC_API_KEY) {
-          headers["X-API-Key"] = process.env.NEXT_PUBLIC_API_KEY;
-        }
-
-        await fetch("https://bitsaveapi.vercel.app/transactions/", {
+        await fetch("/api/transactions", {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -310,11 +306,7 @@ const WithdrawModal = memo(function WithdrawModal({
           "Content-Type": "application/json"
         };
 
-        if (process.env.NEXT_PUBLIC_API_KEY) {
-          headers["X-API-Key"] = process.env.NEXT_PUBLIC_API_KEY;
-        }
-
-        await fetch("https://bitsaveapi.vercel.app/transactions/", {
+        await fetch("/api/transactions", {
           method: "POST",
           headers,
           body: JSON.stringify({

@@ -73,6 +73,70 @@ export async function getUserInteractionsCollection(): Promise<Collection | null
   }
 }
 
+export async function getTransactionsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('transactions');
+  } catch (error) {
+    console.error('Failed to get transactions collection:', error);
+    return null;
+  }
+}
+
+export async function getLeaderboardCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('leaderboard');
+  } catch (error) {
+    console.error('Failed to get leaderboard collection:', error);
+    return null;
+  }
+}
+
+export async function getUpdatesCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('updates');
+  } catch (error) {
+    console.error('Failed to get updates collection:', error);
+    return null;
+  }
+}
+
+export async function getUserReadUpdatesCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('user_read_updates');
+  } catch (error) {
+    console.error('Failed to get user_read_updates collection:', error);
+    return null;
+  }
+}
+
 export interface UserInteraction {
   type: string;
   walletAddress?: string;

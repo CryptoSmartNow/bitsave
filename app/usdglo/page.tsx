@@ -45,7 +45,7 @@ export default function USDGLOPage() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://bitsaveapi.vercel.app/transactions/currency/usdglo', {
+        const response = await fetch('/api/transactions/currency/usdglo', {
           headers: {
             'accept': 'application/json'
           }
@@ -184,7 +184,7 @@ export default function USDGLOPage() {
                 {showFilters ? '✓ Filters' : 'Filters'}
               </button>
               <button
-                onClick={() => window.open('https://bitsaveapi.vercel.app/transactions/currency/usdglo', '_blank')}
+                onClick={() => window.open('/api/transactions/currency/usdglo', '_blank')}
                 className="px-4 py-2 text-white rounded-md text-sm font-medium transition-colors hover:opacity-90"
                 style={{ backgroundColor: '#81D7B4' }}
               >

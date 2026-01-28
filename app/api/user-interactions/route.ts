@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserInteractionsCollection, UserInteraction } from '@/lib/mongodb';
+import { getUserInteractionsCollection, getTransactionsCollection, getLeaderboardCollection, UserInteraction } from '@/lib/mongodb';
 
 export async function GET(request: NextRequest) {
   try {
@@ -163,6 +163,56 @@ export async function POST(request: NextRequest) {
     const interactionData = interaction;
     
     await collection.insertOne(interactionData);
+
+    // Sync to transactions and leaderboard if applicable
+    if (interaction.type === 'savings_created' || interaction.type === 'transaction') {
+      try {
+        const transactionsCollection = await getTransactionsCollection();
+        const leaderboardCollection = await getLeaderboardCollection();
+        
+        if (transactionsCollection && interaction.walletAddress) {
+          const txData = interaction.data as any;
+          
+          // Create transaction record
+          const transactionRecord = {
+             id: interaction.id,
+             transaction_type: txData.type || interaction.type,
+             amount: txData.amount || '0',
+             currency: txData.currency || 'ETH',
+             created_at: interaction.timestamp,
+             savingsname: txData.name || 'Unknown Savings',
+             txnhash: txData.txHash || txData.hash || '0x0',
+             chain: txData.chain || 'base',
+             useraddress: interaction.walletAddress
+          };
+          
+          await transactionsCollection.updateOne(
+            { id: interaction.id },
+            { $set: transactionRecord },
+            { upsert: true }
+          );
+
+          // Update leaderboard
+          if (leaderboardCollection) {
+             // We need to parse amount as number for leaderboard aggregation
+             const amount = parseFloat(transactionRecord.amount);
+             if (!isNaN(amount) && amount > 0) {
+                await leaderboardCollection.updateOne(
+                  { useraddress: interaction.walletAddress },
+                  { 
+                    $inc: { totalamount: amount },
+                    $set: { chain: transactionRecord.chain } // Update chain to latest
+                  },
+                  { upsert: true }
+                );
+             }
+          }
+        }
+      } catch (syncError) {
+        console.error('Error syncing to transactions/leaderboard:', syncError);
+        // Don't fail the main request
+      }
+    }
     
     return NextResponse.json({ message: 'Interaction saved successfully' });
   } catch (error) {

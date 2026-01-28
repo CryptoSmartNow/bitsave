@@ -502,7 +502,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
       try {
         await axios.post(
-          "https://bitsaveapi.vercel.app/transactions/",
+          "/api/transactions",
           {
             amount: userEnteredAmount,
             txnhash: receipt.hash,
@@ -515,7 +515,6 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           {
             headers: {
               "Content-Type": "application/json",
-              "X-API-Key": process.env.NEXT_PUBLIC_API_KEY
             }
           }
         );
@@ -692,7 +691,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
       try {
         await axios.post(
-          "https://bitsaveapi.vercel.app/transactions/",
+          "/api/transactions",
           {
             amount: ethAmount,
             txnhash: receipt.hash,
@@ -705,7 +704,6 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
           {
             headers: {
               "Content-Type": "application/json",
-              "X-API-Key": process.env.NEXT_PUBLIC_API_KEY
             }
           }
         );

@@ -90,11 +90,10 @@ export default function LeaderboardPage() {
     const fetchLeaderboardData = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch('https://bitsaveapi.vercel.app/leaderboard', {
+        const response = await fetch('/api/leaderboard', {
           method: 'GET',
           headers: {
-            'accept': 'application/json',
-            'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || ''
+            'accept': 'application/json'
           }
         })
         
@@ -104,13 +103,17 @@ export default function LeaderboardPage() {
         
         const data: LeaderboardUser[] = await response.json()
         
-        // Filter users with savings >= $10, calculate points, sort by points, limit to top 20, and add rank
+        // Filter users with savings > 0, calculate points, sort by points, limit to top 20, and add rank
         const rankedData = data
-          .filter(user => user.totalamount >= 10) // Exclude savings below $10
-          .map(user => ({
-            ...user,
-            points: Math.floor(user.totalamount * 0.005 * 1000) // Calculate points based on total amount
-          }))
+          .filter(user => (typeof user.totalamount === 'number' ? user.totalamount : parseFloat(user.totalamount)) > 0) // Show all positive savings
+          .map(user => {
+            const amount = typeof user.totalamount === 'number' ? user.totalamount : parseFloat(user.totalamount);
+            return {
+              ...user,
+              totalamount: amount,
+              points: Math.floor(amount * 0.005 * 1000) // Calculate points based on total amount
+            };
+          })
           .sort((a, b) => b.points - a.points) // Sort by points instead of amount
           .slice(0, 20) // Limit to top 20 users
           .map((user, index) => ({

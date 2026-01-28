@@ -25,6 +25,8 @@ import {
     HiOutlineCubeTransparent,
     HiOutlineBell
 } from "react-icons/hi2";
+import { FaTelegramPlane } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { Archivo } from "next/font/google";
 import Link from "next/link";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -605,10 +607,28 @@ export default function BizFiPage() {
 
                 {/* Footer - Minimal */}
                 <footer className="border-t border-[#7B8B9A]/10 py-8">
-                    <div className="max-w-7xl mx-auto px-4 text-center">
+                    <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
                         <p className="text-sm text-[#7B8B9A]/60">
                             © {new Date().getFullYear()} Bitsave Bizfi. All rights reserved.
                         </p>
+                        <div className="flex items-center gap-6">
+                            <a 
+                                href="https://x.com/bitsaveprotocol" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors"
+                            >
+                                <FaXTwitter className="w-5 h-5" />
+                            </a>
+                            <a 
+                                href="https://t.me/+YimKRR7wAkVmZGRk" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors"
+                            >
+                                <FaTelegramPlane className="w-5 h-5" />
+                            </a>
+                        </div>
                     </div>
                 </footer>
             </div >
