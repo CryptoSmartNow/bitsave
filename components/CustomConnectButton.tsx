@@ -2,8 +2,8 @@
 
 import { usePrivy } from '@privy-io/react-auth';
 import { useAccount, useDisconnect } from 'wagmi';
-import { useEffect, useState, useRef } from 'react';
-import { HiOutlineArrowRightOnRectangle, HiOutlineChevronDown, HiOutlineWallet } from 'react-icons/hi2';
+import { useEffect, useState } from 'react';
+import { HiOutlineArrowRightOnRectangle, HiOutlineWallet } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 
 export default function CustomConnectButton() {
@@ -13,24 +13,9 @@ export default function CustomConnectButton() {
   
   // We use local state to ensure hydration match
   const [mounted, setMounted] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, []);
 
   if (!mounted) return null;
@@ -50,7 +35,6 @@ export default function CustomConnectButton() {
         wagmiDisconnect();
       }
       await logout();
-      setShowDropdown(false);
       toast.success('Wallet disconnected successfully');
     } catch (error) {
       console.error('Disconnect error:', error);
@@ -60,30 +44,17 @@ export default function CustomConnectButton() {
 
   if (isConnected) {
     return (
-      <div className="flex justify-end relative" ref={dropdownRef}>
+      <div className="flex justify-end">
         <button 
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3"
+          onClick={handleDisconnect}
+          className="group bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-red-500 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
+          title="Click to disconnect"
         >
-          <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-          <span className="font-mono">{displayAddress}</span>
-          <HiOutlineChevronDown className={`w-4 h-4 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse group-hover:hidden"></div>
+          <HiOutlineArrowRightOnRectangle className="w-5 h-5 hidden group-hover:block" />
+          <span className="font-mono group-hover:hidden">{displayAddress}</span>
+          <span className="hidden group-hover:inline font-medium">Disconnect</span>
         </button>
-
-        {/* Dropdown Menu */}
-        {showDropdown && (
-          <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="p-1">
-              <button
-                onClick={handleDisconnect}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors font-medium"
-              >
-                <HiOutlineArrowRightOnRectangle className="w-4 h-4" />
-                Disconnect
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
