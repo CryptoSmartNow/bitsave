@@ -78,6 +78,10 @@ export default function PlansPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Modal states aligned with Dashboard
   const [topUpModal, setTopUpModal] = useState({
@@ -123,7 +127,7 @@ export default function PlansPage() {
   useEffect(() => {
     const loadNetworkLogos = async () => {
       try {
-        const logos = await fetchMultipleNetworkLogos(['ethereum', 'base', 'celo', 'lisk', 'avalanche', 'solana', 'bsc']);
+        const logos = await fetchMultipleNetworkLogos(['ethereum', 'base', 'celo', 'lisk', 'avalanche', 'solana', 'bsc', 'hedera']);
         setNetworkLogos(logos);
       } catch (error) {
         console.error('Error fetching network logos:', error);
@@ -280,6 +284,18 @@ export default function PlansPage() {
       return true;
     });
   }, [activityData, activeTab]);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
+  const paginatedActivityData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredActivityData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredActivityData, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredActivityData.length / itemsPerPage);
 
   return (
     <div className={`${exo.className} pb-20`}>
@@ -532,9 +548,27 @@ export default function PlansPage() {
                             />
                           </div>
                           <div>
-                            <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-1">
-                              {plan.name}
-                            </h3>
+                            <div className="flex flex-col gap-1 mb-1">
+                              <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+                                {plan.name}
+                              </h3>
+                              {plan.network && (
+                                <div className="flex items-center gap-1.5 w-fit">
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
+                                    {networkLogos[plan.network.toLowerCase()]?.logoUrl && (
+                                       <Image 
+                                         src={networkLogos[plan.network.toLowerCase()].logoUrl} 
+                                         alt={plan.network} 
+                                         width={14} 
+                                         height={14} 
+                                         className="rounded-full"
+                                       />
+                                     )}
+                                    <span className="text-xs font-medium text-gray-500">{plan.network}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
                                <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
                                  Completed
@@ -648,54 +682,87 @@ export default function PlansPage() {
                     <p className="text-gray-500">Loading activity...</p>
                   </div>
                 ) : filteredActivityData.length > 0 ? (
-                  <div className="divide-y divide-gray-100">
-                    {filteredActivityData.map((activity, index) => (
-                      <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            activity.type === 'deposit' || activity.type === 'savings_created'
-                              ? 'bg-green-100 text-green-600'
-                              : activity.type === 'topup'
-                              ? 'bg-blue-100 text-blue-600'
-                              : 'bg-orange-100 text-orange-600'
-                          }`}>
-                            {activity.type === 'deposit' || activity.type === 'savings_created' ? (
-                              <HiOutlinePlus className="w-5 h-5" />
-                            ) : activity.type === 'topup' ? (
-                              <HiOutlineCurrencyDollar className="w-5 h-5" />
-                            ) : (
-                              <HiOutlineBanknotes className="w-5 h-5" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{activity.description}</p>
-                            <p className="text-sm text-gray-500">{activity.timestamp}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
-                          <div className="text-right">
-                            <p className={`font-bold ${
+                  <>
+                    <div className="divide-y divide-gray-100">
+                      {paginatedActivityData.map((activity, index) => (
+                        <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-start gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                               activity.type === 'deposit' || activity.type === 'savings_created'
-                                ? 'text-green-600'
+                                ? 'bg-green-100 text-green-600'
                                 : activity.type === 'topup'
-                                ? 'text-blue-600'
-                                : 'text-orange-600'
+                                ? 'bg-blue-100 text-blue-600'
+                                : 'bg-orange-100 text-orange-600'
                             }`}>
-                              {activity.amount}
-                            </p>
-                            <a 
-                              href={`https://basescan.org/tx/${activity.txHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-[#81D7B4] hover:underline"
-                            >
-                              View on Explorer
-                            </a>
+                              {activity.type === 'deposit' || activity.type === 'savings_created' ? (
+                                <HiOutlinePlus className="w-5 h-5" />
+                              ) : activity.type === 'topup' ? (
+                                <HiOutlineCurrencyDollar className="w-5 h-5" />
+                              ) : (
+                                <HiOutlineBanknotes className="w-5 h-5" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{activity.description}</p>
+                              <p className="text-sm text-gray-500">{activity.timestamp}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
+                            <div className="text-right">
+                              <p className={`font-bold ${
+                                activity.type === 'deposit' || activity.type === 'savings_created'
+                                  ? 'text-green-600'
+                                  : activity.type === 'topup'
+                                  ? 'text-blue-600'
+                                  : 'text-orange-600'
+                              }`}>
+                                {activity.amount}
+                              </p>
+                              <a 
+                                href={`https://basescan.org/tx/${activity.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[#81D7B4] hover:underline"
+                              >
+                                View on Explorer
+                              </a>
+                            </div>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                    
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === 1
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                          }`}
+                        >
+                          Previous
+                        </button>
+                        <span className="text-sm text-gray-600">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === totalPages
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                          }`}
+                        >
+                          Next
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
                   <div className="p-12 text-center">
                     <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
