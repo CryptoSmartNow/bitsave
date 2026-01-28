@@ -194,7 +194,7 @@ const SavvyFinanceVideos = ({ videos }: { videos: Video[] }) => {
       
       <div className="flex justify-center">
         <a
-          href="https://www.youtube.com/@cryptosmartnow"
+          href="https://www.youtube.com/@bitsaveprotocol"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#81D7B4] transition-colors"

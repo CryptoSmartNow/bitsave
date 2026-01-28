@@ -74,6 +74,7 @@ export default function Dashboard() {
     isLiskNetwork,
     isBSCNetwork,
     isAvalancheNetwork,
+    ethPrice,
     refetch: refetchSavingsData
   } = useSavingsData();
 
@@ -165,11 +166,8 @@ export default function Dashboard() {
       const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 second timeout
 
       // Make API request to fetch all platform updates
-      const response = await fetch('https://bitsaveapi.vercel.app/updates/', {
+      const response = await fetch('/api/updates', {
         method: 'GET',
-        headers: {
-          'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '' // API authentication
-        },
         signal: controller.signal // Enable request cancellation
       });
 
@@ -191,10 +189,10 @@ export default function Dashboard() {
           const userTimeoutId = setTimeout(() => userController.abort(), 4000); // 4 second timeout
 
           // Fetch user's read status for updates
-          const userResponse = await fetch(`https://bitsaveapi.vercel.app/updates/user/${address}`, {
+          const userResponse = await fetch(`/api/updates/user/${address}`, {
             method: 'GET',
             headers: {
-              'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || ''
+              'Content-Type': 'application/json'
             },
             signal: userController.signal
           });
@@ -248,10 +246,9 @@ export default function Dashboard() {
 
     try {
       // Send PUT request to mark update as read
-      const response = await fetch(`https://bitsaveapi.vercel.app/updates/${updateId}/read`, {
+      const response = await fetch(`/api/updates/${updateId}/read`, {
         method: 'PUT',
         headers: {
-          'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -439,16 +436,12 @@ export default function Dashboard() {
 
   // Handle network selection (used by both modal and dropdown)
   const handleNetworkSelect = async (network: { name: string; isActive: boolean }) => {
-    // Handle cNGN as a shortcut to Lisk network
-    const targetNetworkName = network.name === 'cNGN' ? 'Lisk' : network.name;
-    const isTargetActive = network.name === 'cNGN' ? isLiskNetwork : network.isActive;
-
-    if (isTargetActive && isNetworkSynced) {
+    if (network.isActive && isNetworkSynced) {
       await refetchSavingsData();
-    } else if (isTargetActive && !isNetworkSynced) {
+    } else if (network.isActive && !isNetworkSynced) {
       await syncToWalletNetwork();
     } else {
-      await switchToNetwork(targetNetworkName);
+      await switchToNetwork(network.name);
     }
   };
 
@@ -458,7 +451,6 @@ export default function Dashboard() {
     { name: 'Celo', desc: 'Mobile-First', icon: networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png', isActive: isCeloNetwork },
     { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
     { name: 'Binance Smart Chain', desc: 'EVM Mainnet', icon: networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png', isActive: isBSCNetwork },
-    { name: 'cNGN', desc: 'Stablecoin', icon: '/cngn.png', isActive: false },
     { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png', isActive: isAvalancheNetwork },
     { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: false, isComingSoon: true }
   ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
@@ -604,7 +596,7 @@ export default function Dashboard() {
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-      className="group relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.05)] p-10 text-center overflow-hidden"
+      className="group relative bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-[0_20px_60px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.05)] p-6 sm:p-10 text-center overflow-hidden"
     >
       {/* Glassmorphism background layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-60"></div>
@@ -624,7 +616,7 @@ export default function Dashboard() {
         <p className="text-gray-600/80 mb-8 max-w-sm mx-auto leading-relaxed font-medium">Your completed savings plans will appear here. Continue building wealth to achieve your financial goals!</p>
 
         {/* Liquid glass status indicator */}
-        <div className="group/indicator inline-flex items-center justify-center px-8 py-4 bg-white/30 backdrop-blur-xl text-gray-700 font-semibold rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.7)] transition-all duration-500 transform hover:scale-105">
+        <div className="group/indicator inline-flex items-center justify-center px-8 py-4 bg-white/30 backdrop-blur-xl text-gray-700 font-semibold rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(129,215,180,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] hover:shadow-[0_12px_40px_rgba(129,215,180,0.15),inset_0_1px_0_rgba(255,255,255,0.7)] transition-all duration-500 transform hover:scale-105 whitespace-nowrap">
           <HiOutlineArrowDown className="h-6 w-6 mr-3 text-[#81D7B4] transition-transform duration-300 group-hover/indicator:rotate-12" />
           <span className="relative z-10">Keep Building Wealth</span>
           {/* Subtle shine effect */}
@@ -673,6 +665,7 @@ export default function Dashboard() {
         isEth={planDetailsModal.isEth}
         tokenName={planDetailsModal.tokenName}
         goodDollarPrice={goodDollarPrice}
+        networkLogos={networkLogos}
       />
 
       {/* Network Selection Modal (Mobile) */}
@@ -1215,23 +1208,28 @@ export default function Dashboard() {
                         <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
                         {/* Header: Icon, Title/Date, Top Up */}
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm">
+                        <div className="flex items-center justify-between mb-6 gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                               <Image
                                 src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
                                 alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
                                 width={32}
                                 height={32}
-                                className="w-8 h-8 object-contain"
+                                className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
                               />
                             </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                            <div className="min-w-0">
+                              <h3 className="text-base sm:text-xl font-bold text-gray-900 tracking-tight truncate">
                                 {plan.name}
                               </h3>
-                              <p className="text-sm font-medium text-gray-400">
-                                Created {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                              <p className="text-xs sm:text-sm font-medium text-gray-400">
+                                Created {(() => {
+                                  const startTime = Number(plan.startTime);
+                                  return !isNaN(startTime) && startTime > 0 
+                                    ? new Date(startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                                    : 'Pending';
+                                })()}
                               </p>
                             </div>
                           </div>
@@ -1239,9 +1237,9 @@ export default function Dashboard() {
                             onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 text-gray-700 font-semibold text-sm hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors bg-white hover:bg-[#81D7B4]/5"
+                            className="flex-shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full border border-gray-200 text-gray-700 font-semibold text-xs sm:text-sm hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors bg-white hover:bg-[#81D7B4]/5"
                           >
-                            <HiOutlinePlus className="w-4 h-4" />
+                            <HiOutlinePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             Top Up
                           </motion.button>
                         </div>
@@ -1250,19 +1248,29 @@ export default function Dashboard() {
                         <div className="h-px w-full bg-gray-100 mb-6"></div>
 
                         {/* Stats Row */}
-                        <div className="flex items-center gap-4 mb-3">
-                          <div className="font-bold text-gray-900 text-lg">
-                            {plan.isEth ? (
-                              <>{parseFloat(plan.currentAmount).toFixed(4)} ETH Saved</>
-                            ) : plan.tokenName === 'Gooddollar' ? (
-                              <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>
-                            ) : (
-                              <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>
-                            )}
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                          <div className="font-bold text-gray-900 text-base sm:text-lg">
+                            {(() => {
+                              const amount = parseFloat(plan.currentAmount);
+                              const safeAmount = !isNaN(amount) ? amount : 0;
+                              
+                              if (plan.isEth) return <>{safeAmount.toFixed(4)} ETH Saved</>;
+                              if (plan.tokenName === 'Gooddollar') return <>{safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>;
+                              return <>${safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>;
+                            })()}
                           </div>
-                          <div className="w-px h-4 bg-gray-300"></div>
-                          <div className="font-bold text-[#81D7B4] text-lg">
-                            +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS Reward
+                          <div className="w-px h-5 bg-gray-200"></div>
+                          <div className="font-bold text-[#81D7B4] text-base sm:text-lg">
+                            +{(() => {
+                               const amount = parseFloat(plan.currentAmount);
+                               const safeAmount = !isNaN(amount) ? amount : 0;
+                               let usdVal = safeAmount;
+                               if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                               if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * goodDollarPrice;
+                               
+                               const reward = usdVal * 0.005 * 1000;
+                               return reward.toFixed(0);
+                            })()} $BTS Reward
                           </div>
                         </div>
 
@@ -1282,7 +1290,10 @@ export default function Dashboard() {
                           <span>
                             {(() => {
                               const now = Math.floor(Date.now() / 1000);
-                              const end = Number(plan.maturityTime || 0);
+                              const end = Number(plan.maturityTime);
+                              
+                              if (isNaN(end) || end <= 0) return "Pending";
+                              
                               const diff = end - now;
                               if (diff <= 0) return "Completed";
                               const days = Math.ceil(diff / (60 * 60 * 24));
@@ -1348,51 +1359,66 @@ export default function Dashboard() {
                           <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
                           {/* Header: Icon, Title/Date (No Top Up) */}
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm">
-                                <Image
-                                  src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
-                                  alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                                  width={32}
-                                  height={32}
-                                  className="w-8 h-8 object-contain"
-                                />
-                              </div>
-                              <div>
-                                <h3 className="text-xl font-bold text-gray-900 tracking-tight">
-                                  {plan.name}
-                                </h3>
-                                <p className="text-sm font-medium text-gray-400">
-                                  Created {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                                </p>
-                              </div>
+                        <div className="flex items-center justify-between mb-6 gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                              <Image
+                                src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
+                                alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
+                                width={32}
+                                height={32}
+                                className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                              />
                             </div>
-                            {/* Completed Badge instead of Top Up */}
-                            <div className="px-4 py-1.5 rounded-full bg-green-50 border border-green-100 text-green-600 font-semibold text-sm">
-                              Completed
-                            </div>
-                          </div>
-
-                          {/* Divider */}
-                          <div className="h-px w-full bg-gray-100 mb-6"></div>
-
-                          {/* Stats Row */}
-                          <div className="flex items-center gap-4 mb-3">
-                            <div className="font-bold text-gray-900 text-lg">
-                              {plan.isEth ? (
-                                <>{parseFloat(plan.currentAmount).toFixed(4)} ETH Saved</>
-                              ) : plan.tokenName === 'Gooddollar' ? (
-                                <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>
-                              ) : (
-                                <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>
-                              )}
-                            </div>
-                            <div className="w-px h-4 bg-gray-300"></div>
-                            <div className="font-bold text-[#81D7B4] text-lg">
-                              +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS Reward
+                            <div className="min-w-0">
+                              <h3 className="text-base sm:text-xl font-bold text-gray-900 tracking-tight truncate">
+                                {plan.name}
+                              </h3>
+                              <p className="text-xs sm:text-sm font-medium text-gray-400">
+                                Created {(() => {
+                                  const startTime = Number(plan.startTime);
+                                  return !isNaN(startTime) && startTime > 0 
+                                    ? new Date(startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                                    : 'Pending';
+                                })()}
+                              </p>
                             </div>
                           </div>
+                          {/* Completed Badge instead of Top Up */}
+                          <div className="flex-shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-green-50 border border-green-100 text-green-600 font-semibold text-xs sm:text-sm">
+                            Completed
+                          </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px w-full bg-gray-100 mb-6"></div>
+
+                        {/* Stats Row */}
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                          <div className="font-bold text-gray-900 text-base sm:text-lg">
+                            {(() => {
+                              const amount = parseFloat(plan.currentAmount);
+                              const safeAmount = !isNaN(amount) ? amount : 0;
+                              
+                              if (plan.isEth) return <>{safeAmount.toFixed(4)} ETH Saved</>;
+                              if (plan.tokenName === 'Gooddollar') return <>{safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>;
+                              return <>${safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>;
+                            })()}
+                          </div>
+                          <div className="w-px h-5 bg-gray-200"></div>
+                          <div className="font-bold text-[#81D7B4] text-base sm:text-lg">
+                            +{(() => {
+                               const amount = parseFloat(plan.currentAmount);
+                               const safeAmount = !isNaN(amount) ? amount : 0;
+                               let usdVal = safeAmount;
+                               if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                               if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * goodDollarPrice;
+                               
+                               const reward = usdVal * 0.005 * 1000;
+                               return reward.toFixed(0);
+                            })()} $BTS Reward
+                          </div>
+                        </div>
 
                           {/* Progress Bar (Full) */}
                           <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden mb-2">
@@ -1414,7 +1440,7 @@ export default function Dashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <button
                               onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all"
+                              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4]/5 transition-all whitespace-nowrap"
                             >
                               <HiOutlineEye className="w-4 h-4" />
                               Plan Details
@@ -1427,10 +1453,10 @@ export default function Dashboard() {
                                 const isCompleted = currentDate >= maturityDate;
                                 openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                               }}
-                              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
+                              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md whitespace-nowrap"
                             >
                               <HiOutlineBanknotes className="w-4 h-4" />
-                              Withdraw Funds
+                              Withdraw
                             </button>
                           </div>
                         </motion.div>

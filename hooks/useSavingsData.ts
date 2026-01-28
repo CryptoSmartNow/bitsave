@@ -30,7 +30,7 @@ import { handleContractError } from '../lib/contractErrorHandler';
 import BitSaveABI from '../app/abi/contractABI.js';
 import childContractABI from '../app/abi/childContractABI.js';
 
-// Debug flag - set to false in production
+
 const DEBUG = process.env.NODE_ENV === 'development';
 
 // Contract addresses for different networks
@@ -283,17 +283,18 @@ export function useSavingsData(): UseSavingsDataReturn {
           // Get user's child contract address with timeout
           let userChildContractAddress;
           try {
-            const contractPromise = contract.getUserChildContractAddress();
+            // Must pass { from: address } because the contract uses msg.sender and we are using a read-only provider
+            const contractPromise = contract.getUserChildContractAddress({ from: address });
             const timeoutPromise = new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Contract call timeout')), 10000)
             );
             userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
-
+            
             if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
               return null;
             }
           } catch (err) {
-            console.warn(`Error checking child contract on ${network.name}:`, err);
+            // console.warn(`Error checking child contract on ${network.name}:`, err);
             return null;
           }
 
@@ -345,6 +346,7 @@ export function useSavingsData(): UseSavingsDataReturn {
           const networkCompletedPlans = [];
           let networkDeposits = 0;
           let networkTotalUsdValue = 0;
+          let networkRewards = 0;
 
           for (let i = 0; i < validSavingNames.length; i += BATCH_SIZE) {
             const batch = validSavingNames.slice(i, i + BATCH_SIZE);
@@ -469,20 +471,26 @@ export function useSavingsData(): UseSavingsDataReturn {
                 if (tokenName === "Gooddollar") price = goodDollarPrice || 0.0001086;
 
                 const usdValue = amountVal * price;
-                if (!isCompleted) {
-                  networkTotalUsdValue += usdValue;
-                }
+                // Calculate rewards based on USD value (5 BTS per $1 saved)
+                networkRewards += usdValue * 5;
+
+                networkTotalUsdValue += usdValue;
 
                 const plan = {
                   id: savingName,
                   name: savingName,
                   amount: amountFormatted,
+                  currentAmount: amountFormatted, // Add alias for dashboard compatibility
+                  startTime: startTime, // Add startTime
+                  maturityTime: maturityTime, // Add maturityTime
+                  isEth: isEth, // Add isEth
                   tokenName,
                   tokenLogo,
                   progress,
                   status: isCompleted ? 'Completed' : 'Active',
                   timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / (24 * 60 * 60))} days`,
-                  penalty: savingData.penalty || "0",
+                  penalty: (savingData.penaltyPercentage ?? savingData[5] ?? 0).toString(),
+                  penaltyPercentage: Number(savingData.penaltyPercentage ?? savingData[5] ?? 0), // Add penaltyPercentage
                   network: network.name, // Add network name to plan
                   chainId: network.chainId // Add chainId to plan
                 };
@@ -501,7 +509,8 @@ export function useSavingsData(): UseSavingsDataReturn {
             plans: networkPlans,
             completedPlans: networkCompletedPlans,
             deposits: networkDeposits,
-            totalUsdValue: networkTotalUsdValue
+            totalUsdValue: networkTotalUsdValue,
+            rewards: networkRewards
           };
 
         } catch (error) {
@@ -517,6 +526,7 @@ export function useSavingsData(): UseSavingsDataReturn {
       let aggregatedCompletedPlans: any[] = [];
       let aggregatedDeposits = 0;
       let aggregatedTotalUsdValue = 0;
+      let aggregatedRewards = 0;
 
       results.forEach(result => {
         if (result.status === 'fulfilled' && result.value) {
@@ -524,13 +534,14 @@ export function useSavingsData(): UseSavingsDataReturn {
           aggregatedCompletedPlans = [...aggregatedCompletedPlans, ...result.value.completedPlans];
           aggregatedDeposits += result.value.deposits;
           aggregatedTotalUsdValue += result.value.totalUsdValue;
+          aggregatedRewards += (result.value as any).rewards || 0;
         }
       });
 
       const finalSavingsData: SavingsData = {
         totalLocked: aggregatedTotalUsdValue.toFixed(2),
         deposits: aggregatedDeposits,
-        rewards: "0.00", // Rewards calculation would need similar aggregation if implemented
+        rewards: aggregatedRewards.toFixed(0),
         currentPlans: aggregatedPlans,
         completedPlans: aggregatedCompletedPlans
       };

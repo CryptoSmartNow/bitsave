@@ -470,14 +470,14 @@ export default function PlansPage() {
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                       <button
                         onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-xs sm:text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-xs sm:text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105 whitespace-nowrap min-w-fit"
                       >
                         <HiOutlinePlus className="w-3 h-3 sm:w-4 sm:h-4" />
                         Top Up
                       </button>
                       <button
                         onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all whitespace-nowrap min-w-fit"
                       >
                         <HiOutlineEye className="w-3 h-3 sm:w-4 sm:h-4" />
                         Details
@@ -490,7 +490,7 @@ export default function PlansPage() {
                           const isCompleted = currentDate >= maturityDate;
                           openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4]/5 transition-all"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4]/5 transition-all whitespace-nowrap min-w-fit"
                       >
                         <HiOutlineBanknotes className="w-3 h-3 sm:w-4 sm:h-4" />
                         Withdraw
@@ -626,7 +626,7 @@ export default function PlansPage() {
                         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                           <button
                             onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all whitespace-nowrap min-w-fit"
                           >
                             <HiOutlineEye className="w-3 h-3 sm:w-4 sm:h-4" />
                             Details
@@ -639,10 +639,10 @@ export default function PlansPage() {
                               const isCompleted = currentDate >= maturityDate;
                               openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                             }}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md whitespace-nowrap min-w-fit"
                           >
                             <HiOutlineBanknotes className="w-3 h-3 sm:w-4 sm:h-4" />
-                            Withdraw Funds
+                            Withdraw
                           </button>
                         </div>
                       </div>
@@ -808,6 +808,7 @@ export default function PlansPage() {
         isEth={planDetailsModal.isEth}
         tokenName={planDetailsModal.tokenName}
         goodDollarPrice={goodDollarPrice}
+        networkLogos={networkLogos}
       />
     </div>
   )

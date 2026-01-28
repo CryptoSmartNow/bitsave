@@ -36,6 +36,11 @@ const socialLinks = [
     name: 'Telegram',
     href: 'https://t.me/+YimKRR7wAkVmZGRk',
     icon: <FaTelegramPlane className="w-5 h-5" />
+  },
+  {
+    name: 'YouTube',
+    href: 'https://www.youtube.com/@bitsaveprotocol',
+    icon: <FaYoutube className="w-5 h-5" />
   }
 ];
 

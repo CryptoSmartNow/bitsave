@@ -10,6 +10,8 @@ import {
     HiOutlineVideoCamera,
     HiOutlineBookOpen
 } from "react-icons/hi2";
+import { FaTelegramPlane } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { Exo } from "next/font/google";
 import "../../bizfi-colors.css";
 
@@ -258,6 +260,24 @@ export default function SupportPage() {
                             <div className="space-y-2 text-sm">
                                 <p className="text-gray-300">📧 bizfi@bitsave.io</p>
                                 <p className="text-gray-300">💬 Live chat (9AM-5PM EST)</p>
+                            </div>
+                            <div className="mt-4 flex gap-3">
+                                <a 
+                                    href="https://x.com/bitsaveprotocol" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-[#81D7B4] hover:bg-gray-700 transition-all"
+                                >
+                                    <FaXTwitter className="w-5 h-5" />
+                                </a>
+                                <a 
+                                    href="https://t.me/+YimKRR7wAkVmZGRk" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-[#81D7B4] hover:bg-gray-700 transition-all"
+                                >
+                                    <FaTelegramPlane className="w-5 h-5" />
+                                </a>
                             </div>
                         </div>
                     </div>
