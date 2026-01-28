@@ -10,42 +10,59 @@ export default function CustomConnectButton() {
   const { login, ready, authenticated, user, logout } = usePrivy();
   const { isConnected: isWagmiConnected, address: wagmiAddress } = useAccount();
   const { disconnect: wagmiDisconnect } = useDisconnect();
-  
+
   // We use local state to ensure hydration match
   const [mounted, setMounted] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Reset disconnecting state when both auth states are cleared
+  useEffect(() => {
+    if (!authenticated && !isWagmiConnected) {
+      setIsDisconnecting(false);
+    }
+  }, [authenticated, isWagmiConnected]);
+
   if (!mounted) return null;
 
-  // Combined auth state
-  const isConnected = ready && (authenticated || isWagmiConnected);
-  
+  // Use Privy's authenticated state as primary indicator
+  // Only show as connected if Privy is authenticated AND not in disconnecting state
+  const isConnected = ready && authenticated && !isDisconnecting;
+
   // Determine display address
-  const address = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
-  const displayAddress = address 
+  const address = user?.wallet?.address || wagmiAddress;
+  const displayAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : user?.email?.address || "Connected";
 
   const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    const toastId = toast.loading('Disconnecting wallet...');
     try {
+      // Disconnect Wagmi first
       if (isWagmiConnected) {
         wagmiDisconnect();
       }
+
+      // Then logout from Privy to ensure auth state is cleared
       await logout();
-      toast.success('Wallet disconnected successfully');
+
+      toast.success('Wallet disconnected successfully', { id: toastId });
+      // State update will be handled by the effects
     } catch (error) {
       console.error('Disconnect error:', error);
-      toast.error('Failed to disconnect wallet');
+      toast.error('Failed to disconnect wallet', { id: toastId });
+      setIsDisconnecting(false);
     }
   };
 
   if (isConnected) {
     return (
       <div className="flex justify-end">
-        <button 
+        <button
           onClick={handleDisconnect}
           className="group bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-red-500 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
           title="Click to disconnect"

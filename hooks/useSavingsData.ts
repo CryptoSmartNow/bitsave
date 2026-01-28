@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount, useChainId } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import {
@@ -95,8 +96,16 @@ export function useSavingsData(): UseSavingsDataReturn {
 
 
   // Wagmi hooks for wallet connection
-  const { address, isConnected } = useAccount();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const chainId = useChainId();
+
+  // Privy hooks for authentication state
+  const { ready, authenticated, user } = usePrivy();
+
+  // Use Privy's wallet address as fallback, prioritizing wagmi address
+  const address = wagmiAddress || user?.wallet?.address as `0x${string}` | undefined;
+  // Consider connected if either Privy is authenticated or wagmi is connected
+  const isConnected = (ready && authenticated) || isWagmiConnected;
 
 
 
@@ -279,7 +288,7 @@ export function useSavingsData(): UseSavingsDataReturn {
               setTimeout(() => reject(new Error('Contract call timeout')), 10000)
             );
             userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
-            
+
             if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
               return null;
             }
@@ -298,19 +307,32 @@ export function useSavingsData(): UseSavingsDataReturn {
           // Fetch savings names
           const savingsNamesPromise = childContract.getSavingsNames();
           const savingsTimeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Savings names timeout')), 8000)
+            setTimeout(() => reject(new Error('Savings names timeout')), 5000)
           );
 
           let savingsNamesArray: string[] = [];
           try {
             const savingsNamesObj: any = await Promise.race([savingsNamesPromise, savingsTimeoutPromise]);
-            savingsNamesArray = savingsNamesObj?.savingsNames || [];
+            // Handle both tuple return (struct) and array return
+            if (savingsNamesObj?.savingsNames && Array.isArray(savingsNamesObj.savingsNames)) {
+              savingsNamesArray = savingsNamesObj.savingsNames;
+            } else if (Array.isArray(savingsNamesObj)) {
+              // Check if the first element is an array (Tuple wrapper: [[name1, name2]])
+              if (Array.isArray(savingsNamesObj[0])) {
+                savingsNamesArray = savingsNamesObj[0];
+              } else {
+                // Assume it's the direct array: [name1, name2]
+                savingsNamesArray = savingsNamesObj;
+              }
+            } else if (savingsNamesObj?.savingsNames) {
+              savingsNamesArray = savingsNamesObj.savingsNames;
+            }
           } catch (err) {
             console.warn(`Error fetching savings names on ${network.name}:`, err);
             return null;
           }
 
-          if (savingsNamesArray.length === 0) return null;
+          if (!savingsNamesArray || savingsNamesArray.length === 0) return null;
 
           const processedPlanNames = new Set();
           const validSavingNames = savingsNamesArray.filter((savingName: string) =>
@@ -318,7 +340,7 @@ export function useSavingsData(): UseSavingsDataReturn {
           );
 
           // Process savings in batches
-          const BATCH_SIZE = 3;
+          const BATCH_SIZE = 5; // Increased batch size
           const networkPlans = [];
           const networkCompletedPlans = [];
           let networkDeposits = 0;
@@ -346,13 +368,13 @@ export function useSavingsData(): UseSavingsDataReturn {
             for (const result of batchResults) {
               if (result.status === 'fulfilled' && result.value) {
                 const { savingName, savingData } = result.value;
-                
+
                 if (!savingData || !savingData.isValid) continue;
 
                 // Determine token properties
                 const tokenId = savingData.tokenId || ethers.ZeroAddress;
                 const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
-                
+
                 let tokenName = "USDC";
                 let decimals = 6;
                 let tokenLogo = '/usdclogo.png';
@@ -430,7 +452,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                 const now = Math.floor(Date.now() / 1000);
                 const startTime = savingData.startTime ? Number(savingData.startTime) : now;
                 const maturityTime = savingData.maturityTime ? Number(savingData.maturityTime) : startTime + (30 * 24 * 60 * 60);
-                
+
                 let progress = 0;
                 if (maturityTime <= startTime || now >= maturityTime) {
                   progress = 100;
@@ -439,13 +461,13 @@ export function useSavingsData(): UseSavingsDataReturn {
                 }
 
                 const isCompleted = savingData.isCompleted || progress >= 100;
-                
+
                 // Calculate USD value
                 const amountVal = parseFloat(amountFormatted);
                 let price = 1;
                 if (tokenName === "ETH" || tokenName === "HBAR") price = currentEthPrice || 3500;
                 if (tokenName === "Gooddollar") price = goodDollarPrice || 0.0001086;
-                
+
                 const usdValue = amountVal * price;
                 if (!isCompleted) {
                   networkTotalUsdValue += usdValue;
@@ -488,7 +510,7 @@ export function useSavingsData(): UseSavingsDataReturn {
         }
       });
 
-      const results = await Promise.all(networkPromises);
+      const results = await Promise.allSettled(networkPromises);
 
       // Aggregate results
       let aggregatedPlans: any[] = [];
@@ -497,11 +519,11 @@ export function useSavingsData(): UseSavingsDataReturn {
       let aggregatedTotalUsdValue = 0;
 
       results.forEach(result => {
-        if (result) {
-          aggregatedPlans = [...aggregatedPlans, ...result.plans];
-          aggregatedCompletedPlans = [...aggregatedCompletedPlans, ...result.completedPlans];
-          aggregatedDeposits += result.deposits;
-          aggregatedTotalUsdValue += result.totalUsdValue;
+        if (result.status === 'fulfilled' && result.value) {
+          aggregatedPlans = [...aggregatedPlans, ...result.value.plans];
+          aggregatedCompletedPlans = [...aggregatedCompletedPlans, ...result.value.completedPlans];
+          aggregatedDeposits += result.value.deposits;
+          aggregatedTotalUsdValue += result.value.totalUsdValue;
         }
       });
 
@@ -531,13 +553,13 @@ export function useSavingsData(): UseSavingsDataReturn {
     } catch (error) {
       console.error("Error in fetchSavingsDataFromBlockchain:", error);
       setError("Failed to fetch savings data");
-      
+
       if (isBackgroundFetch) {
         setIsBackgroundLoading(false);
       } else {
         setIsLoading(false);
       }
-      
+
       return null;
     }
   }, [isConnected, address, fetchEthPrice, fetchGoodDollarPrice]);
