@@ -3,9 +3,10 @@ import { getUserReadUpdatesCollection } from '@/lib/mongodb';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await props.params;
     const updateId = params.id;
     const body = await request.json();
     const { useraddress } = body;
