@@ -176,9 +176,9 @@ export default function BusinessDetailsPage() {
             <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#81D7B4]/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-[#3B82F6]/5 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="max-w-[1400px] mx-auto p-6 md:p-10 relative z-10">
+            <div className="max-w-[1400px] mx-auto p-4 sm:p-6 md:p-10 relative z-10">
                 {/* Navigation Header */}
-                <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-10">
                     <button
                         onClick={() => router.back()}
                         className="self-start flex items-center gap-3 text-[#9BA8B5] hover:text-[#F9F9FB] transition-all group"
@@ -189,20 +189,20 @@ export default function BusinessDetailsPage() {
                         <span className="font-medium">Back to Businesses</span>
                     </button>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                         <button
                             onClick={handleMessage}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-[#1A2538]/50 backdrop-blur-md text-[#81D7B4] rounded-lg border border-[#81D7B4]/20 hover:bg-[#81D7B4]/10 transition-all font-medium text-sm"
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1A2538]/50 backdrop-blur-md text-[#81D7B4] rounded-lg border border-[#81D7B4]/20 hover:bg-[#81D7B4]/10 transition-all font-medium text-sm"
                         >
                             <HiOutlineChatBubbleLeftRight className="w-4 h-4" />
-                            Message Owner
+                            <span className="whitespace-nowrap">Message Owner</span>
                         </button>
                         <button
                             onClick={() => setShowAgreement(true)}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-[#81D7B4] text-[#0F1825] rounded-lg font-bold hover:bg-[#6BC4A0] transition-all shadow-lg shadow-[#81D7B4]/20 text-sm"
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#81D7B4] text-[#0F1825] rounded-lg font-bold hover:bg-[#6BC4A0] transition-all shadow-lg shadow-[#81D7B4]/20 text-sm"
                         >
                             <HiOutlineDocumentText className="w-4 h-4" />
-                            Loan Agreement
+                            <span className="whitespace-nowrap">Loan Agreement</span>
                         </button>
                     </div>
                 </motion.div>
@@ -250,16 +250,16 @@ export default function BusinessDetailsPage() {
                             </div>
 
                             {/* Business Info Row */}
-                            <div className="flex items-start gap-6 w-full">
-                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#1A2538] to-[#0F1825] border border-[#7B8B9A]/20 flex items-center justify-center text-[#81D7B4] font-bold text-4xl shadow-xl shrink-0">
+                            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 w-full">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#1A2538] to-[#0F1825] border border-[#7B8B9A]/20 flex items-center justify-center text-[#81D7B4] font-bold text-3xl sm:text-4xl shadow-xl shrink-0">
                                     {business.businessName.charAt(0)}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                        <h1 className="text-3xl md:text-4xl font-bold text-[#F9F9FB] tracking-tight leading-tight truncate">
+                                <div className="flex-1 min-w-0 w-full">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2 flex-wrap">
+                                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#F9F9FB] tracking-tight leading-tight break-words">
                                             {business.businessName}
                                         </h1>
-                                        <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border flex items-center gap-1.5 ${business.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                        <div className={`w-fit px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border flex items-center gap-1.5 shrink-0 ${business.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
                                             business.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
                                                 'bg-red-500/10 text-red-400 border-red-500/20'
                                             }`}>
@@ -271,14 +271,14 @@ export default function BusinessDetailsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[#9BA8B5] text-sm">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 text-[#9BA8B5] text-xs sm:text-sm">
                                         <div className="flex items-center gap-2 font-mono" title={business.transactionHash}>
                                             <span className="w-1.5 h-1.5 rounded-full bg-[#7B8B9A]/50"></span>
-                                            ID: {business.transactionHash.slice(0, 6)}...{business.transactionHash.slice(-4)}
+                                            <span className="truncate">ID: {business.transactionHash.slice(0, 6)}...{business.transactionHash.slice(-4)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <HiOutlineCalendar className="w-4 h-4 text-[#81D7B4]" />
-                                            Joined {format(new Date(business.createdAt), 'MMM d, yyyy')}
+                                            <HiOutlineCalendar className="w-4 h-4 text-[#81D7B4] shrink-0" />
+                                            <span className="whitespace-nowrap">Joined {format(new Date(business.createdAt), 'MMM d, yyyy')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -288,12 +288,12 @@ export default function BusinessDetailsPage() {
                 </motion.div>
 
                 {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
 
                     {/* Left Sidebar: Stats & Owner (4 cols) */}
-                    <motion.div variants={itemVariants} className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
+                    <motion.div variants={itemVariants} className="lg:col-span-4 space-y-4 sm:space-y-6 lg:sticky lg:top-8">
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <StatCard
                                 label="Business Tier"
                                 value={business.tier}
@@ -308,8 +308,8 @@ export default function BusinessDetailsPage() {
                         </div>
 
                         {/* Owner Details Card */}
-                        <div className="bg-[#1A2538]/30 backdrop-blur-md rounded-2xl border border-[#7B8B9A]/10 p-6">
-                            <h3 className="text-xs font-bold text-[#9BA8B5] uppercase tracking-wider mb-5 flex items-center gap-2">
+                        <div className="bg-[#1A2538]/30 backdrop-blur-md rounded-2xl border border-[#7B8B9A]/10 p-4 sm:p-6">
+                            <h3 className="text-xs font-bold text-[#9BA8B5] uppercase tracking-wider mb-4 sm:mb-5 flex items-center gap-2">
                                 <HiOutlineWallet className="w-4 h-4 text-[#81D7B4]" />
                                 Owner Information
                             </h3>
@@ -317,7 +317,7 @@ export default function BusinessDetailsPage() {
                             <div className="space-y-4">
                                 <div>
                                     <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Wallet Address</p>
-                                    <div className="p-3 bg-[#0F1825]/50 rounded-lg border border-[#7B8B9A]/10 font-mono text-sm text-[#F9F9FB] break-all select-all hover:border-[#81D7B4]/30 transition-colors">
+                                    <div className="p-3 bg-[#0F1825]/50 rounded-lg border border-[#7B8B9A]/10 font-mono text-xs sm:text-sm text-[#F9F9FB] break-all select-all hover:border-[#81D7B4]/30 transition-colors">
                                         {business.owner}
                                     </div>
                                 </div>
@@ -326,10 +326,10 @@ export default function BusinessDetailsPage() {
                                     <div>
                                         <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Referral Code</p>
                                         <div className="flex items-center gap-3 p-3 bg-[#0F1825]/50 rounded-lg border border-[#7B8B9A]/10">
-                                            <div className="w-8 h-8 rounded-md bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                                            <div className="w-8 h-8 rounded-md bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] shrink-0">
                                                 <HiOutlineTicket className="w-5 h-5" />
                                             </div>
-                                            <span className="font-bold text-[#F9F9FB] tracking-wide">{business.referralCode}</span>
+                                            <span className="font-bold text-[#F9F9FB] tracking-wide break-all">{business.referralCode}</span>
                                         </div>
                                     </div>
                                 )}
@@ -340,7 +340,7 @@ export default function BusinessDetailsPage() {
                     {/* Right Content: Tabs (8 cols) */}
                     <motion.div variants={itemVariants} className="lg:col-span-8">
                         {/* Custom Tabs */}
-                        <div className="flex items-center gap-1 mb-6 p-1 bg-[#1A2538]/30 rounded-xl border border-[#7B8B9A]/10 w-fit backdrop-blur-sm">
+                        <div className="flex items-center gap-1 mb-6 p-1 bg-[#1A2538]/30 rounded-xl border border-[#7B8B9A]/10 w-full md:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm">
                             <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="Overview" />
                             <TabButton active={activeTab === 'kyc'} onClick={() => setActiveTab('kyc')} label="KYC & Documents" />
                             <TabButton active={activeTab === 'raw'} onClick={() => setActiveTab('raw')} label="Raw Data" />

@@ -227,7 +227,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] text-[#F9F9FB] flex overflow-hidden bg-[#0A0E14]`}>
+        <div className={`${exo.variable} font-sans h-[calc(100dvh-80px)] text-[#F9F9FB] flex overflow-hidden bg-[#0A0E14]`}>
             {/* Contacts Sidebar - Simplified for Support */}
             <div className="hidden md:flex md:w-80 border-r border-[#7B8B9A]/10 flex-col bg-[#1A2538]/20 backdrop-blur-xl">
                 <div className="p-6 border-b border-[#7B8B9A]/10">
@@ -257,7 +257,7 @@ export default function ChatPage() {
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+')]"></div>
 
                 {/* Chat Header */}
-                <div className="px-6 py-4 border-b border-[#7B8B9A]/10 flex items-center justify-between bg-[#1A2538]/30 backdrop-blur-xl relative z-10">
+                <div className="px-4 md:px-6 py-4 border-b border-[#7B8B9A]/10 flex items-center justify-between bg-[#1A2538]/30 backdrop-blur-xl relative z-10">
                     <div className="flex items-center gap-4">
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl bg-[#81D7B4] flex items-center justify-center font-bold text-[#0F1825] shadow-lg shadow-[#81D7B4]/20">
@@ -298,8 +298,8 @@ export default function ChatPage() {
                             >
                                 <div className={`max-w-[70%] flex flex-col ${msg.sender === 'business' ? 'items-end' : 'items-start'}`}>
                                     <div className={`px-5 py-3.5 shadow-sm text-sm leading-relaxed relative group ${msg.sender === 'business'
-                                            ? 'bg-[#81D7B4] text-[#0F1825] rounded-2xl rounded-tr-none'
-                                            : 'bg-[#1A2538] text-[#F9F9FB] rounded-2xl rounded-tl-none border border-[#7B8B9A]/10'
+                                        ? 'bg-[#81D7B4] text-[#0F1825] rounded-2xl rounded-tr-none'
+                                        : 'bg-[#1A2538] text-[#F9F9FB] rounded-2xl rounded-tl-none border border-[#7B8B9A]/10'
                                         }`}>
                                         {msg.type === 'image' && msg.attachmentUrl ? (
                                             <div className="mb-2 rounded-lg overflow-hidden bg-black/10">
@@ -353,8 +353,8 @@ export default function ChatPage() {
                         )}
                     </AnimatePresence>
 
-                    <div className="flex items-end gap-3 max-w-5xl mx-auto">
-                        <div className="flex items-center gap-1 bg-[#1A2538] p-1.5 rounded-xl border border-[#7B8B9A]/10">
+                    <div className="flex items-end gap-2 md:gap-3 max-w-5xl mx-auto">
+                        <div className="flex items-center gap-0.5 md:gap-1 bg-[#1A2538] p-1 md:p-1.5 rounded-xl border border-[#7B8B9A]/10 flex-shrink-0">
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -365,36 +365,33 @@ export default function ChatPage() {
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploading}
-                                className="p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
                                 <HiOutlinePaperClip className="w-5 h-5" />
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-bold text-[#F9F9FB] bg-[#0F1825] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Attach file</span>
                             </button>
                             <button
                                 onClick={() => setShowDoodle(true)}
                                 disabled={uploading}
-                                className="p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
                                 <HiOutlinePencil className="w-5 h-5" />
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-bold text-[#F9F9FB] bg-[#0F1825] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Draw</span>
                             </button>
                             <button
                                 onClick={() => setShowEmoji(!showEmoji)}
-                                className={`p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
+                                className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                             >
                                 <HiOutlineFaceSmile className="w-5 h-5" />
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-bold text-[#F9F9FB] bg-[#0F1825] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Emoji</span>
                             </button>
                         </div>
 
-                        <div className="flex-1 bg-[#1A2538] rounded-2xl border border-[#7B8B9A]/10 focus-within:border-[#81D7B4]/50 focus-within:shadow-[0_0_0_4px_rgba(129,215,180,0.05)] transition-all flex items-center px-2">
+                        <div className="flex-1 bg-[#1A2538] rounded-2xl border border-[#7B8B9A]/10 focus-within:border-[#81D7B4]/50 focus-within:shadow-[0_0_0_4px_rgba(129,215,180,0.05)] transition-all flex items-center px-2 min-w-0">
                             <textarea
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                placeholder={uploading ? "Uploading..." : "Type your message..."}
+                                placeholder={uploading ? "Uploading..." : "Message..."}
                                 rows={1}
                                 disabled={uploading}
-                                className="w-full px-4 py-3.5 bg-transparent border-none text-[#F9F9FB] placeholder-[#7B8B9A]/50 focus:ring-0 focus:outline-none resize-none max-h-32 text-sm leading-relaxed custom-scrollbar"
+                                className="w-full px-3 py-3 md:px-4 md:py-3.5 bg-transparent border-none text-[#F9F9FB] placeholder-[#7B8B9A]/50 focus:ring-0 focus:outline-none resize-none max-h-32 text-sm leading-relaxed custom-scrollbar"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey && message.trim()) {
                                         e.preventDefault();
@@ -407,12 +404,12 @@ export default function ChatPage() {
                         <button
                             onClick={() => handleSendMessage()}
                             disabled={!message.trim() || sending || uploading}
-                            className="p-3.5 bg-[#81D7B4] text-[#0F1825] rounded-xl hover:bg-[#6BC4A0] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#81D7B4]/20 flex-shrink-0"
+                            className="p-3 md:p-3.5 bg-[#81D7B4] text-[#0F1825] rounded-xl hover:bg-[#6BC4A0] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#81D7B4]/20 flex-shrink-0"
                         >
                             {sending || uploading ? (
-                                <div className="w-6 h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <HiOutlinePaperAirplane className="w-6 h-6 transform -rotate-45 translate-x-0.5" />
+                                <HiOutlinePaperAirplane className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
                             )}
                         </button>
                     </div>

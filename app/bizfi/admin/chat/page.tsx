@@ -10,7 +10,8 @@ import {
     HiOutlineMagnifyingGlass,
     HiOutlineEllipsisVertical,
     HiOutlineBuildingStorefront,
-    HiOutlinePencil
+    HiOutlinePencil,
+    HiOutlineArrowLeft
 } from 'react-icons/hi2';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
@@ -246,9 +247,12 @@ export default function AdminChatPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-80px)] flex bg-[#0A0E14] overflow-hidden">
+        <div className="h-[calc(100vh-80px)] flex bg-[#0A0E14] overflow-hidden relative">
             {/* Sidebar */}
-            <div className="w-80 border-r border-[#7B8B9A]/10 flex flex-col bg-[#1A2538]/20 backdrop-blur-xl">
+            <div className={`
+                w-full md:w-80 border-r border-[#7B8B9A]/10 flex flex-col bg-[#1A2538]/20 backdrop-blur-xl absolute md:relative z-20 h-full transition-transform duration-300
+                ${selectedConversation ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
+            `}>
                 <div className="p-6 border-b border-[#7B8B9A]/10">
                     <h2 className="text-xl font-bold text-[#F9F9FB] mb-6 tracking-wide">Messages</h2>
                     <div className="relative group">
@@ -275,13 +279,13 @@ export default function AdminChatPage() {
                                 key={conv.businessId}
                                 onClick={() => setSelectedConversation(conv)}
                                 className={`w-full p-4 flex items-center gap-3 rounded-xl transition-all duration-200 group ${selectedConversation?.businessId === conv.businessId
-                                        ? 'bg-[#81D7B4]/10 border border-[#81D7B4]/20 shadow-[0_0_15px_rgba(129,215,180,0.05)]'
-                                        : 'hover:bg-[#1A2538]/50 border border-transparent hover:border-[#7B8B9A]/10'
+                                    ? 'bg-[#81D7B4]/10 border border-[#81D7B4]/20 shadow-[0_0_15px_rgba(129,215,180,0.05)]'
+                                    : 'hover:bg-[#1A2538]/50 border border-transparent hover:border-[#7B8B9A]/10'
                                     }`}
                             >
                                 <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold transition-all ${selectedConversation?.businessId === conv.businessId
-                                        ? 'bg-[#81D7B4] text-[#0F1825]'
-                                        : 'bg-[#1A2538] text-[#9BA8B5] group-hover:text-[#F9F9FB]'
+                                    ? 'bg-[#81D7B4] text-[#0F1825]'
+                                    : 'bg-[#1A2538] text-[#9BA8B5] group-hover:text-[#F9F9FB]'
                                     }`}>
                                     {conv.businessName.charAt(0)}
                                     {conv.unreadCount > 0 && (
@@ -312,27 +316,35 @@ export default function AdminChatPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-[#0F1825] relative">
+            <div className={`flex-1 flex flex-col bg-[#0F1825] relative w-full md:w-auto h-full absolute md:relative z-10 transition-transform duration-300 ${!selectedConversation ? 'translate-x-full md:translate-x-0' : 'translate-x-0'}`}>
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+')]"></div>
 
                 {selectedConversation ? (
                     <>
                         {/* Header */}
-                        <div className="px-6 py-4 border-b border-[#7B8B9A]/10 flex items-center justify-between bg-[#1A2538]/30 backdrop-blur-xl relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center text-[#0F1825] font-bold shadow-lg shadow-[#81D7B4]/20">
+                        <div className="px-4 md:px-6 py-4 border-b border-[#7B8B9A]/10 flex items-center justify-between bg-[#1A2538]/30 backdrop-blur-xl relative z-10">
+                            <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0 mr-4">
+                                <button
+                                    onClick={() => setSelectedConversation(null)}
+                                    className="md:hidden p-2 -ml-2 text-[#9BA8B5] hover:text-[#F9F9FB] shrink-0"
+                                >
+                                    <HiOutlineArrowLeft className="w-5 h-5" />
+                                </button>
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center text-[#0F1825] font-bold shadow-lg shadow-[#81D7B4]/20 shrink-0">
                                     <HiOutlineBuildingStorefront className="w-5 h-5" />
                                 </div>
-                                <div>
-                                    <h2 className="font-bold text-[#F9F9FB] text-lg leading-tight">{selectedConversation.businessName}</h2>
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="font-bold text-[#F9F9FB] text-base md:text-lg leading-tight break-words line-clamp-2 md:truncate">
+                                        {selectedConversation.businessName}
+                                    </h2>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#81D7B4] animate-pulse"></div>
-                                        <p className="text-[10px] text-[#81D7B4] font-medium uppercase tracking-wider">Active Now</p>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#81D7B4] animate-pulse shrink-0"></div>
+                                        <p className="text-[10px] text-[#81D7B4] font-medium uppercase tracking-wider truncate">Active Now</p>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 md:gap-2 shrink-0">
                                 <button className="p-2.5 hover:bg-[#1A2538] rounded-xl text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors border border-transparent hover:border-[#7B8B9A]/10">
                                     <HiOutlineMagnifyingGlass className="w-5 h-5" />
                                 </button>
@@ -343,7 +355,7 @@ export default function AdminChatPage() {
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-10 scroll-smooth">
+                        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-6 relative z-10 scroll-smooth">
                             {messages.map((msg) => (
                                 <motion.div
                                     key={msg._id}
@@ -351,10 +363,10 @@ export default function AdminChatPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className={`max-w-[65%] flex flex-col ${msg.sender === 'admin' ? 'items-end' : 'items-start'}`}>
+                                    <div className={`max-w-[85%] md:max-w-[65%] flex flex-col ${msg.sender === 'admin' ? 'items-end' : 'items-start'}`}>
                                         <div className={`px-5 py-3.5 shadow-sm text-sm leading-relaxed relative group ${msg.sender === 'admin'
-                                                ? 'bg-[#81D7B4] text-[#0F1825] rounded-2xl rounded-tr-none'
-                                                : 'bg-[#1A2538] text-[#F9F9FB] rounded-2xl rounded-tl-none border border-[#7B8B9A]/10'
+                                            ? 'bg-[#81D7B4] text-[#0F1825] rounded-2xl rounded-tr-none'
+                                            : 'bg-[#1A2538] text-[#F9F9FB] rounded-2xl rounded-tl-none border border-[#7B8B9A]/10'
                                             }`}>
                                             {msg.type === 'image' && msg.attachmentUrl ? (
                                                 <div className="mb-2 rounded-lg overflow-hidden bg-black/10">
@@ -380,7 +392,7 @@ export default function AdminChatPage() {
                         </div>
 
                         {/* Input */}
-                        <div className="p-5 border-t border-[#7B8B9A]/10 bg-[#1A2538]/30 backdrop-blur-xl relative z-20">
+                        <div className="p-3 md:p-5 border-t border-[#7B8B9A]/10 bg-[#1A2538]/30 backdrop-blur-xl relative z-20">
                             {/* Emoji Picker Popover */}
                             <AnimatePresence>
                                 {showEmoji && (
@@ -388,19 +400,21 @@ export default function AdminChatPage() {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute bottom-28 left-6 z-50 shadow-2xl rounded-2xl overflow-hidden ring-1 ring-[#7B8B9A]/10"
+                                        className="absolute bottom-20 left-4 z-50 shadow-2xl rounded-2xl overflow-hidden ring-1 ring-[#7B8B9A]/10"
                                     >
                                         <EmojiPicker
                                             theme={"dark" as any}
                                             onEmojiClick={onEmojiClick}
                                             lazyLoadEmojis={true}
+                                            width={300}
+                                            height={400}
                                         />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            <div className="flex items-end gap-3 max-w-5xl mx-auto">
-                                <div className="flex items-center gap-1 bg-[#1A2538] p-1.5 rounded-xl border border-[#7B8B9A]/10">
+                            <div className="flex items-end gap-2 md:gap-3 max-w-5xl mx-auto">
+                                <div className="flex items-center gap-0.5 md:gap-1 bg-[#1A2538] p-1 md:p-1.5 rounded-xl border border-[#7B8B9A]/10 shrink-0">
                                     <input
                                         type="file"
                                         ref={fileInputRef}
@@ -411,36 +425,33 @@ export default function AdminChatPage() {
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={uploading}
-                                        className="p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                        className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                                     >
                                         <HiOutlinePaperClip className="w-5 h-5" />
-                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-bold text-[#F9F9FB] bg-[#0F1825] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Attach file</span>
                                     </button>
                                     <button
                                         onClick={() => setShowDoodle(true)}
                                         disabled={uploading}
-                                        className="p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                        className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                                     >
                                         <HiOutlinePencil className="w-5 h-5" />
-                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-bold text-[#F9F9FB] bg-[#0F1825] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Draw</span>
                                     </button>
                                     <button
                                         onClick={() => setShowEmoji(!showEmoji)}
-                                        className={`p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
+                                        className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                                     >
                                         <HiOutlineFaceSmile className="w-5 h-5" />
-                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-bold text-[#F9F9FB] bg-[#0F1825] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Emoji</span>
                                     </button>
                                 </div>
 
-                                <div className="flex-1 bg-[#1A2538] rounded-2xl border border-[#7B8B9A]/10 focus-within:border-[#81D7B4]/50 focus-within:shadow-[0_0_0_4px_rgba(129,215,180,0.05)] transition-all flex items-center px-2">
+                                <div className="flex-1 bg-[#1A2538] rounded-2xl border border-[#7B8B9A]/10 focus-within:border-[#81D7B4]/50 focus-within:shadow-[0_0_0_4px_rgba(129,215,180,0.05)] transition-all flex items-center px-2 min-w-0">
                                     <textarea
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder={uploading ? "Uploading..." : "Type your message..."}
+                                        placeholder="Message..."
                                         rows={1}
                                         disabled={uploading}
-                                        className="w-full px-4 py-3.5 bg-transparent border-none text-[#F9F9FB] placeholder-[#7B8B9A]/50 focus:ring-0 focus:outline-none resize-none max-h-32 text-sm leading-relaxed"
+                                        className="w-full px-3 py-3 md:px-4 md:py-3.5 bg-transparent border-none text-[#F9F9FB] placeholder-[#7B8B9A]/50 focus:ring-0 focus:outline-none resize-none max-h-32 text-sm leading-relaxed"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
                                                 e.preventDefault();
@@ -453,12 +464,12 @@ export default function AdminChatPage() {
                                 <button
                                     onClick={() => handleSendMessage()}
                                     disabled={!newMessage.trim() || sending || uploading}
-                                    className="p-3.5 bg-[#81D7B4] text-[#0F1825] rounded-xl hover:bg-[#6BC4A0] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#81D7B4]/20 flex-shrink-0"
+                                    className="p-3 md:p-3.5 bg-[#81D7B4] text-[#0F1825] rounded-xl hover:bg-[#6BC4A0] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#81D7B4]/20 flex-shrink-0"
                                 >
                                     {sending || uploading ? (
-                                        <div className="w-6 h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin" />
+                                        <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                        <HiOutlinePaperAirplane className="w-6 h-6 transform -rotate-45 translate-x-0.5" />
+                                        <HiOutlinePaperAirplane className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
                                     )}
                                 </button>
                             </div>
@@ -471,12 +482,12 @@ export default function AdminChatPage() {
                         />
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-[#9BA8B5] relative z-10">
-                        <div className="w-24 h-24 bg-[#1A2538]/50 rounded-3xl border border-[#7B8B9A]/10 flex items-center justify-center mb-6 shadow-xl backdrop-blur-sm">
-                            <HiOutlinePaperAirplane className="w-10 h-10 transform -rotate-45 text-[#81D7B4]/50" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-[#9BA8B5] relative z-10 p-6 text-center">
+                        <div className="w-20 h-20 md:w-24 md:h-24 bg-[#1A2538]/50 rounded-3xl border border-[#7B8B9A]/10 flex items-center justify-center mb-6 shadow-xl backdrop-blur-sm">
+                            <HiOutlinePaperAirplane className="w-8 h-8 md:w-10 md:h-10 transform -rotate-45 text-[#81D7B4]/50" />
                         </div>
-                        <h3 className="text-2xl font-bold text-[#F9F9FB] mb-3">Select a Conversation</h3>
-                        <p className="text-[#7B8B9A] max-w-xs text-center leading-relaxed">Choose a business from the sidebar to start messaging and manage support requests.</p>
+                        <h3 className="text-xl md:text-2xl font-bold text-[#F9F9FB] mb-3">Select a Conversation</h3>
+                        <p className="text-[#7B8B9A] max-w-xs text-center leading-relaxed text-sm md:text-base">Choose a business from the sidebar to start messaging and manage support requests.</p>
                     </div>
                 )}
             </div>

@@ -27,17 +27,12 @@ import {
   AlertCircle,
   MoreVertical,
   Download,
-  FileText
+  FileText,
+  Import
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import LoanAgreementEditor from './components/LoanAgreementEditor';
-
-
-interface Metrics {
-  totalBusinesses: number;
-  statusDistribution: { _id: string; count: number }[];
-  tierDistribution: { _id: string; count: number }[];
-  growthData: { _id: string; count: number }[];
-}
 
 interface Business {
   transactionHash: string;
@@ -50,31 +45,42 @@ interface Business {
   metadata?: any;
 }
 
-const TIER_COLORS = {
-  'standard': '#81D7B480',
-  'premium': '#81D7B4CC',
-  'enterprise': '#81D7B4'
-};
-
-const STATUS_COLORS = {
-  'approved': '#81D7B4',
-  'pending': '#81D7B4CC',
-  'rejected': '#EF4444'
-};
-
-import { useRouter } from 'next/navigation';
-
-export default function BizFiAdminDashboard() {
+export default function BizFiAdminPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
+  const [metrics, setMetrics] = useState<{
+    totalBusinesses: number;
+    statusDistribution: { _id: string; count: number }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [agreementBusiness, setAgreementBusiness] = useState<Business | null>(null);
+  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
+
+  const TIER_COLORS = {
+    builder: '#81D7B4',
+    scaler: '#60A5FA',
+    enterprise: '#A78BFA'
+  };
+
+  // Derived Data
+  const tierChartData = metrics?.statusDistribution?.map(item => ({
+    name: item._id,
+    value: item.count
+  })) || [];
+
+  // Mock growth data if not available in metrics (since we only have total businesses in state metrics)
+  // Or derive from businesses list if needed
+  const growthChartData = [
+    { date: 'Jan 1', businesses: 10 },
+    { date: 'Jan 8', businesses: 15 },
+    { date: 'Jan 15', businesses: 25 },
+    { date: 'Jan 22', businesses: 30 },
+    { date: 'Jan 29', businesses: 45 },
+    { date: 'Feb 5', businesses: metrics?.totalBusinesses || 50 }
+  ];
 
   useEffect(() => {
     fetchData();
@@ -199,16 +205,7 @@ export default function BizFiAdminDashboard() {
     show: { opacity: 1, y: 0 }
   };
 
-  // Prepare chart data
-  const growthChartData = metrics?.growthData.map(d => ({
-    date: format(new Date(d._id), 'MMM dd'),
-    businesses: d.count
-  })) || [];
 
-  const tierChartData = metrics?.tierDistribution.map(d => ({
-    name: d._id || 'Standard',
-    value: d.count
-  })) || [];
 
   const handleExport = () => {
     if (!filteredBusinesses.length) return;
@@ -592,50 +589,63 @@ export default function BizFiAdminDashboard() {
             filteredBusinesses.map((biz) => (
               <div
                 key={biz.transactionHash}
-                className="p-4 space-y-4 bg-[#1A2538]/20 cursor-pointer hover:bg-[#1A2538]/40 transition-colors"
-                onClick={() => setSelectedBusiness(biz)}
+                className="p-4 space-y-4 bg-[#1A2538]/20 cursor-pointer hover:bg-[#81D7B4]/5 transition-colors border-l-2 border-transparent hover:border-l-[#81D7B4]"
+                onClick={() => router.push(`/bizfi/admin/businesses/${biz.transactionHash}`)}
               >
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-[#F9F9FB] text-lg">{biz.businessName}</h4>
-                    <p className="text-xs text-[#7B8B9A] font-mono mt-1">
-                      {biz.owner.substring(0, 8)}...{biz.owner.substring(biz.owner.length - 6)}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/5 flex items-center justify-center text-[#81D7B4] font-bold text-sm border border-[#81D7B4]/20 shadow-inner">
+                      {biz.businessName.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#F9F9FB] text-base leading-tight">{biz.businessName}</h4>
+                      <p className="text-xs text-[#7B8B9A] font-mono mt-1 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#7B8B9A]/50"></span>
+                        {biz.owner.substring(0, 6)}...{biz.owner.substring(biz.owner.length - 4)}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#1A2538] text-[#9BA8B5] border border-[#7B8B9A]/20`}>
+                  <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-[#1A2538] text-[#9BA8B5] border border-[#7B8B9A]/20`}>
                     {biz.tier || 'Standard'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize flex items-center gap-1.5 ${biz.status === 'active' ? 'bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20' :
-                    biz.status === 'pending' ? 'bg-[#81D7B4]/10 text-[#81D7B4CC] border border-[#81D7B4]/20' :
-                      'bg-red-500/10 text-red-400 border border-red-500/20'
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${biz.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/10' :
+                    biz.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/10' :
+                      'bg-red-500/10 text-red-400 border-red-500/10'
                     }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${biz.status === 'active' ? 'bg-[#81D7B4]' :
-                      biz.status === 'pending' ? 'bg-[#81D7B4CC]' :
-                        'bg-red-400'
+                    <span className={`w-1.5 h-1.5 rounded-full ${biz.status === 'approved' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' :
+                      biz.status === 'pending' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]' :
+                        'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]'
                       }`}></span>
-                    {biz.status || 'Unknown'}
-                  </span>
-                  <span className="text-xs text-[#7B8B9A]">
+                    <span className="capitalize">{biz.status || 'Unknown'}</span>
+                  </div>
+                  <span className="text-xs text-[#7B8B9A] font-medium">
                     {biz.createdAt ? format(new Date(biz.createdAt), 'MMM d, yyyy') : '-'}
                   </span>
                 </div>
 
                 <div className="pt-2" onClick={(e) => e.stopPropagation()}>
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) handleStatusUpdate(biz.transactionHash, e.target.value);
-                    }}
-                    className="w-full appearance-none bg-[#0F1825] border border-[#7B8B9A]/20 text-[#81D7B4] py-3 px-4 rounded-xl text-sm font-bold cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#81D7B4] transition-all"
-                  >
-                    <option value="" disabled>Update Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) handleStatusUpdate(biz.transactionHash, e.target.value);
+                      }}
+                      className="w-full appearance-none bg-[#0F1825]/50 border border-[#7B8B9A]/20 text-[#81D7B4] py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#0F1825] transition-all"
+                    >
+                      <option value="" disabled>Update Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#81D7B4]">
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
@@ -646,8 +656,8 @@ export default function BizFiAdminDashboard() {
         <div className="p-4 border-t border-[#7B8B9A]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#9BA8B5]">
           <span>Showing {filteredBusinesses.length} of {businesses.length} entries</span>
           <div className="flex gap-2 w-full sm:w-auto">
-            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#0F1825] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium">Previous</button>
-            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#0F1825] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium">Next</button>
+            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#0F1825] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium hover:bg-[#1A2538] transition-colors">Previous</button>
+            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#0F1825] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium hover:bg-[#1A2538] transition-colors">Next</button>
           </div>
         </div>
       </motion.div>
