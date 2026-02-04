@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   AreaChart,
@@ -26,8 +26,11 @@ import {
   CheckCircle2,
   AlertCircle,
   MoreVertical,
-  Download
+  Download,
+  FileText
 } from 'lucide-react';
+import LoanAgreementEditor from './components/LoanAgreementEditor';
+import BusinessDetailsModal from './components/BusinessDetailsModal';
 
 interface Metrics {
   totalBusinesses: number;
@@ -44,6 +47,7 @@ interface Business {
   status: string;
   createdAt: string;
   feePaid?: string;
+  metadata?: any;
 }
 
 const TIER_COLORS = {
@@ -53,9 +57,9 @@ const TIER_COLORS = {
 };
 
 const STATUS_COLORS = {
-  'active': '#81D7B4',
+  'approved': '#81D7B4',
   'pending': '#81D7B4CC',
-  'inactive': '#EF4444'
+  'rejected': '#EF4444'
 };
 
 export default function BizFiAdminDashboard() {
@@ -66,6 +70,8 @@ export default function BizFiAdminDashboard() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [agreementBusiness, setAgreementBusiness] = useState<Business | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -130,6 +136,28 @@ export default function BizFiAdminDashboard() {
       setError('Failed to update status');
       // Revert optimistic update (could be improved by refetching)
       fetchData();
+    }
+  };
+
+  const handleSaveAgreement = async (data: any) => {
+    if (!agreementBusiness) return;
+
+    try {
+      const res = await fetch('/api/bizfi/admin/business/update-agreement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: agreementBusiness.transactionHash,
+          agreement: data
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to save agreement');
+      
+      setAgreementBusiness(null);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save agreement');
     }
   };
 
@@ -215,6 +243,33 @@ export default function BizFiAdminDashboard() {
       animate="show"
       className="space-y-8 pb-12"
     >
+      {error && (
+        <div className="p-6 bg-red-900/10 border border-red-900/30 rounded-2xl text-red-200 flex items-center gap-3">
+          <AlertCircle className="w-6 h-6" />
+          {error}
+        </div>
+      )}
+
+      <AnimatePresence>
+        {selectedBusiness && (
+          <BusinessDetailsModal
+            business={selectedBusiness}
+            onClose={() => setSelectedBusiness(null)}
+            onOpenAgreement={() => {
+              setAgreementBusiness(selectedBusiness);
+              setSelectedBusiness(null);
+            }}
+          />
+        )}
+        {agreementBusiness && (
+          <LoanAgreementEditor
+            business={agreementBusiness}
+            onClose={() => setAgreementBusiness(null)}
+            onSave={handleSaveAgreement}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
@@ -260,9 +315,9 @@ export default function BizFiAdminDashboard() {
 
         <motion.div variants={item} className="relative bg-[#1A2538]/50 backdrop-blur-sm p-6 rounded-2xl border border-[#7B8B9A]/10 hover:border-[#81D7B4]/30 transition-all group hover:shadow-lg hover:shadow-[#81D7B4]/5 flex flex-col justify-between overflow-hidden">
           <div className="relative z-10 pr-12">
-            <p className="text-[#9BA8B5] text-sm font-medium mb-1">Active status</p>
+            <p className="text-[#9BA8B5] text-sm font-medium mb-1">Active (Approved)</p>
             <h3 className="text-3xl font-bold text-[#F9F9FB] tracking-tight">
-              {metrics?.statusDistribution.find(s => s._id === 'active')?.count || 0}
+              {metrics?.statusDistribution.find(s => s._id === 'approved' || s._id === 'active')?.count || 0}
             </h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
@@ -423,9 +478,9 @@ export default function BizFiAdminDashboard() {
                 className="w-full appearance-none bg-[#0F1825] border border-[#7B8B9A]/20 rounded-xl pl-4 pr-10 py-2.5 text-sm text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4] transition-all cursor-pointer"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active</option>
                 <option value="pending">Pending</option>
-                <option value="inactive">Inactive</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
               </select>
               <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
             </div>
@@ -437,6 +492,7 @@ export default function BizFiAdminDashboard() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#0F1825]/50 text-[#9BA8B5] text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-medium">No.</th>
                 <th className="px-6 py-4 font-medium">Business Name</th>
                 <th className="px-6 py-4 font-medium">Owner</th>
                 <th className="px-6 py-4 font-medium">Tier</th>
@@ -456,8 +512,15 @@ export default function BizFiAdminDashboard() {
                   </td>
                 </tr>
               ) : (
-                filteredBusinesses.map((biz) => (
-                  <tr key={biz.transactionHash} className="hover:bg-[#81D7B4]/5 transition-colors group">
+                filteredBusinesses.map((biz, index) => (
+                  <tr 
+                    key={biz.transactionHash} 
+                    className="hover:bg-[#81D7B4]/5 transition-colors group cursor-pointer"
+                    onClick={() => setSelectedBusiness(biz)}
+                  >
+                    <td className="px-6 py-4 text-sm text-[#9BA8B5] font-mono">
+                      {(index + 1).toString().padStart(2, '0')}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="font-medium text-[#F9F9FB]">{biz.businessName}</span>
                     </td>
@@ -474,23 +537,23 @@ export default function BizFiAdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize flex w-fit items-center gap-1.5 ${biz.status === 'active' ? 'bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20' :
-                        biz.status === 'pending' ? 'bg-[#81D7B4]/10 text-[#81D7B4CC] border border-[#81D7B4]/20' :
-                          biz.status === 'hold' ? 'bg-[#81D7B4]/10 text-[#81D7B480] border border-[#81D7B4]/20' :
-                            'bg-red-500/10 text-red-400 border border-red-500/20'
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize flex w-fit items-center gap-1.5 ${
+                          biz.status === 'approved' ? 'bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20' :
+                          biz.status === 'pending' ? 'bg-[#81D7B4]/10 text-[#81D7B4CC] border border-[#81D7B4]/20' :
+                          'bg-red-500/10 text-red-400 border border-red-500/20'
                         }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${biz.status === 'active' ? 'bg-[#81D7B4]' :
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          biz.status === 'approved' ? 'bg-[#81D7B4]' :
                           biz.status === 'pending' ? 'bg-[#81D7B4CC]' :
-                            biz.status === 'hold' ? 'bg-[#81D7B480]' :
-                              'bg-red-400'
-                          }`}></span>
+                          'bg-red-400'
+                        }`}></span>
                         {biz.status || 'Unknown'}
                       </span>
                     </td>
                     <td className="hidden lg:table-cell px-6 py-4 text-sm text-[#9BA8B5]">
                       {biz.createdAt ? format(new Date(biz.createdAt), 'MMM d, yyyy') : '-'}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="relative inline-block">
                         <select
                           value=""
@@ -500,11 +563,9 @@ export default function BizFiAdminDashboard() {
                           className="appearance-none bg-[#1A2538] border border-[#7B8B9A]/20 hover:border-[#81D7B4] text-[#9BA8B5] hover:text-[#81D7B4] py-2 pl-3 pr-8 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#81D7B4] transition-colors"
                         >
                           <option value="" disabled>Change Status</option>
-                          <option value="active">Active</option>
                           <option value="pending">Pending</option>
-                          <option value="hold">Hold</option>
+                          <option value="approved">Approved</option>
                           <option value="rejected">Rejected</option>
-                          <option value="inactive">Inactive</option>
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#7B8B9A]">
                           <MoreVertical className="h-4 w-4" />
@@ -529,7 +590,11 @@ export default function BizFiAdminDashboard() {
             </div>
           ) : (
             filteredBusinesses.map((biz) => (
-              <div key={biz.transactionHash} className="p-4 space-y-4 bg-[#1A2538]/20">
+              <div 
+                key={biz.transactionHash} 
+                className="p-4 space-y-4 bg-[#1A2538]/20 cursor-pointer hover:bg-[#1A2538]/40 transition-colors"
+                onClick={() => setSelectedBusiness(biz)}
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-bold text-[#F9F9FB] text-lg">{biz.businessName}</h4>
@@ -558,7 +623,7 @@ export default function BizFiAdminDashboard() {
                   </span>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2" onClick={(e) => e.stopPropagation()}>
                   <select
                     value=""
                     onChange={(e) => {
@@ -567,11 +632,9 @@ export default function BizFiAdminDashboard() {
                     className="w-full appearance-none bg-[#0F1825] border border-[#7B8B9A]/20 text-[#81D7B4] py-3 px-4 rounded-xl text-sm font-bold cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#81D7B4] transition-all"
                   >
                     <option value="" disabled>Update Status</option>
-                    <option value="active">Active</option>
                     <option value="pending">Pending</option>
-                    <option value="hold">Hold</option>
+                    <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
-                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>

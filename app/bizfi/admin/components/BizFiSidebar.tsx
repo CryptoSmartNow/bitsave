@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/adminAuth';
 import {
   LayoutDashboard,
   Users,
+  MessageSquare,
   TrendingUp,
   Settings,
   LogOut,
@@ -29,6 +30,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
   const navigation = [
     { name: 'Dashboard', href: '/bizfi/admin', icon: LayoutDashboard },
     { name: 'Businesses', href: '/bizfi/admin/businesses', icon: Users },
+    { name: 'Chat', href: '/bizfi/admin/chat', icon: MessageSquare },
     { name: 'Analytics', href: '/bizfi/admin/analytics', icon: TrendingUp },
     { name: 'Reports', href: '/bizfi/admin/reports', icon: FileText },
     { name: 'Audit Logs', href: '/bizfi/admin/audit', icon: Activity },
@@ -69,7 +71,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
             </button>
           </div>
 
-          <nav className="space-y-1 flex-1 overflow-y-auto pr-2">
+          <nav className="space-y-1 flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -91,18 +93,6 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
 
           {/* Sidebar Stats */}
           <div className="mt-auto space-y-4">
-            <div className="p-4 bg-[#0F1825]/50 rounded-xl border border-[#7B8B9A]/10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-xs text-[#9BA8B5] uppercase font-bold tracking-wider">System Status</span>
-              </div>
-              <p className="text-[#F9F9FB] text-sm font-medium">All systems operational</p>
-              <div className="mt-3 text-xs text-[#7B8B9A] flex justify-between">
-                <span>Uptime</span>
-                <span className="text-[#81D7B4]">99.9%</span>
-              </div>
-            </div>
-
             <div className="pt-4 border-t border-[#7B8B9A]/20">
               <div className="flex items-center gap-3 px-3 mb-4 py-2 bg-[#0F1825]/30 rounded-xl border border-[#7B8B9A]/5">
                 <div className="w-9 h-9 rounded-full bg-[#81D7B4]/20 flex items-center justify-center text-[#81D7B4] shrink-0">

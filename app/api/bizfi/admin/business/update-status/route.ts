@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const validStatuses = ['active', 'pending', 'inactive', 'hold', 'rejected'];
+        const validStatuses = ['pending', 'approved', 'rejected'];
         if (!validStatuses.includes(status)) {
             return NextResponse.json({ error: "Invalid status" }, { status: 400 });
         }

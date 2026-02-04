@@ -22,6 +22,7 @@ import {
 import "../../bizfi-colors.css";
 import BusinessDetailsModal from "./BusinessDetailsModal";
 import KYCStatus from "./components/KYCStatus";
+import KYCSubmissionForm from "./components/KYCSubmissionForm";
 import ProjectTimeline from "./components/ProjectTimeline";
 import RiskAssessment from "./components/RiskAssessment";
 import EmptyState from "@/app/components/EmptyState";
@@ -35,26 +36,29 @@ export default function LaunchPadPage() {
     const [selectedBusiness, setSelectedBusiness] = useState<any>(null); // For modal
     const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-    useEffect(() => {
-        const fetchBusinesses = async () => {
-            if (!address) return;
-            try {
-                const response = await fetch(`/api/bizfi/business?owner=${address}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setBusinesses(data || []);
-                    // Set initial active project if not set
-                    if (data && data.length > 0 && !activeProject) {
-                        setActiveProject(data[0]);
-                    }
+    const fetchBusinesses = async () => {
+        if (!address) return;
+        try {
+            const response = await fetch(`/api/bizfi/business?owner=${address}`);
+            if (response.ok) {
+                const data = await response.json();
+                setBusinesses(data || []);
+                // Update active project if it exists in new data
+                if (activeProject) {
+                    const updated = data.find((b: any) => b.transactionHash === activeProject.transactionHash);
+                    if (updated) setActiveProject(updated);
+                } else if (data && data.length > 0) {
+                    setActiveProject(data[0]);
                 }
-            } catch (error) {
-                console.error("Failed to fetch businesses:", error);
-            } finally {
-                setLoading(false);
             }
-        };
+        } catch (error) {
+            console.error("Failed to fetch businesses:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchBusinesses();
     }, [address]);
 
@@ -63,7 +67,7 @@ export default function LaunchPadPage() {
         if (!activeProject && businesses.length > 0) {
             setActiveProject(businesses[0]);
         }
-    }, [businesses, activeProject]);
+    }, [businesses]); // Removed activeProject from dependency to avoid loop if logic changes
 
     const handleProjectSelect = (project: any) => {
         setActiveProject(project);
@@ -76,6 +80,7 @@ export default function LaunchPadPage() {
             case "draft":
                 return { icon: HiOutlineDocumentText, color: "text-gray-400", bg: "bg-gray-800/30", label: "Draft" };
             case "pending":
+            case "inactive":
                 return { icon: HiOutlineClock, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Pending" };
             case "submitted":
             case "registered":
@@ -307,10 +312,17 @@ export default function LaunchPadPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
                         >
-                            <KYCStatus 
-                                status={activeProject?.status} 
-                                steps={activeProject?.kycSteps}
-                            />
+                            {(!activeProject?.metadata?.kyc && (activeProject?.status === 'pending' || activeProject?.status === 'inactive')) ? (
+                                <KYCSubmissionForm 
+                                    business={activeProject}
+                                    onSuccess={fetchBusinesses}
+                                />
+                            ) : (
+                                <KYCStatus 
+                                    status={activeProject?.status} 
+                                    steps={activeProject?.kycSteps}
+                                />
+                            )}
                         </motion.div>
 
                         {/* Milestones & Risk Grid */}
