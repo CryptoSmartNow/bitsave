@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   Filter,
@@ -11,8 +12,6 @@ import {
   AlertCircle,
   FileText
 } from 'lucide-react';
-import BusinessDetailsModal from '../components/BusinessDetailsModal';
-import LoanAgreementEditor from '../components/LoanAgreementEditor';
 
 interface Business {
   transactionHash: string;
@@ -26,14 +25,13 @@ interface Business {
 }
 
 export default function BizFiBusinessesPage() {
+  const router = useRouter();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
-  const [agreementBusiness, setAgreementBusiness] = useState<Business | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -131,28 +129,6 @@ export default function BizFiBusinessesPage() {
     }
   };
 
-  const handleSaveAgreement = async (data: any) => {
-    if (!agreementBusiness) return;
-
-    try {
-      const res = await fetch('/api/bizfi/admin/business/update-agreement', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionHash: agreementBusiness.transactionHash,
-          agreement: data
-        }),
-      });
-
-      if (!res.ok) throw new Error('Failed to save agreement');
-      
-      setAgreementBusiness(null);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to save agreement');
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
@@ -191,26 +167,6 @@ export default function BizFiBusinessesPage() {
           {error}
         </div>
       )}
-
-      <AnimatePresence>
-        {selectedBusiness && (
-          <BusinessDetailsModal
-            business={selectedBusiness}
-            onClose={() => setSelectedBusiness(null)}
-            onOpenAgreement={() => {
-              setAgreementBusiness(selectedBusiness);
-              setSelectedBusiness(null);
-            }}
-          />
-        )}
-        {agreementBusiness && (
-          <LoanAgreementEditor
-            business={agreementBusiness}
-            onClose={() => setAgreementBusiness(null)}
-            onSave={handleSaveAgreement}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Main Content */}
       <div className="bg-[#1A2538]/50 backdrop-blur-sm rounded-2xl border border-[#7B8B9A]/10 overflow-hidden">
@@ -274,7 +230,7 @@ export default function BizFiBusinessesPage() {
                   <tr 
                     key={biz.transactionHash} 
                     className="hover:bg-[#81D7B4]/5 transition-colors group cursor-pointer"
-                    onClick={() => setSelectedBusiness(biz)}
+                    onClick={() => router.push(`/bizfi/admin/businesses/${biz.transactionHash}`)}
                   >
                     <td className="px-6 py-4 text-sm text-[#9BA8B5] font-mono">
                       {(index + 1).toString().padStart(2, '0')}
@@ -351,7 +307,7 @@ export default function BizFiBusinessesPage() {
               <div 
                 key={biz.transactionHash} 
                 className="p-4 space-y-4 bg-[#1A2538]/20 cursor-pointer hover:bg-[#1A2538]/40 transition-colors"
-                onClick={() => setSelectedBusiness(biz)}
+                onClick={() => router.push(`/bizfi/admin/businesses/${biz.transactionHash}`)}
               >
                 <div className="flex justify-between items-start">
                   <div>

@@ -255,7 +255,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
                   <strong>IN WITNESS WHEREOF</strong> the parties have executed this Agreement the day and year first above written.
                 </p>
 
-                <div className="grid grid-cols-2 gap-12 mt-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-12">
                   <div className="space-y-8">
                     <p className="font-bold border-b border-black pb-2">SIGNED for and on behalf of<br/>BITSAVE SMART LIMITED</p>
                     <div className="h-20"></div>
