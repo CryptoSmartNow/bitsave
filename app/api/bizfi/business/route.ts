@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const owner = searchParams.get("owner");
+    const transactionHash = searchParams.get("transactionHash");
 
     try {
         const db = await getDatabase();
@@ -61,7 +62,13 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
         }
 
-        const query = owner ? { owner: owner.toLowerCase() } : {};
+        let query: any = {};
+        if (owner) {
+            query.owner = owner.toLowerCase();
+        } else if (transactionHash) {
+            query.transactionHash = transactionHash;
+        }
+
         const businesses = await db.collection(COLLECTION_NAME).find(query).sort({ createdAt: -1 }).toArray();
 
         return NextResponse.json(businesses);

@@ -14,7 +14,6 @@ import { Exo } from "next/font/google";
 import { format } from "date-fns";
 import "../../bizfi-colors.css";
 import dynamic from 'next/dynamic';
-// import ChatDoodle from "../components/ChatDoodle";
 
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 const ChatDoodle = dynamic(() => import('../components/ChatDoodle'), { ssr: false });
@@ -91,9 +90,9 @@ export default function ChatPage() {
                     const lastMsg = data[data.length - 1];
                     // Play sound if new message arrived from admin
                     if (lastMsg.sender === 'admin' && messages.length > 0) {
-                         receivedAudioRef.current?.play().catch(e => console.error("Audio play failed", e));
+                        receivedAudioRef.current?.play().catch(e => console.error("Audio play failed", e));
                     }
-                    
+
                     setMessages(data);
                     setTimeout(scrollToBottom, 100);
                 } else {
@@ -207,7 +206,7 @@ export default function ChatPage() {
 
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center bg-gray-900`}>
+            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center bg-[#0A0E14]`}>
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
@@ -215,68 +214,79 @@ export default function ChatPage() {
 
     if (!address) {
         return (
-            <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] flex items-center justify-center bg-gray-950 text-white`}>
-                <div className="text-center">
-                    <HiOutlineChatBubbleLeftRight className="w-16 h-16 text-[#81D7B4] mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold mb-2">Connect Wallet</h2>
-                    <p className="text-gray-400">Please connect your wallet to access support chat.</p>
+            <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] flex items-center justify-center bg-[#0A0E14] text-white`}>
+                <div className="text-center p-8 bg-[#1A2538]/50 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 max-w-md w-full mx-4 shadow-xl">
+                    <div className="w-24 h-24 bg-[#1A2538] rounded-full flex items-center justify-center mb-6 mx-auto border border-[#7B8B9A]/10 shadow-lg shadow-[#81D7B4]/5">
+                        <HiOutlineChatBubbleLeftRight className="w-10 h-10 text-[#81D7B4]" />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-3 text-[#F9F9FB] tracking-tight">Connect Wallet</h2>
+                    <p className="text-[#9BA8B5] leading-relaxed">Please connect your wallet to access premium support chat and manage your business inquiries.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] text-white flex overflow-hidden bg-gray-950`}>
+        <div className={`${exo.variable} font-sans h-[calc(100dvh-80px)] text-[#F9F9FB] flex overflow-hidden bg-[#0A0E14]`}>
             {/* Contacts Sidebar - Simplified for Support */}
-            <div className="hidden md:flex md:w-80 border-r border-gray-800 flex-col bg-gray-900/50 backdrop-blur-xl">
-                <div className="p-4 border-b border-gray-800">
-                    <h2 className="text-xl font-bold text-white">Support</h2>
+            <div className="hidden md:flex md:w-80 border-r border-[#7B8B9A]/10 flex-col bg-[#1A2538]/20 backdrop-blur-xl">
+                <div className="p-6 border-b border-[#7B8B9A]/10">
+                    <h2 className="text-xl font-bold text-[#F9F9FB] tracking-wide">Support</h2>
                 </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-                    <button className="w-full p-4 flex items-center gap-4 bg-gray-800/80 border-l-2 border-l-[#81D7B4] transition-all rounded-r-xl">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+                    <button className="w-full p-4 flex items-center gap-4 bg-[#81D7B4]/10 border border-[#81D7B4]/20 shadow-[0_0_15px_rgba(129,215,180,0.05)] transition-all rounded-xl group hover:bg-[#81D7B4]/15">
                         <div className="relative flex-shrink-0">
-                            <div className="w-12 h-12 rounded-full bg-[#81D7B4] flex items-center justify-center font-bold text-lg text-[#0F1825]">
+                            <div className="w-12 h-12 rounded-xl bg-[#81D7B4] flex items-center justify-center font-bold text-lg text-[#0F1825] shadow-lg shadow-[#81D7B4]/20">
                                 S
                             </div>
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#81D7B4] rounded-full border-2 border-gray-900"></div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full border-2 border-[#0A0E14] flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#0F1825] animate-pulse"></div>
+                            </div>
                         </div>
                         <div className="flex-1 text-left min-w-0">
-                            <h3 className="font-semibold text-white">Bitsave Support</h3>
-                            <p className="text-sm text-gray-300">Official Support Channel</p>
+                            <h3 className="font-bold text-[#F9F9FB] group-hover:text-white transition-colors">Bitsave Support</h3>
+                            <p className="text-xs text-[#81D7B4] font-medium tracking-wide">Official Support Channel</p>
                         </div>
                     </button>
                 </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-gray-950">
+            <div className="flex-1 flex flex-col bg-[#0F1825] relative">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+')]"></div>
+
                 {/* Chat Header */}
-                <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/50 backdrop-blur-md">
+                <div className="px-4 md:px-6 py-4 border-b border-[#7B8B9A]/10 flex items-center justify-between bg-[#1A2538]/30 backdrop-blur-xl relative z-10">
                     <div className="flex items-center gap-4">
                         <div className="relative">
-                            <div className="w-10 h-10 rounded-full bg-[#81D7B4] flex items-center justify-center font-bold text-[#0F1825]">
+                            <div className="w-10 h-10 rounded-xl bg-[#81D7B4] flex items-center justify-center font-bold text-[#0F1825] shadow-lg shadow-[#81D7B4]/20">
                                 S
                             </div>
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#81D7B4] rounded-full border-2 border-gray-900"></div>
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#81D7B4] rounded-full border-2 border-[#0A0E14]"></div>
                         </div>
                         <div>
-                            <h2 className="font-bold text-white text-lg">Bitsave Support</h2>
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#81D7B4]"></span>
-                                <p className="text-xs text-gray-400 font-medium">Online</p>
+                            <h2 className="font-bold text-[#F9F9FB] text-lg leading-tight">Bitsave Support</h2>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#81D7B4] animate-pulse"></span>
+                                <p className="text-[10px] text-[#81D7B4] font-medium uppercase tracking-wider">Online</p>
                             </div>
                         </div>
                     </div>
-                    <button className="p-2 hover:bg-gray-800 rounded-xl transition-colors text-gray-400 hover:text-white">
-                        <HiOutlineEllipsisVertical className="w-6 h-6" />
+                    <button className="p-2.5 hover:bg-[#1A2538] rounded-xl transition-colors text-[#9BA8B5] hover:text-[#F9F9FB] border border-transparent hover:border-[#7B8B9A]/10">
+                        <HiOutlineEllipsisVertical className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#0F1825] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0icmdiYSgxMjMsIDEzOSwgMTU0LCAwLjA1KSIvPgo8L3N2Zz4=')]">
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-10 scroll-smooth custom-scrollbar">
                     {messages.length === 0 ? (
-                        <div className="text-center text-gray-500 mt-10">
-                            <p>No messages yet. Start a conversation with support!</p>
+                        <div className="text-center text-[#9BA8B5] mt-10 p-8 bg-[#1A2538]/30 rounded-2xl border border-[#7B8B9A]/10 max-w-md mx-auto backdrop-blur-sm">
+                            <div className="w-16 h-16 bg-[#1A2538] rounded-2xl flex items-center justify-center mb-4 mx-auto text-[#81D7B4]">
+                                <HiOutlineChatBubbleLeftRight className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-lg font-bold text-[#F9F9FB] mb-2">Welcome to Support</h3>
+                            <p className="text-sm leading-relaxed">No messages yet. Start a conversation with our support team regarding your business application or account!</p>
                         </div>
                     ) : (
                         messages.map((msg) => (
@@ -286,27 +296,27 @@ export default function ChatPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className={`flex ${msg.sender === 'business' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className={`max-w-[70%] ${msg.sender === 'business' ? 'order-2' : 'order-1'}`}>
-                                    <div className={`px-5 py-3 rounded-2xl shadow-sm ${
-                                        msg.sender === 'business'
-                                            ? 'bg-[#81D7B4] text-[#0F1825] rounded-tr-sm'
-                                            : 'bg-gray-800/80 text-white rounded-tl-sm border border-gray-700'
-                                    }`}>
+                                <div className={`max-w-[70%] flex flex-col ${msg.sender === 'business' ? 'items-end' : 'items-start'}`}>
+                                    <div className={`px-5 py-3.5 shadow-sm text-sm leading-relaxed relative group ${msg.sender === 'business'
+                                        ? 'bg-[#81D7B4] text-[#0F1825] rounded-2xl rounded-tr-none'
+                                        : 'bg-[#1A2538] text-[#F9F9FB] rounded-2xl rounded-tl-none border border-[#7B8B9A]/10'
+                                        }`}>
                                         {msg.type === 'image' && msg.attachmentUrl ? (
-                                            <div className="mb-2 rounded-lg overflow-hidden bg-black/20">
-                                                <img 
-                                                    src={msg.attachmentUrl} 
-                                                    alt="Attachment" 
-                                                    className="max-w-full h-auto max-h-60 object-contain"
+                                            <div className="mb-2 rounded-lg overflow-hidden bg-black/10">
+                                                <img
+                                                    src={msg.attachmentUrl}
+                                                    alt="Attachment"
+                                                    className="max-w-full h-auto max-h-64 object-contain"
                                                 />
                                             </div>
                                         ) : null}
-                                        {msg.content && <p className="text-sm leading-relaxed">{msg.content}</p>}
+                                        {msg.content && <p>{msg.content}</p>}
                                     </div>
-                                    <p className={`text-[10px] mt-1 ml-1 font-mono ${
-                                        msg.sender === 'business' ? 'text-right text-gray-500' : 'text-gray-600'
-                                    }`}>
-                                        {format(new Date(msg.timestamp), 'PP p')}
+                                    <p className="text-[10px] text-[#7B8B9A] mt-1.5 font-medium px-1 flex items-center gap-1">
+                                        {format(new Date(msg.timestamp), 'h:mm a')}
+                                        {msg.sender === 'business' && (
+                                            <span className="text-[#81D7B4]">✓</span>
+                                        )}
                                     </p>
                                 </div>
                             </motion.div>
@@ -316,7 +326,7 @@ export default function ChatPage() {
                 </div>
 
                 {/* Message Input */}
-                <div className="p-4 border-t border-gray-800 bg-gray-900/50 backdrop-blur-md relative">
+                <div className="p-5 border-t border-[#7B8B9A]/10 bg-[#1A2538]/30 backdrop-blur-xl relative z-20">
                     {/* Emoji Picker Popover */}
                     <AnimatePresence>
                         {showEmoji && (
@@ -324,16 +334,16 @@ export default function ChatPage() {
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute bottom-24 left-4 z-50 shadow-2xl rounded-2xl overflow-hidden"
+                                className="absolute bottom-28 left-6 z-50 shadow-2xl rounded-2xl overflow-hidden ring-1 ring-[#7B8B9A]/10"
                             >
                                 <div className="relative">
-                                    <button 
+                                    <button
                                         onClick={() => setShowEmoji(false)}
-                                        className="absolute -top-2 -right-2 bg-gray-800 rounded-full p-1 text-gray-400 hover:text-white z-10 border border-gray-700"
+                                        className="absolute -top-2 -right-2 bg-[#1A2538] rounded-full p-1 text-[#9BA8B5] hover:text-[#F9F9FB] z-10 border border-[#7B8B9A]/20"
                                     >
                                         <HiOutlineEllipsisVertical className="w-4 h-4 rotate-90" />
                                     </button>
-                                    <EmojiPicker 
+                                    <EmojiPicker
                                         theme={"dark" as any}
                                         onEmojiClick={onEmojiClick}
                                         lazyLoadEmojis={true}
@@ -343,8 +353,8 @@ export default function ChatPage() {
                         )}
                     </AnimatePresence>
 
-                    <div className="flex items-end gap-3 max-w-4xl mx-auto">
-                        <div className="flex gap-1">
+                    <div className="flex items-end gap-2 md:gap-3 max-w-5xl mx-auto">
+                        <div className="flex items-center gap-0.5 md:gap-1 bg-[#1A2538] p-1 md:p-1.5 rounded-xl border border-[#7B8B9A]/10 flex-shrink-0">
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -352,39 +362,36 @@ export default function ChatPage() {
                                 accept="image/*"
                                 onChange={handleFileUpload}
                             />
-                            <button 
+                            <button
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploading}
-                                className="p-3 hover:bg-gray-800 rounded-xl transition-colors text-gray-400 hover:text-[#81D7B4] disabled:opacity-50"
-                                title="Attach Image"
+                                className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
-                                <HiOutlinePaperClip className="w-6 h-6" />
+                                <HiOutlinePaperClip className="w-5 h-5" />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setShowDoodle(true)}
                                 disabled={uploading}
-                                className="p-3 hover:bg-gray-800 rounded-xl transition-colors text-gray-400 hover:text-[#81D7B4] disabled:opacity-50"
-                                title="Draw Signature"
+                                className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
-                                <HiOutlinePencil className="w-6 h-6" />
+                                <HiOutlinePencil className="w-5 h-5" />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setShowEmoji(!showEmoji)}
-                                className={`p-3 hover:bg-gray-800 rounded-xl transition-colors ${showEmoji ? 'text-[#81D7B4] bg-gray-800' : 'text-gray-400 hover:text-[#81D7B4]'}`}
-                                title="Emoji"
+                                className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                             >
-                                <HiOutlineFaceSmile className="w-6 h-6" />
+                                <HiOutlineFaceSmile className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="flex-1 bg-gray-800/50 rounded-2xl border border-gray-700 transition-all flex items-center px-2">
+                        <div className="flex-1 bg-[#1A2538] rounded-2xl border border-[#7B8B9A]/10 focus-within:border-[#81D7B4]/50 focus-within:shadow-[0_0_0_4px_rgba(129,215,180,0.05)] transition-all flex items-center px-2 min-w-0">
                             <textarea
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                placeholder={uploading ? "Uploading..." : "Type a message..."}
+                                placeholder={uploading ? "Uploading..." : "Message..."}
                                 rows={1}
                                 disabled={uploading}
-                                className="w-full px-4 py-3 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 focus:outline-none resize-none max-h-32 custom-scrollbar"
+                                className="w-full px-3 py-3 md:px-4 md:py-3.5 bg-transparent border-none text-[#F9F9FB] placeholder-[#7B8B9A]/50 focus:ring-0 focus:outline-none resize-none max-h-32 text-sm leading-relaxed custom-scrollbar"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey && message.trim()) {
                                         e.preventDefault();
@@ -397,18 +404,18 @@ export default function ChatPage() {
                         <button
                             onClick={() => handleSendMessage()}
                             disabled={!message.trim() || sending || uploading}
-                            className="p-3 bg-[#81D7B4] text-[#0F1825] rounded-xl hover:bg-[#6BC4A0] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(129,215,180,0.2)]"
+                            className="p-3 md:p-3.5 bg-[#81D7B4] text-[#0F1825] rounded-xl hover:bg-[#6BC4A0] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#81D7B4]/20 flex-shrink-0"
                         >
                             {sending || uploading ? (
-                                <div className="w-6 h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <HiOutlinePaperAirplane className="w-6 h-6" />
+                                <HiOutlinePaperAirplane className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
                             )}
                         </button>
                     </div>
                 </div>
 
-                <ChatDoodle 
+                <ChatDoodle
                     isOpen={showDoodle}
                     onClose={() => setShowDoodle(false)}
                     onSend={handleDoodleSend}
