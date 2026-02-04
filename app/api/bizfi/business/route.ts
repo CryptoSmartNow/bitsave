@@ -70,3 +70,39 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function PUT(req: NextRequest) {
+    let body;
+    try {
+        body = await req.json();
+        const { transactionHash, owner, updates } = body;
+
+        if (!transactionHash || !owner || !updates) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        const db = await getDatabase();
+        if (!db) {
+            return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
+        }
+
+        const query = {
+            transactionHash,
+            owner: owner.toLowerCase()
+        };
+
+        const result = await db.collection(COLLECTION_NAME).updateOne(
+            query,
+            { $set: updates }
+        );
+
+        if (result.matchedCount === 0) {
+            return NextResponse.json({ error: "Business not found or unauthorized" }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        console.error("Failed to update business", e);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

@@ -258,8 +258,20 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-10 custom-scrollbar bg-[#0F1825]">
                         {SECTIONS.map((section) => {
                             const SectionIcon = section.icon;
+                            
+                            // Helper to get value from nested structures (like kyc)
+                            const getValue = (data: any, field: string) => {
+                                if (data[field] !== undefined) return data[field];
+                                if (data.kyc && data.kyc[field] !== undefined) return data.kyc[field];
+                                return undefined;
+                            };
+
                             // Check if any fields in this section have data
-                            const hasData = section.fields.some(field => data[field] && String(data[field]).trim() !== '');
+                            const hasData = section.fields.some(field => {
+                                const val = getValue(data, field);
+                                return val && String(val).trim() !== '';
+                            });
+                            
                             if (!hasData) return null;
 
                             return (
@@ -273,7 +285,7 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                                         {section.fields.map(field => {
-                                            const value = data[field];
+                                            const value = getValue(data, field);
                                             if (!value || (typeof value === 'string' && value.trim() === '')) return null;
 
                                             // Determine if this field should span row (long text)
