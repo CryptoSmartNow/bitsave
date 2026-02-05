@@ -211,12 +211,13 @@ const TopUpModal = memo(function TopUpModal({
       setWalletBalance(nativeBalanceFormatted);
 
       // Get token balance for selected currency
+      let tokenBalanceFormatted = nativeBalanceFormatted;
       if (!isEth && tokenName) {
         const tokenAddress = getTokenAddress(tokenName, currentNetwork);
         const tokenContract = new ethers.Contract(tokenAddress, erc20ABI.abi, provider);
-        const tokenBalance = await tokenContract.balanceOf(address);
+        const tBalance = await tokenContract.balanceOf(address);
         const decimals = await tokenContract.decimals();
-        const tokenBalanceFormatted = ethers.formatUnits(tokenBalance, decimals);
+        tokenBalanceFormatted = ethers.formatUnits(tBalance, decimals);
         setTokenBalance(tokenBalanceFormatted);
       } else {
         setTokenBalance(nativeBalanceFormatted); // For ETH top-ups
