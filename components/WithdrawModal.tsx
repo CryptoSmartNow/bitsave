@@ -213,7 +213,7 @@ const WithdrawModal = memo(function WithdrawModal({
       const userAddress = await signer.getAddress();
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      const userChildContractAddress = await contract.getUserChildContractAddress({ from: userAddress });
+      const userChildContractAddress = await contract.getUserChildContractAddress();
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
@@ -302,7 +302,7 @@ const WithdrawModal = memo(function WithdrawModal({
       const contractAddress = getContractAddress();
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      const userChildContractAddress = await contract.getUserChildContractAddress({ from: userAddress });
+      const userChildContractAddress = await contract.getUserChildContractAddress();
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
@@ -310,11 +310,6 @@ const WithdrawModal = memo(function WithdrawModal({
       // Determine decimals based on token name
       let decimals = 6; // Default to 6 (USDC, cNGN)
       if (currentTokenName === 'USDGLO' || currentTokenName === 'cUSD' || currentTokenName === 'Gooddollar' || currentTokenName === '$G') {
-        decimals = 18;
-      }
-
-      // Special case for old Base savings using 18 decimals for USDC
-      if (currentNetwork === 'base' && currentTokenName === 'USDC' && getContractAddress() === BASE_CONTRACT_ADDRESS_OLD) {
         decimals = 18;
       }
 
