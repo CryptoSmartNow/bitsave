@@ -464,7 +464,7 @@ const TopUpModal = memo(function TopUpModal({
 
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      const userChildContractAddress = await contract.getUserChildContractAddress();
+      const userChildContractAddress = await contract.getUserChildContractAddress({ from: address });
       if (userChildContractAddress === ethers.ZeroAddress) {
         throw new Error("You must join Bitsave before topping up.");
       }

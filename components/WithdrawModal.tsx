@@ -213,7 +213,7 @@ const WithdrawModal = memo(function WithdrawModal({
       const userAddress = await signer.getAddress();
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      const userChildContractAddress = await contract.getUserChildContractAddress();
+      const userChildContractAddress = await contract.getUserChildContractAddress({ from: userAddress });
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
@@ -302,7 +302,7 @@ const WithdrawModal = memo(function WithdrawModal({
       const contractAddress = getContractAddress();
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      const userChildContractAddress = await contract.getUserChildContractAddress();
+      const userChildContractAddress = await contract.getUserChildContractAddress({ from: userAddress });
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
