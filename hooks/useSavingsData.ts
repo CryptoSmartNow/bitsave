@@ -195,7 +195,7 @@ export function useSavingsData(): UseSavingsDataReturn {
     {
       chainId: BASE_CHAIN_ID,
       rpcUrl: 'https://base.publicnode.com',
-      contractAddress: BASE_CONTRACT_ADDRESS_NEW, // Use new contract for fetching (will check both)
+      contractAddress: BASE_CONTRACT_ADDRESS_OLD, // Use old contract to fetch existing savings
       name: 'Base'
     },
     {
