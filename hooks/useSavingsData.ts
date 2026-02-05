@@ -34,7 +34,12 @@ import childContractABI from '../app/abi/childContractABI.js';
 const DEBUG = process.env.NODE_ENV === 'development';
 
 // Contract addresses for different networks
-const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
+// Base network - dual contract support
+const BASE_CONTRACT_ADDRESS_OLD = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"; // For existing savings
+const BASE_CONTRACT_ADDRESS_NEW = "0x67FFa7a1eb0D05BEaF9dB039c1bD604063040be9"; // For new savings
+const BASE_CONTRACT_MIGRATION_DATE = new Date('2026-02-05T00:00:00Z').getTime() / 1000; // Unix timestamp
+
+// Other networks
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
@@ -90,6 +95,16 @@ const defaultSavingsData: SavingsData = {
   rewards: "0.00",
   currentPlans: [],
   completedPlans: []
+};
+
+// Helper function to determine which Base contract to use
+const getBaseContractAddress = (creationTimestamp?: number): string => {
+  // If no timestamp provided or it's before migration date, use old contract
+  if (!creationTimestamp || creationTimestamp < BASE_CONTRACT_MIGRATION_DATE) {
+    return BASE_CONTRACT_ADDRESS_OLD;
+  }
+  // Otherwise use new contract
+  return BASE_CONTRACT_ADDRESS_NEW;
 };
 
 export function useSavingsData(): UseSavingsDataReturn {
@@ -180,7 +195,7 @@ export function useSavingsData(): UseSavingsDataReturn {
     {
       chainId: BASE_CHAIN_ID,
       rpcUrl: 'https://base.publicnode.com',
-      contractAddress: BASE_CONTRACT_ADDRESS,
+      contractAddress: BASE_CONTRACT_ADDRESS_NEW, // Use new contract for fetching (will check both)
       name: 'Base'
     },
     {
@@ -289,7 +304,7 @@ export function useSavingsData(): UseSavingsDataReturn {
               setTimeout(() => reject(new Error('Contract call timeout')), 10000)
             );
             userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
-            
+
             if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
               return null;
             }
@@ -492,7 +507,10 @@ export function useSavingsData(): UseSavingsDataReturn {
                   penalty: (savingData.penaltyPercentage ?? savingData[5] ?? 0).toString(),
                   penaltyPercentage: Number(savingData.penaltyPercentage ?? savingData[5] ?? 0), // Add penaltyPercentage
                   network: network.name, // Add network name to plan
-                  chainId: network.chainId // Add chainId to plan
+                  chainId: network.chainId, // Add chainId to plan
+                  contractAddress: network.chainId === BASE_CHAIN_ID
+                    ? getBaseContractAddress(startTime)
+                    : network.contractAddress // Store the actual contract address used
                 };
 
                 if (isCompleted) {

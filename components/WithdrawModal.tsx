@@ -13,7 +13,13 @@ import { trackTransaction, trackError } from '@/lib/interactionTracker';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
 
-const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
+// Contract addresses
+// Base network - dual contract support
+const BASE_CONTRACT_ADDRESS_OLD = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"; // For existing savings
+const BASE_CONTRACT_ADDRESS_NEW = "0x67FFa7a1eb0D05BEaF9dB039c1bD604063040be9"; // For new savings
+const BASE_CONTRACT_MIGRATION_DATE = new Date('2026-02-05T00:00:00Z').getTime() / 1000; // Unix timestamp
+
+// Other networks
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
@@ -53,6 +59,21 @@ interface WithdrawModalProps {
   tokenName?: string;
   isCompleted?: boolean;
   networkLogos?: NetworkLogoData;
+  contractAddress?: string; // Contract address from plan metadata
+  startTime?: number; // Plan creation timestamp for contract selection
+}
+
+// Helper function to determine which Base contract to use
+const getBaseContractAddress = (contractAddress?: string, startTime?: number): string => {
+  // If contract address is explicitly provided in plan metadata, use it
+  if (contractAddress) {
+    return contractAddress;
+  }
+  // Otherwise determine based on creation time
+  if (!startTime || startTime < BASE_CONTRACT_MIGRATION_DATE) {
+    return BASE_CONTRACT_ADDRESS_OLD;
+  }
+  return BASE_CONTRACT_ADDRESS_NEW;
 }
 
 const WithdrawModal = memo(function WithdrawModal({
@@ -63,7 +84,9 @@ const WithdrawModal = memo(function WithdrawModal({
   penaltyPercentage,
   tokenName,
   isCompleted = false,
-  networkLogos
+  networkLogos,
+  contractAddress: planContractAddress,
+  startTime: planStartTime
 }: WithdrawModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -131,7 +154,7 @@ const WithdrawModal = memo(function WithdrawModal({
 
   const getContractAddress = () => {
     if (currentNetwork === 'base') {
-      return BASE_CONTRACT_ADDRESS;
+      return getBaseContractAddress(planContractAddress, planStartTime);
     } else if (currentNetwork === 'lisk') {
       return LISK_CONTRACT_ADDRESS;
     } else if (currentNetwork === 'bsc') {
@@ -283,13 +306,13 @@ const WithdrawModal = memo(function WithdrawModal({
 
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
-      
+
       // Determine decimals based on token name
       let decimals = 6; // Default to 6 (USDC, cNGN)
       if (currentTokenName === 'USDGLO' || currentTokenName === 'cUSD' || currentTokenName === 'Gooddollar' || currentTokenName === '$G') {
         decimals = 18;
       }
-      
+
       const amount = ethers.formatUnits(savingData.amount, decimals);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);

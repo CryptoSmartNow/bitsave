@@ -13,10 +13,17 @@ import Image from 'next/image';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
 
 // Contract addresses and ABIs
-const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
+// Base network - dual contract support
+const BASE_CONTRACT_ADDRESS_OLD = "0x3593546078eecd0ffd1c19317f53ee565be6ca13" // For existing savings
+const BASE_CONTRACT_ADDRESS_NEW = "0x67FFa7a1eb0D05BEaF9dB039c1bD604063040be9" // For new savings
+const BASE_CONTRACT_MIGRATION_DATE = new Date('2026-02-05T00:00:00Z').getTime() / 1000 // Unix timestamp
+
+// Other networks
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13"
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932"
+
+// Token addresses
 const ETH_TOKEN_ADDRESS = "0x0000000000000000000000000000000000000000"
 const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const USDC_LISK_ADDRESS = "0xf242275d3a6527d877f2c927a82d9b057609cc71"
@@ -72,6 +79,21 @@ interface TopUpModalProps {
   isEth?: boolean
   tokenName?: string
   networkLogos?: NetworkLogoData
+  contractAddress?: string // Contract address from plan metadata
+  startTime?: number // Plan creation timestamp for contract selection
+}
+
+// Helper function to determine which Base contract to use
+const getBaseContractAddress = (contractAddress?: string, startTime?: number): string => {
+  // If contract address is explicitly provided in plan metadata, use it
+  if (contractAddress) {
+    return contractAddress;
+  }
+  // Otherwise determine based on creation time
+  if (!startTime || startTime < BASE_CONTRACT_MIGRATION_DATE) {
+    return BASE_CONTRACT_ADDRESS_OLD;
+  }
+  return BASE_CONTRACT_ADDRESS_NEW;
 }
 
 const getTokenLogo = (name: string, logoUrl: string) => {
@@ -84,7 +106,16 @@ const getTokenLogo = (name: string, logoUrl: string) => {
   return '/default-token.png';
 }
 
-const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth = false, tokenName, networkLogos }: TopUpModalProps) {
+const TopUpModal = memo(function TopUpModal({
+  isOpen,
+  onClose,
+  planName,
+  isEth = false,
+  tokenName,
+  networkLogos,
+  contractAddress: planContractAddress,
+  startTime: planStartTime
+}: TopUpModalProps) {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
@@ -343,7 +374,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
       let tokenNameToUse;
 
       if (networkType === 'base') {
-        contractAddress = BASE_CONTRACT_ADDRESS;
+        contractAddress = getBaseContractAddress(planContractAddress, planStartTime);
         tokenAddress = USDC_BASE_ADDRESS;
         tokenNameToUse = "USDC";
       } else if (networkType === 'lisk') {
@@ -360,7 +391,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         tokenNameToUse = "USDGLO";
       }
 
-     
+
 
       if (networkType === 'base' && tokenName) {
         if (tokenName === 'USDGLO') {
@@ -463,7 +494,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         const network = await signer.provider?.getNetwork();
         const chainId = network?.chainId;
 
-        let targetContract = BASE_CONTRACT_ADDRESS;
+        let targetContract = getBaseContractAddress(planContractAddress, planStartTime);
         if (chainId && Number(chainId) === 42220) targetContract = CELO_CONTRACT_ADDRESS;
         if (chainId && Number(chainId) === 1135) targetContract = LISK_CONTRACT_ADDRESS;
         if (chainId && Number(chainId) === 56) targetContract = BSC_CONTRACT_ADDRESS;
@@ -616,7 +647,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
 
       let contractAddress;
       if (networkType === 'base') {
-        contractAddress = BASE_CONTRACT_ADDRESS;
+        contractAddress = getBaseContractAddress(planContractAddress, planStartTime);
       } else if (networkType === 'lisk') {
         contractAddress = LISK_CONTRACT_ADDRESS;
       } else if (networkType === 'bsc') {
@@ -828,7 +859,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           {showTransactionModal ? (
             <motion.div
-             
+
               className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -836,11 +867,11 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div className="p-8 flex flex-col items-center">
-            
+
 
                 <h2 className="text-2xl font-bold mb-4">{success ? "Success!" : "Failed"}</h2>
                 <p className="mb-4 text-center">{error || (success ? "Transaction successful." : "")}</p>
-                
+
                 {success && (
                   <a
                     href={getTweetButtonProps('top-up', {
@@ -858,7 +889,7 @@ const TopUpModal = memo(function TopUpModal({ isOpen, onClose, planName, isEth =
                     Share on X
                   </a>
                 )}
-                
+
                 <button className="w-full py-3 bg-[#81D7B4] text-white rounded-xl" onClick={handleCloseTransactionModal}>Close</button>
               </div>
             </motion.div>
