@@ -42,7 +42,8 @@ const ensureImageUrl = (url: string | undefined): string => {
   return url
 }
 
-const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
+const CONTRACT_ADDRESS_OLD = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
+const CONTRACT_ADDRESS = "0x67FFa7a1eb0D05BEaF9dB039c1bD604063040be9"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932"
@@ -1211,19 +1212,18 @@ export default function CreateSavingsPage() {
         <div className="relative flex items-center justify-between">
           {/* Connecting Line */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full -z-10"></div>
-          <div 
+          <div
             className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#81D7B4] rounded-full -z-10 transition-all duration-500 ease-out"
             style={{ width: `${((step - 1) / 2) * 100}%` }}
           ></div>
 
           {/* Step 1 */}
           <div className="flex flex-col items-center">
-            <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${
-                step >= 1 
-                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110' 
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${step >= 1
+                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110'
                   : 'bg-white border-gray-200 text-gray-400'
-              }`}
+                }`}
             >
               {step > 1 ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -1238,12 +1238,11 @@ export default function CreateSavingsPage() {
 
           {/* Step 2 */}
           <div className="flex flex-col items-center">
-            <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${
-                step >= 2 
-                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110' 
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${step >= 2
+                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110'
                   : 'bg-white border-gray-200 text-gray-400'
-              }`}
+                }`}
             >
               {step > 2 ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -1258,12 +1257,11 @@ export default function CreateSavingsPage() {
 
           {/* Step 3 */}
           <div className="flex flex-col items-center">
-            <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${
-                step >= 3 
-                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110' 
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 z-10 ${step >= 3
+                  ? 'bg-[#81D7B4] border-[#81D7B4] text-white shadow-lg scale-110'
                   : 'bg-white border-gray-200 text-gray-400'
-              }`}
+                }`}
             >
               <span className="font-bold">3</span>
             </div>
@@ -1314,7 +1312,7 @@ export default function CreateSavingsPage() {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     className="p-4 sm:p-6 md:p-8"
                   >
-                    <motion.div 
+                    <motion.div
                       className="text-center mb-8"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1329,47 +1327,47 @@ export default function CreateSavingsPage() {
 
                     <div className="space-y-8 max-w-3xl mx-auto">
                       {/* Name Input */}
-                      <motion.div 
+                      <motion.div
                         variants={itemVariants}
                         className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg"
                       >
-                         <label htmlFor="planName" className="block text-sm font-bold text-gray-700 mb-2">Plan Name</label>
-                         <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </div>
-                            <input
-                              type="text"
-                              id="planName"
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              placeholder="e.g. Dream Vacation, New Laptop"
-                              className={`w-full pl-12 pr-4 py-4 bg-white rounded-xl border-2 text-gray-900 text-lg sm:text-xl font-medium shadow-sm focus:outline-none focus:ring-4 focus:ring-[#81D7B4]/10 transition-all ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#81D7B4]'}`}
-                            />
-                            {errors.name && <p className="mt-2 text-sm text-red-500">{errors.name}</p>}
-                         </div>
-                         
-                         {/* Quick Presets */}
-                         <div className="mt-4 flex flex-wrap gap-2">
-                            {['Emergency Fund', 'Rent', 'Fees', 'Vacation', 'Car', 'Gadget'].map((preset) => (
-                              <motion.button
-                                key={preset}
-                                type="button"
-                                onClick={() => setName(preset)}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:border-[#81D7B4] hover:text-[#81D7B4] hover:shadow-sm transition-all"
-                              >
-                                {preset}
-                              </motion.button>
-                            ))}
-                         </div>
+                        <label htmlFor="planName" className="block text-sm font-bold text-gray-700 mb-2">Plan Name</label>
+                        <div className="relative group">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-focus-within:text-[#81D7B4] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            id="planName"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="e.g. Dream Vacation, New Laptop"
+                            className={`w-full pl-12 pr-4 py-4 bg-white rounded-xl border-2 text-gray-900 text-lg sm:text-xl font-medium shadow-sm focus:outline-none focus:ring-4 focus:ring-[#81D7B4]/10 transition-all ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#81D7B4]'}`}
+                          />
+                          {errors.name && <p className="mt-2 text-sm text-red-500">{errors.name}</p>}
+                        </div>
+
+                        {/* Quick Presets */}
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {['Emergency Fund', 'Rent', 'Fees', 'Vacation', 'Car', 'Gadget'].map((preset) => (
+                            <motion.button
+                              key={preset}
+                              type="button"
+                              onClick={() => setName(preset)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:border-[#81D7B4] hover:text-[#81D7B4] hover:shadow-sm transition-all"
+                            >
+                              {preset}
+                            </motion.button>
+                          ))}
+                        </div>
                       </motion.div>
 
                       {/* Network Selection */}
-                      <motion.div 
+                      <motion.div
                         variants={itemVariants}
                         className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg relative z-20"
                       >
@@ -1384,22 +1382,22 @@ export default function CreateSavingsPage() {
                           >
                             <div className="flex items-center">
                               <div className="relative w-8 h-8 mr-3 flex-shrink-0 bg-white rounded-full p-0.5 border border-gray-100 shadow-sm">
-                                <Image 
-                                  src={chains.find(c => c.id === chain)?.logo || '/default-network.png'} 
-                                  alt={chains.find(c => c.id === chain)?.name || 'Network'} 
-                                  fill 
-                                  className="object-contain p-0.5" 
+                                <Image
+                                  src={chains.find(c => c.id === chain)?.logo || '/default-network.png'}
+                                  alt={chains.find(c => c.id === chain)?.name || 'Network'}
+                                  fill
+                                  className="object-contain p-0.5"
                                 />
                               </div>
                               <span className="font-bold text-gray-900 text-lg">
                                 {chains.find(c => c.id === chain)?.name || 'Select Network'}
                               </span>
                             </div>
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${isNetworkDropdownOpen ? 'rotate-180' : ''}`} 
-                              fill="none" 
-                              viewBox="0 0 24 24" 
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${isNetworkDropdownOpen ? 'rotate-180' : ''}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1454,7 +1452,7 @@ export default function CreateSavingsPage() {
                       </motion.div>
 
                       {/* Token Selection */}
-                      <motion.div 
+                      <motion.div
                         variants={itemVariants}
                         className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 shadow-lg"
                       >
@@ -1471,29 +1469,29 @@ export default function CreateSavingsPage() {
                               whileTap={{ scale: 0.95 }}
                               className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all relative ${currency === curr.symbol ? 'border-[#81D7B4] bg-[#81D7B4]/5 ring-1 ring-[#81D7B4] shadow-md' : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'}`}
                             >
-                               {currency === curr.symbol && (
-                                 <div className="absolute top-2 right-2 text-[#81D7B4]">
-                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                   </svg>
-                                 </div>
-                               )}
-                               <div className="relative w-12 h-12 mb-3 bg-white rounded-full p-1 shadow-sm border border-gray-100">
-                                  <Image 
-                                    src={
-                                      curr.symbol === 'Gooddollar' ? '/$g.png'
+                              {currency === curr.symbol && (
+                                <div className="absolute top-2 right-2 text-[#81D7B4]">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              )}
+                              <div className="relative w-12 h-12 mb-3 bg-white rounded-full p-1 shadow-sm border border-gray-100">
+                                <Image
+                                  src={
+                                    curr.symbol === 'Gooddollar' ? '/$g.png'
                                       : curr.symbol === 'cUSD' ? '/cusd.png'
-                                      : curr.symbol === 'USDGLO' ? '/usdglo.png'
-                                      : curr.symbol === 'USDC' ? '/usdclogo.png'
-                                      : curr.symbol === 'cNGN' ? '/cngn.png'
-                                      : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
-                                    }
-                                    alt={curr.symbol} 
-                                    fill 
-                                    className="object-contain p-1" 
-                                  />
-                               </div>
-                               <div className="font-bold text-gray-900 text-lg">{curr.symbol}</div>
+                                        : curr.symbol === 'USDGLO' ? '/usdglo.png'
+                                          : curr.symbol === 'USDC' ? '/usdclogo.png'
+                                            : curr.symbol === 'cNGN' ? '/cngn.png'
+                                              : `/${curr.symbol.toLowerCase().replace('$', '')}.png`
+                                  }
+                                  alt={curr.symbol}
+                                  fill
+                                  className="object-contain p-1"
+                                />
+                              </div>
+                              <div className="font-bold text-gray-900 text-lg">{curr.symbol}</div>
                             </motion.button>
                           ))}
                         </div>
@@ -1704,8 +1702,8 @@ export default function CreateSavingsPage() {
                                   setCalendarNavigateDate(presetDate);
                                 }}
                                 aria-label={`Select ${preset.label} duration`}
-                                 aria-pressed={!!isSelected}
-                                 whileHover={{ scale: 1.05, y: -2 }}
+                                aria-pressed={!!isSelected}
+                                whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                                 className={`p-3 rounded-xl border-2 transition-all duration-200 text-center relative overflow-hidden ${isSelected
                                   ? 'bg-[#81D7B4]/10 border-[#81D7B4] text-[#2D5A4A] shadow-md'
@@ -1745,7 +1743,7 @@ export default function CreateSavingsPage() {
                             className="bg-gradient-to-br from-[#81D7B4]/10 to-[#6bc5a0]/10 rounded-xl p-6 border border-[#81D7B4]/30 relative overflow-hidden"
                           >
                             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-xl"></div>
-                            
+
                             <div className="flex items-center mb-4 relative z-10">
                               <div className="w-8 h-8 bg-[#81D7B4] rounded-lg flex items-center justify-center mr-3 shadow-sm text-white">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -1756,7 +1754,7 @@ export default function CreateSavingsPage() {
                                 Total Duration: <span className="text-[#2D5A4A]">{Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days</span>
                               </span>
                             </div>
-                            
+
                             <div className="flex items-center justify-between text-sm relative z-10 bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
                               <div className="text-center">
                                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Start Date</div>
@@ -1844,9 +1842,9 @@ export default function CreateSavingsPage() {
                           className="flex items-start text-sm text-gray-600 bg-amber-50 p-5 rounded-xl border border-amber-100 shadow-sm"
                         >
                           <div className="bg-amber-100 p-2 rounded-lg mr-4 flex-shrink-0 text-amber-600">
-                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                             </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
                           </div>
                           <div>
                             <div className="font-bold text-amber-900 mb-1 text-base">Penalty Impact Analysis</div>

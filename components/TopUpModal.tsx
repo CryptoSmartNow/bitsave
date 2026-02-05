@@ -401,7 +401,8 @@ const TopUpModal = memo(function TopUpModal({
           tokenNameToUse = 'USDGLO';
         } else if (tokenName === 'USDC') {
           tokenAddress = USDC_BASE_ADDRESS;
-          decimals = 6;
+          const isOldContract = contractAddress === BASE_CONTRACT_ADDRESS_OLD;
+          decimals = isOldContract ? 18 : 6;
           tokenNameToUse = 'USDC';
         } else if (tokenName === 'cNGN') {
           tokenAddress = "0x46C85152bFe9f96829aA94755D9f915F9B10EF5F";
@@ -460,7 +461,7 @@ const TopUpModal = memo(function TopUpModal({
 
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      const userChildContractAddress = await contract.getUserChildContractAddress();
+      const userChildContractAddress = await contract.getUserChildContractAddress({ from: address });
       if (userChildContractAddress === ethers.ZeroAddress) {
         throw new Error("You must join Bitsave before topping up.");
       }
@@ -660,7 +661,7 @@ const TopUpModal = memo(function TopUpModal({
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
       // Check if user has joined Bitsave
-      const userChildContractAddress = await contract.getUserChildContractAddress();
+      const userChildContractAddress = await contract.getUserChildContractAddress({ from: address });
       if (userChildContractAddress === ethers.ZeroAddress) {
         throw new Error("You must join Bitsave before topping up.");
       }

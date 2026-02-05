@@ -525,12 +525,7 @@ export default function Dashboard() {
     }
   }, [mounted, address, refetchSavingsData]);
 
-  // Redirect to landing page if wallet is disconnected
-  useEffect(() => {
-    if (mounted && !isConnected) {
-      router.push('/');
-    }
-  }, [isConnected, mounted, router]);
+
 
   // Helper function to get the appropriate logo path for different tokens
   // Returns custom logo if provided, otherwise maps token names to their logo files
