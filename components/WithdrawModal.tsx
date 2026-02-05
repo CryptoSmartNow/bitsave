@@ -313,6 +313,11 @@ const WithdrawModal = memo(function WithdrawModal({
         decimals = 18;
       }
 
+      // Special case for old Base savings using 18 decimals for USDC
+      if (currentNetwork === 'base' && currentTokenName === 'USDC' && getContractAddress() === BASE_CONTRACT_ADDRESS_OLD) {
+        decimals = 18;
+      }
+
       const amount = ethers.formatUnits(savingData.amount, decimals);
 
       const gasEstimate = await contract.withdrawSaving.estimateGas(nameOfSavings);

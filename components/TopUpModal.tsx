@@ -400,7 +400,12 @@ const TopUpModal = memo(function TopUpModal({
           tokenNameToUse = 'USDGLO';
         } else if (tokenName === 'USDC') {
           tokenAddress = USDC_BASE_ADDRESS;
-          decimals = 6;
+          // For Base, older savings used 18 decimals, newer use 6
+          if (contractAddress === BASE_CONTRACT_ADDRESS_OLD) {
+            decimals = 18;
+          } else {
+            decimals = 6;
+          }
           tokenNameToUse = 'USDC';
         } else if (tokenName === 'cNGN') {
           tokenAddress = "0x46C85152bFe9f96829aA94755D9f915F9B10EF5F";

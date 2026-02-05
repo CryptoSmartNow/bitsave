@@ -415,7 +415,12 @@ export function useSavingsData(): UseSavingsDataReturn {
                 } else if (network.chainId === BASE_CHAIN_ID) {
                   if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
                     tokenName = "USDC";
-                    decimals = 6;
+                    // For Base, older savings used 18 decimals, newer use 6
+                    if (network.contractAddress === BASE_CONTRACT_ADDRESS_OLD) {
+                      decimals = 18;
+                    } else {
+                      decimals = 6;
+                    }
                     tokenLogo = '/usdclogo.png';
                   } else if (tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
                     tokenName = "USDGLO";
