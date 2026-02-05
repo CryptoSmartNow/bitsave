@@ -52,6 +52,7 @@ interface Plan {
   tokenName?: string;
   tokenLogo?: string;
   network?: string;
+  contractAddress?: string;
 }
 
 // Helper to get logo for a token
@@ -78,7 +79,7 @@ export default function PlansPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -90,7 +91,9 @@ export default function PlansPage() {
     planId: '',
     isEth: false,
     isGToken: false,
-    tokenName: ''
+    tokenName: '',
+    contractAddress: '',
+    startTime: 0
   });
 
   const [withdrawModal, setWithdrawModal] = useState({
@@ -100,7 +103,9 @@ export default function PlansPage() {
     isEth: false,
     penaltyPercentage: 0,
     tokenName: '',
-    isCompleted: false
+    isCompleted: false,
+    contractAddress: '',
+    startTime: 0
   });
 
   const [planDetailsModal, setPlanDetailsModal] = useState({
@@ -146,9 +151,9 @@ export default function PlansPage() {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
           if (accounts.length > 0) {
             const address = accounts[0];
-            
+
             const response = await fetch(`/api/transactions?address=${address}`);
-            
+
             if (!response.ok) {
               if (response.status === 404) {
                 setActivityData([]);
@@ -205,8 +210,8 @@ export default function PlansPage() {
                 return null;
               }
             })
-            .filter(Boolean)
-            .sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
+              .filter(Boolean)
+              .sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
             setActivityData(formattedActivity);
           } else {
@@ -243,22 +248,24 @@ export default function PlansPage() {
   }, []);
 
   // Modal Handlers
-  const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '') => {
+  const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '', contractAddress: string = '', startTime: number = 0) => {
     setTopUpModal({
       isOpen: true,
       planName,
       planId,
       isEth,
       isGToken: tokenName === '$G',
-      tokenName
+      tokenName,
+      contractAddress,
+      startTime
     });
   };
 
   const closeTopUpModal = () => {
-    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '' });
+    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '', contractAddress: '', startTime: 0 });
   };
 
-  const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false) => {
+  const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false, contractAddress: string = '', startTime: number = 0) => {
     setWithdrawModal({
       isOpen: true,
       planId,
@@ -266,12 +273,14 @@ export default function PlansPage() {
       isEth,
       penaltyPercentage,
       tokenName,
-      isCompleted
+      isCompleted,
+      contractAddress,
+      startTime
     });
   };
 
   const closeWithdrawModal = () => {
-    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false });
+    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false, contractAddress: '', startTime: 0 });
   };
 
   const filteredActivityData = useMemo(() => {
@@ -320,42 +329,42 @@ export default function PlansPage() {
         {/* Stats Cards - Carousel on mobile, Grid on desktop */}
         <div className="flex overflow-x-auto pb-4 gap-4 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory hide-scrollbar">
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-             <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                   <HiOutlineChartPie className="w-5 h-5" />
-                 </div>
-                 <h3 className="text-gray-500 font-medium text-sm">Active Plans</h3>
-               </div>
-               <p className="text-3xl font-bold text-gray-900">{stats.activeCount}</p>
-             </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                  <HiOutlineChartPie className="w-5 h-5" />
+                </div>
+                <h3 className="text-gray-500 font-medium text-sm">Active Plans</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeCount}</p>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-             <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                   <HiOutlineBanknotes className="w-5 h-5" />
-                 </div>
-                 <h3 className="text-gray-500 font-medium text-sm">Total Value</h3>
-               </div>
-               <p className="text-3xl font-bold text-gray-900">${parseFloat(stats.totalLocked).toLocaleString()}</p>
-             </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                  <HiOutlineBanknotes className="w-5 h-5" />
+                </div>
+                <h3 className="text-gray-500 font-medium text-sm">Total Value</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">${parseFloat(stats.totalLocked).toLocaleString()}</p>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-             <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
-                   <HiOutlineCurrencyDollar className="w-5 h-5" />
-                 </div>
-                 <h3 className="text-gray-500 font-medium text-sm">Rewards Earned</h3>
-               </div>
-               <p className="text-3xl font-bold text-gray-900">{stats.rewards} <span className="text-sm font-medium text-gray-400">$BTS</span></p>
-             </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                  <HiOutlineCurrencyDollar className="w-5 h-5" />
+                </div>
+                <h3 className="text-gray-500 font-medium text-sm">Rewards Earned</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{stats.rewards} <span className="text-sm font-medium text-gray-400">$BTS</span></p>
+            </div>
           </div>
         </div>
 
@@ -407,25 +416,25 @@ export default function PlansPage() {
 
                     {/* Stats Row */}
                     <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 bg-white/50 rounded-xl px-4 sm:px-6 py-3 border border-gray-100/50 w-full sm:w-auto">
-                        <div>
-                          <p className="text-xs font-medium text-gray-400 mb-1">Saved Amount</p>
-                          <p className="font-bold text-gray-900 text-lg md:text-xl">
-                            {plan.isEth ? (
-                              <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
-                            ) : plan.tokenName === 'Gooddollar' ? (
-                              <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
-                            ) : (
-                              <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
-                            )}
-                          </p>
-                        </div>
-                        <div className="w-px h-10 bg-gray-200"></div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
-                          <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
-                            +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
-                          </p>
-                        </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-1">Saved Amount</p>
+                        <p className="font-bold text-gray-900 text-lg md:text-xl">
+                          {plan.isEth ? (
+                            <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
+                          ) : plan.tokenName === 'Gooddollar' ? (
+                            <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
+                          ) : (
+                            <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                          )}
+                        </p>
+                      </div>
+                      <div className="w-px h-10 bg-gray-200"></div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
+                        <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
+                          +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -436,8 +445,8 @@ export default function PlansPage() {
                     {/* Progress Bar Section */}
                     <div className="flex-1 w-full">
                       <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
-                         <span>Progress</span>
-                         <span className="text-[#81D7B4] font-bold">{Math.round(plan.progress)}%</span>
+                        <span>Progress</span>
+                        <span className="text-[#81D7B4] font-bold">{Math.round(plan.progress)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
                         <motion.div
@@ -448,28 +457,28 @@ export default function PlansPage() {
                         />
                       </div>
                       <div className="mt-2 text-right">
-                         <span className="text-xs font-medium text-gray-400">
-                            {(() => {
-                              const now = Math.floor(Date.now() / 1000);
-                              const end = Number(plan.maturityTime || 0);
-                              const diff = end - now;
-                              if (diff <= 0) return "Completed";
-                              const days = Math.ceil(diff / (60 * 60 * 24));
-                              if (days > 30) {
-                                const months = Math.floor(days / 30);
-                                const remainingDays = days % 30;
-                                return `${months} Months & ${remainingDays} Days Remaining`;
-                              }
-                              return `${days} Days Remaining`;
-                            })()}
-                         </span>
+                        <span className="text-xs font-medium text-gray-400">
+                          {(() => {
+                            const now = Math.floor(Date.now() / 1000);
+                            const end = Number(plan.maturityTime || 0);
+                            const diff = end - now;
+                            if (diff <= 0) return "Completed";
+                            const days = Math.ceil(diff / (60 * 60 * 24));
+                            if (days > 30) {
+                              const months = Math.floor(days / 30);
+                              const remainingDays = days % 30;
+                              return `${months} Months & ${remainingDays} Days Remaining`;
+                            }
+                            return `${days} Days Remaining`;
+                          })()}
+                        </span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                       <button
-                        onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
+                        onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName, plan.contractAddress, plan.startTime)}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-xs sm:text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105 whitespace-nowrap min-w-fit"
                       >
                         <HiOutlinePlus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -488,7 +497,7 @@ export default function PlansPage() {
                           const maturityTimestamp = Number(plan.maturityTime || 0);
                           const maturityDate = new Date(maturityTimestamp * 1000);
                           const isCompleted = currentDate >= maturityDate;
-                          openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                          openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted, plan.contractAddress, plan.startTime);
                         }}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4]/5 transition-all whitespace-nowrap min-w-fit"
                       >
@@ -556,51 +565,51 @@ export default function PlansPage() {
                                 <div className="flex items-center gap-1.5 w-fit">
                                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
                                     {networkLogos[plan.network.toLowerCase()]?.logoUrl && (
-                                       <Image 
-                                         src={networkLogos[plan.network.toLowerCase()].logoUrl} 
-                                         alt={plan.network} 
-                                         width={14} 
-                                         height={14} 
-                                         className="rounded-full"
-                                       />
-                                     )}
+                                      <Image
+                                        src={networkLogos[plan.network.toLowerCase()].logoUrl}
+                                        alt={plan.network}
+                                        width={14}
+                                        height={14}
+                                        className="rounded-full"
+                                      />
+                                    )}
                                     <span className="text-xs font-medium text-gray-500">{plan.network}</span>
                                   </div>
                                 </div>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                               <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
-                                 Completed
-                               </span>
-                               <span className="text-sm font-medium text-gray-400">
-                                 Goal Reached
-                               </span>
+                              <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                                Completed
+                              </span>
+                              <span className="text-sm font-medium text-gray-400">
+                                Goal Reached
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                         {/* Stats Row */}
+                        {/* Stats Row */}
                         <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 bg-white/50 rounded-xl px-4 sm:px-6 py-3 border border-gray-100/50 w-full sm:w-auto">
-                            <div>
-                              <p className="text-xs font-medium text-gray-400 mb-1">Final Amount</p>
-                              <p className="font-bold text-gray-900 text-lg md:text-xl">
-                                {plan.isEth ? (
-                                  <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
-                                ) : plan.tokenName === 'Gooddollar' ? (
-                                  <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
-                                ) : (
-                                  <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
-                                )}
-                              </p>
-                            </div>
-                            <div className="w-px h-10 bg-gray-200"></div>
-                            <div>
-                              <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
-                              <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
-                                +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
-                              </p>
-                            </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-400 mb-1">Final Amount</p>
+                            <p className="font-bold text-gray-900 text-lg md:text-xl">
+                              {plan.isEth ? (
+                                <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
+                              ) : plan.tokenName === 'Gooddollar' ? (
+                                <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
+                              ) : (
+                                <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                              )}
+                            </p>
+                          </div>
+                          <div className="w-px h-10 bg-gray-200"></div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
+                            <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
+                              +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
+                            </p>
+                          </div>
                         </div>
                       </div>
 
@@ -610,8 +619,8 @@ export default function PlansPage() {
                       <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
                         <div className="flex-1 w-full">
                           <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
-                             <span>Progress</span>
-                             <span className="text-green-500 font-bold">100%</span>
+                            <span>Progress</span>
+                            <span className="text-green-500 font-bold">100%</span>
                           </div>
                           <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
                             <motion.div
@@ -637,7 +646,7 @@ export default function PlansPage() {
                               const maturityTimestamp = Number(plan.maturityTime || 0);
                               const maturityDate = new Date(maturityTimestamp * 1000);
                               const isCompleted = currentDate >= maturityDate;
-                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted, plan.contractAddress, plan.startTime);
                             }}
                             className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md whitespace-nowrap min-w-fit"
                           >
@@ -656,18 +665,17 @@ export default function PlansPage() {
             <div className="pt-8 border-t border-gray-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Activity History</h2>
-                
+
                 {/* Tabs */}
                 <div className="flex p-1 bg-gray-100 rounded-xl overflow-x-auto hide-scrollbar">
                   {['all', 'deposit', 'topup', 'withdrawal'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                        activeTab === tab
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
@@ -687,13 +695,12 @@ export default function PlansPage() {
                       {paginatedActivityData.map((activity, index) => (
                         <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-start gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              activity.type === 'deposit' || activity.type === 'savings_created'
-                                ? 'bg-green-100 text-green-600'
-                                : activity.type === 'topup'
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${activity.type === 'deposit' || activity.type === 'savings_created'
+                              ? 'bg-green-100 text-green-600'
+                              : activity.type === 'topup'
                                 ? 'bg-blue-100 text-blue-600'
                                 : 'bg-orange-100 text-orange-600'
-                            }`}>
+                              }`}>
                               {activity.type === 'deposit' || activity.type === 'savings_created' ? (
                                 <HiOutlinePlus className="w-5 h-5" />
                               ) : activity.type === 'topup' ? (
@@ -709,16 +716,15 @@ export default function PlansPage() {
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
                             <div className="text-right">
-                              <p className={`font-bold ${
-                                activity.type === 'deposit' || activity.type === 'savings_created'
-                                  ? 'text-green-600'
-                                  : activity.type === 'topup'
+                              <p className={`font-bold ${activity.type === 'deposit' || activity.type === 'savings_created'
+                                ? 'text-green-600'
+                                : activity.type === 'topup'
                                   ? 'text-blue-600'
                                   : 'text-orange-600'
-                              }`}>
+                                }`}>
                                 {activity.amount}
                               </p>
-                              <a 
+                              <a
                                 href={`https://basescan.org/tx/${activity.txHash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -731,18 +737,17 @@ export default function PlansPage() {
                         </div>
                       ))}
                     </div>
-                    
+
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
                         <button
                           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                           disabled={currentPage === 1}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === 1
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-gray-700 hover:bg-white hover:shadow-sm'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                            }`}
                         >
                           Previous
                         </button>
@@ -752,11 +757,10 @@ export default function PlansPage() {
                         <button
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === totalPages
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-gray-700 hover:bg-white hover:shadow-sm'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                            }`}
                         >
                           Next
                         </button>
@@ -788,6 +792,8 @@ export default function PlansPage() {
         isEth={topUpModal.isEth}
         tokenName={topUpModal.tokenName}
         networkLogos={networkLogos}
+        contractAddress={topUpModal.contractAddress}
+        startTime={topUpModal.startTime}
       />
 
       <WithdrawModal
@@ -799,6 +805,8 @@ export default function PlansPage() {
         tokenName={withdrawModal.tokenName}
         isCompleted={withdrawModal.isCompleted}
         networkLogos={networkLogos}
+        contractAddress={withdrawModal.contractAddress}
+        startTime={withdrawModal.startTime}
       />
 
       <PlanDetailsModal

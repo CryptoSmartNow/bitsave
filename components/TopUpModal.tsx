@@ -231,7 +231,7 @@ const TopUpModal = memo(function TopUpModal({
 
       // Check for warnings
       const amountNum = parseFloat(amount || '0');
-      const tokenBalanceNum = parseFloat(isEth ? nativeBalanceFormatted : tokenBalance);
+      const tokenBalanceNum = parseFloat(isEth ? nativeBalanceFormatted : tokenBalanceFormatted);
       const nativeBalanceNum = parseFloat(nativeBalanceFormatted);
       const gasFeeNum = parseFloat(gasFeeFormatted);
 
@@ -257,7 +257,7 @@ const TopUpModal = memo(function TopUpModal({
     } finally {
       setIsCheckingBalance(false);
     }
-  }, [address, amount, isEth, tokenName, currentNetwork, tokenBalance, signer]);
+  }, [address, amount, isEth, tokenName, currentNetwork, signer]);
 
   // Check balances when amount changes
   useEffect(() => {

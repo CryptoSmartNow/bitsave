@@ -195,8 +195,14 @@ export function useSavingsData(): UseSavingsDataReturn {
     {
       chainId: BASE_CHAIN_ID,
       rpcUrl: 'https://base.publicnode.com',
-      contractAddress: BASE_CONTRACT_ADDRESS_OLD, // Use old contract to fetch existing savings
-      name: 'Base'
+      contractAddress: BASE_CONTRACT_ADDRESS_OLD,
+      name: 'Base (Old)'
+    },
+    {
+      chainId: BASE_CHAIN_ID,
+      rpcUrl: 'https://base.publicnode.com',
+      contractAddress: BASE_CONTRACT_ADDRESS_NEW,
+      name: 'Base (New)'
     },
     {
       chainId: CELO_CHAIN_ID,
@@ -408,23 +414,30 @@ export function useSavingsData(): UseSavingsDataReturn {
                     decimals = tokenInfo.decimals;
                     tokenLogo = tokenInfo.logo;
                   } else {
-                    tokenName = 'USDGLO';
-                    decimals = 6;
-                    tokenLogo = '/usdglo.png';
+                    // Default for unknown Celo tokens
+                    tokenName = 'Unknown';
+                    decimals = 18;
+                    tokenLogo = '/cusd.png';
                   }
                 } else if (network.chainId === BASE_CHAIN_ID) {
-                  if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
+                  const tid = tokenId.toLowerCase();
+                  if (tid === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
                     tokenName = "USDC";
                     decimals = 6;
                     tokenLogo = '/usdclogo.png';
-                  } else if (tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
+                  } else if (tid === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
                     tokenName = "USDGLO";
                     decimals = 18;
                     tokenLogo = '/usdglo.png';
-                  } else if (tokenId.toLowerCase() === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
+                  } else if (tid === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
                     tokenName = "cNGN";
                     decimals = 6;
                     tokenLogo = '/cngn.png';
+                  } else {
+                    // Default for other Base tokens
+                    tokenName = "Token";
+                    decimals = 18; // Default to 18 to avoid trillion-dollar display errors
+                    tokenLogo = '/usdclogo.png';
                   }
                 } else if (network.chainId === LISK_CHAIN_ID) {
                   if (tokenId.toLowerCase() === "0xf242275d3a6527d877f2c927a82d9b057609cc71") {
@@ -506,11 +519,9 @@ export function useSavingsData(): UseSavingsDataReturn {
                   timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / (24 * 60 * 60))} days`,
                   penalty: (savingData.penaltyPercentage ?? savingData[5] ?? 0).toString(),
                   penaltyPercentage: Number(savingData.penaltyPercentage ?? savingData[5] ?? 0), // Add penaltyPercentage
-                  network: network.name, // Add network name to plan
+                  network: 'Base', // Standardize network name for aggregation display
                   chainId: network.chainId, // Add chainId to plan
-                  contractAddress: network.chainId === BASE_CHAIN_ID
-                    ? getBaseContractAddress(startTime)
-                    : network.contractAddress // Store the actual contract address used
+                  contractAddress: network.contractAddress // Use the actual contract address from which it was fetched
                 };
 
                 if (isCompleted) {

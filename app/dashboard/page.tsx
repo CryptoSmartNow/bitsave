@@ -101,7 +101,9 @@ export default function Dashboard() {
     planId: '',
     isEth: false,
     isGToken: false,
-    tokenName: ''
+    tokenName: '',
+    contractAddress: '',
+    startTime: 0
   });
 
   // Modal state for plan details
@@ -287,7 +289,9 @@ export default function Dashboard() {
     isEth: false,
     penaltyPercentage: 0,
     tokenName: '',
-    isCompleted: false
+    isCompleted: false,
+    contractAddress: '',
+    startTime: 0
   });
 
 
@@ -468,24 +472,26 @@ export default function Dashboard() {
 
 
   // Opens the top-up modal with plan details and token information
-  const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '') => {
+  const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '', contractAddress: string = '', startTime: number = 0) => {
     setTopUpModal({
       isOpen: true,
       planName,
       planId,
       isEth,
       isGToken: tokenName === '$G',
-      tokenName
+      tokenName,
+      contractAddress,
+      startTime
     });
   };
 
   // Closes the top-up modal and resets all modal state
   const closeTopUpModal = () => {
-    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '' });
+    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '', contractAddress: '', startTime: 0 });
   };
 
   // Opens the withdrawal modal with plan details, penalty information, and completion status
-  const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false) => {
+  const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false, contractAddress: string = '', startTime: number = 0) => {
     setWithdrawModal({
       isOpen: true,
       planId,
@@ -493,13 +499,15 @@ export default function Dashboard() {
       isEth,
       penaltyPercentage,
       tokenName,
-      isCompleted
+      isCompleted,
+      contractAddress,
+      startTime
     });
   };
 
   // Closes the withdrawal modal and resets all modal state
   const closeWithdrawModal = () => {
-    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false });
+    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false, contractAddress: '', startTime: 0 });
   };
 
 
@@ -643,6 +651,8 @@ export default function Dashboard() {
         isEth={topUpModal.isEth}
         tokenName={topUpModal.tokenName}
         networkLogos={networkLogos}
+        contractAddress={topUpModal.contractAddress}
+        startTime={topUpModal.startTime}
       />
 
       {/* Withdraw Modal */}
@@ -655,6 +665,8 @@ export default function Dashboard() {
         tokenName={withdrawModal.tokenName}
         isCompleted={withdrawModal.isCompleted}
         networkLogos={networkLogos}
+        contractAddress={withdrawModal.contractAddress}
+        startTime={withdrawModal.startTime}
       />
 
       {/* Plan Details Modal */}
@@ -1226,7 +1238,7 @@ export default function Dashboard() {
                               <p className="text-xs sm:text-sm font-medium text-gray-400">
                                 Created {(() => {
                                   const startTime = Number(plan.startTime);
-                                  return !isNaN(startTime) && startTime > 0 
+                                  return !isNaN(startTime) && startTime > 0
                                     ? new Date(startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
                                     : 'Pending';
                                 })()}
@@ -1234,7 +1246,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <motion.button
-                            onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
+                            onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName, plan.contractAddress, plan.startTime)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className="flex-shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full border border-gray-200 text-gray-700 font-semibold text-xs sm:text-sm hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors bg-white hover:bg-[#81D7B4]/5"
@@ -1253,7 +1265,7 @@ export default function Dashboard() {
                             {(() => {
                               const amount = parseFloat(plan.currentAmount);
                               const safeAmount = !isNaN(amount) ? amount : 0;
-                              
+
                               if (plan.isEth) return <>{safeAmount.toFixed(4)} ETH Saved</>;
                               if (plan.tokenName === 'Gooddollar') return <>{safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>;
                               return <>${safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>;
@@ -1262,14 +1274,14 @@ export default function Dashboard() {
                           <div className="w-px h-5 bg-gray-200"></div>
                           <div className="font-bold text-[#81D7B4] text-base sm:text-lg">
                             +{(() => {
-                               const amount = parseFloat(plan.currentAmount);
-                               const safeAmount = !isNaN(amount) ? amount : 0;
-                               let usdVal = safeAmount;
-                               if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
-                               if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * goodDollarPrice;
-                               
-                               const reward = usdVal * 0.005 * 1000;
-                               return reward.toFixed(0);
+                              const amount = parseFloat(plan.currentAmount);
+                              const safeAmount = !isNaN(amount) ? amount : 0;
+                              let usdVal = safeAmount;
+                              if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                              if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * goodDollarPrice;
+
+                              const reward = usdVal * 0.005 * 1000;
+                              return reward.toFixed(0);
                             })()} $BTS Reward
                           </div>
                         </div>
@@ -1291,9 +1303,9 @@ export default function Dashboard() {
                             {(() => {
                               const now = Math.floor(Date.now() / 1000);
                               const end = Number(plan.maturityTime);
-                              
+
                               if (isNaN(end) || end <= 0) return "Pending";
-                              
+
                               const diff = end - now;
                               if (diff <= 0) return "Completed";
                               const days = Math.ceil(diff / (60 * 60 * 24));
@@ -1322,7 +1334,7 @@ export default function Dashboard() {
                               const maturityTimestamp = Number(plan.maturityTime || 0);
                               const maturityDate = new Date(maturityTimestamp * 1000);
                               const isCompleted = currentDate >= maturityDate;
-                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted, plan.contractAddress, plan.startTime);
                             }}
                             className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-red-50 hover:border-red-500 hover:text-red-500 transition-all group/withdraw"
                           >
@@ -1359,66 +1371,66 @@ export default function Dashboard() {
                           <div className="absolute inset-0 bg-[url('/noise.jpg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
                           {/* Header: Icon, Title/Date (No Top Up) */}
-                        <div className="flex items-center justify-between mb-6 gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
-                              <Image
-                                src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
-                                alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
-                                width={32}
-                                height={32}
-                                className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
-                              />
+                          <div className="flex items-center justify-between mb-6 gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-gray-100 bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                                <Image
+                                  src={plan.isEth ? '/eth.png' : getTokenLogo(plan.tokenName || '', plan.tokenLogo || '')}
+                                  alt={plan.isEth ? 'ETH' : (plan.tokenName || 'Token')}
+                                  width={32}
+                                  height={32}
+                                  className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                                />
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="text-base sm:text-xl font-bold text-gray-900 tracking-tight truncate">
+                                  {plan.name}
+                                </h3>
+                                <p className="text-xs sm:text-sm font-medium text-gray-400">
+                                  Created {(() => {
+                                    const startTime = Number(plan.startTime);
+                                    return !isNaN(startTime) && startTime > 0
+                                      ? new Date(startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                                      : 'Pending';
+                                  })()}
+                                </p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <h3 className="text-base sm:text-xl font-bold text-gray-900 tracking-tight truncate">
-                                {plan.name}
-                              </h3>
-                              <p className="text-xs sm:text-sm font-medium text-gray-400">
-                                Created {(() => {
-                                  const startTime = Number(plan.startTime);
-                                  return !isNaN(startTime) && startTime > 0 
-                                    ? new Date(startTime * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
-                                    : 'Pending';
-                                })()}
-                              </p>
+                            {/* Completed Badge instead of Top Up */}
+                            <div className="flex-shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-green-50 border border-green-100 text-green-600 font-semibold text-xs sm:text-sm">
+                              Completed
                             </div>
                           </div>
-                          {/* Completed Badge instead of Top Up */}
-                          <div className="flex-shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-green-50 border border-green-100 text-green-600 font-semibold text-xs sm:text-sm">
-                            Completed
-                          </div>
-                        </div>
 
-                        {/* Divider */}
-                        <div className="h-px w-full bg-gray-100 mb-6"></div>
+                          {/* Divider */}
+                          <div className="h-px w-full bg-gray-100 mb-6"></div>
 
-                        {/* Stats Row */}
-                        <div className="flex flex-wrap items-center gap-3 mb-4">
-                          <div className="font-bold text-gray-900 text-base sm:text-lg">
-                            {(() => {
-                              const amount = parseFloat(plan.currentAmount);
-                              const safeAmount = !isNaN(amount) ? amount : 0;
-                              
-                              if (plan.isEth) return <>{safeAmount.toFixed(4)} ETH Saved</>;
-                              if (plan.tokenName === 'Gooddollar') return <>{safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>;
-                              return <>${safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>;
-                            })()}
+                          {/* Stats Row */}
+                          <div className="flex flex-wrap items-center gap-3 mb-4">
+                            <div className="font-bold text-gray-900 text-base sm:text-lg">
+                              {(() => {
+                                const amount = parseFloat(plan.currentAmount);
+                                const safeAmount = !isNaN(amount) ? amount : 0;
+
+                                if (plan.isEth) return <>{safeAmount.toFixed(4)} ETH Saved</>;
+                                if (plan.tokenName === 'Gooddollar') return <>{safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G Saved</>;
+                                return <>${safeAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Saved</>;
+                              })()}
+                            </div>
+                            <div className="w-px h-5 bg-gray-200"></div>
+                            <div className="font-bold text-[#81D7B4] text-base sm:text-lg">
+                              +{(() => {
+                                const amount = parseFloat(plan.currentAmount);
+                                const safeAmount = !isNaN(amount) ? amount : 0;
+                                let usdVal = safeAmount;
+                                if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                                if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * goodDollarPrice;
+
+                                const reward = usdVal * 0.005 * 1000;
+                                return reward.toFixed(0);
+                              })()} $BTS Reward
+                            </div>
                           </div>
-                          <div className="w-px h-5 bg-gray-200"></div>
-                          <div className="font-bold text-[#81D7B4] text-base sm:text-lg">
-                            +{(() => {
-                               const amount = parseFloat(plan.currentAmount);
-                               const safeAmount = !isNaN(amount) ? amount : 0;
-                               let usdVal = safeAmount;
-                               if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
-                               if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * goodDollarPrice;
-                               
-                               const reward = usdVal * 0.005 * 1000;
-                               return reward.toFixed(0);
-                            })()} $BTS Reward
-                          </div>
-                        </div>
 
                           {/* Progress Bar (Full) */}
                           <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden mb-2">
@@ -1451,7 +1463,7 @@ export default function Dashboard() {
                                 const maturityTimestamp = Number(plan.maturityTime || 0);
                                 const maturityDate = new Date(maturityTimestamp * 1000);
                                 const isCompleted = currentDate >= maturityDate;
-                                openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
+                                openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted, plan.contractAddress, plan.startTime);
                               }}
                               className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-medium text-sm hover:bg-[#81D7B4] hover:text-white transition-all shadow-sm hover:shadow-md whitespace-nowrap"
                             >
