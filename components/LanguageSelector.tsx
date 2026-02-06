@@ -306,7 +306,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
   const selectedLang = languages.find(lang => lang.code === selectedLanguage) || languages[0];
 
   // Determine theme based on path
-  const isBizFi = pathname.startsWith('/bizfi');
+  const isBizFi = pathname.startsWith('/bizfi') || pathname.startsWith('/bizfun');
   
   // Theme configuration
   const theme = {
