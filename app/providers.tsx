@@ -68,7 +68,7 @@ const queryClient = new QueryClient();
 function InnerProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   const pathname = usePathname();
-  const isBizFi = pathname?.startsWith('/bizfi');
+  const isBizFi = pathname?.startsWith('/bizfi') || pathname?.startsWith('/bizfun');
 
   // Force dark theme for BizFi pages
   const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');

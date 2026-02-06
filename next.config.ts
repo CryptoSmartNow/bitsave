@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
       "pino-pretty": false,
       "lokijs": false,
       "encoding": false,
+      "@react-native-async-storage/async-storage": false,
     };
 
     // --- FIX #3: Silence nested warnings from Privy + WalletConnect ---
