@@ -40,11 +40,24 @@ const exo = Exo({
     variable: '--font-exo',
 });
 
+// Reusable BizMart Link Component
+const BizMartLink = () => (
+    <Link 
+        href="https://clanker.world/clanker/0xd5F9B7DB3F9Ec658De934638E07919091983Bb07" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="font-bold text-[#81D7B4] hover:text-[#6BC5A0] hover:underline transition-colors inline-flex items-center gap-0.5 cursor-pointer"
+    >
+        $BizMart
+        <HiOutlineArrowTopRightOnSquare className="w-3 h-3" />
+    </Link>
+);
+
 // Reusing the style from the main landing page
 const FEATURES = [
     {
         title: "Tokenize Business",
-        description: "Tokenize your business or idea instantly with our AI agent $BizMart.",
+        description: <>Tokenize your business or idea instantly with our AI agent <BizMartLink />.</>,
         icon: HiOutlineCubeTransparent,
         detail: "Instant Tokenization"
     },
@@ -72,7 +85,7 @@ const STEPS = [
     {
         step: "01",
         title: "Tokenize",
-        description: "Submit your business or idea to $BizMart for instant tokenization."
+        description: <>Submit your business or idea to <BizMartLink /> for instant tokenization.</>
     },
     {
         step: "02",
@@ -93,19 +106,6 @@ const FUNDING_TARGETS = [
     "StartUp",
     "Career"
 ];
-
-// Reusable BizMart Link Component
-const BizMartLink = () => (
-    <Link 
-        href="https://clanker.world/clanker/0xd5F9B7DB3F9Ec658De934638E07919091983Bb07" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="font-bold text-[#81D7B4] hover:text-[#6BC5A0] hover:underline transition-colors inline-flex items-center gap-0.5 cursor-pointer"
-    >
-        $BizMart
-        <HiOutlineArrowTopRightOnSquare className="w-3 h-3" />
-    </Link>
-);
 
 export default function BizFunPage() {
     const { address, isConnected } = useAccount();
@@ -288,7 +288,7 @@ export default function BizFunPage() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#81D7B4] opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#81D7B4]"></span>
                             </span>
-                            <span className="text-sm font-semibold text-[#81D7B4] tracking-wide font-mono">COMING SOON</span>
+                            <span className="text-sm font-semibold text-[#81D7B4] tracking-wide font-mono">AGENT LIVE</span>
                         </motion.div>
 
                         <motion.h1
@@ -330,19 +330,20 @@ export default function BizFunPage() {
                             </p>
                         </motion.div>
 
+                        {/* Agent Launch Button */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.3 }}
                             className="flex flex-col sm:flex-row items-center justify-center gap-4"
                         >
-                            <button
-                                disabled
-                                className="w-full sm:w-auto px-8 py-4 bg-[#81D7B4] text-[#0b0c15] font-bold text-lg rounded-full shadow-[0_0_20px_rgba(129,215,180,0.3)] opacity-70 cursor-not-allowed flex items-center justify-center gap-2"
+                            <Link
+                                href="/bizfun/agent"
+                                className="w-full sm:w-auto px-8 py-4 bg-[#81D7B4] text-[#0b0c15] font-bold text-lg rounded-full shadow-[0_0_20px_rgba(129,215,180,0.3)] hover:bg-[#6BC5A0] hover:shadow-[0_0_30px_rgba(129,215,180,0.5)] transition-all flex items-center justify-center gap-2 group"
                             >
-                                Launch App
-                                <HiOutlineArrowRight className="w-5 h-5" />
-                            </button>
+                                <HiOutlineRocketLaunch className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                                Launch Agent
+                            </Link>
                             <Link
                                 href="https://t.me/+YimKRR7wAkVmZGRk"
                                 target="_blank"
