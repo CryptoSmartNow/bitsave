@@ -7,7 +7,8 @@ import { getChatSessionsCollection } from '@/lib/mongodb';
 // If REMOTE_AGENT_URL is set, we will use that instead of local instance
 const agent = new BizMartAgent();
 const REMOTE_AGENT_URL = process.env.REMOTE_AGENT_URL;
-const REMOTE_AGENT_KEY = process.env.REMOTE_AGENT_KEY;
+// Use AGENT_SERVER_API_KEY to match the .env and server configuration
+const REMOTE_AGENT_KEY = process.env.AGENT_SERVER_API_KEY || process.env.REMOTE_AGENT_KEY;
 
 export async function GET(req: NextRequest) {
     try {
