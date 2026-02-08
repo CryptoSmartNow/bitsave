@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set host [lindex $argv 0]
+set password "###Pr1m1dac404"
+
+# 1. Copy the upgrade script
+spawn scp scripts/upgrade-node.sh root@$host:~/upgrade-node.sh
+expect {
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof
+
+# 2. Run the upgrade script
+spawn ssh root@$host "bash ~/upgrade-node.sh"
+expect {
+    "password:" {
+        send "$password\r"
+    }
+}
+
+# Wait for completion (it might take a while to install node)
+expect eof

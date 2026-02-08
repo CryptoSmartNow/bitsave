@@ -54,7 +54,7 @@ ssh $VPS_USER@$VPS_HOST << 'EOF'
     # Update and install Node.js if not present
     if ! command -v node &> /dev/null; then
         echo "Installing Node.js..."
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
         apt-get install -y nodejs
     fi
 
