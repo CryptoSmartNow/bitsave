@@ -101,8 +101,8 @@ ssh $VPS_USER@$VPS_HOST << 'EOF'
         echo "UFW not found, assuming firewall is open or managed externally."
     fi
 
-    # Start with pm2 using tsx
-    pm2 start scripts/agent-server.ts --name bizmart-agent --interpreter tsx
+    # Start with pm2 using tsx (forcing environment update)
+    OPENCLAW_STATE_DIR=$(pwd)/.bizmart-agent pm2 start scripts/agent-server.ts --name bizmart-agent --interpreter tsx --update-env
     
     pm2 save
     

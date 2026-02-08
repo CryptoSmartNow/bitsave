@@ -30,11 +30,9 @@ export class BizMartAgent {
         // Resolve the openclaw binary path relative to this file or CWD
         this.openclawBin = path.resolve(process.cwd(), 'node_modules', '.bin', 'openclaw');
         
-        // Use a persistent state directory in development, or /tmp in production
-        // For consistent identity, we need to inject files into the workspace
-        this.stateDir = process.env.NODE_ENV === 'production' 
-            ? '/tmp/bizmart-agent' 
-            : path.join(process.cwd(), '.bizmart-agent');
+        // Use a persistent state directory. Prefer environment variable if set.
+        // Default to local .bizmart-agent directory for persistence.
+        this.stateDir = process.env.OPENCLAW_STATE_DIR || path.join(process.cwd(), '.bizmart-agent');
         
         if (process.env.MOLTBOOK_API_KEY) {
             this.moltbook = new MoltbookClient(process.env.MOLTBOOK_API_KEY);
