@@ -198,8 +198,19 @@ export class BizMartAgent {
         yield { type: 'thought', content: `Consulting BizMart Agent...` };
 
         try {
+            // Prepend a forceful system reminder to the user message to ensure adherence
+            // This overrides any potential context loss or model drift
+            const systemReminder = `[SYSTEM: You are BizMart Agent (Identity: 🦞). 
+If the user says "hello", introduce yourself as BizMart Agent and list your capabilities. 
+If the user asks to "create a market", "deploy", or "bet", you MUST use the provided JSON tools (create_market, etc.). 
+DO NOT respond as a web developer building a website. DO NOT mention localhost. 
+DO NOT ask for the user's name or onboarding details. 
+IMMEDIATELY generate the JSON action block for the requested task.]`;
+            
+            const fullMessage = `${systemReminder}\n\nUser: ${message}`;
+
             // 2. Call OpenClaw CLI
-            const result = await this.callOpenClaw(message, sessionId);
+            const result = await this.callOpenClaw(fullMessage, sessionId);
             
             // 3. Process the result
             if (result.error) {
