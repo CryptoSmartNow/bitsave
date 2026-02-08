@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.6-3",
+    "lastTouchedAt": "2026-02-08T01:23:07.828Z"
+  },
+  "agents": {
+    "defaults": {
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "1h"
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "30m"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "identity": {
+          "name": "BizMart",
+          "theme": "AI Agent",
+          "emoji": "🦞"
+        }
+      },
+      {
+        "id": "bizmart",
+        "name": "bizmart",
+        "workspace": "/Users/primidac/Developer/bitsave/.bizmart-agent/workspace",
+        "agentDir": "/Users/primidac/Developer/bitsave/.bizmart-agent/agents/bizmart/agent",
+        "identity": {
+          "name": "BizMart",
+          "theme": "AI Agent",
+          "emoji": "🦞"
+        }
+      }
+    ]
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  }
+}

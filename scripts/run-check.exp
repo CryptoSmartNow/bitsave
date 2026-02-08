@@ -1,0 +1,28 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set host [lindex $argv 0]
+set password "###Pr1m1dac404"
+
+spawn ssh root@$host
+
+expect {
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+
+expect "#"
+send "pm2 list\r"
+expect "#"
+send "netstat -tulpn | grep 3001\r"
+expect "#"
+send "curl -v http://localhost:3001/health\r"
+expect "#"
+send "ufw status\r"
+expect "#"
+send "exit\r"

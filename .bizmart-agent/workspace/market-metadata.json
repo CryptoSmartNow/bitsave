@@ -1,0 +1,12 @@
+{
+  "title": "Will ETH hit $5,000 this month?",
+  "description": "This market resolves YES if the price of Ethereum (ETH) reaches or exceeds $5,000 USD on any major exchange (Coinbase, Binance, Kraken) at any point before the trading deadline. Resolves NO otherwise.",
+  "category": "Crypto",
+  "token": "ETH",
+  "targetPrice": 5000,
+  "currency": "USD",
+  "tradingDeadline": "2026-03-31T23:59:59Z",
+  "resolveTime": "2026-08-01T00:00:00Z",
+  "resolutionSource": "CoinGecko / Major CEX spot price",
+  "createdAt": "2025-07-25T00:00:00Z"
+}

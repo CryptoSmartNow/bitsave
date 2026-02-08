@@ -1,7 +1,9 @@
 
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
-import { MoltbookClient } from '@/utils/moltbook';
+import fs from 'fs';
+import { MoltbookClient } from '../utils/moltbook';
+import { agentTools, TOOLS_DESCRIPTION } from './web3/agent-tools';
 
 /**
  * BizMart Agent - Core Logic
@@ -11,7 +13,7 @@ import { MoltbookClient } from '@/utils/moltbook';
  */
 
 export interface AgentResponse {
-    type: 'thought' | 'action' | 'message' | 'error';
+    type: 'thought' | 'action' | 'message' | 'error' | 'proposal';
     content: string;
     data?: any;
 }
@@ -20,12 +22,19 @@ export class BizMartAgent {
     private name: string;
     private openclawBin: string;
     private moltbook: MoltbookClient | null = null;
+    private stateDir: string;
+    private isInitialized: boolean = false;
 
     constructor(name: string = "BizMart") {
         this.name = name;
         // Resolve the openclaw binary path relative to this file or CWD
-        // In a Next.js environment, we might need to find where node_modules is
         this.openclawBin = path.resolve(process.cwd(), 'node_modules', '.bin', 'openclaw');
+        
+        // Use a persistent state directory in development, or /tmp in production
+        // For consistent identity, we need to inject files into the workspace
+        this.stateDir = process.env.NODE_ENV === 'production' 
+            ? '/tmp/bizmart-agent' 
+            : path.join(process.cwd(), '.bizmart-agent');
         
         if (process.env.MOLTBOOK_API_KEY) {
             this.moltbook = new MoltbookClient(process.env.MOLTBOOK_API_KEY);
@@ -33,11 +42,161 @@ export class BizMartAgent {
     }
 
     /**
+     * Initialize the workspace with identity files
+     */
+    private initializeWorkspace() {
+        if (this.isInitialized) return;
+
+        try {
+            const workspaceDir = path.join(this.stateDir, 'workspace');
+            
+            // Create directories if they don't exist
+            if (!fs.existsSync(workspaceDir)) {
+                fs.mkdirSync(workspaceDir, { recursive: true });
+            }
+
+            // Path to source identity files
+            const sourceIdentity = path.join(process.cwd(), 'docs', 'agent', 'IDENTITY.md');
+            const destIdentity = path.join(workspaceDir, 'IDENTITY.md');
+            
+            const sourceSoul = path.join(process.cwd(), 'docs', 'agent', 'SOUL.md');
+            const destSoul = path.join(workspaceDir, 'SOUL.md');
+
+            // Copy identity file if it exists
+            if (fs.existsSync(sourceIdentity)) {
+                fs.copyFileSync(sourceIdentity, destIdentity);
+            }
+
+            // Copy soul file if it exists and append tools description
+            if (fs.existsSync(sourceSoul)) {
+                let soulContent = fs.readFileSync(sourceSoul, 'utf-8');
+                // Avoid duplicating if already present
+                if (!soulContent.includes("BizFi Protocol tools")) {
+                    soulContent += "\n\n" + TOOLS_DESCRIPTION;
+                }
+                fs.writeFileSync(destSoul, soulContent);
+            }
+
+            // Configure the agent identity in OpenClaw
+            const env = {
+                ...process.env,
+                OPENCLAW_STATE_DIR: this.stateDir,
+                OPENCLAW_CONFIG_PATH: path.join(this.stateDir, 'config.json'),
+            };
+
+            // Try to set identity for 'bizmart' agent
+            // We use spawnSync to ensure it completes before processing messages
+            const setIdentity = () => spawnSync(this.openclawBin, [
+                'agents', 'set-identity', 
+                '--agent', 'bizmart', 
+                '--identity-file', destIdentity
+            ], { env });
+
+            let result = setIdentity();
+
+            // If it failed (likely agent 'bizmart' doesn't exist), try to create it first
+            if (result.status !== 0) {
+                // console.log("Creating 'bizmart' agent...");
+                spawnSync(this.openclawBin, [
+                    'agents', 'add', 'bizmart',
+                    '--workspace', workspaceDir
+                ], { env });
+                result = setIdentity();
+            }
+
+            if (result.status === 0) {
+                this.isInitialized = true;
+            } else {
+                console.warn("Failed to set agent identity:", result.stderr.toString());
+            }
+
+        } catch (error) {
+            console.error("Failed to initialize agent workspace:", error);
+        }
+    }
+
+    /**
+     * Helper to process JSON payload structure
+     */
+    private async *_processJsonPayload(json: any): AsyncGenerator<AgentResponse> {
+        // Check for explicit action first
+        if (json.action) {
+             yield { type: 'thought', content: `Executing tool: ${json.action}` };
+             try {
+                 let result: any = null;
+                 const params = json.parameters || {};
+                 
+                 if (json.action === 'create_market') {
+                    result = await agentTools.createMarket(params as any);
+                    if (result && result.proposal) {
+                        yield { 
+                            type: 'proposal', 
+                            content: result.message || 'Market Creation Proposed',
+                            data: result.proposal
+                        };
+                        return true;
+                    }
+                } else if (json.action === 'buy_shares') {
+                    result = await agentTools.buyShares(params as any);
+                } else if (json.action === 'approve_usdc') {
+                    result = await agentTools.approveUsdc(params as any);
+                } else if (json.action === 'mint_usdc') {
+                    result = await agentTools.mintUsdc();
+                } else if (json.action === 'resolve_market') {
+                    result = await agentTools.resolveMarket(params as any);
+                } else if (json.action === 'redeem_winnings') {
+                    result = await agentTools.redeemWinnings(params as any);
+                }
+                 
+                 if (result) {
+                     yield { type: 'message', content: `✅ **Action Executed**: ${result.message}` };
+                 } else {
+                     yield { type: 'error', content: `Unknown action: ${json.action}` };
+                 }
+                 return true; // Stop processing other payloads if action was taken
+             } catch (e: any) {
+                 yield { type: 'error', content: `❌ **Action Failed**: ${e.message}` };
+                 return true;
+             }
+        }
+
+        if (json.payloads && Array.isArray(json.payloads)) {
+            let hasContent = false;
+            for (const payload of json.payloads) {
+                if (payload.text) {
+                    const cleanText = payload.text.trim();
+                    if (cleanText) {
+                        // Check for embedded actions in the text
+                        const embeddedAction = this.extractJsonFromText(cleanText);
+                        if (embeddedAction && embeddedAction.action) {
+                            // Recursively process the embedded action
+                            const processed = yield* this._processJsonPayload(embeddedAction);
+                            if (processed) return true;
+                        }
+
+                        yield { type: 'message', content: cleanText };
+                        hasContent = true;
+                    }
+                }
+                if (payload.mediaUrl) {
+                    yield { type: 'message', content: `[Image: ${payload.mediaUrl}]` };
+                    hasContent = true;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Process a user message using OpenClaw and return a stream of responses
      */
     async *processMessage(message: string, sessionId: string = 'default'): AsyncGenerator<AgentResponse> {
+        // Ensure workspace is ready with identity
+        this.initializeWorkspace();
+
         // 1. Yield initial thought
-        yield { type: 'thought', content: `Consulting OpenClaw agent...` };
+        yield { type: 'thought', content: `Consulting BizMart Agent...` };
 
         try {
             // 2. Call OpenClaw CLI
@@ -49,39 +208,9 @@ export class BizMartAgent {
                  return;
             }
 
-            // Helper to process JSON payload structure
-            const processJsonPayload = function*(json: any): Generator<AgentResponse> {
-                if (json.payloads && Array.isArray(json.payloads)) {
-                    let hasContent = false;
-                    for (const payload of json.payloads) {
-                        if (payload.text) {
-                            const cleanText = payload.text.trim();
-                            if (cleanText) {
-                                yield { type: 'message', content: cleanText };
-                                hasContent = true;
-                            }
-                        }
-                        if (payload.mediaUrl) {
-                            yield { type: 'message', content: `[Image: ${payload.mediaUrl}]` }; // Or handle as image type if UI supports it
-                            // Ideally: yield { type: 'image', content: payload.mediaUrl };
-                            // But AgentResponse type is 'thought' | 'action' | 'message' | 'error'
-                            // Let's assume 'message' is text. 
-                            // If we want to support images, we need to update AgentResponse interface or send markdown image
-                            // yield { type: 'message', content: `![Image](${payload.mediaUrl})` };
-                            hasContent = true;
-                        }
-                    }
-                    if (!hasContent) {
-                         // yield { type: 'thought', content: "Agent returned empty payload." };
-                    }
-                    return true;
-                }
-                return false;
-            };
-
             // If OpenClaw returns JSON with specific structure, parse it
             if (result.json) {
-                const processed = yield* processJsonPayload(result.json);
+                const processed = yield* this._processJsonPayload(result.json);
                 if (processed) return;
 
                 // Fallback for other JSON structures
@@ -102,20 +231,11 @@ export class BizMartAgent {
                 // Fallback for raw text
                 const raw = result.raw?.trim() || "";
                 
-                // Try to extract JSON from raw text (it might be surrounded by logs)
-                // Find the first '{' and last '}'
-                const firstBrace = raw.indexOf('{');
-                const lastBrace = raw.lastIndexOf('}');
-                
-                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                    const potentialJson = raw.substring(firstBrace, lastBrace + 1);
-                    try {
-                        const parsed = JSON.parse(potentialJson);
-                        const processed = yield* processJsonPayload(parsed);
-                        if (processed) return;
-                    } catch (e) {
-                        // ignore JSON parse error
-                    }
+                // Try to extract JSON from raw text using smart extractor
+                const parsed = this.extractJsonFromText(raw);
+                if (parsed) {
+                    const processed = yield* this._processJsonPayload(parsed);
+                    if (processed) return;
                 }
                 
                 yield { type: 'message', content: raw || "No response from agent." };
@@ -132,6 +252,40 @@ export class BizMartAgent {
         }
     }
 
+    private extractJsonFromText(text: string): any {
+        let startIndex = text.indexOf('{');
+        while (startIndex !== -1) {
+            let braceCount = 0;
+            let endIndex = -1;
+            
+            for (let i = startIndex; i < text.length; i++) {
+                if (text[i] === '{') braceCount++;
+                else if (text[i] === '}') braceCount--;
+                
+                if (braceCount === 0) {
+                    endIndex = i;
+                    break;
+                }
+            }
+            
+            if (endIndex !== -1) {
+                const jsonStr = text.substring(startIndex, endIndex + 1);
+                try {
+                    const parsed = JSON.parse(jsonStr);
+                    // Check if it looks like an action or message payload
+                    if (parsed.action || parsed.reply || parsed.message || parsed.text || parsed.content || parsed.payloads) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    // Continue searching
+                }
+            }
+            
+            startIndex = text.indexOf('{', startIndex + 1);
+        }
+        return null;
+    }
+
     private callOpenClaw(message: string, sessionId: string): Promise<{ json?: any, raw?: string, error?: string }> {
         return new Promise((resolve, reject) => {
             // Arguments for openclaw agent command
@@ -139,16 +293,22 @@ export class BizMartAgent {
             const args = [
                 'agent',
                 '--local',
+                '--agent', 'bizmart', // Explicitly use the configured 'bizmart' agent
                 '--message', message,
                 '--session-id', sessionId,
-                '--json'
+                '--json',
+                '--thinking', 'minimal' // Optimize for speed
             ];
 
             // Set environment variables for OpenClaw
             const env = {
                 ...process.env,
-                OPENCLAW_STATE_DIR: '/tmp/openclaw-state',
-                OPENCLAW_CONFIG_PATH: '/tmp/openclaw-config.json',
+                OPENCLAW_STATE_DIR: this.stateDir,
+                OPENCLAW_CONFIG_PATH: path.join(this.stateDir, 'config.json'),
+                // Explicitly pass API keys to ensure they are available to the child process
+                ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+                OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+                MOLTBOOK_API_KEY: process.env.MOLTBOOK_API_KEY,
             };
 
             const child = spawn(this.openclawBin, args, { env });
@@ -165,40 +325,34 @@ export class BizMartAgent {
             });
 
             child.on('close', (code) => {
+                console.log(`OpenClaw stdout length: ${stdout.length}`);
+                // Try to extract JSON from stdout regardless of exit code
+                const json = this.extractJsonFromText(stdout);
+                
+                if (json) {
+                    console.log("Extracted JSON from stdout");
+                    resolve({ json });
+                    return;
+                } else {
+                    console.log("Failed to extract JSON from stdout");
+                }
+
                 if (code !== 0) {
-                    // Try to parse stdout even on error code
-                    if (stdout.trim()) {
-                         try {
-                            const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-                            if (jsonMatch) {
-                                const json = JSON.parse(jsonMatch[0]);
-                                resolve({ json });
-                                return;
-                            }
-                         } catch (e) {
-                             // ignore
-                         }
+                    if (json) {
+                        resolve({ json });
+                        return;
                     }
-                    
                     reject(new Error(`OpenClaw exited with code ${code}: ${stderr}`));
                     return;
                 }
 
-                try {
-                    // Try to find the largest JSON object in stdout
-                    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                         const json = JSON.parse(jsonMatch[0]);
-                         resolve({ json });
-                         return;
-                    }
-
-                    // Fallback to simple parse
-                    const json = JSON.parse(stdout.trim());
+                if (json) {
                     resolve({ json });
-                } catch (e) {
-                    resolve({ raw: stdout });
+                    return;
                 }
+
+                // Fallback: return raw stdout if no JSON found
+                resolve({ raw: stdout });
             });
 
             child.on('error', (err) => {

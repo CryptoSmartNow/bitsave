@@ -57,6 +57,7 @@ export async function getDatabase(): Promise<Db | null> {
   }
 }
 
+
 export async function getUserInteractionsCollection(): Promise<Collection | null> {
   if (!MONGODB_ENABLED) {
     console.warn('MongoDB is not enabled');
@@ -85,6 +86,22 @@ export async function getTransactionsCollection(): Promise<Collection | null> {
     return db.collection('transactions');
   } catch (error) {
     console.error('Failed to get transactions collection:', error);
+    return null;
+  }
+}
+
+export async function getChatSessionsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('chat_sessions');
+  } catch (error) {
+    console.error('Failed to get chat sessions collection:', error);
     return null;
   }
 }

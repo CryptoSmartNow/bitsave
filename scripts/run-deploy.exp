@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+set host [lindex $argv 0]
+set password "###Pr1m1dac404"
+
+# Spawn the deployment script
+spawn ./scripts/deploy-to-vps.sh $host
+
+# Expect SCP password
+expect {
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+
+# Expect SSH password (inside the script)
+expect {
+    "password:" {
+        send "$password\r"
+    }
+}
+
+# Wait for completion
+expect eof

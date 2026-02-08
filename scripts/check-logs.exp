@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set host [lindex $argv 0]
+set password "###Pr1m1dac404"
+
+spawn ssh root@$host "pm2 logs bizmart-agent --lines 50 --nostream"
+
+expect {
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

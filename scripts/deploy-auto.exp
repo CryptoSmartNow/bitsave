@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host [lindex $argv 0]
+set password "###Pr1m1dac404"
+
+if {$host == ""} {
+    puts "Usage: ./scripts/deploy-auto.exp <HOST>"
+    exit 1
+}
+
+spawn ./scripts/deploy-to-vps.sh $host
+
+expect {
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+        exp_continue
+    }
+    "Deployment complete!" {
+        exit 0
+    }
+    eof {
+        exit 0
+    }
+}

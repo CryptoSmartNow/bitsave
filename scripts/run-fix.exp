@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+set host [lindex $argv 0]
+set password "###Pr1m1dac404"
+
+spawn ssh root@$host "bash -s" < scripts/fix-vps.sh
+
+expect {
+    "Are you sure you want to continue connecting" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

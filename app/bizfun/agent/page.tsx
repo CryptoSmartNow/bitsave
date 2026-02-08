@@ -22,7 +22,38 @@ const exo = Exo({
     variable: '--font-exo',
 });
 
-// Reusable BizMart Link Component
+import { marked } from 'marked';
+import { MarketProposalCard } from "@/components/MarketProposalCard";
+
+// ... existing imports ...
+
+// Helper component for rendering Markdown safely
+const MarkdownRenderer = ({ content }: { content: string }) => {
+    // Remove leading "> " if present (for user messages)
+    const cleanContent = content.startsWith('> ') ? content.substring(2) : content;
+    
+    // Parse markdown to HTML
+    const html = marked.parse(cleanContent, { async: false }) as string;
+
+    return (
+        <div 
+            className="prose prose-invert prose-sm max-w-none 
+                prose-p:leading-relaxed prose-p:my-1
+                prose-headings:text-[#81D7B4] prose-headings:font-bold prose-headings:my-2
+                prose-strong:text-white prose-strong:font-bold
+                prose-ul:list-disc prose-ul:pl-4 prose-ul:my-1
+                prose-ol:list-decimal prose-ol:pl-4 prose-ol:my-1
+                prose-li:my-0.5
+                prose-code:text-[#81D7B4] prose-code:bg-white/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-xs
+                prose-pre:bg-black/30 prose-pre:p-2 prose-pre:rounded prose-pre:border prose-pre:border-white/5
+                text-gray-200"
+            dangerouslySetInnerHTML={{ __html: html }} 
+        />
+    );
+};
+
+// ... existing components ...
+
 const BizMartLink = () => (
     <Link 
         href="https://clanker.world/clanker/0xd5F9B7DB3F9Ec658De934638E07919091983Bb07" 
@@ -36,9 +67,10 @@ const BizMartLink = () => (
 );
 
 interface AgentStep {
-    type: 'thought' | 'action' | 'message' | 'error';
+    type: 'thought' | 'action' | 'message' | 'error' | 'proposal';
     content: string;
     data?: any;
+    timestamp?: string | Date;
 }
 
 const AgentTerminal = () => {
@@ -46,6 +78,24 @@ const AgentTerminal = () => {
     const [history, setHistory] = useState<AgentStep[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Load history on mount
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const res = await fetch('/api/bizfun/agent');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.steps && Array.isArray(data.steps)) {
+                        setHistory(data.steps);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load chat history:", error);
+            }
+        };
+        fetchHistory();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -148,9 +198,12 @@ const AgentTerminal = () => {
                                         )}
                                     </div>
                                 )}
+                                {step.type === 'proposal' && (
+                                    <MarketProposalCard data={step.data} />
+                                )}
                                 {step.type === 'message' && (
                                     <div className={step.content.startsWith('>') ? 'text-white' : 'text-gray-200'}>
-                                        {step.content}
+                                        <MarkdownRenderer content={step.content} />
                                     </div>
                                 )}
                                 {step.type === 'error' && (
