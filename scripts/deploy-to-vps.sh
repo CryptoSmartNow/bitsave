@@ -80,6 +80,13 @@ ssh $VPS_USER@$VPS_HOST << 'EOF'
     # Install global tsx
     npm install -g tsx typescript
 
+    # Set Agent Identity
+    echo "🦞 Setting Agent Identity..."
+    export OPENCLAW_STATE_DIR=$(pwd)/.bizmart-agent
+    export OPENCLAW_CONFIG_PATH=$OPENCLAW_STATE_DIR/config.json
+    mkdir -p $OPENCLAW_STATE_DIR
+    ./node_modules/.bin/openclaw agents set-identity --agent bizmart --identity-file docs/agent/IDENTITY.md || echo "⚠️ Warning: Failed to set identity"
+
     # Start Server
     echo "Starting Agent Server..."
     pm2 stop bizmart-agent 2>/dev/null || true
