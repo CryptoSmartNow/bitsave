@@ -39,6 +39,7 @@ module.exports = {
     },
   },
   plugins: [
+    require('@tailwindcss/typography'),
     // Add a plugin for smooth scrolling behavior
     function({ addBase }) {
       addBase({
