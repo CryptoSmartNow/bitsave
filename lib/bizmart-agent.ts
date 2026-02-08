@@ -56,23 +56,18 @@ export class BizMartAgent {
             // Path to source identity files
             const sourceIdentity = path.join(process.cwd(), 'docs', 'agent', 'IDENTITY.md');
             const destIdentity = path.join(workspaceDir, 'IDENTITY.md');
-            
-            const sourceSoul = path.join(process.cwd(), 'docs', 'agent', 'SOUL.md');
-            const destSoul = path.join(workspaceDir, 'SOUL.md');
 
-            // Copy identity file if it exists
+            // Copy identity file if it exists and append tools description
             if (fs.existsSync(sourceIdentity)) {
-                fs.copyFileSync(sourceIdentity, destIdentity);
-            }
-
-            // Copy soul file if it exists and append tools description
-            if (fs.existsSync(sourceSoul)) {
-                let soulContent = fs.readFileSync(sourceSoul, 'utf-8');
+                let identityContent = fs.readFileSync(sourceIdentity, 'utf-8');
                 // Avoid duplicating if already present
-                if (!soulContent.includes("BizFi Protocol tools")) {
-                    soulContent += "\n\n" + TOOLS_DESCRIPTION;
+                if (!identityContent.includes("BizFi Protocol tools")) {
+                    identityContent += "\n\n" + TOOLS_DESCRIPTION;
                 }
-                fs.writeFileSync(destSoul, soulContent);
+                fs.writeFileSync(destIdentity, identityContent);
+            } else {
+                // Fallback if no identity file exists
+                fs.writeFileSync(destIdentity, `Name: BizMart\nEmoji: 🦞\n\n${TOOLS_DESCRIPTION}`);
             }
 
             // Configure the agent identity in OpenClaw
@@ -119,6 +114,12 @@ export class BizMartAgent {
     private async *_processJsonPayload(json: any): AsyncGenerator<AgentResponse> {
         // Check for explicit action first
         if (json.action) {
+             // Yield the conversational message if present
+             if (json.message || json.reply || json.text) {
+                 const msg = json.message || json.reply || json.text;
+                 yield { type: 'message', content: msg };
+             }
+
              yield { type: 'thought', content: `Executing tool: ${json.action}` };
              try {
                  let result: any = null;
