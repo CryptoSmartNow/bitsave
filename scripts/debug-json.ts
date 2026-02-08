@@ -23,7 +23,7 @@ function extractJsonFromText(text: string): any {
                 if (parsed.action || parsed.reply || parsed.message || parsed.text || parsed.content) {
                     return parsed;
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.log("Parse error:", e.message);
             }
         }
