@@ -80,8 +80,7 @@ export default function CustomConnectButton() {
     <div className="flex justify-end">
       <button
         onClick={() => login({ loginMethods: ['wallet'] })}
-        disabled={!ready}
-        className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        className="bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2"
       >
         <HiOutlineWallet className="w-5 h-5" />
         <span>Connect Wallet</span>

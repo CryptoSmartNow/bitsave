@@ -53,8 +53,7 @@ export function BizFiAuthButton({ className }: { className?: string }) {
     return (
         <button
             onClick={login}
-            disabled={!ready}
-            className={`px-4 py-2 font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl hover:bg-[#6BC4A0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            className={`px-4 py-2 font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl hover:bg-[#6BC4A0] transition-colors ${className}`}
         >
             Login
         </button>
