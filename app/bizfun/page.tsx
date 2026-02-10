@@ -165,6 +165,7 @@ export default function BizFunPage() {
 
                         {/* Desktop Nav */}
                         <nav className="hidden xl:flex items-center space-x-1">
+                            <Link href="/bizfun/market" className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-white/5 whitespace-nowrap">Markets</Link>
                             <a href="#how-it-works" className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-white/5 whitespace-nowrap">How It Works</a>
                             <a href="#features" className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-white/5 whitespace-nowrap">Features</a>
                         </nav>

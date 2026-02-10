@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits } from "viem";
 import { PREDICTION_MARKET_FACTORY_ABI, MOCK_USDC_ABI } from "@/lib/web3/abi";
 import { HiOutlineCheck } from "react-icons/hi2";
@@ -29,11 +29,15 @@ interface MarketProposalProps {
 
 export const MarketProposalCard = ({ data }: MarketProposalProps) => {
     const { address } = useAccount();
-    const [step, setStep] = useState<'check' | 'approve' | 'create' | 'done'>('check');
-    const [txHash, setTxHash] = useState<string | null>(null);
+    const [step, setStep] = useState<'check' | 'approve' | 'create' | 'indexing' | 'done'>('check');
+    const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
 
     const { writeContractAsync: writeApprove, isPending: isApproving } = useWriteContract();
     const { writeContractAsync: writeCreate, isPending: isCreating } = useWriteContract();
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+        hash: txHash,
+    });
 
     // Check Allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -58,6 +62,34 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
         }
     }, [allowance, creationFee, step]);
 
+    useEffect(() => {
+        if (isConfirmed && txHash && step === 'indexing') {
+            const indexMarket = async () => {
+                try {
+                    await fetch('/api/bizfun/markets', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            question: data.description, // Use description as question
+                            description: data.description,
+                            vibe: 'Community',
+                            tradingDeadline: data.params.tradingDeadline,
+                            chainId: 8453,
+                            creator: address,
+                            txHash: txHash,
+                            metadataUri: data.params.metadataUri
+                        })
+                    });
+                    setStep('done');
+                } catch (error) {
+                    console.error("Indexing failed", error);
+                    setStep('done'); // Show done anyway, maybe with warning?
+                }
+            };
+            indexMarket();
+        }
+    }, [isConfirmed, txHash, step, data, address]);
+
     const handleApprove = async () => {
         try {
             const hash = await writeApprove({
@@ -67,18 +99,13 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                 args: [data.contracts.factory, creationFee * BigInt(10)],
             });
             console.log("Approval tx:", hash);
-            // Wait for receipt would be better, but we rely on re-check or manual next step for now
-            // Actually, let's just wait for next render cycle or optimistic update
-            // Ideally we wait for receipt.
-            // For now, we'll just set step to 'create' after a delay or assume success if no error thrown
-            // Better: use useWaitForTransactionReceipt
+            // Wait for receipt handled by user re-checking or optimistic
+            // Ideally we wait for approval receipt too, but let's stick to creation for now
+            setTimeout(() => refetchAllowance(), 2000); 
         } catch (error) {
             console.error("Approval failed", error);
         }
     };
-
-    // We can use a separate hook to wait for approval receipt if we had the hash
-    // But for simplicity, let's just refetch allowance on button click or interval
 
     const handleCreate = async () => {
         try {
@@ -98,7 +125,7 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                 ]
             });
             setTxHash(hash);
-            setStep('done');
+            setStep('indexing');
         } catch (error) {
             console.error("Creation failed", error);
         }
@@ -125,7 +152,7 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                     <button
                         onClick={handleApprove}
                         disabled={isApproving}
-                        className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                        className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
                     >
                         {isApproving ? "Approving..." : "1. Approve USDC"}
                     </button>

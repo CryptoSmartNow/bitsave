@@ -30,13 +30,14 @@ export default function DashboardLayout({
   const [mounted, setMounted] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { ready, authenticated } = usePrivy();
+  const { isConnected: isWagmiConnected } = useAccount();
   const { disconnect, isDisconnecting } = useOptimizedDisconnect();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Use Privy's authenticated state as primary indicator
-  // Only show as connected if Privy is authenticated
-  const isConnected = ready && authenticated;
+  // Use Privy's authenticated state or Wagmi connection state
+  // Show as connected if either Privy is authenticated or Wagmi is connected
+  const isConnected = ready && (authenticated || isWagmiConnected);
 
   useEffect(() => {
     setMounted(true);
