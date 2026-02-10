@@ -1,7 +1,7 @@
 import { createWalletClient, createPublicClient, http, parseUnits, formatUnits, decodeEventLog } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { base, baseSepolia } from 'viem/chains';
-import { PREDICTION_MARKET_FACTORY_ABI, PREDICTION_MARKET_ABI, MOCK_USDC_ABI } from './abi';
+import { PREDICTION_MARKET_FACTORY_ABI, PREDICTION_MARKET_ABI, MOCK_USDC_ABI, ERC20_ABI } from './abi';
 import { BIZFI_CONFIG } from './config';
 
 // Initialize clients
@@ -205,7 +205,7 @@ export const agentTools = {
 
         const hash = await walletClient.writeContract({
             address: BIZFI_CONFIG.contracts.mockUsdc as `0x${string}`,
-            abi: MOCK_USDC_ABI,
+            abi: ERC20_ABI,
             functionName: 'approve',
             args: [params.spenderAddress as `0x${string}`, amountWei]
         });

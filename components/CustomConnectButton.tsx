@@ -61,16 +61,18 @@ export default function CustomConnectButton() {
 
   if (isConnected) {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse shadow-[0_0_8px_rgba(129,215,180,0.5)]" />
+          <span className="font-mono font-medium tracking-wide text-gray-300">{displayAddress}</span>
+        </div>
+
         <button
           onClick={handleDisconnect}
-          className="group bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-red-500 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
-          title="Click to disconnect"
+          className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors font-medium text-sm"
+          title="Disconnect Wallet"
         >
-          <div className="w-2 h-2 rounded-full bg-white animate-pulse group-hover:hidden"></div>
-          <HiOutlineArrowRightOnRectangle className="w-5 h-5 hidden group-hover:block" />
-          <span className="font-mono group-hover:hidden">{displayAddress}</span>
-          <span className="hidden group-hover:inline font-medium">Disconnect</span>
+          <HiOutlineArrowRightOnRectangle className="w-5 h-5" />
         </button>
       </div>
     );

@@ -3,13 +3,15 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 import {
     HiOutlineArrowLeft,
     HiOutlineArrowTopRightOnSquare,
     HiOutlineCommandLine,
     HiOutlinePaperAirplane,
-    HiOutlineGift
+    HiOutlineGift,
+    HiCheck
 } from "react-icons/hi2";
 import { GiCrabClaw, GiRobotGrab } from "react-icons/gi";
 import { Exo } from "next/font/google";
@@ -70,7 +72,64 @@ interface AgentStep {
     type: 'thought' | 'action' | 'message' | 'error' | 'proposal';
     content: string;
     data?: any;
+    options?: string[];
+    checkboxes?: string[];
     timestamp?: string | Date;
+}
+
+const StepOptions = ({ step, onSelect }: { step: AgentStep, onSelect: (msg: string) => void }) => {
+    const [selected, setSelected] = useState<string[]>([]);
+
+    if (step.options) {
+        return (
+            <div className="flex flex-wrap gap-2 mt-3">
+                {step.options.map((opt, i) => (
+                    <button
+                        key={i}
+                        onClick={() => onSelect(opt)}
+                        className="px-3 py-1.5 rounded-lg bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-[#0b0c15] transition-all text-xs font-bold"
+                    >
+                        {opt}
+                    </button>
+                ))}
+            </div>
+        );
+    }
+
+    if (step.checkboxes) {
+        return (
+            <div className="flex flex-col gap-2 mt-3">
+                {step.checkboxes.map((opt, i) => (
+                    <label key={i} className="flex items-center gap-2 cursor-pointer group w-fit">
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selected.includes(opt) ? 'bg-[#81D7B4] border-[#81D7B4]' : 'border-gray-500 group-hover:border-[#81D7B4]'}`}>
+                            {selected.includes(opt) && <HiCheck className="w-3 h-3 text-[#0b0c15]" />}
+                        </div>
+                        <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={selected.includes(opt)}
+                            onChange={() => {
+                                setSelected(prev => 
+                                    prev.includes(opt) 
+                                        ? prev.filter(p => p !== opt)
+                                        : [...prev, opt]
+                                );
+                            }}
+                        />
+                        <span className={`text-sm ${selected.includes(opt) ? 'text-[#81D7B4]' : 'text-gray-400 group-hover:text-gray-300'}`}>{opt}</span>
+                    </label>
+                ))}
+                <button
+                    onClick={() => onSelect(selected.join(', '))}
+                    disabled={selected.length === 0}
+                    className="mt-2 px-4 py-2 bg-[#81D7B4] text-[#0b0c15] rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-[#6BC5A0] w-fit transition-colors"
+                >
+                    Confirm Selection
+                </button>
+            </div>
+        );
+    }
+    return null;
 }
 
 const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
@@ -102,23 +161,20 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
         fetchHistory();
     }, [walletAddress]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim() || isProcessing) return;
+    const sendMessage = async (text: string) => {
+        if (!text.trim() || isProcessing) return;
 
-        const userMsg = input;
-        setInput("");
         setIsProcessing(true);
         
         // Add user message to history locally
-        setHistory(prev => [...prev, { type: 'message', content: `> ${userMsg}` }]);
+        setHistory(prev => [...prev, { type: 'message', content: `> ${text}` }]);
 
         try {
             const res = await fetch('/api/bizfun/agent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    message: userMsg,
+                    message: text,
                     walletAddress: walletAddress 
                 }),
             });
@@ -137,6 +193,14 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim() || isProcessing) return;
+        const msg = input;
+        setInput("");
+        await sendMessage(msg);
     };
 
     useEffect(() => {
@@ -175,7 +239,7 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
                         <div className="h-full flex flex-col items-center justify-center text-gray-500 italic">
                             <GiCrabClaw className="w-16 h-16 mb-6 opacity-20" />
                             <p className="text-lg">Initialize communication with <BizMartLink /></p>
-                            <p className="text-sm mt-2 opacity-50">Try: "Tokenize a coffee shop" or "Create a prediction market"</p>
+                            <p className="text-sm mt-2 opacity-50">Try: "$bizmart"</p>
                         </div>
                     )}
 
@@ -212,6 +276,7 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
                                 {step.type === 'message' && (
                                     <div className={step.content.startsWith('>') ? 'text-white' : 'text-gray-200'}>
                                         <MarkdownRenderer content={step.content} />
+                                        <StepOptions step={step} onSelect={sendMessage} />
                                     </div>
                                 )}
                                 {step.type === 'error' && (
@@ -230,24 +295,37 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
 
                 {/* Input Area */}
                 <div className="p-4 bg-white/5 border-t border-white/5 shrink-0">
-                    <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
-                        <HiOutlineCommandLine className="w-5 h-5 text-gray-500 absolute left-3" />
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Command the agent (e.g., 'Tokenize my startup')"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all font-mono text-sm"
-                            disabled={isProcessing}
-                        />
-                        <button 
-                            type="submit"
-                            disabled={!input.trim() || isProcessing}
-                            className="absolute right-2 p-1.5 text-gray-400 hover:text-[#81D7B4] disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
-                        >
-                            <HiOutlinePaperAirplane className="w-5 h-5 rotate-90" />
-                        </button>
-                    </form>
+                    {walletAddress ? (
+                        <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
+                            <HiOutlineCommandLine className="w-5 h-5 text-gray-500 absolute left-3 top-6" />
+                            <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSubmit(e);
+                                    }
+                                }}
+                                placeholder="Command the agent (e.g., 'Tokenize my startup')"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all font-mono text-sm resize-none min-h-[50px] max-h-[120px]"
+                                rows={1}
+                                disabled={isProcessing}
+                            />
+                            <button 
+                                type="submit"
+                                disabled={!input.trim() || isProcessing}
+                                className="absolute right-2 top-3 p-1.5 text-gray-400 hover:text-[#81D7B4] disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+                            >
+                                <HiOutlinePaperAirplane className="w-5 h-5 rotate-90" />
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-4 text-center">
+                            <p className="text-gray-400 mb-3 text-sm">Please connect your wallet to interact with the agent.</p>
+                            <BizFiAuthButton />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -257,6 +335,9 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
 export default function AgentPage() {
     const { address, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
+    const { user, authenticated, ready } = usePrivy();
+
+    const activeAddress = isConnected ? address : (ready && authenticated ? user?.wallet?.address : undefined);
 
     return (
         <div className={`${exo.variable} font-[family-name:var(--font-exo)] min-h-screen text-white bg-[#0b0c15] selection:bg-[#81D7B4]/30 selection:text-white overflow-hidden flex flex-col`}>
@@ -284,24 +365,10 @@ export default function AgentPage() {
                             className="text-sm font-medium text-gray-400 hover:text-[#81D7B4] transition-colors flex items-center gap-2 mr-4"
                         >
                             <HiOutlineArrowLeft className="w-4 h-4" />
-                            Back to Home
+                            Go to market
                         </Link>
 
-                        {isConnected && address ? (
-                            <div className="flex items-center gap-2">
-                                <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-mono text-gray-300">
-                                    {address.slice(0, 6)}...{address.slice(-4)}
-                                </div>
-                                <button
-                                    onClick={() => disconnect()}
-                                    className="text-sm text-gray-400 hover:text-red-400 transition-colors px-2"
-                                >
-                                    Logout
-                                </button>
-                            </div>
-                        ) : (
-                            <BizFiAuthButton className="!bg-[#81D7B4] !text-[#0b0c15] !rounded-full !px-6 !py-2.5 !font-bold !shadow-[0_0_20px_rgba(129,215,180,0.3)] hover:!bg-[#6BC5A0] hover:!shadow-[0_0_30px_rgba(129,215,180,0.5)] transition-all" />
-                        )}
+                        <BizFiAuthButton />
                     </div>
                 </div>
             </header>
@@ -325,7 +392,7 @@ export default function AgentPage() {
                         <p className="text-gray-400">Interact directly with <BizMartLink /> to tokenize businesses and deploy markets.</p>
                     </motion.div>
                     
-                    <AgentTerminal walletAddress={isConnected ? address : undefined} />
+                    <AgentTerminal walletAddress={activeAddress} />
                 </div>
             </main>
         </div>

@@ -17,6 +17,8 @@ export interface AgentResponse {
     type: 'thought' | 'action' | 'message' | 'error' | 'proposal';
     content: string;
     data?: any;
+    options?: string[];
+    checkboxes?: string[];
 }
 
 interface CreationState {
@@ -59,7 +61,7 @@ const FLOW_STEPS = {
 const SCRIPT = {
     INIT: "Hey 👋\n I’m $BizMart. I help tokenize ideas, businesses, and even careers and launch their prediction markets.\n Takes about 10 minutes. Ready?",
     
-    TYPE: "First things first — what are we tokenizing today?\n\n**Options:**\n- A business\n- A startup / product\n- An idea\n- My career / personal brand\n- Just an experiment",
+    TYPE: "First things first — what are we tokenizing today?",
     
     NAME: "What should we call it publicly? Include links to your/business socials so I can do my research.",
     
@@ -67,19 +69,19 @@ const SCRIPT = {
     
     VALUE: "What value are you providing and who is your target audience?",
     
-    STAGE: "Be honest — what stage are you at?\n\n**Options:**\n- Just an idea\n- Building\n- Launched, no revenue yet\n- Making money\n- Growing my career fast",
+    STAGE: "Be honest — what stage are you at?",
     
-    GOAL: "Let’s make this interesting 😈\n What should the market predict?\n\n**Options:**\n- Revenue goal\n- Sales target\n- User growth\n- Launch milestone\n- Social growth (e.g your twitter following will get to 50k in 3 months)",
+    GOAL: "Let’s make this interesting 😈\n What should the market predict?",
     
     QUESTION: "Write the prediction in plain English.\n Example: “Will this business make $3,000 in the next 30 days?”",
     
-    DURATION: "How long should the prediction run?\n\n**Options:**\n- 7 days\n- 14 days\n- 30 days",
+    DURATION: "How long should the prediction run?",
     
-    CHAIN: "What chain should I deploy your Prediction on?\n\n**Options (multi-select):**\n- Base\n- Monad\n- BSC",
+    CHAIN: "What chain should I deploy your Prediction on?",
     
-    VIBE: "What vibe should the prediction have?\n\n**Options:**\n- Meme\n- Serious\n- Experimental",
+    VIBE: "What vibe should the prediction have?",
     
-    MARKETING: "Last thing — can I market this publicly for you?\n\n**Checkboxes:**\n- Post on MoltBook\n- Spark AI agent debates\n- Reply under big accounts\n- Go full chaos mode",
+    MARKETING: "Last thing — can I market this publicly for you?",
     
     WALLET: "Drop a USDC address for settlement, this is where your revenue from the prediction market will come.",
     
@@ -210,7 +212,11 @@ export class BizMartAgent {
         // If user says "yes" or "ready", move to TYPE.
         if (state.step === FLOW_STEPS.INIT) {
             // Assume any positive intent starts it, or really anything since they engaged
-            yield { type: 'message', content: SCRIPT.TYPE };
+            yield { 
+                type: 'message', 
+                content: SCRIPT.TYPE,
+                options: ["A business", "A startup / product", "An idea", "My career / personal brand", "Just an experiment"]
+            };
             await updateState({ step: FLOW_STEPS.TYPE });
             return;
         }
@@ -243,13 +249,49 @@ export class BizMartAgent {
             case FLOW_STEPS.NAME: yield { type: 'message', content: SCRIPT.NAME }; break;
             case FLOW_STEPS.DESCRIPTION: yield { type: 'message', content: SCRIPT.DESCRIPTION }; break;
             case FLOW_STEPS.VALUE: yield { type: 'message', content: SCRIPT.VALUE }; break;
-            case FLOW_STEPS.STAGE: yield { type: 'message', content: SCRIPT.STAGE }; break;
-            case FLOW_STEPS.GOAL: yield { type: 'message', content: SCRIPT.GOAL }; break;
+            case FLOW_STEPS.STAGE: 
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.STAGE,
+                    options: ["Just an idea", "Building", "Launched, no revenue yet", "Making money", "Growing my career fast"]
+                }; 
+                break;
+            case FLOW_STEPS.GOAL: 
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.GOAL,
+                    options: ["Revenue goal", "Sales target", "User growth", "Launch milestone", "Social growth"]
+                }; 
+                break;
             case FLOW_STEPS.QUESTION: yield { type: 'message', content: SCRIPT.QUESTION }; break;
-            case FLOW_STEPS.DURATION: yield { type: 'message', content: SCRIPT.DURATION }; break;
-            case FLOW_STEPS.CHAIN: yield { type: 'message', content: SCRIPT.CHAIN }; break;
-            case FLOW_STEPS.VIBE: yield { type: 'message', content: SCRIPT.VIBE }; break;
-            case FLOW_STEPS.MARKETING: yield { type: 'message', content: SCRIPT.MARKETING }; break;
+            case FLOW_STEPS.DURATION: 
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.DURATION,
+                    options: ["7 days", "14 days", "30 days"]
+                }; 
+                break;
+            case FLOW_STEPS.CHAIN: 
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.CHAIN,
+                    checkboxes: ["Base", "Monad", "BSC"]
+                }; 
+                break;
+            case FLOW_STEPS.VIBE: 
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.VIBE,
+                    options: ["Meme", "Serious", "Experimental"]
+                }; 
+                break;
+            case FLOW_STEPS.MARKETING: 
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.MARKETING,
+                    checkboxes: ["Post on MoltBook", "Spark AI agent debates", "Reply under big accounts", "Go full chaos mode"]
+                }; 
+                break;
             case FLOW_STEPS.WALLET: yield { type: 'message', content: SCRIPT.WALLET }; break;
             case FLOW_STEPS.DEPLOY:
                 yield { type: 'message', content: SCRIPT.DONE };
@@ -332,15 +374,19 @@ export class BizMartAgent {
 
         // Check trigger words if not active
         if (!creationState.isActive) {
-            // Remove punctuation for easier matching (e.g. "Hello!" -> "hello")
-            const lowerMsg = message.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+            // Check for $bizmart trigger (case insensitive)
+            const lowerMsg = message.trim().toLowerCase();
+            const isBizMart = lowerMsg === '$bizmart' || lowerMsg.startsWith('$bizmart ') || lowerMsg === 'bizmart';
+
+            // Legacy triggers (optional, keeping for robustness but prioritizing bizmart)
+            const cleanMsg = lowerMsg.replace(/[^a-z0-9\s]/g, '').trim();
             const greetings = ['hello', 'hi', 'hey', 'start', 'begin', 'yo'];
             const triggers = ['create', 'tokenize', 'launch', 'deploy'];
             
-            const isGreeting = greetings.some(g => lowerMsg === g || lowerMsg.startsWith(g + ' '));
-            const isTrigger = triggers.some(t => lowerMsg.includes(t));
+            const isGreeting = greetings.some(g => cleanMsg === g || cleanMsg.startsWith(g + ' '));
+            const isTrigger = triggers.some(t => cleanMsg.includes(t));
 
-            if (isGreeting || isTrigger) {
+            if (isBizMart || isGreeting || isTrigger) {
                 // Initialize Flow
                 yield { type: 'message', content: SCRIPT.INIT };
                 if (collection) {

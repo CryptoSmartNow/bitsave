@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits } from "viem";
-import { PREDICTION_MARKET_FACTORY_ABI, MOCK_USDC_ABI } from "@/lib/web3/abi";
+import { PREDICTION_MARKET_FACTORY_ABI, ERC20_ABI } from "@/lib/web3/abi";
 import { HiOutlineCheck } from "react-icons/hi2";
 
 interface MarketProposalProps {
@@ -30,19 +30,27 @@ interface MarketProposalProps {
 export const MarketProposalCard = ({ data }: MarketProposalProps) => {
     const { address } = useAccount();
     const [step, setStep] = useState<'check' | 'approve' | 'create' | 'indexing' | 'done'>('check');
-    const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+    const [createTxHash, setCreateTxHash] = useState<`0x${string}` | undefined>(undefined);
+    const [approveTxHash, setApproveTxHash] = useState<`0x${string}` | undefined>(undefined);
+    const [marketId, setMarketId] = useState<string | undefined>(undefined);
 
     const { writeContractAsync: writeApprove, isPending: isApproving } = useWriteContract();
     const { writeContractAsync: writeCreate, isPending: isCreating } = useWriteContract();
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-        hash: txHash,
+    // Wait for Creation
+    const { isLoading: isConfirmingCreate, isSuccess: isConfirmedCreate } = useWaitForTransactionReceipt({
+        hash: createTxHash,
+    });
+
+    // Wait for Approval
+    const { isLoading: isConfirmingApprove, isSuccess: isConfirmedApprove } = useWaitForTransactionReceipt({
+        hash: approveTxHash,
     });
 
     // Check Allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
         address: data.contracts.usdc,
-        abi: MOCK_USDC_ABI,
+        abi: ERC20_ABI,
         functionName: 'allowance',
         args: [address as `0x${string}`, data.contracts.factory],
         query: {
@@ -51,6 +59,12 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
     });
 
     const creationFee = BigInt(data.params.creationFee);
+
+    useEffect(() => {
+        if (isConfirmedApprove) {
+            refetchAllowance();
+        }
+    }, [isConfirmedApprove, refetchAllowance]);
 
     useEffect(() => {
         if (allowance !== undefined && allowance >= creationFee) {
@@ -63,10 +77,10 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
     }, [allowance, creationFee, step]);
 
     useEffect(() => {
-        if (isConfirmed && txHash && step === 'indexing') {
+        if (isConfirmedCreate && createTxHash && step === 'indexing') {
             const indexMarket = async () => {
                 try {
-                    await fetch('/api/bizfun/markets', {
+                    const res = await fetch('/api/bizfun/markets', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -76,10 +90,15 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                             tradingDeadline: data.params.tradingDeadline,
                             chainId: 8453,
                             creator: address,
-                            txHash: txHash,
+                            txHash: createTxHash,
                             metadataUri: data.params.metadataUri
                         })
                     });
+                    
+                    const responseData = await res.json();
+                    if (responseData.market && responseData.market._id) {
+                        setMarketId(responseData.market._id);
+                    }
                     setStep('done');
                 } catch (error) {
                     console.error("Indexing failed", error);
@@ -88,26 +107,32 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
             };
             indexMarket();
         }
-    }, [isConfirmed, txHash, step, data, address]);
+    }, [isConfirmedCreate, createTxHash, step, data, address]);
 
     const handleApprove = async () => {
+        if (!address) {
+            console.error("Wallet not connected");
+            return;
+        }
         try {
             const hash = await writeApprove({
                 address: data.contracts.usdc,
-                abi: MOCK_USDC_ABI,
+                abi: ERC20_ABI,
                 functionName: 'approve',
-                args: [data.contracts.factory, creationFee * BigInt(10)],
+                args: [data.contracts.factory, creationFee],
             });
             console.log("Approval tx:", hash);
-            // Wait for receipt handled by user re-checking or optimistic
-            // Ideally we wait for approval receipt too, but let's stick to creation for now
-            setTimeout(() => refetchAllowance(), 2000); 
+            setApproveTxHash(hash);
         } catch (error) {
             console.error("Approval failed", error);
         }
     };
 
     const handleCreate = async () => {
+        if (!address) {
+            console.error("Wallet not connected");
+            return;
+        }
         try {
             // Replace oracle placeholder with user address if it's the 0x0...0 address
             const oracle = data.params.oracle === "0x0000000000000000000000000000000000000000" ? address : data.params.oracle;
@@ -124,7 +149,7 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                     data.params.metadataUri
                 ]
             });
-            setTxHash(hash);
+            setCreateTxHash(hash);
             setStep('indexing');
         } catch (error) {
             console.error("Creation failed", error);
@@ -151,20 +176,20 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                 {step === 'approve' && (
                     <button
                         onClick={handleApprove}
-                        disabled={isApproving}
+                        disabled={isApproving || isConfirmingApprove}
                         className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
                     >
-                        {isApproving ? "Approving..." : "1. Approve USDC"}
+                        {isApproving || isConfirmingApprove ? "Approving..." : "1. Approve USDC"}
                     </button>
                 )}
                 
                 {step === 'create' && (
                     <button
                         onClick={handleCreate}
-                        disabled={isCreating}
+                        disabled={isCreating || isConfirmingCreate}
                         className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
                     >
-                        {isCreating ? "Creating..." : "2. Create Market"}
+                        {isCreating || isConfirmingCreate ? "Creating..." : "2. Create Market"}
                     </button>
                 )}
 
@@ -174,15 +199,25 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                             <HiOutlineCheck className="w-5 h-5" />
                             <span>Created!</span>
                         </div>
-                        {txHash && (
-                            <a 
-                                href={`https://basescan.org/tx/${txHash}`} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs underline block mt-1 hover:text-green-300"
-                            >
-                                View TX
-                            </a>
+                        {createTxHash && (
+                            <div className="flex justify-center gap-3 mt-1">
+                                <a 
+                                    href={`https://basescan.org/tx/${createTxHash}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs underline hover:text-green-300"
+                                >
+                                    View TX
+                                </a>
+                                {marketId && (
+                                    <a 
+                                        href={`/bizfun/market/${marketId}`}
+                                        className="text-xs underline hover:text-green-300"
+                                    >
+                                        Open Market
+                                    </a>
+                                )}
+                            </div>
                         )}
                     </div>
                 )}
