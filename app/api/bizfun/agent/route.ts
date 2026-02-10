@@ -12,18 +12,43 @@ const REMOTE_AGENT_KEY = process.env.AGENT_SERVER_API_KEY || process.env.REMOTE_
 
 export async function GET(req: NextRequest) {
     try {
-        const sessionId = req.cookies.get('bizfun_session')?.value;
-        if (!sessionId) {
-            return NextResponse.json({ steps: [] });
-        }
+        const walletAddress = req.nextUrl.searchParams.get('wallet');
+        let sessionId = req.cookies.get('bizfun_session')?.value;
 
         const collection = await getChatSessionsCollection();
         if (!collection) {
              return NextResponse.json({ steps: [] });
         }
 
-        const session = await collection.findOne({ sessionId });
-        return NextResponse.json({ steps: session?.steps || [] });
+        let session = null;
+        
+        // Prioritize wallet session if wallet is connected
+        if (walletAddress) {
+            // Find most recent session for this wallet
+            session = await collection.findOne({ walletAddress });
+            if (session) {
+                sessionId = session.sessionId;
+            }
+        }
+
+        // Fallback to cookie session if no wallet session found
+        if (!session && sessionId) {
+            session = await collection.findOne({ sessionId });
+        }
+
+        const response = NextResponse.json({ steps: session?.steps || [] });
+        
+        // If we switched to a wallet session, update the cookie
+        if (session && session.sessionId !== req.cookies.get('bizfun_session')?.value) {
+            response.cookies.set('bizfun_session', session.sessionId, { 
+                httpOnly: true, 
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/' 
+            });
+        }
+
+        return response;
 
     } catch (error) {
         console.error('Agent API GET Error:', error);
@@ -34,23 +59,60 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { message } = body;
+        const { message, walletAddress } = body;
 
         if (!message) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
         }
 
+        const collection = await getChatSessionsCollection();
         let sessionId = req.cookies.get('bizfun_session')?.value;
         let isNewSession = false;
         
+        // 1. Resolve Session ID
+        if (collection && walletAddress) {
+            // Check if wallet already has a session
+            const walletSession = await collection.findOne({ walletAddress });
+            if (walletSession) {
+                sessionId = walletSession.sessionId;
+            }
+        }
+
         if (!sessionId) {
             sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
             isNewSession = true;
         }
 
-        // Collect all steps from the generator
-        const agentSteps = [];
+        // Helper to recursively handle BigInt serialization
+        const sanitizeBigInts = (obj: any): any => {
+            if (obj === null || obj === undefined) return obj;
+            if (typeof obj === 'bigint') return obj.toString();
+            if (Array.isArray(obj)) return obj.map(sanitizeBigInts);
+            if (typeof obj === 'object') {
+                const newObj: any = {};
+                for (const key in obj) {
+                    newObj[key] = sanitizeBigInts(obj[key]);
+                }
+                return newObj;
+            }
+            return obj;
+        };
 
+        // Collect all steps from the generator
+        const rawAgentSteps: any[] = [];
+
+        // Force local execution to ensure latest BizMart logic is used
+        // if (REMOTE_AGENT_URL) { ... }
+        
+        // Local execution
+        for await (const step of agent.processMessage(message, sessionId)) {
+            rawAgentSteps.push(step);
+        }
+
+        // Sanitize BigInts for both DB and Response
+        const agentSteps = sanitizeBigInts(rawAgentSteps);
+
+        /*
         if (REMOTE_AGENT_URL) {
             try {
                 // Call remote agent server
@@ -86,6 +148,7 @@ export async function POST(req: NextRequest) {
                 agentSteps.push(step);
             }
         }
+        */
 
         // Prepare steps to save (User message + Agent responses)
         const userStep = { type: 'message', content: `> ${message}`, timestamp: new Date() };
@@ -93,23 +156,40 @@ export async function POST(req: NextRequest) {
         // Add timestamp to agent steps
         const stepsToSave = [
             userStep,
-            ...agentSteps.map(step => ({ ...step, timestamp: new Date() }))
+            ...(Array.isArray(agentSteps) ? agentSteps : []).map((step: any) => ({ ...step, timestamp: new Date() }))
         ];
 
         // Save to MongoDB
-        const collection = await getChatSessionsCollection();
         if (collection) {
+            const updateDoc: any = {
+                $push: { steps: { $each: stepsToSave } },
+                $setOnInsert: { createdAt: new Date() },
+                $set: { updatedAt: new Date() }
+            };
+
+            // Link wallet if provided
+            if (walletAddress) {
+                updateDoc.$set.walletAddress = walletAddress;
+            }
+
             await collection.updateOne(
                 { sessionId },
-                { 
-                    $push: { steps: { $each: stepsToSave } } as any,
-                    $setOnInsert: { createdAt: new Date() },
-                    $set: { updatedAt: new Date() }
-                },
+                updateDoc,
                 { upsert: true }
             );
         }
 
+        // Helper to handle BigInt serialization
+        /* 
+        const jsonReplacer = (key: string, value: any) => {
+            if (typeof value === 'bigint') {
+                return value.toString();
+            }
+            return value;
+        };
+        */
+
+        // agentSteps is already sanitized (BigInts -> strings) by sanitizeBigInts above
         const response = NextResponse.json({ steps: agentSteps });
         
         if (isNewSession) {

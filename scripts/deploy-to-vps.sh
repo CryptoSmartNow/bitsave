@@ -9,8 +9,18 @@ if [ "$VPS_HOST" = "bitsave.vps.main" ]; then
     echo "   If this is not a real domain, please run: ./scripts/deploy-to-vps.sh <YOUR_VPS_IP>"
 fi
 
+# Setup SSH/SCP commands with optional sshpass
+if [ -n "$VPS_PASS" ] && command -v sshpass &> /dev/null; then
+    echo "🔑 Using provided password for automation..."
+    SSH_CMD="sshpass -p $VPS_PASS ssh -o StrictHostKeyChecking=no"
+    SCP_CMD="sshpass -p $VPS_PASS scp -o StrictHostKeyChecking=no"
+else
+    echo "ℹ️  Password provided: ###Pr1m1dac404 (You will need to enter this when prompted)"
+    SSH_CMD="ssh"
+    SCP_CMD="scp"
+fi
+
 echo "🚀 Preparing deployment to $VPS_HOST..."
-echo "ℹ️  Password provided: ###Pr1m1dac404 (You will need to enter this when prompted)"
 
 # Stop on any error
 set -e
@@ -40,7 +50,7 @@ tar -czf deploy-package.tar.gz \
 
 # 2. Upload to VPS
 echo "📡 Sending files to VPS..."
-if ! scp deploy-package.tar.gz $VPS_USER@$VPS_HOST:~/; then
+if ! $SCP_CMD deploy-package.tar.gz $VPS_USER@$VPS_HOST:~/; then
     echo "❌ Failed to connect to $VPS_HOST. Please check the hostname/IP and try again."
     rm deploy-package.tar.gz .deployignore
     exit 1
@@ -48,7 +58,7 @@ fi
 
 # 3. Execute setup on VPS
 echo "🔧 Configuring VPS..."
-ssh $VPS_USER@$VPS_HOST << 'EOF'
+$SSH_CMD $VPS_USER@$VPS_HOST << 'EOF'
     set -e
 
     # Update and install Node.js if not present

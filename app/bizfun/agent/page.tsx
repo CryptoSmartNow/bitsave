@@ -73,17 +73,22 @@ interface AgentStep {
     timestamp?: string | Date;
 }
 
-const AgentTerminal = () => {
+const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
     const [input, setInput] = useState("");
     const [history, setHistory] = useState<AgentStep[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Load history on mount
+    // Load history on mount or when wallet changes
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const res = await fetch('/api/bizfun/agent');
+                let url = '/api/bizfun/agent';
+                if (walletAddress) {
+                    url += `?wallet=${walletAddress}`;
+                }
+                
+                const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.steps && Array.isArray(data.steps)) {
@@ -95,7 +100,7 @@ const AgentTerminal = () => {
             }
         };
         fetchHistory();
-    }, []);
+    }, [walletAddress]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -112,7 +117,10 @@ const AgentTerminal = () => {
             const res = await fetch('/api/bizfun/agent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMsg }),
+                body: JSON.stringify({ 
+                    message: userMsg,
+                    walletAddress: walletAddress 
+                }),
             });
 
             const data = await res.json();
@@ -317,7 +325,7 @@ export default function AgentPage() {
                         <p className="text-gray-400">Interact directly with <BizMartLink /> to tokenize businesses and deploy markets.</p>
                     </motion.div>
                     
-                    <AgentTerminal />
+                    <AgentTerminal walletAddress={isConnected ? address : undefined} />
                 </div>
             </main>
         </div>

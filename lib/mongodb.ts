@@ -106,6 +106,22 @@ export async function getChatSessionsCollection(): Promise<Collection | null> {
   }
 }
 
+export async function getMarketsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('markets');
+  } catch (error) {
+    console.error('Failed to get markets collection:', error);
+    return null;
+  }
+}
+
 export async function getLeaderboardCollection(): Promise<Collection | null> {
   if (!MONGODB_ENABLED) {
     console.warn('MongoDB is not enabled');
@@ -150,6 +166,22 @@ export async function getUserReadUpdatesCollection(): Promise<Collection | null>
     return db.collection('user_read_updates');
   } catch (error) {
     console.error('Failed to get user_read_updates collection:', error);
+    return null;
+  }
+}
+
+export async function getCommentsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('market_comments');
+  } catch (error) {
+    console.error('Failed to get market_comments collection:', error);
     return null;
   }
 }
