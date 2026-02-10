@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await props.params;
         const { id } = params;
         
         if (!id) {

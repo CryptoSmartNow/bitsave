@@ -6,9 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await props.params;
         const { id: marketId } = params;
         
         if (!marketId) {
@@ -35,9 +36,10 @@ export async function GET(
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await props.params;
         const { id: marketId } = params;
         const body = await req.json();
         const { user, text, sentiment } = body;
