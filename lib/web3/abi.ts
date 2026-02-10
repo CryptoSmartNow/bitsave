@@ -554,6 +554,43 @@ export const PREDICTION_MARKET_ABI = [
     }
 ] as const;
 
+export const ERC20_ABI = [
+  {
+      type: "function",
+      name: "balanceOf",
+      inputs: [{ name: "owner", type: "address", internalType: "address" }],
+      outputs: [{ name: "balance", type: "uint256", internalType: "uint256" }],
+      stateMutability: "view"
+  },
+  {
+      type: "function",
+      name: "allowance",
+      inputs: [
+          { name: "owner", type: "address", internalType: "address" },
+          { name: "spender", type: "address", internalType: "address" },
+      ],
+      outputs: [{ name: "remaining", type: "uint256", internalType: "uint256" }],
+      stateMutability: "view"
+  },
+  {
+      type: "function",
+      name: "approve",
+      inputs: [
+          { name: "spender", type: "address", internalType: "address" },
+          { name: "value", type: "uint256", internalType: "uint256" },
+      ],
+      outputs: [{ name: "success", type: "bool", internalType: "bool" }],
+      stateMutability: "nonpayable"
+  },
+  {
+      type: "function",
+      name: "decimals",
+      inputs: [],
+      outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
+      stateMutability: "view"
+  }
+] as const;
+
 export const MOCK_USDC_ABI = [
     { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {

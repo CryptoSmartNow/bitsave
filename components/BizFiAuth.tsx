@@ -3,6 +3,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount, useDisconnect } from "wagmi";
 import { HiOutlineArrowLeftOnRectangle } from "react-icons/hi2";
+import { useState, useEffect } from "react";
 
 /**
  * Custom Auth Button that triggers Privy login flow.
@@ -14,8 +15,17 @@ export function BizFiAuthButton({ className }: { className?: string }) {
     const { isConnected: isWagmiConnected, address: wagmiAddress } = useAccount();
     const { disconnect: wagmiDisconnect } = useDisconnect();
 
+    const [isDisconnecting, setIsDisconnecting] = useState(false);
+
     // Determine if user is signed in (either via Privy or external Wallet)
-    const isSignedIn = ready && (authenticated || isWagmiConnected);
+    const isSignedIn = ready && (authenticated || isWagmiConnected) && !isDisconnecting;
+
+    // Reset disconnecting state when fully disconnected
+    useEffect(() => {
+        if (!authenticated && !isWagmiConnected) {
+            setIsDisconnecting(false);
+        }
+    }, [authenticated, isWagmiConnected]);
 
     if (isSignedIn) {
         // Prefer Wagmi address if connected, otherwise Privy wallet
@@ -27,6 +37,7 @@ export function BizFiAuthButton({ className }: { className?: string }) {
             : user?.email?.address || "Connected";
 
         const handleSignOut = async () => {
+            setIsDisconnecting(true);
             if (isWagmiConnected) {
                 wagmiDisconnect();
             }
@@ -34,15 +45,16 @@ export function BizFiAuthButton({ className }: { className?: string }) {
         };
 
         return (
-            <div className={`flex items-center gap-3 ${className}`}>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1F2937] rounded-lg border border-gray-700">
-                    <div className="w-2 h-2 rounded-full bg-[#81D7B4]"></div>
-                    <span className="text-sm font-mono text-gray-300">{displayAddress}</span>
+            <div className={`flex items-center gap-4 ${className}`}>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse shadow-[0_0_8px_rgba(129,215,180,0.5)]" />
+                    <span className="font-mono text-sm text-gray-300 tracking-wide">{displayAddress}</span>
                 </div>
+
                 <button
                     onClick={handleSignOut}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                    title="Logout"
+                    className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors text-sm font-medium"
+                    title="Disconnect Wallet"
                 >
                     <HiOutlineArrowLeftOnRectangle className="w-5 h-5" />
                 </button>
