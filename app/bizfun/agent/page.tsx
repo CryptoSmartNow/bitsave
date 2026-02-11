@@ -146,6 +146,12 @@ const RecentMarkets = () => {
             .catch(console.error);
     }, []);
 
+    const getMarketName = (m: any) => {
+        if (m.data?.predictionQuestion) return m.data.predictionQuestion;
+        if (m.question && !m.question.startsWith('ipfs://')) return m.question;
+        return "Untitled Market";
+    };
+
     if (markets.length === 0) return null;
 
     return (
@@ -158,7 +164,7 @@ const RecentMarkets = () => {
                     <Link href={`/bizfun/market/${m._id}`} key={m._id} className="block group">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#81D7B4]/50 transition-all h-full flex flex-col hover:bg-white/10">
                             <h3 className="font-bold text-white group-hover:text-[#81D7B4] transition-colors line-clamp-2 mb-3 text-lg">
-                                {m.question}
+                                {getMarketName(m)}
                             </h3>
                             <div className="mt-auto space-y-3">
                                 <div className="flex items-center gap-2 text-xs text-gray-400">
