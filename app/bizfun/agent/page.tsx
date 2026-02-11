@@ -151,7 +151,7 @@ const RecentMarkets = () => {
     return (
         <div className="w-full max-w-5xl mx-auto mt-12 mb-20">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 px-4 md:px-0">
-                <span className="text-[#81D7B4]">⚡</span> Recent Markets
+                <HiOutlinePresentationChartLine className="w-6 h-6 text-[#81D7B4]" /> Recent Markets
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 md:px-0">
                 {markets.map((m) => (
@@ -172,7 +172,7 @@ const RecentMarkets = () => {
                                     </div>
                                     <div className="flex flex-col items-end">
                                         <span className="text-[10px] text-gray-500 uppercase tracking-wider">Liquidity</span>
-                                        <span className="text-sm font-mono text-white">${m.liquidity || '5000'}</span>
+                                        <span className="text-sm font-mono text-white">${m.liquidity || '0'}</span>
                                     </div>
                                 </div>
                             </div>

@@ -1,3 +1,4 @@
+import { formatUnits } from 'viem';
 
 import { spawn } from 'child_process';
 import path from 'path';
@@ -343,7 +344,7 @@ export class BizMartAgent {
                             creator: newData.wallet,
                             createdAt: new Date(),
                             volume: '0',
-                            liquidity: '5000',
+                            liquidity: formatUnits(BigInt(result.proposal.params.b), 6),
                             data: newData // Save full form data
                         });
                     }
