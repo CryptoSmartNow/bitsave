@@ -170,6 +170,10 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                     <span>Deadline:</span>
                     <span className="font-mono text-white">{new Date(Number(data.params.tradingDeadline) * 1000).toLocaleDateString()}</span>
                 </div>
+                <div className="flex justify-between">
+                    <span>Initial Liquidity:</span>
+                    <span className="font-mono text-white">{formatUnits(BigInt(data.params.b), 6)} USDC</span>
+                </div>
             </div>
 
             <div className="flex gap-2">

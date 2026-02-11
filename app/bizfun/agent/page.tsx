@@ -11,7 +11,9 @@ import {
     HiOutlineCommandLine,
     HiOutlinePaperAirplane,
     HiOutlineGift,
-    HiCheck
+    HiCheck,
+    HiOutlinePresentationChartLine,
+    HiOutlineUsers
 } from "react-icons/hi2";
 import { GiCrabClaw, GiRobotGrab } from "react-icons/gi";
 import { Exo } from "next/font/google";
@@ -131,6 +133,56 @@ const StepOptions = ({ step, onSelect }: { step: AgentStep, onSelect: (msg: stri
     }
     return null;
 }
+
+const RecentMarkets = () => {
+    const [markets, setMarkets] = useState<any[]>([]);
+    
+    useEffect(() => {
+        fetch('/api/bizfun/markets')
+            .then(res => res.json())
+            .then(data => {
+                if (data.markets) setMarkets(data.markets.slice(0, 3)); // Show top 3
+            })
+            .catch(console.error);
+    }, []);
+
+    if (markets.length === 0) return null;
+
+    return (
+        <div className="w-full max-w-5xl mx-auto mt-12 mb-20">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 px-4 md:px-0">
+                <span className="text-[#81D7B4]">⚡</span> Recent Markets
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 md:px-0">
+                {markets.map((m) => (
+                    <Link href={`/bizfun/market/${m._id}`} key={m._id} className="block group">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#81D7B4]/50 transition-all h-full flex flex-col hover:bg-white/10">
+                            <h3 className="font-bold text-white group-hover:text-[#81D7B4] transition-colors line-clamp-2 mb-3 text-lg">
+                                {m.question}
+                            </h3>
+                            <div className="mt-auto space-y-3">
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                    <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
+                                    <span>Active Market</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">Volume</span>
+                                        <span className="text-sm font-mono text-white">${m.volume || '0'}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">Liquidity</span>
+                                        <span className="text-sm font-mono text-white">${m.liquidity || '5000'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
     const [input, setInput] = useState("");
@@ -393,6 +445,8 @@ export default function AgentPage() {
                     </motion.div>
                     
                     <AgentTerminal walletAddress={activeAddress} />
+                    
+                    <RecentMarkets />
                 </div>
             </main>
         </div>
