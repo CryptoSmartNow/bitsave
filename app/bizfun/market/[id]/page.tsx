@@ -15,10 +15,14 @@ import {
     HiOutlineArrowLeft,
     HiOutlineShare,
     HiOutlineShieldCheck,
-    HiOutlineExclamationCircle
+    HiOutlineExclamationCircle,
+    HiXMark,
+    HiCheck,
+    HiLink
 } from "react-icons/hi2";
 import { useAccount } from "wagmi";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
+import { Dialog, DialogContent, DialogOverlay, DialogTitle } from "@radix-ui/react-dialog";
 
 const exo = Exo({ 
     subsets: ['latin'],
@@ -38,6 +42,9 @@ interface Market {
     volume?: string;
     liquidity?: string;
     resolutionCriteria?: string;
+    data?: {
+        predictionQuestion?: string;
+    };
 }
 
 interface Comment {
@@ -58,6 +65,10 @@ export default function MarketDetailPage() {
     // Forum Data
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState("");
+    
+    // Share Modal
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
 
     useEffect(() => {
         const fetchMarketData = async () => {
@@ -121,6 +132,26 @@ export default function MarketDetailPage() {
         }
     };
 
+    const getMarketName = (m: Market) => {
+        if (m.data?.predictionQuestion) return m.data.predictionQuestion;
+        if (m.question && !m.question.startsWith('ipfs://')) return m.question;
+        return "Untitled Market"; 
+    };
+
+    const handleCopyLink = () => {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    const handleShareTwitter = () => {
+        if (!market) return;
+        const text = `Check out this prediction market on BizFun: ${getMarketName(market)}`;
+        const url = window.location.href;
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    };
+
     if (loading) {
         return (
             <div className={`${exo.variable} font-sans min-h-screen bg-[#0b0c15] flex items-center justify-center`}>
@@ -149,12 +180,68 @@ export default function MarketDetailPage() {
                     </Link>
                     
                     <div className="flex items-center gap-4">
-                        <button className="p-2 text-gray-400 hover:text-[#81D7B4] transition-colors">
+                        <button 
+                            onClick={() => setIsShareModalOpen(true)}
+                            className="p-2 text-gray-400 hover:text-[#81D7B4] transition-colors"
+                        >
                             <HiOutlineShare className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
             </header>
+
+            <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+                <DialogOverlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
+                <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#151725] border border-white/10 rounded-2xl p-6 w-full max-w-md z-50 shadow-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                        <DialogTitle className="text-xl font-bold text-white">Share Market</DialogTitle>
+                        <button onClick={() => setIsShareModalOpen(false)} className="text-gray-400 hover:text-white">
+                            <HiXMark className="w-6 h-6" />
+                        </button>
+                    </div>
+                    
+                    <div className="space-y-6">
+                        <div className="bg-[#0b0c15] border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                            <div className="bg-[#81D7B4]/10 p-2 rounded-lg">
+                                <HiLink className="w-5 h-5 text-[#81D7B4]" />
+                            </div>
+                            <input 
+                                type="text" 
+                                readOnly 
+                                value={typeof window !== 'undefined' ? window.location.href : ''} 
+                                className="bg-transparent border-none text-gray-300 text-sm flex-1 focus:ring-0"
+                            />
+                            <button 
+                                onClick={handleCopyLink}
+                                className="px-3 py-1.5 bg-[#81D7B4] text-[#0b0c15] text-xs font-bold rounded-lg hover:bg-[#6BC5A0] transition-colors flex items-center gap-1"
+                            >
+                                {isCopied ? <HiCheck className="w-3 h-3" /> : null}
+                                {isCopied ? 'Copied' : 'Copy'}
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button 
+                                onClick={handleShareTwitter}
+                                className="flex items-center justify-center gap-2 bg-[#000000] border border-white/10 hover:border-white/30 text-white py-3 rounded-xl transition-all font-medium"
+                            >
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                Share on X
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    const url = encodeURIComponent(window.location.href);
+                                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+                                }}
+                                className="flex items-center justify-center gap-2 bg-[#0077b5] text-white py-3 rounded-xl hover:bg-[#006097] transition-all font-medium"
+                            >
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                                LinkedIn
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <main className="pt-24 pb-20 px-4 max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -173,7 +260,7 @@ export default function MarketDetailPage() {
                             </div>
                             
                             <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-                                {market.question}
+                                {getMarketName(market)}
                             </h1>
                             
                             <div className="flex items-center gap-4 text-sm text-gray-400">
