@@ -148,7 +148,11 @@ const RecentMarkets = () => {
 
     const getMarketName = (m: any) => {
         if (m.data?.predictionQuestion) return m.data.predictionQuestion;
-        if (m.question && !m.question.startsWith('ipfs://')) return m.question;
+        if (m.question) {
+            if (m.question.startsWith('ipfs://')) return "Untitled Market";
+            if (m.question.startsWith('Create Market: ipfs://')) return "Untitled Market";
+            return m.question;
+        }
         return "Untitled Market";
     };
 

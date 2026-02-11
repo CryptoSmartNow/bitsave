@@ -158,7 +158,7 @@ export const agentTools = {
         return {
             proposal: {
                 type: 'create_market',
-                description: `Create Market: ${params.metadataUri}`,
+                description: params.metadataUri,
                 chainId: chain.id,
                 contracts: {
                     factory: factoryAddress,
