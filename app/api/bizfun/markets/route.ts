@@ -11,8 +11,16 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ markets: [] });
         }
 
+        const { searchParams } = new URL(req.url);
+        const creator = searchParams.get('creator');
+
+        const query: any = { txHash: { $exists: true, $ne: null } };
+        if (creator) {
+            query.creator = { $regex: new RegExp(`^${creator}$`, 'i') };
+        }
+
         // Only fetch markets that have a transaction hash (proof of on-chain creation)
-        const markets = await collection.find({ txHash: { $exists: true, $ne: null } })
+        const markets = await collection.find(query)
             .sort({ createdAt: -1 })
             .limit(50)
             .toArray();

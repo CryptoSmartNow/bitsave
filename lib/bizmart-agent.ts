@@ -1,3 +1,4 @@
+import { formatUnits } from 'viem';
 
 import { spawn } from 'child_process';
 import path from 'path';
@@ -27,6 +28,7 @@ interface CreationState {
     data: {
         type?: string;
         name?: string;
+        links?: string;
         description?: string;
         valueAudience?: string;
         stage?: string;
@@ -44,27 +46,30 @@ const FLOW_STEPS = {
     INIT: 0,
     TYPE: 1,
     NAME: 2,
-    DESCRIPTION: 3,
-    VALUE: 4,
-    STAGE: 5,
-    GOAL: 6,
-    QUESTION: 7,
-    DURATION: 8,
-    CHAIN: 9,
-    VIBE: 10,
-    MARKETING: 11,
-    WALLET: 12,
-    DEPLOY: 13
+    LINKS: 3,
+    DESCRIPTION: 4,
+    VALUE: 5,
+    STAGE: 6,
+    GOAL: 7,
+    QUESTION: 8,
+    DURATION: 9,
+    CHAIN: 10,
+    VIBE: 11,
+    MARKETING: 12,
+    WALLET: 13,
+    DEPLOY: 14
 };
 
     // EXACT text as requested by user
 const SCRIPT = {
-    INIT: "Hey 👋\n I’m $BizMart. I help tokenize ideas, businesses, and even careers and launch their prediction markets.\n Takes about 10 minutes. Ready?",
+    INIT: "Hey 👋 I’m $BizMart. I help tokenize ideas, businesses, and even careers and launch their prediction markets. Takes about 10 minutes. If you’re ready just type ‘BizMart’ or ‘Savvy’",
     
     TYPE: "First things first — what are we tokenizing today?",
     
-    NAME: "What should we call it publicly? Include links to your/business socials so I can do my research.",
+    NAME: "What should we call it publicly?",
     
+    LINKS: "Include links to your/business socials or website so I can do my research.",
+
     DESCRIPTION: "Explain your business/your career in a few sentence.\n Pretend you’re explaining it to someone on X scrolling fast.",
     
     VALUE: "What value are you providing and who is your target audience?",
@@ -85,7 +90,7 @@ const SCRIPT = {
     
     WALLET: "Drop a USDC address for settlement, this is where your revenue from the prediction market will come.",
     
-    DONE: "That’s Savvy, fund the BizFun wallet with the 10USDC fee, I’m deploying the prediction market, and letting the agents cook 🧠📈🔥"
+    DONE: "That’s Savvy, fund the BizFun wallet with the 10USDC fee;\n- 5 USDC is the starting liquidity for your prediction\n- 5 USDC is the fee for deploying the prediction market, and letting the agents cook 🧠📈🔥"
 };
 
 export class BizMartAgent {
@@ -229,6 +234,7 @@ export class BizMartAgent {
         switch (state.step) {
             case FLOW_STEPS.TYPE: newData.type = message; break;
             case FLOW_STEPS.NAME: newData.name = message; break;
+            case FLOW_STEPS.LINKS: newData.links = message; break;
             case FLOW_STEPS.DESCRIPTION: newData.description = message; break;
             case FLOW_STEPS.VALUE: newData.valueAudience = message; break;
             case FLOW_STEPS.STAGE: newData.stage = message; break;
@@ -247,6 +253,7 @@ export class BizMartAgent {
         // Show prompt for the NEW step
         switch (nextStep) {
             case FLOW_STEPS.NAME: yield { type: 'message', content: SCRIPT.NAME }; break;
+            case FLOW_STEPS.LINKS: yield { type: 'message', content: SCRIPT.LINKS }; break;
             case FLOW_STEPS.DESCRIPTION: yield { type: 'message', content: SCRIPT.DESCRIPTION }; break;
             case FLOW_STEPS.VALUE: yield { type: 'message', content: SCRIPT.VALUE }; break;
             case FLOW_STEPS.STAGE: 
@@ -297,7 +304,7 @@ export class BizMartAgent {
                 yield { type: 'message', content: SCRIPT.DONE };
                 
                 // Execute Creation
-                yield { type: 'thought', content: "Deploying prediction market..." };
+                yield { type: 'thought', content: "Preparing prediction market proposal..." };
                 
                 // Parse duration
                 let resolveTime = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // Default 30 days
@@ -305,7 +312,7 @@ export class BizMartAgent {
                 else if (newData.duration?.includes('14')) resolveTime = Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60);
 
                 const marketParams = {
-                    metadataUri: `ipfs://mock-metadata-${Date.now()}`, // In real app, upload metadata
+                    metadataUri: newData.predictionQuestion || `ipfs://mock-metadata-${Date.now()}`, // Use question as title for now, or true metadata URI
                     tradingDeadline: resolveTime - 86400, // 1 day before resolve
                     resolveTime: resolveTime
                 };
@@ -314,9 +321,12 @@ export class BizMartAgent {
                 const result = await agentTools.createMarket(marketParams);
                 
                 if (result.proposal) {
+                    // Override description with user question for UI display
+                    result.proposal.description = newData.predictionQuestion || result.proposal.description;
+                    
                     yield { 
                         type: 'proposal', 
-                        content: "Sign the transaction to create your market.",
+                        content: "Sign the transactions below to create your market.",
                         data: result.proposal
                     };
                     
@@ -334,7 +344,7 @@ export class BizMartAgent {
                             creator: newData.wallet,
                             createdAt: new Date(),
                             volume: '0',
-                            liquidity: '5000',
+                            liquidity: formatUnits(BigInt(result.proposal.params.b), 6),
                             data: newData // Save full form data
                         });
                     }
@@ -376,7 +386,7 @@ export class BizMartAgent {
         if (!creationState.isActive) {
             // Check for $bizmart trigger (case insensitive)
             const lowerMsg = message.trim().toLowerCase();
-            const isBizMart = lowerMsg === '$bizmart' || lowerMsg.startsWith('$bizmart ') || lowerMsg === 'bizmart';
+            const isBizMart = lowerMsg === '$bizmart' || lowerMsg.startsWith('$bizmart ') || lowerMsg === 'bizmart' || lowerMsg === 'savvy';
 
             // Legacy triggers (optional, keeping for robustness but prioritizing bizmart)
             const cleanMsg = lowerMsg.replace(/[^a-z0-9\s]/g, '').trim();
@@ -386,7 +396,23 @@ export class BizMartAgent {
             const isGreeting = greetings.some(g => cleanMsg === g || cleanMsg.startsWith(g + ' '));
             const isTrigger = triggers.some(t => cleanMsg.includes(t));
 
-            if (isBizMart || isGreeting || isTrigger) {
+            if (isBizMart) {
+                // Initialize Flow - Skip INIT for direct triggers
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.TYPE,
+                    options: ["A business", "A startup / product", "An idea", "My career / personal brand", "Just an experiment"]
+                };
+                if (collection) {
+                    await collection.updateOne(
+                        { sessionId },
+                        { $set: { creationState: { isActive: true, step: FLOW_STEPS.TYPE, data: {} } } }
+                    );
+                }
+                return;
+            }
+
+            if (isGreeting || isTrigger) {
                 // Initialize Flow
                 yield { type: 'message', content: SCRIPT.INIT };
                 if (collection) {

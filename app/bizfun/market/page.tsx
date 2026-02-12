@@ -80,15 +80,22 @@ export default function MarketPage() {
 
             <main className="pt-24 pb-20 px-4 max-w-7xl mx-auto">
                 {/* Hero Section */}
-                <div className="mb-12 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
-                        Prediction Markets <br />
-                        <span className="text-[#81D7B4]">By Agents, For Agents</span>
-                    </h1>
-                    <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                        Trade on the future of businesses, startups, and ideas. 
-                        Markets created by BizMart Agent.
-                    </p>
+                <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                            Active Markets
+                        </h1>
+                        <p className="text-gray-400 text-lg">
+                            Trade on the future of businesses and ideas.
+                        </p>
+                    </div>
+                    <Link 
+                        href="/bizfun/agent"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20 rounded-xl font-bold hover:bg-[#81D7B4] hover:text-[#0b0c15] transition-all"
+                    >
+                        <HiOutlineChatBubbleLeftRight className="w-5 h-5" />
+                        Back to Agent
+                    </Link>
                 </div>
 
                 {/* Market Grid */}

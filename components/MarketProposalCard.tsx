@@ -25,9 +25,10 @@ interface MarketProposalProps {
         };
         rawArgs: any[];
     };
+    onSuccess?: (marketId: string, txHash: string, chainId: number) => void;
 }
 
-export const MarketProposalCard = ({ data }: MarketProposalProps) => {
+export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => {
     const { address } = useAccount();
     const [step, setStep] = useState<'check' | 'approve' | 'create' | 'indexing' | 'done'>('check');
     const [createTxHash, setCreateTxHash] = useState<`0x${string}` | undefined>(undefined);
@@ -98,6 +99,9 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                     const responseData = await res.json();
                     if (responseData.market && responseData.market._id) {
                         setMarketId(responseData.market._id);
+                        if (onSuccess) {
+                            onSuccess(responseData.market._id, createTxHash, data.chainId);
+                        }
                     }
                     setStep('done');
                 } catch (error) {
@@ -169,6 +173,10 @@ export const MarketProposalCard = ({ data }: MarketProposalProps) => {
                 <div className="flex justify-between">
                     <span>Deadline:</span>
                     <span className="font-mono text-white">{new Date(Number(data.params.tradingDeadline) * 1000).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                    <span>Initial Liquidity:</span>
+                    <span className="font-mono text-white">{formatUnits(BigInt(data.params.b), 6)} USDC</span>
                 </div>
             </div>
 
