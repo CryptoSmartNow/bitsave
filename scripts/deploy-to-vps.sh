@@ -57,7 +57,6 @@ tar -czf deploy-package.tar.gz \
     hooks \
     messages \
     public \
-    providers \
     i18n \
     .env
 
