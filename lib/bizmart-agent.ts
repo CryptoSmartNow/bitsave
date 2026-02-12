@@ -62,7 +62,7 @@ const FLOW_STEPS = {
 
     // EXACT text as requested by user
 const SCRIPT = {
-    INIT: "Hey 👋\n I’m $BizMart. I help tokenize ideas, businesses, and even careers and launch their prediction markets.\n Takes about 10 minutes. Ready?",
+    INIT: "Hey 👋 I’m $BizMart. I help tokenize ideas, businesses, and even careers and launch their prediction markets. Takes about 10 minutes. If you’re ready just type ‘BizMart’ or ‘Savvy’",
     
     TYPE: "First things first — what are we tokenizing today?",
     
@@ -90,7 +90,7 @@ const SCRIPT = {
     
     WALLET: "Drop a USDC address for settlement, this is where your revenue from the prediction market will come.",
     
-    DONE: "That’s Savvy! You will need to sign 2 transactions:\n1. Approve USDC spending (10 USDC)\n2. Create Market (this collects the fee and deploys the contract)\n\nI’m preparing the proposal now, get ready to cook 🧠📈🔥"
+    DONE: "That’s Savvy, fund the BizFun wallet with the 10USDC fee;\n- 5 USDC is the starting liquidity for your prediction\n- 5 USDC is the fee for deploying the prediction market, and letting the agents cook 🧠📈🔥"
 };
 
 export class BizMartAgent {

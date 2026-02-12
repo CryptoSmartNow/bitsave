@@ -13,8 +13,11 @@ import {
     HiOutlineGift,
     HiCheck,
     HiOutlinePresentationChartLine,
-    HiOutlineUsers
+    HiOutlineUsers,
+    HiShare,
+    HiClipboard
 } from "react-icons/hi2";
+import { FaXTwitter } from "react-icons/fa6";
 import { GiCrabClaw, GiRobotGrab } from "react-icons/gi";
 import { Exo } from "next/font/google";
 import Link from "next/link";
@@ -29,7 +32,7 @@ const exo = Exo({
 import { marked } from 'marked';
 import { MarketProposalCard } from "@/components/MarketProposalCard";
 
-// ... existing imports ...
+
 
 // Helper component for rendering Markdown safely
 const MarkdownRenderer = ({ content }: { content: string }) => {
@@ -71,7 +74,7 @@ const BizMartLink = () => (
 );
 
 interface AgentStep {
-    type: 'thought' | 'action' | 'message' | 'error' | 'proposal';
+    type: 'thought' | 'action' | 'message' | 'error' | 'proposal' | 'share';
     content: string;
     data?: any;
     options?: string[];
@@ -134,17 +137,37 @@ const StepOptions = ({ step, onSelect }: { step: AgentStep, onSelect: (msg: stri
     return null;
 }
 
-const RecentMarkets = () => {
+const getChainHandle = (chainId: number) => {
+    if (chainId === 8453 || chainId === 84532) return "@base";
+    if (chainId === 56 || chainId === 97) return "@BNBCHAIN";
+    if (chainId === 10143) return "@monad_xyz"; 
+    return "@base";
+};
+
+const RecentMarkets = ({ walletAddress }: { walletAddress?: string }) => {
     const [markets, setMarkets] = useState<any[]>([]);
+    const [userMarkets, setUserMarkets] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<'mine' | 'all'>('mine');
     
     useEffect(() => {
+        // Fetch all markets
         fetch('/api/bizfun/markets')
             .then(res => res.json())
             .then(data => {
-                if (data.markets) setMarkets(data.markets.slice(0, 3)); // Show top 3
+                if (data.markets) setMarkets(data.markets.slice(0, 3));
             })
             .catch(console.error);
-    }, []);
+            
+        // Fetch user markets
+        if (walletAddress) {
+            fetch(`/api/bizfun/markets?creator=${walletAddress}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.markets) setUserMarkets(data.markets.slice(0, 3));
+                })
+                .catch(console.error);
+        }
+    }, [walletAddress]);
 
     const getMarketName = (m: any) => {
         if (m.data?.predictionQuestion) return m.data.predictionQuestion;
@@ -156,40 +179,68 @@ const RecentMarkets = () => {
         return "Untitled Market";
     };
 
-    if (markets.length === 0) return null;
+    const displayMarkets = activeTab === 'all' ? markets : userMarkets;
+    const showEmptyState = activeTab === 'mine' && userMarkets.length === 0;
+
+    if (markets.length === 0 && userMarkets.length === 0) return null;
 
     return (
-        <div className="w-full max-w-5xl mx-auto mt-12 mb-20">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 px-4 md:px-0">
-                <HiOutlinePresentationChartLine className="w-6 h-6 text-[#81D7B4]" /> Recent Markets
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 md:px-0">
-                {markets.map((m) => (
-                    <Link href={`/bizfun/market/${m._id}`} key={m._id} className="block group">
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#81D7B4]/50 transition-all h-full flex flex-col hover:bg-white/10">
-                            <h3 className="font-bold text-white group-hover:text-[#81D7B4] transition-colors line-clamp-2 mb-3 text-lg">
-                                {getMarketName(m)}
-                            </h3>
-                            <div className="mt-auto space-y-3">
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                    <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
-                                    <span>Active Market</span>
-                                </div>
-                                <div className="flex justify-between items-center pt-3 border-t border-white/5">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">Volume</span>
-                                        <span className="text-sm font-mono text-white">${m.volume || '0'}</span>
+        <div className="w-full max-w-5xl mx-auto mt-12 mb-20 px-4 md:px-0">
+            <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">
+                <button 
+                    onClick={() => setActiveTab('mine')}
+                    className={`text-lg font-bold flex items-center gap-2 transition-colors relative pb-1 ${activeTab === 'mine' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                    <HiOutlineUsers className={`w-5 h-5 ${activeTab === 'mine' ? 'text-[#81D7B4]' : 'text-gray-500'}`} /> 
+                    My Predictions
+                    {activeTab === 'mine' && <div className="absolute bottom-[-17px] left-0 w-full h-0.5 bg-[#81D7B4]"></div>}
+                </button>
+                <div className="w-px h-5 bg-white/10 mx-2"></div>
+                <button 
+                    onClick={() => setActiveTab('all')}
+                    className={`text-lg font-bold flex items-center gap-2 transition-colors relative pb-1 ${activeTab === 'all' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                    <HiOutlinePresentationChartLine className={`w-5 h-5 ${activeTab === 'all' ? 'text-[#81D7B4]' : 'text-gray-500'}`} /> 
+                    All Markets
+                    {activeTab === 'all' && <div className="absolute bottom-[-17px] left-0 w-full h-0.5 bg-[#81D7B4]"></div>}
+                </button>
+            </div>
+
+            {showEmptyState ? (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+                    <HiOutlinePresentationChartLine className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-gray-300 mb-2">No Predictions Yet</h3>
+                    <p className="text-gray-500 mb-6">Create your first prediction market with the agent above.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {displayMarkets.map((m) => (
+                        <Link href={`/bizfun/market/${m._id}`} key={m._id} className="block group">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#81D7B4]/50 transition-all h-full flex flex-col hover:bg-white/10">
+                                <h3 className="font-bold text-white group-hover:text-[#81D7B4] transition-colors line-clamp-2 mb-3 text-lg">
+                                    {getMarketName(m)}
+                                </h3>
+                                <div className="mt-auto space-y-3">
+                                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                                        <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
+                                        <span>Active Market</span>
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">Liquidity</span>
-                                        <span className="text-sm font-mono text-white">${m.liquidity || '0'}</span>
+                                    <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-gray-500 uppercase tracking-wider">Volume</span>
+                                            <span className="text-sm font-mono text-white">${m.volume || '0'}</span>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[10px] text-gray-500 uppercase tracking-wider">Liquidity</span>
+                                            <span className="text-sm font-mono text-white">${m.liquidity || '0'}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
@@ -222,6 +273,16 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
         };
         fetchHistory();
     }, [walletAddress]);
+
+    const handleMarketSuccess = (marketId: string, txHash: string, chainId: number) => {
+        const shareMsg: AgentStep = {
+            type: 'share',
+            content: "That’s a Savvy prediction 💰",
+            data: { marketId, txHash, chainId },
+            timestamp: new Date()
+        };
+        setHistory(prev => [...prev, shareMsg]);
+    };
 
     const sendMessage = async (text: string) => {
         if (!text.trim() || isProcessing) return;
@@ -369,7 +430,40 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
 
                                     {step.type === 'proposal' && (
                                         <div className="w-full">
-                                            <MarketProposalCard data={step.data} />
+                                            <MarketProposalCard data={step.data} onSuccess={handleMarketSuccess} />
+                                        </div>
+                                    )}
+
+                                    {step.type === 'share' && (
+                                        <div className="w-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-xl p-5 mt-4">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-10 h-10 rounded-full bg-[#81D7B4] flex items-center justify-center text-[#0b0c15] text-xl">
+                                                    💰
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-white text-lg">That’s a Savvy prediction!</h3>
+                                                    <p className="text-[#81D7B4] text-sm">Market deployed successfully.</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex gap-3 mt-4">
+                                                <a
+                                                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`$BizMart AI agent by @bitsaveprotocol just created my prediction and deployed it on ${getChainHandle(step.data.chainId)}, we’re winning this! https://bitsave.vercel.app/bizfun/market/${step.data.marketId}`)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 py-3 bg-[#81D7B4] text-[#0b0c15] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#6BC5A0] transition-all"
+                                                >
+                                                    <FaXTwitter className="w-4 h-4" />
+                                                    Share on X
+                                                </a>
+                                                <Link
+                                                    href={`/bizfun/market/${step.data.marketId}`}
+                                                    className="flex-1 py-3 bg-white/5 text-white border border-white/10 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+                                                >
+                                                    <HiOutlineArrowTopRightOnSquare className="w-4 h-4" />
+                                                    Open Market
+                                                </Link>
+                                            </div>
                                         </div>
                                     )}
 
@@ -521,12 +615,12 @@ export default function AgentPage() {
                         className="text-center mb-8"
                     >
                         <h1 className="text-3xl font-bold text-white mb-2">Agent Terminal</h1>
-                        <p className="text-gray-400">Interact directly with <BizMartLink /> to tokenize businesses and deploy markets.</p>
+                        <p className="text-gray-400">Interact directly with <BizMartLink /> to tokenize businesses and deploy <Link href="/bizfun" className="text-[#81D7B4] hover:underline">markets</Link>.</p>
                     </motion.div>
                     
                     <AgentTerminal walletAddress={activeAddress} />
                     
-                    <RecentMarkets />
+                    <RecentMarkets walletAddress={activeAddress} />
                 </div>
             </main>
         </div>
