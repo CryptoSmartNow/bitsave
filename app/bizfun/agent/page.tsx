@@ -272,119 +272,189 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
     }, [history]);
 
     return (
-        <div className="w-full max-w-5xl mx-auto p-1 rounded-2xl bg-gradient-to-b from-[#81D7B4]/20 to-transparent backdrop-blur-md">
-            <div className="bg-[#0b0c15]/90 rounded-xl overflow-hidden border border-white/10 shadow-2xl h-[80vh] flex flex-col">
-                {/* Terminal Header */}
-                <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/5 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <div className="flex gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                            <div className="w-3 h-3 rounded-full bg-green-500/80" />
+        <div className="w-full max-w-4xl mx-auto">
+            <div className="bg-[#0b0c15]/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col h-[75vh]">
+                {/* Chat Header */}
+                <div className="px-6 py-4 bg-white/5 border-b border-white/5 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#81D7B4]/20 border border-[#81D7B4]/30 flex items-center justify-center text-[#81D7B4]">
+                            <GiRobotGrab className="w-6 h-6" />
                         </div>
-                        <div className="ml-3 flex items-center gap-2 text-xs font-mono text-gray-400">
-                            <GiRobotGrab className="text-[#81D7B4]" />
-                            <span>bizmart-agent — openclaw</span>
+                        <div>
+                            <h3 className="font-bold text-white text-sm">BizMart Agent</h3>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                <span className="text-xs text-gray-400">Online & Ready</span>
+                            </div>
                         </div>
                     </div>
-                    <div className="text-[10px] font-mono text-[#81D7B4]/60 px-2 py-0.5 rounded bg-[#81D7B4]/10 border border-[#81D7B4]/20">
-                        LIVE CONNECTION
-                    </div>
+                    {walletAddress && (
+                         <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400 font-mono">
+                            {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                        </div>
+                    )}
                 </div>
 
-                {/* Terminal Body */}
+                {/* Chat Messages */}
                 <div 
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto p-6 font-mono text-sm space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+                    className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
                 >
                     {history.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-500 italic">
-                            <GiCrabClaw className="w-16 h-16 mb-6 opacity-20" />
-                            <p className="text-lg">Initialize communication with <BizMartLink /></p>
-                            <p className="text-sm mt-2 opacity-50">Try: "$bizmart"</p>
+                        <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                            <div className="w-20 h-20 bg-[#81D7B4]/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                <GiCrabClaw className="w-10 h-10 text-[#81D7B4]" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Welcome to BizMart</h3>
+                            <p className="text-gray-200 font-medium max-w-lg mx-auto mb-8 text-lg">
+                                BizMart is arguing on MoltBook right now, call his attention by typing <span className="text-[#81D7B4] font-bold font-mono bg-[#81D7B4]/10 px-2 py-1 rounded-lg border border-[#81D7B4]/20">BizMart</span>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+                                {["BizMart", "Tokenize my startup", "Create a market", "Help me"].map((cmd) => (
+                                    <button 
+                                        key={cmd}
+                                        onClick={() => sendMessage(cmd)}
+                                        className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#81D7B4]/50 rounded-xl text-sm text-gray-300 hover:text-white transition-all text-left"
+                                    >
+                                        {cmd}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 
                     {history.map((step, idx) => (
                         <motion.div 
                             key={idx}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className={`flex gap-3 ${step.type === 'message' && step.content.startsWith('>') ? 'text-white font-bold' : ''}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex w-full ${step.type === 'message' && step.content.startsWith('>') ? 'justify-end' : 'justify-start'}`}
                         >
-                            <div className="mt-0.5 shrink-0">
-                                {step.type === 'thought' && <span className="text-gray-500">🧠</span>}
-                                {step.type === 'action' && <span className="text-yellow-400">⚡</span>}
-                                {step.type === 'message' && !step.content.startsWith('>') && <span className="text-[#81D7B4]">💬</span>}
-                                {step.type === 'error' && <span className="text-red-400">❌</span>}
-                            </div>
-                            <div className="flex-1 overflow-hidden">
-                                {step.type === 'thought' && (
-                                    <span className="text-gray-500 italic">{step.content}</span>
-                                )}
-                                {step.type === 'action' && (
-                                    <div className="text-yellow-400/90">
-                                        <div className="font-semibold mb-1">EXECUTING: {step.content}</div>
-                                        {step.data && (
-                                            <pre className="text-xs bg-black/30 p-2 rounded border border-white/5 overflow-x-auto">
-                                                {JSON.stringify(step.data, null, 2)}
-                                            </pre>
-                                        )}
-                                    </div>
-                                )}
-                                {step.type === 'proposal' && (
-                                    <MarketProposalCard data={step.data} />
-                                )}
-                                {step.type === 'message' && (
-                                    <div className={step.content.startsWith('>') ? 'text-white' : 'text-gray-200'}>
-                                        <MarkdownRenderer content={step.content} />
-                                        <StepOptions step={step} onSelect={sendMessage} />
-                                    </div>
-                                )}
-                                {step.type === 'error' && (
-                                    <span className="text-red-400">{step.content}</span>
-                                )}
+                            <div className={`flex max-w-[85%] md:max-w-[75%] gap-3 ${step.type === 'message' && step.content.startsWith('>') ? 'flex-row-reverse' : 'flex-row'}`}>
+                                {/* Avatar */}
+                                <div className="shrink-0 mt-1">
+                                    {step.type === 'message' && step.content.startsWith('>') ? (
+                                        <div className="w-8 h-8 rounded-full bg-[#81D7B4] flex items-center justify-center shadow-lg">
+                                            <HiOutlineUsers className="w-4 h-4 text-[#0b0c15]" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-[#1a1b26] border border-white/10 flex items-center justify-center shadow-lg">
+                                            {step.type === 'thought' ? <span className="text-xs">🧠</span> : 
+                                             step.type === 'action' ? <span className="text-xs">⚡</span> :
+                                             step.type === 'error' ? <span className="text-xs">❌</span> :
+                                             <GiRobotGrab className="w-4 h-4 text-[#81D7B4]" />}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Message Bubble */}
+                                <div className={`flex flex-col ${step.type === 'message' && step.content.startsWith('>') ? 'items-end' : 'items-start'}`}>
+                                    {step.type === 'thought' && (
+                                        <div className="px-4 py-2 bg-white/5 border border-white/5 rounded-2xl rounded-tl-none text-xs text-gray-400 italic mb-1">
+                                            {step.content}
+                                        </div>
+                                    )}
+
+                                    {step.type === 'action' && (
+                                        <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl rounded-tl-none text-sm text-yellow-200 mb-1 w-full">
+                                            <div className="font-bold text-xs uppercase tracking-wider mb-1 opacity-70">Executing Action</div>
+                                            <div className="font-mono">{step.content}</div>
+                                            {step.data && (
+                                                <pre className="mt-2 text-[10px] bg-black/20 p-2 rounded overflow-x-auto">
+                                                    {JSON.stringify(step.data, null, 2)}
+                                                </pre>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {step.type === 'proposal' && (
+                                        <div className="w-full">
+                                            <MarketProposalCard data={step.data} />
+                                        </div>
+                                    )}
+
+                                    {step.type === 'error' && (
+                                        <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-2xl rounded-tl-none text-sm text-red-300">
+                                            {step.content}
+                                        </div>
+                                    )}
+
+                                    {step.type === 'message' && (
+                                        <div className={`
+                                            px-5 py-3.5 shadow-md text-sm leading-relaxed
+                                            ${step.content.startsWith('>') 
+                                                ? 'bg-[#81D7B4] text-[#0b0c15] rounded-2xl rounded-tr-none font-medium' 
+                                                : 'bg-[#1a1b26] border border-white/10 text-gray-100 rounded-2xl rounded-tl-none'}
+                                        `}>
+                                            {step.content.startsWith('>') ? (
+                                                step.content.substring(2)
+                                            ) : (
+                                                <>
+                                                    <MarkdownRenderer content={step.content} />
+                                                    <StepOptions step={step} onSelect={sendMessage} />
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     ))}
-                    
+
                     {isProcessing && (
-                        <div className="flex gap-3">
-                            <span className="animate-pulse text-[#81D7B4]">▋</span>
-                        </div>
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex justify-start w-full"
+                        >
+                            <div className="flex gap-3 max-w-[75%]">
+                                <div className="w-8 h-8 rounded-full bg-[#1a1b26] border border-white/10 flex items-center justify-center shrink-0">
+                                    <GiRobotGrab className="w-4 h-4 text-[#81D7B4]" />
+                                </div>
+                                <div className="bg-[#1a1b26] border border-white/10 px-5 py-4 rounded-2xl rounded-tl-none flex items-center gap-1.5">
+                                    <div className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                    <div className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                    <div className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce"></div>
+                                </div>
+                            </div>
+                        </motion.div>
                     )}
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 bg-white/5 border-t border-white/5 shrink-0">
+                <div className="p-4 bg-[#0b0c15] border-t border-white/5 shrink-0">
                     {walletAddress ? (
-                        <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
-                            <HiOutlineCommandLine className="w-5 h-5 text-gray-500 absolute left-3 top-6" />
-                            <textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSubmit(e);
-                                    }
-                                }}
-                                placeholder="Command the agent (e.g., 'Tokenize my startup')"
-                                className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all font-mono text-sm resize-none min-h-[50px] max-h-[120px]"
-                                rows={1}
-                                disabled={isProcessing}
-                            />
-                            <button 
-                                type="submit"
-                                disabled={!input.trim() || isProcessing}
-                                className="absolute right-2 top-3 p-1.5 text-gray-400 hover:text-[#81D7B4] disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
-                            >
-                                <HiOutlinePaperAirplane className="w-5 h-5 rotate-90" />
-                            </button>
+                        <form onSubmit={handleSubmit} className="relative flex items-center gap-3 max-w-3xl mx-auto">
+                            <div className="relative flex-1 group">
+                                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#81D7B4]/20 to-[#81D7B4]/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                                <div className="relative flex items-center bg-[#151725] border border-white/10 rounded-xl focus-within:border-[#81D7B4]/50 transition-colors">
+                                    <textarea
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSubmit(e);
+                                            }
+                                        }}
+                                        placeholder="Type your message..."
+                                        className="w-full bg-transparent border-none py-4 pl-4 pr-12 text-white placeholder-gray-500 focus:ring-0 text-sm resize-none min-h-[56px] max-h-[120px]"
+                                        rows={1}
+                                        disabled={isProcessing}
+                                    />
+                                    <button 
+                                        type="submit"
+                                        disabled={!input.trim() || isProcessing}
+                                        className="absolute right-2 p-2 bg-[#81D7B4] text-[#0b0c15] rounded-lg hover:bg-[#6BC5A0] disabled:opacity-50 disabled:bg-white/10 disabled:text-gray-500 transition-all shadow-lg shadow-[#81D7B4]/20"
+                                    >
+                                        <HiOutlinePaperAirplane className="w-4 h-4 -rotate-45 translate-x-0.5 -translate-y-0.5" />
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-4 text-center">
-                            <p className="text-gray-400 mb-3 text-sm">Please connect your wallet to interact with the agent.</p>
+                        <div className="flex flex-col items-center justify-center py-2 text-center">
+                            <p className="text-gray-500 mb-3 text-xs uppercase tracking-widest font-bold">Connect Wallet to Chat</p>
                             <BizFiAuthButton />
                         </div>
                     )}
