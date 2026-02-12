@@ -307,10 +307,10 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
                             </div>
                             <h3 className="text-xl font-bold text-white mb-2">Welcome to BizMart</h3>
                             <p className="text-gray-200 font-medium max-w-lg mx-auto mb-8 text-lg">
-                                BizMart is arguing on MoltBook right now, call his attention by typing <span className="text-[#81D7B4] font-bold font-mono bg-[#81D7B4]/10 px-2 py-1 rounded-lg border border-[#81D7B4]/20">BizMart</span>
+                                Hey 👋 I’m <span className="text-[#81D7B4] font-bold">BizMart</span>. I help tokenize ideas, businesses, and even careers and launch their prediction markets. Takes about 10 minutes. If you’re ready just type <span className="text-[#81D7B4] font-bold font-mono bg-[#81D7B4]/10 px-2 py-1 rounded-lg border border-[#81D7B4]/20">BizMart</span> or <span className="text-[#81D7B4] font-bold font-mono bg-[#81D7B4]/10 px-2 py-1 rounded-lg border border-[#81D7B4]/20">Savvy</span>
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
-                                {["BizMart", "Tokenize my startup", "Create a market", "Help me"].map((cmd) => (
+                                {["BizMart", "Savvy", "Help me"].map((cmd) => (
                                     <button 
                                         key={cmd}
                                         onClick={() => sendMessage(cmd)}

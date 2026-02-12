@@ -386,7 +386,7 @@ export class BizMartAgent {
         if (!creationState.isActive) {
             // Check for $bizmart trigger (case insensitive)
             const lowerMsg = message.trim().toLowerCase();
-            const isBizMart = lowerMsg === '$bizmart' || lowerMsg.startsWith('$bizmart ') || lowerMsg === 'bizmart';
+            const isBizMart = lowerMsg === '$bizmart' || lowerMsg.startsWith('$bizmart ') || lowerMsg === 'bizmart' || lowerMsg === 'savvy';
 
             // Legacy triggers (optional, keeping for robustness but prioritizing bizmart)
             const cleanMsg = lowerMsg.replace(/[^a-z0-9\s]/g, '').trim();
@@ -396,7 +396,23 @@ export class BizMartAgent {
             const isGreeting = greetings.some(g => cleanMsg === g || cleanMsg.startsWith(g + ' '));
             const isTrigger = triggers.some(t => cleanMsg.includes(t));
 
-            if (isBizMart || isGreeting || isTrigger) {
+            if (isBizMart) {
+                // Initialize Flow - Skip INIT for direct triggers
+                yield { 
+                    type: 'message', 
+                    content: SCRIPT.TYPE,
+                    options: ["A business", "A startup / product", "An idea", "My career / personal brand", "Just an experiment"]
+                };
+                if (collection) {
+                    await collection.updateOne(
+                        { sessionId },
+                        { $set: { creationState: { isActive: true, step: FLOW_STEPS.TYPE, data: {} } } }
+                    );
+                }
+                return;
+            }
+
+            if (isGreeting || isTrigger) {
                 // Initialize Flow
                 yield { type: 'message', content: SCRIPT.INIT };
                 if (collection) {
