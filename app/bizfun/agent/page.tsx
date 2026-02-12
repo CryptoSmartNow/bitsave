@@ -298,7 +298,7 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
                 {/* Chat Messages */}
                 <div 
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+                    className="flex-1 overflow-y-auto p-6 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
                     {history.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -437,7 +437,7 @@ const AgentTerminal = ({ walletAddress }: { walletAddress?: string }) => {
                                                 handleSubmit(e);
                                             }
                                         }}
-                                        placeholder="Type your message..."
+                                        placeholder="Type bizmart"
                                         className="w-full bg-transparent border-none py-4 pl-4 pr-12 text-white placeholder-gray-500 focus:ring-0 text-sm resize-none min-h-[56px] max-h-[120px]"
                                         rows={1}
                                         disabled={isProcessing}

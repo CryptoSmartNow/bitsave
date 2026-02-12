@@ -41,11 +41,24 @@ tar -czf deploy-package.tar.gz \
     --exclude='.git' \
     --exclude='.next' \
     package.json \
+    package-lock.json \
     tsconfig.json \
+    next.config.ts \
+    middleware.ts \
+    postcss.config.mjs \
+    eslint.config.mjs \
+    i18n.ts \
     scripts \
     lib \
     utils \
     docs \
+    app \
+    components \
+    hooks \
+    messages \
+    public \
+    providers \
+    i18n \
     .env
 
 # 2. Upload to VPS
