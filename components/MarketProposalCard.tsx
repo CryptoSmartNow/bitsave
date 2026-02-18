@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from "wagmi";
 import { formatUnits } from "viem";
 import { PREDICTION_MARKET_FACTORY_ABI, ERC20_ABI } from "@/lib/web3/abi";
 import { HiOutlineCheck } from "react-icons/hi2";
@@ -30,6 +30,9 @@ interface MarketProposalProps {
 
 export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => {
     const { address } = useAccount();
+    const currentChainId = useChainId();
+    const { switchChain } = useSwitchChain();
+    
     const [step, setStep] = useState<'check' | 'approve' | 'create' | 'indexing' | 'done'>('check');
     const [createTxHash, setCreateTxHash] = useState<`0x${string}` | undefined>(undefined);
     const [approveTxHash, setApproveTxHash] = useState<`0x${string}` | undefined>(undefined);
@@ -37,6 +40,9 @@ export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => 
 
     const { writeContractAsync: writeApprove, isPending: isApproving } = useWriteContract();
     const { writeContractAsync: writeCreate, isPending: isCreating } = useWriteContract();
+
+    // Check Chain Mismatch
+    const isWrongChain = currentChainId !== data.chainId;
 
     // Wait for Creation
     const { isLoading: isConfirmingCreate, isSuccess: isConfirmedCreate } = useWaitForTransactionReceipt({
@@ -89,7 +95,7 @@ export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => 
                             description: data.description,
                             vibe: 'Community',
                             tradingDeadline: data.params.tradingDeadline,
-                            chainId: 8453,
+                            chainId: data.chainId,
                             creator: address,
                             txHash: createTxHash,
                             metadataUri: data.params.metadataUri
@@ -181,23 +187,43 @@ export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => 
             </div>
 
             <div className="flex gap-2">
-                {step === 'approve' && (
+                {isWrongChain ? (
                     <button
-                        onClick={handleApprove}
-                        disabled={isApproving || isConfirmingApprove}
-                        className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                        onClick={() => switchChain({ chainId: data.chainId })}
+                        className="w-full bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all"
                     >
-                        {isApproving || isConfirmingApprove ? "Approving..." : "1. Approve USDC"}
+                        Switch to {data.chainId === 56 ? 'BSC' : data.chainId === 143 ? 'Monad' : 'Base'}
                     </button>
+                ) : (
+                    <>
+                        {step === 'approve' && (
+                            <button
+                                onClick={handleApprove}
+                                disabled={isApproving || isConfirmingApprove}
+                                className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                            >
+                                {isApproving || isConfirmingApprove ? "Approving..." : "1. Approve USDC"}
+                            </button>
+                        )}
+                        
+                        {step === 'create' && (
+                            <button
+                                onClick={handleCreate}
+                                disabled={isCreating || isConfirmingCreate}
+                                className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                            >
+                                {isCreating || isConfirmingCreate ? "Creating..." : "2. Create Market"}
+                            </button>
+                        )}
+                    </>
                 )}
                 
-                {step === 'create' && (
+                {step === 'indexing' && (
                     <button
-                        onClick={handleCreate}
-                        disabled={isCreating || isConfirmingCreate}
-                        className="flex-1 bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                        disabled
+                        className="flex-1 bg-[#81D7B4]/20 text-[#81D7B4] border border-[#81D7B4]/50 py-2 rounded-lg font-bold transition-all opacity-50 cursor-wait"
                     >
-                        {isCreating || isConfirmingCreate ? "Creating..." : "2. Create Market"}
+                        Indexing...
                     </button>
                 )}
 

@@ -1,8 +1,25 @@
 import { createWalletClient, createPublicClient, http, parseUnits, formatUnits, decodeEventLog } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { base, baseSepolia } from 'viem/chains';
+import { base, baseSepolia, bsc } from 'viem/chains';
 import { PREDICTION_MARKET_FACTORY_ABI, PREDICTION_MARKET_ABI, MOCK_USDC_ABI, ERC20_ABI } from './abi';
-import { BIZFI_CONFIG } from './config';
+import { BIZFI_CONFIG, CHAINS_CONFIG } from './config';
+
+// Define Monad Mainnet Chain
+const monadMainnet = {
+    id: 143,
+    name: 'Monad Mainnet',
+    network: 'monad',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Monad',
+        symbol: 'MON',
+    },
+    rpcUrls: {
+        default: { http: ['https://rpc-monad.xyz'] },
+        public: { http: ['https://rpc-monad.xyz'] },
+    },
+    testnet: false,
+};
 
 // Initialize clients
 const privateKey = process.env.AGENT_PRIVATE_KEY || process.env.BIZFI_AGENT_PRIVATE_KEY || process.env.REFERRAL_SIGNER_PRIVATE_KEY;
@@ -31,7 +48,8 @@ You have access to the following BizFi Protocol tools. To use them, output a JSO
      - metadataUri (string): IPFS URI or URL for market metadata.
      - tradingDeadline (number|string): Unix timestamp (seconds) or date string (e.g. "2026-03-31").
      - resolveTime (number|string): Unix timestamp (seconds) or date string (e.g. "2026-08-01").
-   - Example: { "action": "create_market", "parameters": { "metadataUri": "ipfs://...", "tradingDeadline": "2026-03-31", "resolveTime": "2026-08-01" } }
+     - chain (string): Optional. Chain to deploy on ("Base", "BSC", "Monad"). Defaults to Base.
+   - Example: { "action": "create_market", "parameters": { "metadataUri": "ipfs://...", "tradingDeadline": "2026-03-31", "resolveTime": "2026-08-01", "chain": "Base" } }
 
 2. buy_shares
    - Description: Buy Yes or No shares in a market.
@@ -117,7 +135,7 @@ export const agentTools = {
         return { success: true, txHash: hash, message: `Redeemed winnings. Tx: ${hash}` };
     },
 
-    async createMarket(params: { metadataUri: string, tradingDeadline: number | string, resolveTime: number | string }) {
+    async createMarket(params: { metadataUri: string, tradingDeadline: number | string, resolveTime: number | string, chain?: string }) {
         // Helper to convert to unix seconds
         const toUnix = (val: number | string): bigint => {
             let ms: number;
@@ -138,6 +156,16 @@ export const agentTools = {
 
         console.log(`Parsed dates: Deadline=${tradingDeadline} (${new Date(Number(tradingDeadline)*1000).toISOString()}), Resolve=${resolveTime} (${new Date(Number(resolveTime)*1000).toISOString()})`);
 
+        // Determine chain ID and Config
+        let targetChainId = 8453; // Default Base
+        if (params.chain) {
+            const c = params.chain.toLowerCase();
+            if (c.includes('bsc') || c.includes('binance')) targetChainId = 56;
+            else if (c.includes('monad')) targetChainId = 143;
+        }
+
+        const chainConfig = CHAINS_CONFIG[targetChainId] || CHAINS_CONFIG[8453];
+
         // We use a placeholder for the oracle if not provided, usually the user will set it.
         // For the proposal, we can default to the user's address (handled by frontend) or a known oracle.
         // For now, let's leave it to be filled by the frontend or use a default if available.
@@ -145,21 +173,21 @@ export const agentTools = {
         // We'll use a placeholder "0x0000000000000000000000000000000000000000" which the frontend should replace with the user's address.
         const oracle = "0x0000000000000000000000000000000000000000"; 
         
-        const factoryAddress = BIZFI_CONFIG.contracts.predictionMarketFactory as `0x${string}`;
-        const usdcAddress = BIZFI_CONFIG.contracts.mockUsdc as `0x${string}`;
+        const factoryAddress = chainConfig.contracts.predictionMarketFactory as `0x${string}`;
+        const usdcAddress = chainConfig.contracts.mockUsdc as `0x${string}`;
         
         const creationFee = BigInt(10000000); // 10 USDC (10e6)
         
         // _b (liquidity parameter) must be > 0 for CPMM/LMSR
         // Using 5 USDC (5000000) as default liquidity to align with SKILL.md "initialLiquidity" recommendation
         const liquidityParam = BigInt(5000000); 
-
+        
         // Instead of executing, we return the proposal details
         return {
             proposal: {
                 type: 'create_market',
                 description: params.metadataUri,
-                chainId: chain.id,
+                chainId: targetChainId,
                 contracts: {
                     factory: factoryAddress,
                     usdc: usdcAddress
@@ -174,7 +202,7 @@ export const agentTools = {
                 },
                 rawArgs: [oracle, tradingDeadline, resolveTime, liquidityParam, params.metadataUri]
             },
-            message: "I've prepared the market creation transaction for you. Please sign it below."
+            message: `I've prepared the market creation transaction on ${targetChainId === 56 ? 'BSC' : targetChainId === 143 ? 'Monad' : 'Base'} for you. Please sign it below.`
         };
     },
 
