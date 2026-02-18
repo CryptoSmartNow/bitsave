@@ -314,7 +314,8 @@ export class BizMartAgent {
                 const marketParams = {
                     metadataUri: newData.predictionQuestion || `ipfs://mock-metadata-${Date.now()}`, // Use question as title for now, or true metadata URI
                     tradingDeadline: resolveTime - 86400, // 1 day before resolve
-                    resolveTime: resolveTime
+                    resolveTime: resolveTime,
+                    chain: newData.chain // Pass selected chain
                 };
 
                 // Call Agent Tool
@@ -340,7 +341,7 @@ export class BizMartAgent {
                             outcome: 'UNDECIDED',
                             tradingDeadline: marketParams.tradingDeadline.toString(),
                             resolveTime: marketParams.resolveTime.toString(),
-                            chainId: 84532, // Default Base Sepolia
+                            chainId: result.proposal.chainId, // Use dynamic chain ID
                             creator: newData.wallet,
                             createdAt: new Date(),
                             volume: '0',
