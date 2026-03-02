@@ -37,6 +37,9 @@ export interface SavingsPlan {
   tokenLogo?: string;
   network?: string;
   chainId?: bigint | string;
+  contractAddress?: string;
+  isShared?: boolean;
+  sharedBy?: string;
 }
 
 export interface SavingsData {
@@ -115,7 +118,7 @@ export function cacheSavingsData(
     };
 
     const cacheKey = getCacheKey(userAddress, networkChainId);
-    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    localStorage.setItem(cacheKey, JSON.stringify(cacheData, (_, v) => typeof v === 'bigint' ? v.toString() : v));
 
   } catch (error) {
     console.error('Error caching savings data:', error);

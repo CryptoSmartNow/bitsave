@@ -9,9 +9,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Exo } from 'next/font/google';
 import CustomConnectButton from '@/components/CustomConnectButton';
-import { HiOutlineHome, HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineUserGroup, HiOutlineTrophy, HiOutlineUserPlus, HiOutlinePlus, HiOutlineCog, HiOutlineArrowRightOnRectangle, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { HiOutlineHome, HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineUserGroup, HiOutlineTrophy, HiOutlineUserPlus, HiOutlinePlus, HiOutlineCog, HiOutlineArrowRightOnRectangle, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineArrowsRightLeft } from 'react-icons/hi2';
+import { FiMenu as FiMenuIcon, FiX as FiXIcon } from 'react-icons/fi';
 import LanguageSelector from '@/components/LanguageSelector';
+import FiatRampModal from '@/components/FiatRampModal';
 
 
 // Removed custom network connection UI in favor of RainbowKit modal-only
@@ -29,11 +30,15 @@ export default function DashboardLayout({
 }) {
   const [mounted, setMounted] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { ready, authenticated } = usePrivy();
-  const { isConnected: isWagmiConnected } = useAccount();
+  const { ready, authenticated, user } = usePrivy();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { disconnect, isDisconnecting } = useOptimizedDisconnect();
   const router = useRouter();
   const pathname = usePathname();
+  const [fiatRampModal, setFiatRampModal] = useState({ isOpen: false });
+
+  // Compute common address
+  const activeAddress = wagmiAddress || user?.wallet?.address;
 
   // Use Privy's authenticated state or Wagmi connection state
   // Show as connected if either Privy is authenticated or Wagmi is connected
@@ -99,7 +104,7 @@ export default function DashboardLayout({
                       className="p-2 rounded-xl transition-all duration-200 min-h-[32px] min-w-[32px] flex items-center justify-center"
                       aria-label="Open sidebar"
                     >
-                      <FiMenu className="w-4 h-4 text-gray-700" />
+                      <FiMenuIcon className="w-4 h-4 text-gray-700" />
                     </button>
                   </div>
                 )}
@@ -233,6 +238,17 @@ export default function DashboardLayout({
                     </div>
                     {!sidebarCollapsed && <span className="ml-3 text-sm font-medium truncate">Settings</span>}
                   </Link>
+
+                  <button
+                    disabled
+                    className={`w-full group flex items-center ${sidebarCollapsed ? 'px-3 py-4 justify-center' : 'px-3 xs:px-4 py-3 xs:py-4'} mb-1 xs:mb-2 rounded-xl mx-1 transition-all duration-300 text-gray-400 opacity-50 cursor-not-allowed`}
+                    title="Fiat On/Off Ramp is currently unavailable"
+                  >
+                    <div className="relative">
+                      <HiOutlineArrowsRightLeft className="w-5 h-5 flex-shrink-0" />
+                    </div>
+                    {!sidebarCollapsed && <span className="ml-3 text-sm font-medium truncate">Fiat On/Off Ramp</span>}
+                  </button>
                 </div>
 
                 {/* Bottom Section - background removed */}
@@ -286,9 +302,9 @@ export default function DashboardLayout({
             aria-expanded={!sidebarCollapsed}
           >
             {sidebarCollapsed ? (
-              <FiMenu className="w-6 h-6 text-gray-800" />
+              <FiMenuIcon className="w-6 h-6 text-gray-800" />
             ) : (
-              <FiX className="w-6 h-6 text-gray-800" />
+              <FiXIcon className="w-6 h-6 text-gray-800" />
             )}
           </button>
         </div>
@@ -363,6 +379,14 @@ export default function DashboardLayout({
       </div>
 
       {/* Modal-only connection experience: no custom overlay or network UI */}
+      {isConnected && (
+        <FiatRampModal
+          isOpen={fiatRampModal.isOpen}
+          onClose={() => setFiatRampModal({ isOpen: false })}
+          walletAddress={activeAddress}
+          theme="light"
+        />
+      )}
     </div>
   );
 }

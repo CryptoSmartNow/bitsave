@@ -40,13 +40,12 @@ const Header = memo(function Header() {
 
   return (
     <>
-      <header 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled 
-            ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100 py-4' 
-            : 'bg-transparent py-6'
-        }`}
-      >      
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+          ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100 py-4'
+          : 'bg-transparent py-6'
+          }`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="relative z-50 flex items-center group">
@@ -61,31 +60,52 @@ const Header = memo(function Header() {
               />
             </div>
           </Link>
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center space-x-1">
             {navLinks.map((link) => (
-              <Link 
+              <Link
                 key={link.name}
-                href={link.href} 
+                href={link.href}
                 className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-gray-50 whitespace-nowrap"
               >
                 {link.name}
               </Link>
             ))}
-            <Link 
-              href="/docs" 
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-gray-50 flex items-center gap-1 whitespace-nowrap"
-            >
-              Docs
-              <FiArrowUpRight className="w-3 h-3" />
-            </Link>
+
+            {/* Docs Dropdown */}
+            <div className="relative group">
+              <button
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-gray-50 flex items-center gap-1 whitespace-nowrap"
+              >
+                Docs
+              </button>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-[150px]">
+                <div className="bg-white rounded-xl shadow-xl shadow-gray-200/50 border border-gray-100 p-2 flex flex-col gap-1">
+                  <Link
+                    href="/docs"
+                    className="flex justify-between items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
+                  >
+                    SaveFi
+                  </Link>
+                  <a
+                    href="https://bizfi.mintlify.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex justify-between items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
+                  >
+                    BizFi
+                    <FiArrowUpRight className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
           </nav>
-          
+
           {/* Right Actions */}
           <div className="hidden xl:flex items-center space-x-4">
             <LanguageSelector />
-            <Link 
+            <Link
               href="/dashboard"
               prefetch={false}
               className="bg-[#81D7B4] hover:bg-[#6BC5A0] text-white px-6 py-2.5 rounded-full font-semibold transition-all duration-300 shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/40 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
@@ -95,7 +115,7 @@ const Header = memo(function Header() {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button 
+          <button
             className="xl:hidden relative z-50 p-2 text-gray-800 hover:text-[#81D7B4] transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
@@ -127,8 +147,8 @@ const Header = memo(function Header() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 + idx * 0.05 }}
                 >
-                  <Link 
-                    href={link.href} 
+                  <Link
+                    href={link.href}
                     className="block py-4 text-2xl font-bold text-gray-900 border-b border-gray-100 hover:text-[#81D7B4] transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -136,30 +156,45 @@ const Header = memo(function Header() {
                   </Link>
                 </motion.div>
               ))}
-              
+
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 + navLinks.length * 0.05 }}
+                className="py-4 border-b border-gray-100"
               >
-                <a 
-                href="/docs" 
-                className="block py-4 text-2xl font-bold text-gray-900 border-b border-gray-100 hover:text-[#81D7B4] transition-colors flex items-center justify-between"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Docs
-                <FiArrowUpRight className="w-5 h-5" />
-              </a>
+                <div className="text-xl font-bold text-gray-400 mb-3 flex items-center justify-between">
+                  Documentation
+                </div>
+                <div className="flex flex-col space-y-3 pl-4">
+                  <Link
+                    href="/docs"
+                    className="text-lg font-semibold text-gray-900 hover:text-[#81D7B4] transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    SaveFi Docs
+                  </Link>
+                  <a
+                    href="https://bizfi.mintlify.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-semibold text-gray-900 hover:text-[#81D7B4] transition-colors flex items-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    BizFi Docs
+                    <FiArrowUpRight className="w-4 h-4" />
+                  </a>
+                </div>
               </motion.div>
             </div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="mt-auto pt-8 flex flex-col gap-4"
             >
-              <Link 
+              <Link
                 href="/dashboard"
                 prefetch={false}
                 onClick={() => setMobileMenuOpen(false)}

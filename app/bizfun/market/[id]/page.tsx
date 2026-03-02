@@ -5,9 +5,9 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Exo } from "next/font/google";
-import { 
-    HiOutlineRocketLaunch, 
-    HiOutlineClock, 
+import {
+    HiOutlineRocketLaunch,
+    HiOutlineClock,
     HiOutlineCurrencyDollar,
     HiOutlineArrowTrendingUp,
     HiOutlineUserGroup,
@@ -24,7 +24,7 @@ import { useAccount } from "wagmi";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle } from "@radix-ui/react-dialog";
 
-const exo = Exo({ 
+const exo = Exo({
     subsets: ['latin'],
     variable: '--font-exo'
 });
@@ -50,6 +50,7 @@ interface Market {
 interface Comment {
     id: string;
     user: string;
+    savvyName?: string;
     text: string;
     timestamp: Date;
     sentiment: 'bullish' | 'bearish' | 'neutral';
@@ -61,11 +62,11 @@ export default function MarketDetailPage() {
     const [market, setMarket] = useState<Market | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'trade' | 'forum' | 'details'>('trade');
-    
+
     // Forum Data
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState("");
-    
+
     // Share Modal
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
@@ -88,6 +89,7 @@ export default function MarketDetailPage() {
                     const formattedComments = commentsData.comments.map((c: any) => ({
                         ...c,
                         id: c._id,
+                        savvyName: c.savvyName,
                         timestamp: new Date(c.timestamp)
                     }));
                     setComments(formattedComments);
@@ -104,20 +106,21 @@ export default function MarketDetailPage() {
 
     const handlePostComment = async () => {
         if (!newComment.trim() || !id) return;
-        
+
         try {
             const res = await fetch(`/api/bizfun/markets/${id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    user: address ? `${address.slice(0,6)}...${address.slice(-4)}` : 'Anonymous',
+                    user: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anonymous',
+                    fullWalletAddress: address || null,
                     text: newComment,
                     sentiment: 'neutral'
                 })
             });
-            
+
             const data = await res.json();
-            
+
             if (data.success && data.comment) {
                 const newCommentObj = {
                     ...data.comment,
@@ -139,7 +142,7 @@ export default function MarketDetailPage() {
             if (m.question.startsWith('Create Market: ipfs://')) return "Untitled Market";
             return m.question;
         }
-        return "Untitled Market"; 
+        return "Untitled Market";
     };
 
     const handleCopyLink = () => {
@@ -182,9 +185,9 @@ export default function MarketDetailPage() {
                         <HiOutlineArrowLeft className="w-5 h-5" />
                         <span className="font-medium">Back</span>
                     </Link>
-                    
+
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                             onClick={() => setIsShareModalOpen(true)}
                             className="p-2 text-gray-400 hover:text-[#81D7B4] transition-colors"
                         >
@@ -203,19 +206,19 @@ export default function MarketDetailPage() {
                             <HiXMark className="w-6 h-6" />
                         </button>
                     </div>
-                    
+
                     <div className="space-y-6">
                         <div className="bg-[#0b0c15] border border-white/10 rounded-xl p-3 flex items-center gap-3">
                             <div className="bg-[#81D7B4]/10 p-2 rounded-lg">
                                 <HiLink className="w-5 h-5 text-[#81D7B4]" />
                             </div>
-                            <input 
-                                type="text" 
-                                readOnly 
-                                value={typeof window !== 'undefined' ? window.location.href : ''} 
+                            <input
+                                type="text"
+                                readOnly
+                                value={typeof window !== 'undefined' ? window.location.href : ''}
                                 className="bg-transparent border-none text-gray-300 text-sm flex-1 focus:ring-0"
                             />
-                            <button 
+                            <button
                                 onClick={handleCopyLink}
                                 className="px-3 py-1.5 bg-[#81D7B4] text-[#0b0c15] text-xs font-bold rounded-lg hover:bg-[#6BC5A0] transition-colors flex items-center gap-1"
                             >
@@ -225,21 +228,21 @@ export default function MarketDetailPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <button 
+                            <button
                                 onClick={handleShareTwitter}
                                 className="flex items-center justify-center gap-2 bg-[#000000] border border-white/10 hover:border-white/30 text-white py-3 rounded-xl transition-all font-medium"
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                                 Share on X
                             </button>
-                            <button 
+                            <button
                                 onClick={() => {
                                     const url = encodeURIComponent(window.location.href);
                                     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
                                 }}
                                 className="flex items-center justify-center gap-2 bg-[#0077b5] text-white py-3 rounded-xl hover:bg-[#006097] transition-all font-medium"
                             >
-                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
                                 LinkedIn
                             </button>
                         </div>
@@ -262,11 +265,11 @@ export default function MarketDetailPage() {
                                     Ends {new Date(Number(market.tradingDeadline) * 1000).toLocaleDateString()}
                                 </span>
                             </div>
-                            
+
                             <h1 className="text-3xl md:text-4xl font-bold leading-tight">
                                 {getMarketName(market)}
                             </h1>
-                            
+
                             <div className="flex items-center gap-4 text-sm text-gray-400">
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs">
@@ -296,13 +299,12 @@ export default function MarketDetailPage() {
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${
-                                        activeTab === tab ? 'text-[#81D7B4]' : 'text-gray-500 hover:text-gray-300'
-                                    }`}
+                                    className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${activeTab === tab ? 'text-[#81D7B4]' : 'text-gray-500 hover:text-gray-300'
+                                        }`}
                                 >
                                     {tab}
                                     {activeTab === tab && (
-                                        <motion.div 
+                                        <motion.div
                                             layoutId="activeTab"
                                             className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#81D7B4]"
                                         />
@@ -361,19 +363,20 @@ export default function MarketDetailPage() {
                                                 <div className="flex items-center justify-between mb-3">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xs font-mono">
-                                                            {comment.user.slice(0,2)}
+                                                            {comment.savvyName ? comment.savvyName.slice(0, 2).toUpperCase() : comment.user.slice(0, 2)}
                                                         </div>
-                                                        <span className="font-bold text-sm text-gray-300">{comment.user}</span>
+                                                        <span className={`font-bold text-sm ${comment.savvyName ? 'text-[#81D7B4]' : 'text-gray-300'}`}>
+                                                            {comment.savvyName ? `@${comment.savvyName}` : comment.user}
+                                                        </span>
                                                         <span className="text-xs text-gray-600">
                                                             {comment.timestamp.toLocaleDateString()}
                                                         </span>
                                                     </div>
                                                     {comment.sentiment !== 'neutral' && (
-                                                        <span className={`text-xs px-2 py-1 rounded-full border ${
-                                                            comment.sentiment === 'bullish' 
-                                                                ? 'border-green-500/30 text-green-400 bg-green-500/10' 
+                                                        <span className={`text-xs px-2 py-1 rounded-full border ${comment.sentiment === 'bullish'
+                                                                ? 'border-green-500/30 text-green-400 bg-green-500/10'
                                                                 : 'border-red-500/30 text-red-400 bg-red-500/10'
-                                                        }`}>
+                                                            }`}>
                                                             {comment.sentiment.toUpperCase()}
                                                         </span>
                                                     )}

@@ -3,7 +3,8 @@ import { ethers } from "ethers";
 import BizFiABI from "@/app/abi/BizFi.json";
 import { getDatabase } from "@/lib/mongodb";
 
-const BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770";
+const BASE_BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770";
+const CELO_BIZFI_PROXY_ADDRESS = "0x956a6F2841A714806375BB3E7bDacb18DD26ACeB";
 
 export async function POST(req: NextRequest) {
     let businessId, recipient;
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         businessId = body.businessId;
         recipient = body.recipient;
-        const { verificationData, transactionHash } = body;
+        const { verificationData, transactionHash, network = 'base' } = body;
 
         if (!businessId || !recipient || !verificationData) {
             return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
@@ -23,10 +24,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
         }
 
-        // Initialize provider and signer
-        const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || "https://mainnet.base.org");
+        // Initialize provider and signer based on network
+        const isCelo = network === 'celo';
+        const rpcUrl = isCelo ? (process.env.CELO_RPC_URL || "https://forno.celo.org") : (process.env.NEXT_PUBLIC_RPC_URL || "https://mainnet.base.org");
+        const proxyAddress = isCelo ? CELO_BIZFI_PROXY_ADDRESS : BASE_BIZFI_PROXY_ADDRESS;
+
+        const provider = new ethers.JsonRpcProvider(rpcUrl);
         const signer = new ethers.Wallet(privateKey, provider);
-        const bizfiContract = new ethers.Contract(BIZFI_PROXY_ADDRESS, BizFiABI, signer);
+        const bizfiContract = new ethers.Contract(proxyAddress, BizFiABI, signer);
 
         // 1. Hash the verification data
         const dataString = JSON.stringify(verificationData);
@@ -84,7 +89,8 @@ export async function POST(req: NextRequest) {
                             $set: {
                                 attestationUid: easUid,
                                 attestationId: attestationId,
-                                businessId: businessId.toString()
+                                businessId: businessId.toString(),
+                                network: network
                             }
                         }
                     );

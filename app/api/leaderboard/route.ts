@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLeaderboardCollection } from '@/lib/mongodb';
+import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export const dynamic = 'force-dynamic';
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const collection = await getLeaderboardCollection();
-    
+
     if (!collection) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
@@ -18,17 +19,31 @@ export async function GET(request: NextRequest) {
       .sort({ totalamount: -1 })
       .toArray();
 
-    // Return plain array as expected by frontend
-    return NextResponse.json(leaderboard.map((user: any) => ({
-      useraddress: user.useraddress,
-      totalamount: parseFloat(user.totalamount) || 0, // Ensure number
-      chain: user.chain,
-      id: user.id || user._id.toString()
-    })));
+    // Fetch Savvy Names for these users
+    const client = await clientPromise;
+    if (!client) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+    }
+    const db = client.db('bitsave');
+    const usersCollection = db.collection('users');
+
+    const enhancedLeaderboard = await Promise.all(leaderboard.map(async (user: any) => {
+      const u = await usersCollection.findOne({ walletAddress: user.useraddress?.toLowerCase() || '' });
+      return {
+        useraddress: user.useraddress,
+        savvyName: u?.savvyName || null,
+        totalamount: parseFloat(user.totalamount) || 0, // Ensure number
+        chain: user.chain,
+        id: user.id || user._id.toString()
+      };
+    }));
+
+    // Return extended array
+    return NextResponse.json(enhancedLeaderboard);
 
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: error instanceof Error ? error.message : 'Failed to fetch leaderboard'
     }, { status: 500 });
   }
@@ -47,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const collection = await getLeaderboardCollection();
-    
+
     if (!collection) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
@@ -61,15 +76,15 @@ export async function POST(request: NextRequest) {
 
     const result = await collection.insertOne(newUser);
 
-    return NextResponse.json({ 
-      success: true, 
-      id: result.insertedId.toString() 
+    return NextResponse.json({
+      success: true,
+      id: result.insertedId.toString()
     });
 
   } catch (error) {
     console.error('Error creating leaderboard entry:', error);
-    return NextResponse.json({ 
-      error: 'Failed to create entry' 
+    return NextResponse.json({
+      error: 'Failed to create entry'
     }, { status: 500 });
   }
 }
@@ -84,7 +99,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const collection = await getLeaderboardCollection();
-    
+
     if (!collection) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
@@ -116,8 +131,8 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     console.error('Error updating leaderboard:', error);
-    return NextResponse.json({ 
-      error: 'Failed to update entry' 
+    return NextResponse.json({
+      error: 'Failed to update entry'
     }, { status: 500 });
   }
 }
@@ -132,7 +147,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const collection = await getLeaderboardCollection();
-    
+
     if (!collection) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
@@ -157,8 +172,8 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Error deleting leaderboard entry:', error);
-    return NextResponse.json({ 
-      error: 'Failed to delete entry' 
+    return NextResponse.json({
+      error: 'Failed to delete entry'
     }, { status: 500 });
   }
 }

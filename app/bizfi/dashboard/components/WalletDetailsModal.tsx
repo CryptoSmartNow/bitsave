@@ -12,11 +12,11 @@ interface WalletDetailsModalProps {
     logout: () => void;
 }
 
-// Base Mainnet USDC
 const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const GDOLLAR_ADDRESS = "0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A"; // Celo GoodDollar
 
 type ViewState = 'details' | 'send';
-type TokenType = 'ETH' | 'USDC';
+type TokenType = 'ETH' | 'USDC' | 'CELO' | 'G$';
 
 export default function WalletDetailsModal({ isOpen, onClose, address, logout }: WalletDetailsModalProps) {
     const [view, setView] = useState<ViewState>('details');
@@ -32,15 +32,28 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
     const { chain } = useAccount();
     const { transferToken, loading, error } = useBizFi();
 
-    // ETH Balance
+    // Base Balances
     const { data: ethBalance, refetch: refetchEth } = useBalance({
         address: address,
+        chainId: 8453,
     });
 
-    // USDC Balance
     const { data: usdcBalance, refetch: refetchUsdc } = useBalance({
         address: address,
         token: USDC_ADDRESS,
+        chainId: 8453,
+    });
+
+    // Celo Balances
+    const { data: celoBalance, refetch: refetchCelo } = useBalance({
+        address: address,
+        chainId: 42220,
+    });
+
+    const { data: gdollarBalance, refetch: refetchGd } = useBalance({
+        address: address,
+        token: GDOLLAR_ADDRESS,
+        chainId: 42220,
     });
 
     const handleCopy = async () => {
@@ -53,7 +66,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
 
     const refreshBalances = async () => {
         setIsRefreshing(true);
-        await Promise.all([refetchEth(), refetchUsdc()]);
+        await Promise.all([refetchEth(), refetchUsdc(), refetchCelo(), refetchGd()]);
         setTimeout(() => setIsRefreshing(false), 1000);
     };
 
@@ -114,7 +127,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 </h3>
                                 <span className="text-xs text-gray-400 flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-[#81D7B4]"></span>
-                                    {chain?.name || 'Base Network'}
+                                    {chain ? chain.name : 'Connected'}
                                 </span>
                             </div>
                         </div>
@@ -202,7 +215,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                                     <img src="/usdclogo.png" alt="USDC" className="w-5 h-5 object-contain" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-white text-sm">USDC</p>
+                                                    <p className="font-bold text-white text-sm">Base USDC</p>
                                                     <p className="text-[10px] text-gray-400">Stablecoin</p>
                                                 </div>
                                             </div>
@@ -211,6 +224,46 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                                     {usdcBalance ? Number(formatUnits(usdcBalance.value, usdcBalance.decimals)).toFixed(2) : '0.00'}
                                                 </p>
                                                 <p className="text-[10px] text-gray-400 font-medium">USDC</p>
+                                            </div>
+                                        </div>
+
+                                        {/* CELO */}
+                                        <div className="group flex items-center justify-between p-3 rounded-2xl bg-gray-800/30 hover:bg-gray-800/50 border border-gray-700/50 transition-all duration-300">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#FCFF52]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                    <div className="w-5 h-5 rounded-full border-2 border-[#FCFF52] flex items-center justify-center">
+                                                        <div className="w-2 h-2 rounded-full bg-[#FCFF52]"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-white text-sm">Celo</p>
+                                                    <p className="text-[10px] text-gray-400">Gas Token</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-bold text-white font-mono text-sm">
+                                                    {celoBalance ? Number(formatUnits(celoBalance.value, celoBalance.decimals)).toFixed(4) : '0.0000'}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 font-medium">CELO</p>
+                                            </div>
+                                        </div>
+
+                                        {/* GoodDollar */}
+                                        <div className="group flex items-center justify-between p-3 rounded-2xl bg-gray-800/30 hover:bg-gray-800/50 border border-gray-700/50 transition-all duration-300">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#00AEEF]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                    <span className="text-[#00AEEF] font-bold">G$</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-white text-sm">GoodDollar</p>
+                                                    <p className="text-[10px] text-gray-400">Payment Token</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-bold text-white font-mono text-sm">
+                                                    {gdollarBalance ? Number(formatUnits(gdollarBalance.value, gdollarBalance.decimals)).toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0'}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 font-medium">G$</p>
                                             </div>
                                         </div>
                                     </div>
@@ -298,24 +351,29 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 ) : (
                                     <>
                                         {/* Token Selector */}
-                                        <div className="grid grid-cols-2 gap-3 p-1 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                                            {(['USDC', 'ETH'] as const).map((token) => (
+                                        <div className="grid grid-cols-4 gap-2 p-1 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                                            {(['USDC', 'ETH', 'CELO', 'G$'] as const).map((token) => (
                                                 <button
                                                     key={token}
                                                     type="button"
                                                     onClick={() => setSelectedToken(token)}
-                                                    className={`py-2 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${selectedToken === token
+                                                    className={`py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${selectedToken === token
                                                         ? 'bg-[#81D7B4] text-[#0A1016] shadow-lg scale-105'
                                                         : 'text-gray-400 hover:text-white'
                                                         }`}
                                                 >
-                                                    {token === 'USDC' ? (
-                                                        <img src="/usdclogo.png" className="w-4 h-4" alt="USDC" />
-                                                    ) : (
-                                                        <svg className="w-4 h-4 text-current" viewBox="0 0 32 32" fill="currentColor">
+                                                    {token === 'USDC' && <img src="/usdclogo.png" className="w-3 h-3" alt="USDC" />}
+                                                    {token === 'ETH' && (
+                                                        <svg className="w-3 h-3 text-current" viewBox="0 0 32 32" fill="currentColor">
                                                             <path d="M15.925 23.96l-9.819-5.796L15.925 32l9.83-13.836-9.83 5.796zM16.075 0L6.255 16.332l9.82 5.806 9.82-5.806L16.075 0zm0 20.686l-8.48-5.013 8.48-14.103 8.486 14.103-8.486 5.013z" />
                                                         </svg>
                                                     )}
+                                                    {token === 'CELO' && (
+                                                        <div className="w-3 h-3 rounded-full border border-current flex items-center justify-center">
+                                                            <div className="w-1 h-1 rounded-full bg-current"></div>
+                                                        </div>
+                                                    )}
+                                                    {token === 'G$' && <span className="font-bold">G$</span>}
                                                     {token}
                                                 </button>
                                             ))}
@@ -356,7 +414,11 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                                     <p className="text-[10px] text-gray-400">
                                                         Balance: {selectedToken === 'ETH'
                                                             ? (ethBalance ? Number(formatUnits(ethBalance.value, 18)).toFixed(4) : '0.00')
-                                                            : (usdcBalance ? Number(formatUnits(usdcBalance.value, 6)).toFixed(2) : '0.00')}
+                                                            : selectedToken === 'CELO'
+                                                                ? (celoBalance ? Number(formatUnits(celoBalance.value, 18)).toFixed(4) : '0.00')
+                                                                : selectedToken === 'USDC'
+                                                                    ? (usdcBalance ? Number(formatUnits(usdcBalance.value, 6)).toFixed(2) : '0.00')
+                                                                    : (gdollarBalance ? Number(formatUnits(gdollarBalance.value, 18)).toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0')}
                                                     </p>
                                                 </div>
                                             </div>

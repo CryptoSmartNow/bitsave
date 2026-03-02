@@ -12,8 +12,9 @@ import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
 import { formatTimestamp } from '@/utils/dateUtils';
-import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlineChartPie } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlineChartPie, HiOutlineUsers } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
+import SharePlanModal from '@/components/SharePlanModal';
 
 // Helper function to ensure image URLs are properly formatted for Next.js Image
 const ensureImageUrl = (url: string | undefined): string => {
@@ -52,6 +53,10 @@ interface Plan {
   tokenName?: string;
   tokenLogo?: string;
   network?: string;
+  contractAddress?: string;
+  chainId?: number;
+  isShared?: boolean;
+  sharedBy?: string;
 }
 
 // Helper to get logo for a token
@@ -78,7 +83,7 @@ export default function PlansPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -108,6 +113,14 @@ export default function PlansPage() {
     plan: null as any,
     isEth: false,
     tokenName: ''
+  });
+
+  const [sharePlanModal, setSharePlanModal] = useState({
+    isOpen: false,
+    planName: '',
+    networkName: '',
+    contractAddress: '',
+    chainId: 0
   });
 
   // Use the new caching hook for savings data
@@ -146,9 +159,9 @@ export default function PlansPage() {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
           if (accounts.length > 0) {
             const address = accounts[0];
-            
+
             const response = await fetch(`/api/transactions?address=${address}`);
-            
+
             if (!response.ok) {
               if (response.status === 404) {
                 setActivityData([]);
@@ -205,8 +218,8 @@ export default function PlansPage() {
                 return null;
               }
             })
-            .filter(Boolean)
-            .sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
+              .filter(Boolean)
+              .sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
             setActivityData(formattedActivity);
           } else {
@@ -320,42 +333,42 @@ export default function PlansPage() {
         {/* Stats Cards - Carousel on mobile, Grid on desktop */}
         <div className="flex overflow-x-auto pb-4 gap-4 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory hide-scrollbar">
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-             <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                   <HiOutlineChartPie className="w-5 h-5" />
-                 </div>
-                 <h3 className="text-gray-500 font-medium text-sm">Active Plans</h3>
-               </div>
-               <p className="text-3xl font-bold text-gray-900">{stats.activeCount}</p>
-             </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                  <HiOutlineChartPie className="w-5 h-5" />
+                </div>
+                <h3 className="text-gray-500 font-medium text-sm">Active Plans</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeCount}</p>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-             <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                   <HiOutlineBanknotes className="w-5 h-5" />
-                 </div>
-                 <h3 className="text-gray-500 font-medium text-sm">Total Value</h3>
-               </div>
-               <p className="text-3xl font-bold text-gray-900">${parseFloat(stats.totalLocked).toLocaleString()}</p>
-             </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#81D7B4]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
+                  <HiOutlineBanknotes className="w-5 h-5" />
+                </div>
+                <h3 className="text-gray-500 font-medium text-sm">Total Value</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">${parseFloat(stats.totalLocked).toLocaleString()}</p>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group min-w-[280px] md:min-w-0 snap-center">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-             <div className="relative z-10">
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
-                   <HiOutlineCurrencyDollar className="w-5 h-5" />
-                 </div>
-                 <h3 className="text-gray-500 font-medium text-sm">Rewards Earned</h3>
-               </div>
-               <p className="text-3xl font-bold text-gray-900">{stats.rewards} <span className="text-sm font-medium text-gray-400">$BTS</span></p>
-             </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                  <HiOutlineCurrencyDollar className="w-5 h-5" />
+                </div>
+                <h3 className="text-gray-500 font-medium text-sm">Rewards Earned</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{stats.rewards} <span className="text-sm font-medium text-gray-400">$BTS</span></p>
+            </div>
           </div>
         </div>
 
@@ -396,9 +409,16 @@ export default function PlansPage() {
                         />
                       </div>
                       <div>
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-1">
-                          {plan.name}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+                            {plan.name}
+                          </h3>
+                          {plan.isShared && (
+                            <span className="flex items-center gap-1 bg-[#81D7B4]/20 text-[#6BC5A0] text-xs font-bold px-2 py-1 rounded-md">
+                              <HiOutlineUsers className="w-3 h-3" /> Shared
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm font-medium text-gray-400">
                           Started {new Date(Number(plan.startTime) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </p>
@@ -407,25 +427,25 @@ export default function PlansPage() {
 
                     {/* Stats Row */}
                     <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 bg-white/50 rounded-xl px-4 sm:px-6 py-3 border border-gray-100/50 w-full sm:w-auto">
-                        <div>
-                          <p className="text-xs font-medium text-gray-400 mb-1">Saved Amount</p>
-                          <p className="font-bold text-gray-900 text-lg md:text-xl">
-                            {plan.isEth ? (
-                              <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
-                            ) : plan.tokenName === 'Gooddollar' ? (
-                              <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
-                            ) : (
-                              <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
-                            )}
-                          </p>
-                        </div>
-                        <div className="w-px h-10 bg-gray-200"></div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
-                          <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
-                            +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
-                          </p>
-                        </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-1">Saved Amount</p>
+                        <p className="font-bold text-gray-900 text-lg md:text-xl">
+                          {plan.isEth ? (
+                            <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
+                          ) : plan.tokenName === 'Gooddollar' ? (
+                            <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
+                          ) : (
+                            <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                          )}
+                        </p>
+                      </div>
+                      <div className="w-px h-10 bg-gray-200"></div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
+                        <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
+                          +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -436,8 +456,8 @@ export default function PlansPage() {
                     {/* Progress Bar Section */}
                     <div className="flex-1 w-full">
                       <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
-                         <span>Progress</span>
-                         <span className="text-[#81D7B4] font-bold">{Math.round(plan.progress)}%</span>
+                        <span>Progress</span>
+                        <span className="text-[#81D7B4] font-bold">{Math.round(plan.progress)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
                         <motion.div
@@ -448,36 +468,47 @@ export default function PlansPage() {
                         />
                       </div>
                       <div className="mt-2 text-right">
-                         <span className="text-xs font-medium text-gray-400">
-                            {(() => {
-                              const now = Math.floor(Date.now() / 1000);
-                              const end = Number(plan.maturityTime || 0);
-                              const diff = end - now;
-                              if (diff <= 0) return "Completed";
-                              const days = Math.ceil(diff / (60 * 60 * 24));
-                              if (days > 30) {
-                                const months = Math.floor(days / 30);
-                                const remainingDays = days % 30;
-                                return `${months} Months & ${remainingDays} Days Remaining`;
-                              }
-                              return `${days} Days Remaining`;
-                            })()}
-                         </span>
+                        <span className="text-xs font-medium text-gray-400">
+                          {(() => {
+                            const now = Math.floor(Date.now() / 1000);
+                            const end = Number(plan.maturityTime || 0);
+                            const diff = end - now;
+                            if (diff <= 0) return "Completed";
+                            const days = Math.ceil(diff / (60 * 60 * 24));
+                            if (days > 30) {
+                              const months = Math.floor(days / 30);
+                              const remainingDays = days % 30;
+                              return `${months} Months & ${remainingDays} Days Remaining`;
+                            }
+                            return `${days} Days Remaining`;
+                          })()}
+                        </span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                      {!plan.isShared && (
+                        <button
+                          onClick={() => setSharePlanModal({ isOpen: true, planName: plan.name, networkName: plan.network || '', contractAddress: (plan as any).contractAddress || '', chainId: (plan as any).chainId || 0 })}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-purple-500 text-white font-bold text-xs sm:text-sm hover:bg-purple-600 shadow-lg shadow-purple-500/20 transition-all transform hover:scale-105 whitespace-nowrap min-w-fit"
+                        >
+                          <HiOutlineUsers className="w-3 h-3 sm:w-4 sm:h-4" />
+                          Share
+                        </button>
+                      )}
+
                       <button
                         onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl bg-[#81D7B4] text-white font-bold text-xs sm:text-sm hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 transition-all transform hover:scale-105 whitespace-nowrap min-w-fit"
+                        disabled={plan.isShared}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-[#81D7B4] ${plan.isShared ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#6BC4A0] shadow-lg shadow-[#81D7B4]/20 hover:scale-105'} text-white font-bold text-xs sm:text-sm transition-all transform whitespace-nowrap min-w-fit`}
                       >
                         <HiOutlinePlus className="w-3 h-3 sm:w-4 sm:h-4" />
                         Top Up
                       </button>
                       <button
                         onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all whitespace-nowrap min-w-fit"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold text-xs sm:text-sm hover:bg-gray-50 hover:text-gray-900 transition-all whitespace-nowrap min-w-fit"
                       >
                         <HiOutlineEye className="w-3 h-3 sm:w-4 sm:h-4" />
                         Details
@@ -490,7 +521,8 @@ export default function PlansPage() {
                           const isCompleted = currentDate >= maturityDate;
                           openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCompleted);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm hover:bg-[#81D7B4]/5 transition-all whitespace-nowrap min-w-fit"
+                        disabled={plan.isShared}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl border border-[#81D7B4] text-[#81D7B4] font-semibold text-xs sm:text-sm ${plan.isShared ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#81D7B4]/5'} transition-all whitespace-nowrap min-w-fit`}
                       >
                         <HiOutlineBanknotes className="w-3 h-3 sm:w-4 sm:h-4" />
                         Withdraw
@@ -556,51 +588,51 @@ export default function PlansPage() {
                                 <div className="flex items-center gap-1.5 w-fit">
                                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
                                     {networkLogos[plan.network.toLowerCase()]?.logoUrl && (
-                                       <Image 
-                                         src={networkLogos[plan.network.toLowerCase()].logoUrl} 
-                                         alt={plan.network} 
-                                         width={14} 
-                                         height={14} 
-                                         className="rounded-full"
-                                       />
-                                     )}
+                                      <Image
+                                        src={networkLogos[plan.network.toLowerCase()].logoUrl}
+                                        alt={plan.network}
+                                        width={14}
+                                        height={14}
+                                        className="rounded-full"
+                                      />
+                                    )}
                                     <span className="text-xs font-medium text-gray-500">{plan.network}</span>
                                   </div>
                                 </div>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                               <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
-                                 Completed
-                               </span>
-                               <span className="text-sm font-medium text-gray-400">
-                                 Goal Reached
-                               </span>
+                              <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                                Completed
+                              </span>
+                              <span className="text-sm font-medium text-gray-400">
+                                Goal Reached
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                         {/* Stats Row */}
+                        {/* Stats Row */}
                         <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 bg-white/50 rounded-xl px-4 sm:px-6 py-3 border border-gray-100/50 w-full sm:w-auto">
-                            <div>
-                              <p className="text-xs font-medium text-gray-400 mb-1">Final Amount</p>
-                              <p className="font-bold text-gray-900 text-lg md:text-xl">
-                                {plan.isEth ? (
-                                  <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
-                                ) : plan.tokenName === 'Gooddollar' ? (
-                                  <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
-                                ) : (
-                                  <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
-                                )}
-                              </p>
-                            </div>
-                            <div className="w-px h-10 bg-gray-200"></div>
-                            <div>
-                              <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
-                              <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
-                                +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
-                              </p>
-                            </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-400 mb-1">Final Amount</p>
+                            <p className="font-bold text-gray-900 text-lg md:text-xl">
+                              {plan.isEth ? (
+                                <>{parseFloat(plan.currentAmount).toFixed(4)} ETH</>
+                              ) : plan.tokenName === 'Gooddollar' ? (
+                                <>{parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} $G</>
+                              ) : (
+                                <>${parseFloat(plan.currentAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</>
+                              )}
+                            </p>
+                          </div>
+                          <div className="w-px h-10 bg-gray-200"></div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-400 mb-1">Rewards</p>
+                            <p className="font-bold text-[#81D7B4] text-lg md:text-xl">
+                              +{plan.tokenName === 'Gooddollar' ? ((parseFloat(plan.currentAmount) * goodDollarPrice) * 0.005 * 1000).toFixed(0) : (parseFloat(plan.currentAmount) * 0.005 * 1000).toFixed(0)} $BTS
+                            </p>
+                          </div>
                         </div>
                       </div>
 
@@ -610,8 +642,8 @@ export default function PlansPage() {
                       <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
                         <div className="flex-1 w-full">
                           <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
-                             <span>Progress</span>
-                             <span className="text-green-500 font-bold">100%</span>
+                            <span>Progress</span>
+                            <span className="text-green-500 font-bold">100%</span>
                           </div>
                           <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
                             <motion.div
@@ -656,18 +688,17 @@ export default function PlansPage() {
             <div className="pt-8 border-t border-gray-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Activity History</h2>
-                
+
                 {/* Tabs */}
                 <div className="flex p-1 bg-gray-100 rounded-xl overflow-x-auto hide-scrollbar">
                   {['all', 'deposit', 'topup', 'withdrawal'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                        activeTab === tab
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
@@ -687,13 +718,12 @@ export default function PlansPage() {
                       {paginatedActivityData.map((activity, index) => (
                         <div key={index} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-start gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              activity.type === 'deposit' || activity.type === 'savings_created'
-                                ? 'bg-green-100 text-green-600'
-                                : activity.type === 'topup'
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${activity.type === 'deposit' || activity.type === 'savings_created'
+                              ? 'bg-green-100 text-green-600'
+                              : activity.type === 'topup'
                                 ? 'bg-blue-100 text-blue-600'
                                 : 'bg-orange-100 text-orange-600'
-                            }`}>
+                              }`}>
                               {activity.type === 'deposit' || activity.type === 'savings_created' ? (
                                 <HiOutlinePlus className="w-5 h-5" />
                               ) : activity.type === 'topup' ? (
@@ -709,16 +739,15 @@ export default function PlansPage() {
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
                             <div className="text-right">
-                              <p className={`font-bold ${
-                                activity.type === 'deposit' || activity.type === 'savings_created'
-                                  ? 'text-green-600'
-                                  : activity.type === 'topup'
+                              <p className={`font-bold ${activity.type === 'deposit' || activity.type === 'savings_created'
+                                ? 'text-green-600'
+                                : activity.type === 'topup'
                                   ? 'text-blue-600'
                                   : 'text-orange-600'
-                              }`}>
+                                }`}>
                                 {activity.amount}
                               </p>
-                              <a 
+                              <a
                                 href={`https://basescan.org/tx/${activity.txHash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -731,18 +760,17 @@ export default function PlansPage() {
                         </div>
                       ))}
                     </div>
-                    
+
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
                         <button
                           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                           disabled={currentPage === 1}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === 1
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-gray-700 hover:bg-white hover:shadow-sm'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                            }`}
                         >
                           Previous
                         </button>
@@ -752,11 +780,10 @@ export default function PlansPage() {
                         <button
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === totalPages
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-gray-700 hover:bg-white hover:shadow-sm'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                            }`}
                         >
                           Next
                         </button>
@@ -780,6 +807,15 @@ export default function PlansPage() {
       </div>
 
       {/* Modals */}
+      <SharePlanModal
+        isOpen={sharePlanModal.isOpen}
+        onClose={() => setSharePlanModal({ ...sharePlanModal, isOpen: false })}
+        planName={sharePlanModal.planName}
+        networkName={sharePlanModal.networkName}
+        contractAddress={sharePlanModal.contractAddress}
+        chainId={sharePlanModal.chainId}
+      />
+
       <TopUpModal
         isOpen={topUpModal.isOpen}
         onClose={closeTopUpModal}

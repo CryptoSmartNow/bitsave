@@ -17,7 +17,6 @@ import { usePrivy } from "@privy-io/react-auth";
 import { parseUnits, zeroAddress, toHex } from "viem";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 
-import { initOnRamp } from '@coinbase/cbpay-js';
 
 type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
 
@@ -74,6 +73,7 @@ const CURRENCIES = ["USD", "EUR", "GBP", "NGN", "KES", "ZAR", "GHS", "UGX"];
 
 export default function WizardForm({ selectedTier, referralCode, isReferralValid }: WizardFormProps) {
     const [currentStep, setCurrentStep] = useState(1);
+    const [paymentNetwork, setPaymentNetwork] = useState<'base' | 'celo'>('base');
     const [formData, setFormData] = useState<any>({});
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -143,72 +143,6 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         const event = new CustomEvent('openBuyCryptoModal');
         window.dispatchEvent(event);
     };
-
-    const openCoinbasePay = async () => {
-        if (!address) return;
-        try {
-            const res = await fetch('/api/bizfi/pay/session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address })
-            });
-            const data = await res.json();
-
-            if (res.ok && data.sessionToken) {
-                // Secure CB Pay Init with Session Token
-                initOnRamp({
-                    sessionToken: data.sessionToken,
-                    onSuccess: () => {
-                        console.log('Onramp success');
-                    },
-                    onExit: () => {
-                        console.log('Onramp exit');
-                    },
-                } as any, (error, instance) => {
-                    if (instance) instance.open();
-                    if (error) console.error("Onramp error:", error);
-                });
-            } else {
-                // Fallback to Standard CB Pay Init
-                initOnRamp({
-                    appId: process.env.NEXT_PUBLIC_COINBASE_CDP_PROJECT_ID || process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "",
-                    widgetParameters: {
-                        destinationWallets: [{
-                            address: address,
-                            blockchains: ["ethereum", "optimism", "base", "polygon"],
-                        }],
-                    },
-                    onSuccess: () => {
-                        console.log('Onramp success');
-                    },
-                    onExit: () => {
-                        console.log('Onramp exit');
-                    },
-                }, (error, instance) => {
-                    if (instance) instance.open();
-                    if (error) console.error("Onramp error:", error);
-                });
-            }
-
-        } catch (e) {
-            console.error("Failed to start onramp:", e);
-            setNotificationConfig({
-                type: 'error',
-                title: 'Coinbase Pay Error',
-                message: 'Could not start Coinbase Pay. Please try again.'
-            });
-            setShowNotification(true);
-        }
-    };
-
-    // Listen for Coinbase Pay event from modal
-    useEffect(() => {
-        const handleOpenCoinbasePay = () => {
-            openCoinbasePay();
-        };
-        window.addEventListener('openCoinbasePay', handleOpenCoinbasePay);
-        return () => window.removeEventListener('openCoinbasePay', handleOpenCoinbasePay);
-    }, [address]);
 
     const steps = TIER_STEPS[selectedTier.id];
     const isLastStep = currentStep === steps.length;
@@ -301,7 +235,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         referralCode,
                         recipient: address,
                         tier: tierValue,
-                        businessName: finalBusinessName
+                        businessName: finalBusinessName,
+                        network: paymentNetwork
                     })
                 });
 
@@ -330,7 +265,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 finalBusinessName,
                 formData,
                 selectedTier.id,
-                referralData
+                referralData,
+                paymentNetwork
             );
 
             console.log("Registration successful!", receipt);
@@ -362,7 +298,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         metadata: formData,
                         tier: selectedTier.id,
                         feePaid: isReferralValid ? selectedTier.referralPrice : selectedTier.price,
-                        referralCode: referralCode || ""
+                        referralCode: referralCode || "",
+                        network: paymentNetwork
                     })
                 });
             } catch (saveErr) {
@@ -378,7 +315,8 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                             businessId: businessId,
                             recipient: address,
                             verificationData: formData,
-                            transactionHash: receipt.transactionHash
+                            transactionHash: receipt.transactionHash,
+                            network: paymentNetwork
                         })
                     });
 
@@ -592,7 +530,25 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 )}
 
                 {isLastStep ? (
-                    <div className="flex flex-col items-stretch sm:items-end gap-2 sm:gap-3 order-1 sm:order-3 w-full sm:w-auto">
+                    <div className="flex flex-col items-stretch sm:items-end gap-3 sm:gap-4 order-1 sm:order-3 w-full sm:w-auto">
+                        {/* Payment Network Selector */}
+                        <div className="flex bg-gray-900/50 p-1 rounded-xl border border-gray-800 backdrop-blur-sm self-stretch sm:self-end w-full sm:w-auto mt-2 sm:mt-0">
+                            <button
+                                onClick={() => setPaymentNetwork('base')}
+                                disabled={loading}
+                                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all ${paymentNetwork === 'base' ? 'bg-[#0052FF]/20 text-[#0052FF] border border-[#0052FF]/30' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                            >
+                                Base (USDC)
+                            </button>
+                            <button
+                                onClick={() => setPaymentNetwork('celo')}
+                                disabled={loading}
+                                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all ${paymentNetwork === 'celo' ? 'bg-[#FCFF52]/20 text-[#FCFF52] border border-[#FCFF52]/30' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                            >
+                                Celo (G$)
+                            </button>
+                        </div>
+
                         <button
                             onClick={() => {
                                 if (!validateStep(currentStep)) return;
@@ -605,7 +561,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                 <>Processing...</>
                             ) : (
                                 <>
-                                    Review & Pay ${isReferralValid ? selectedTier.referralPrice : selectedTier.price}
+                                    Review & Pay {paymentNetwork === 'celo' ? (isReferralValid ? 'Discounted G$' : 'G$ Fees') : `$${isReferralValid ? selectedTier.referralPrice : selectedTier.price}`}
                                     <HiOutlineRocketLaunch className="w-5 h-5" />
                                 </>
                             )}
@@ -741,6 +697,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 businessName={formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || formData.entRegisteredName || ''}
                 isReferralValid={isReferralValid}
                 referralCode={referralCode}
+                paymentNetwork={paymentNetwork}
             />
         </div>
     );

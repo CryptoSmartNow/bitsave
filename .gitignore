@@ -45,3 +45,4 @@ next-env.d.ts
 
 # User interaction data (now stored in MongoDB)
 # /data/user-interactions.json
+deploy-package.tar.gz

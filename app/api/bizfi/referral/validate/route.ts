@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { createWalletClient, http, parseUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { base } from 'viem/chains';
+import { base, celo } from 'viem/chains';
 
 // Configuration
 const PRIVATE_KEY = (process.env.REFERRAL_SIGNER_PRIVATE_KEY || process.env.PRIVATE_KEY) as `0x${string}`;
-const BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770"; // Base Mainnet Proxy
+const BASE_BIZFI_PROXY_ADDRESS = "0x7C24A938e086d01d252f1cde36783c105784c770"; // Base Mainnet Proxy
+const CELO_BIZFI_PROXY_ADDRESS = "0x956a6F2841A714806375BB3E7bDacb18DD26ACeB"; // Celo Mainnet Proxy
 const DISCOUNT_PERCENT = 20; // Standard 20% discount
 
-const DOMAIN = {
+const getDomain = (network: 'base' | 'celo') => ({
     name: "BizFi",
     version: "1",
-    chainId: 8453, // Base Mainnet
-    verifyingContract: BIZFI_PROXY_ADDRESS as `0x${string}`
-};
+    chainId: network === 'celo' ? 42220 : 8453,
+    verifyingContract: (network === 'celo' ? CELO_BIZFI_PROXY_ADDRESS : BASE_BIZFI_PROXY_ADDRESS) as `0x${string}`
+});
 
 const TYPES = {
     ReferralDiscount: [
@@ -27,12 +28,19 @@ const TYPES = {
     ]
 };
 
-// Listing Fees (USDC 6 decimals)
+// Listing Fees (USDC 6 decimals, G$ 18 decimals assumed integer values here)
 const LISTING_FEES: Record<number, number> = {
     0: 10,  // MICRO
     1: 35,  // BUILDER
     2: 60,  // GROWTH
     3: 120  // ENTERPRISE
+};
+
+const CELO_LISTING_FEES: Record<number, number> = {
+    0: 90090,  // MICRO
+    1: 315315,  // BUILDER
+    2: 540541,  // GROWTH
+    3: 1081081  // ENTERPRISE
 };
 
 // Referral Prices (USDC 6 decimals) -> Specific discounted amounts
@@ -43,12 +51,20 @@ const REFERRAL_PRICES: Record<number, number> = {
     3: 100  // ENTERPRISE ($20 off)
 };
 
+// Celo Referral Prices (20% discount approx)
+const CELO_REFERRAL_PRICES: Record<number, number> = {
+    0: 72072,
+    1: 252252,
+    2: 432432,
+    3: 864864
+};
+
 export async function POST(request: NextRequest) {
     let body;
     try {
         body = await request.json();
         console.log("Validating referral request:", JSON.stringify(body));
-        const { referralCode, recipient, tier, businessName } = body;
+        const { referralCode, recipient, tier, businessName, network = 'base' } = body;
 
         if (!referralCode || typeof referralCode !== 'string') {
             return NextResponse.json(
@@ -97,18 +113,19 @@ export async function POST(request: NextRequest) {
         const account = privateKeyToAccount(PRIVATE_KEY);
         const walletClient = createWalletClient({
             account,
-            chain: base,
+            chain: network === 'celo' ? celo : base,
             transport: http()
         });
 
-        const originalPrice = LISTING_FEES[tier] || 0;
-        const discountedPriceVal = REFERRAL_PRICES[tier];
+        const originalPrice = network === 'celo' ? CELO_LISTING_FEES[tier] : LISTING_FEES[tier] || 0;
+        const discountedPriceVal = network === 'celo' ? CELO_REFERRAL_PRICES[tier] : REFERRAL_PRICES[tier];
 
         if (discountedPriceVal === undefined) {
             return NextResponse.json({ valid: false, message: "Invalid tier selected" }, { status: 400 });
         }
 
-        const discountedPriceBigInt = parseUnits(discountedPriceVal.toString(), 6);
+        const decimals = network === 'celo' ? 18 : 6;
+        const discountedPriceBigInt = parseUnits(discountedPriceVal.toString(), decimals);
 
         // Calculate actual percent for response metadata
         const discountPercent = originalPrice > 0
@@ -130,7 +147,7 @@ export async function POST(request: NextRequest) {
         };
 
         const signature = await walletClient.signTypedData({
-            domain: DOMAIN,
+            domain: getDomain(network),
             types: TYPES,
             primaryType: 'ReferralDiscount',
             message: referralData
