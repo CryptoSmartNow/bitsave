@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Activity, 
-  AlertTriangle, 
+import {
+  Users,
+  Activity,
+  AlertTriangle,
   Zap,
   Clock,
   Coins,
@@ -82,7 +82,7 @@ export default function DashboardOverview() {
       Object.entries(chainData).forEach(([currency, amount]) => {
         const normCurrency = currency.toUpperCase();
         if (normCurrency === 'ETH') return; // Skip ETH as it is used for gas
-        
+
         hasData = true;
         // Use price if available, otherwise default to 0 for unknown tokens (or 1 if looks like stable?)
         // Safer to just use 0 if unknown to avoid inflating
@@ -92,13 +92,13 @@ export default function DashboardOverview() {
     });
 
     if (!hasData) return '$0.00';
-    
+
     // If we have data but totalUSD is 0 (maybe all unknown tokens?), 
     // we should probably fallback to the single token display logic if applicable,
     // but the user requested "Actual Total". 
     // If we have mixed tokens and missing prices, it's hard.
     // Assuming our supported tokens list covers most cases.
-    
+
     return `$${totalUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
@@ -194,7 +194,7 @@ export default function DashboardOverview() {
             </div>
             <div className="mt-4 flex items-center gap-2 w-full">
               {(stat as any).isAction ? (
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     stat.onClick && stat.onClick();
@@ -206,9 +206,8 @@ export default function DashboardOverview() {
                 </button>
               ) : (
                 <>
-                  <span className={`text-sm font-medium ${
-                    stat.changeType === 'increase' ? 'text-[#81D7B4]' : stat.changeType === 'decrease' ? 'text-[#81D7B4]' : 'text-slate-400'
-                  }`}>
+                  <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-[#81D7B4]' : stat.changeType === 'decrease' ? 'text-[#81D7B4]' : 'text-slate-400'
+                    }`}>
                     {stat.change}
                   </span>
                   {stat.changeType !== 'neutral' && <span className="text-sm text-slate-400">vs last month</span>}
@@ -235,6 +234,7 @@ export default function DashboardOverview() {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Time</th>
                 </tr>
               </thead>
@@ -255,13 +255,17 @@ export default function DashboardOverview() {
                       <span className="text-sm text-slate-600 capitalize">{interaction.type.replace(/_/g, ' ')}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        interaction.type.includes('error') 
-                          ? 'bg-red-50 text-red-600' 
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${interaction.type.includes('error')
+                          ? 'bg-red-50 text-red-600'
                           : 'bg-[#81D7B4]/10 text-[#81D7B4]'
-                      }`}>
+                        }`}>
                         {interaction.type.includes('error') ? 'Failed' : 'Success'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                      <div className="flex items-center gap-1">
+                        {new Date(interaction.timestamp).toLocaleDateString()}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                       <div className="flex items-center gap-1">
@@ -290,7 +294,7 @@ export default function DashboardOverview() {
               </div>
               <p className="text-xs text-slate-400 mt-2">45ms average response time</p>
             </div>
-            
+
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-slate-600">Database Load</span>
@@ -344,14 +348,14 @@ export default function DashboardOverview() {
                     <p className="text-sm text-slate-500">Breakdown by Chain and Currency</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsTVSModalOpen(false)}
                   className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
-              
+
               <div className="p-6 overflow-y-auto max-h-[calc(80vh-88px)]">
                 {Object.keys(tvsBreakdown).length === 0 ? (
                   <div className="text-center py-12">
@@ -382,7 +386,7 @@ export default function DashboardOverview() {
                               const normCurrency = currency.toUpperCase();
                               const price = prices[normCurrency] || 0;
                               const usdValue = amount * price;
-                              
+
                               return (
                                 <div key={currency} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm flex items-center justify-between">
                                   <div>

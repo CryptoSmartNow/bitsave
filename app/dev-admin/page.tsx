@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/lib/adminAuth';
-import { 
-  Trophy, 
-  ArrowRightLeft, 
-  Bell, 
-  LogOut, 
-  Edit2, 
-  Trash2, 
+import {
+  Trophy,
+  ArrowRightLeft,
+  Bell,
+  LogOut,
+  Edit2,
+  Trash2,
   Hammer,
   ArrowDownCircle,
   ArrowUpCircle,
@@ -51,7 +51,7 @@ function AdminContent() {
             <h1 className="text-2xl font-bold text-gray-900">Dev Admin Access</h1>
             <p className="text-gray-500 text-sm">Restricted access for developers only.</p>
           </div>
-          
+
           <form onSubmit={async (e) => {
             e.preventDefault();
             const success = await login(password);
@@ -90,30 +90,30 @@ function AdminContent() {
             Dev Admin
           </h2>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-1">
-          <SidebarItem 
-            active={activeTab === 'transactions'} 
-            onClick={() => setActiveTab('transactions')} 
-            icon={<ArrowRightLeft className="w-5 h-5" />} 
-            label="Transactions" 
+          <SidebarItem
+            active={activeTab === 'transactions'}
+            onClick={() => setActiveTab('transactions')}
+            icon={<ArrowRightLeft className="w-5 h-5" />}
+            label="Transactions"
           />
-          <SidebarItem 
-            active={activeTab === 'leaderboard'} 
-            onClick={() => setActiveTab('leaderboard')} 
-            icon={<Trophy className="w-5 h-5" />} 
-            label="Leaderboard" 
+          <SidebarItem
+            active={activeTab === 'leaderboard'}
+            onClick={() => setActiveTab('leaderboard')}
+            icon={<Trophy className="w-5 h-5" />}
+            label="Leaderboard"
           />
-          <SidebarItem 
-            active={activeTab === 'updates'} 
-            onClick={() => setActiveTab('updates')} 
-            icon={<Bell className="w-5 h-5" />} 
-            label="Updates" 
+          <SidebarItem
+            active={activeTab === 'updates'}
+            onClick={() => setActiveTab('updates')}
+            icon={<Bell className="w-5 h-5" />}
+            label="Updates"
           />
         </nav>
 
         <div className="p-4 border-t border-gray-100">
-          <button 
+          <button
             onClick={logout}
             className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
@@ -153,11 +153,10 @@ function SidebarItem({ active, onClick, icon, label }: { active: boolean, onClic
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-        active 
-          ? 'bg-[#81D7B4]/10 text-[#0f766e]' 
+      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${active
+          ? 'bg-[#81D7B4]/10 text-[#0f766e]'
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-      }`}
+        }`}
     >
       <span className={active ? 'text-[#0f766e]' : 'text-gray-400'}>{icon}</span>
       {label}
@@ -278,14 +277,14 @@ function LeaderboardPanel() {
       <div className="xl:col-span-2 p-6 flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-gray-900">Current Leaderboard</h3>
-          <button 
-            onClick={fetchLeaderboard} 
+          <button
+            onClick={fetchLeaderboard}
             className="text-sm text-[#0f766e] font-medium hover:underline"
           >
             Refresh Data
           </button>
         </div>
-        
+
         <div className="flex-1 flex flex-col">
           <div className="overflow-x-auto rounded-xl border border-gray-200">
             <table className="w-full text-left text-sm min-w-[700px]">
@@ -309,16 +308,17 @@ function LeaderboardPanel() {
                     return (
                       <tr key={user.id || idx} className="hover:bg-gray-50/50 transition-colors group">
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                            globalIdx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                            globalIdx === 1 ? 'bg-gray-100 text-gray-700' :
-                            globalIdx === 2 ? 'bg-orange-100 text-orange-700' :
-                            'text-gray-500'
-                          }`}>
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${globalIdx === 0 ? 'bg-yellow-100 text-yellow-700' :
+                              globalIdx === 1 ? 'bg-gray-100 text-gray-700' :
+                                globalIdx === 2 ? 'bg-orange-100 text-orange-700' :
+                                  'text-gray-500'
+                            }`}>
                             {globalIdx + 1}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-mono text-xs text-gray-600">{user.useraddress}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-gray-600">
+                          {user.savvyName ? <span className="text-[#0f766e] font-bold tracking-wide">@{user.savvyName}</span> : user.useraddress}
+                        </td>
                         <td className="px-6 py-4 text-right font-bold text-gray-900">${user.totalamount?.toLocaleString()}</td>
                         <td className="px-6 py-4">
                           <span className="inline-flex px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs font-medium capitalize">
@@ -350,15 +350,15 @@ function LeaderboardPanel() {
                 Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, users.length)}</span> of <span className="font-medium">{users.length}</span> results
               </div>
               <div className="flex gap-2">
-                <button 
-                  onClick={prevPage} 
+                <button
+                  onClick={prevPage}
                   disabled={currentPage === 1}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
-                <button 
-                  onClick={nextPage} 
+                <button
+                  onClick={nextPage}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
@@ -376,35 +376,35 @@ function LeaderboardPanel() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">User Address</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] focus:border-[#81D7B4] outline-none text-sm font-mono text-gray-900"
               placeholder="0x..."
               value={formData.useraddress}
-              onChange={e => setFormData({...formData, useraddress: e.target.value})}
+              onChange={e => setFormData({ ...formData, useraddress: e.target.value })}
             />
           </div>
-          
+
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Total Saved</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               required
               step="0.000001"
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
               placeholder="0.00"
               value={formData.totalamount}
-              onChange={e => setFormData({...formData, totalamount: e.target.value})}
+              onChange={e => setFormData({ ...formData, totalamount: e.target.value })}
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Chain</label>
-            <select 
+            <select
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
               value={formData.chain}
-              onChange={e => setFormData({...formData, chain: e.target.value})}
+              onChange={e => setFormData({ ...formData, chain: e.target.value })}
             >
               <option value="base">Base</option>
               <option value="optimism">Optimism</option>
@@ -414,14 +414,14 @@ function LeaderboardPanel() {
           </div>
 
           <div className="pt-4 flex gap-3">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="flex-1 py-2.5 bg-[#81D7B4] hover:bg-[#6BC6A3] text-white font-bold rounded-xl shadow-sm transition-colors"
             >
               {editingId ? 'Save Changes' : 'Create Record'}
             </button>
             {editingId && (
-              <button 
+              <button
                 type="button"
                 onClick={handleCancelEdit}
                 className="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-colors"
@@ -555,7 +555,7 @@ function TransactionsPanel() {
           <h3 className="text-lg font-bold text-gray-900">Recent Transactions</h3>
           <button onClick={fetchTransactions} className="text-sm text-[#0f766e] font-medium hover:underline">Refresh List</button>
         </div>
-        
+
         <div className="space-y-3">
           {loading ? (
             <div className="text-center py-12 text-gray-500">Loading transactions...</div>
@@ -565,14 +565,13 @@ function TransactionsPanel() {
             transactions.map((tx) => (
               <div key={tx.id} className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-[#81D7B4] hover:shadow-md transition-all">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    tx.transaction_type === 'deposit' ? 'bg-green-100 text-green-600' :
-                    tx.transaction_type === 'withdraw' ? 'bg-red-100 text-red-600' :
-                    'bg-blue-100 text-blue-600'
-                  }`}>
-                    {tx.transaction_type === 'deposit' ? <ArrowDownCircle className="w-5 h-5" /> : 
-                     tx.transaction_type === 'withdraw' ? <ArrowUpCircle className="w-5 h-5" /> : 
-                     <Zap className="w-5 h-5" />}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.transaction_type === 'deposit' ? 'bg-green-100 text-green-600' :
+                      tx.transaction_type === 'withdraw' ? 'bg-red-100 text-red-600' :
+                        'bg-blue-100 text-blue-600'
+                    }`}>
+                    {tx.transaction_type === 'deposit' ? <ArrowDownCircle className="w-5 h-5" /> :
+                      tx.transaction_type === 'withdraw' ? <ArrowUpCircle className="w-5 h-5" /> :
+                        <Zap className="w-5 h-5" />}
                   </div>
                   <div>
                     <div className="font-bold text-gray-900">{tx.amount} {tx.currency}</div>
@@ -605,34 +604,34 @@ function TransactionsPanel() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">User Address</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] focus:border-[#81D7B4] outline-none text-sm font-mono text-gray-900"
               placeholder="0x..."
               value={formData.useraddress}
-              onChange={e => setFormData({...formData, useraddress: e.target.value})}
+              onChange={e => setFormData({ ...formData, useraddress: e.target.value })}
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Amount</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 required
                 step="0.000001"
                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
                 value={formData.amount}
-                onChange={e => setFormData({...formData, amount: e.target.value})}
+                onChange={e => setFormData({ ...formData, amount: e.target.value })}
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Currency</label>
-              <select 
+              <select
                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
                 value={formData.currency}
-                onChange={e => setFormData({...formData, currency: e.target.value})}
+                onChange={e => setFormData({ ...formData, currency: e.target.value })}
               >
                 <option value="USDC">USDC</option>
                 <option value="USDT">USDT</option>
@@ -645,10 +644,10 @@ function TransactionsPanel() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Type</label>
-              <select 
+              <select
                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
                 value={formData.transaction_type}
-                onChange={e => setFormData({...formData, transaction_type: e.target.value})}
+                onChange={e => setFormData({ ...formData, transaction_type: e.target.value })}
               >
                 <option value="deposit">Deposit</option>
                 <option value="withdraw">Withdraw</option>
@@ -657,10 +656,10 @@ function TransactionsPanel() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Chain</label>
-              <select 
+              <select
                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
                 value={formData.chain}
-                onChange={e => setFormData({...formData, chain: e.target.value})}
+                onChange={e => setFormData({ ...formData, chain: e.target.value })}
               >
                 <option value="base">Base</option>
                 <option value="optimism">Optimism</option>
@@ -672,25 +671,25 @@ function TransactionsPanel() {
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Tx Hash</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm font-mono text-gray-900"
               placeholder="0x..."
               value={formData.txnhash}
-              onChange={e => setFormData({...formData, txnhash: e.target.value})}
+              onChange={e => setFormData({ ...formData, txnhash: e.target.value })}
             />
           </div>
 
           <div className="pt-4 flex gap-3">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="flex-1 py-2.5 bg-[#81D7B4] hover:bg-[#6BC6A3] text-white font-bold rounded-xl shadow-sm transition-colors"
             >
               {editingId ? 'Save Changes' : 'Create Record'}
             </button>
             {editingId && (
-              <button 
+              <button
                 type="button"
                 onClick={handleCancelEdit}
                 className="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-colors"
@@ -782,7 +781,7 @@ function UpdatesPanel() {
           <h3 className="text-lg font-bold text-gray-900">Live Updates</h3>
           <button onClick={fetchUpdates} className="text-sm text-[#0f766e] font-medium hover:underline">Refresh</button>
         </div>
-        
+
         {loading ? (
           <div className="text-center py-12 text-gray-500">Loading updates...</div>
         ) : updates.length === 0 ? (
@@ -812,35 +811,35 @@ function UpdatesPanel() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Title</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900"
               placeholder="Update Title"
               value={formData.title}
-              onChange={e => setFormData({...formData, title: e.target.value})}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
             />
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Content</label>
-            <textarea 
+            <textarea
               required
               rows={6}
               className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm resize-none text-gray-900"
               placeholder="What's new?"
               value={formData.content}
-              onChange={e => setFormData({...formData, content: e.target.value})}
+              onChange={e => setFormData({ ...formData, content: e.target.value })}
             />
           </div>
           <div className="pt-4 flex gap-3">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="flex-1 py-2.5 bg-[#81D7B4] hover:bg-[#6BC6A3] text-white font-bold rounded-xl shadow-sm transition-colors"
             >
               {editingId ? 'Save Changes' : 'Publish'}
             </button>
             {editingId && (
-              <button 
+              <button
                 type="button"
                 onClick={handleCancelEdit}
                 className="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-colors"

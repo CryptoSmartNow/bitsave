@@ -26,6 +26,7 @@ interface PaymentSummaryModalProps {
     businessName: string;
     isReferralValid: boolean;
     referralCode: string;
+    paymentNetwork?: 'base' | 'celo';
 }
 
 export default function PaymentSummaryModal({
@@ -36,15 +37,46 @@ export default function PaymentSummaryModal({
     tier,
     businessName,
     isReferralValid,
-    referralCode
+    referralCode,
+    paymentNetwork = 'base'
 }: PaymentSummaryModalProps) {
     if (!isOpen) return null;
 
-    const originalPrice = tier.price;
-    const finalPrice = isReferralValid ? tier.referralPrice : tier.price;
+    const isCelo = paymentNetwork === 'celo';
+
+    const CELO_LISTING_FEES: Record<string, number> = {
+        micro: 90090,
+        builder: 315315,
+        growth: 540541,
+        enterprise: 1081081
+    };
+
+    const CELO_REFERRAL_PRICES: Record<string, number> = {
+        micro: 72072,
+        builder: 252252,
+        growth: 432432,
+        enterprise: 864864
+    };
+
+    const originalPrice = isCelo ? (CELO_LISTING_FEES[tier.id] || tier.price) : tier.price;
+    const finalPrice = isCelo
+        ? (isReferralValid ? (CELO_REFERRAL_PRICES[tier.id] || tier.referralPrice) : (CELO_LISTING_FEES[tier.id] || tier.price))
+        : (isReferralValid ? tier.referralPrice : tier.price);
+
     const discount = originalPrice - finalPrice;
     const discountPercentage = Math.round((discount / originalPrice) * 100);
     const hasDiscount = isReferralValid && discount > 0;
+
+    const currency = isCelo ? 'G$' : 'USDC';
+    const networkName = isCelo ? 'Celo' : 'Base';
+
+    // Format helper for large G$ numbers vs USD numbers
+    const formatPrice = (price: number) => {
+        if (isCelo) {
+            return price.toLocaleString();
+        }
+        return price.toFixed(2);
+    };
 
     return (
         <AnimatePresence>
@@ -198,7 +230,7 @@ export default function PaymentSummaryModal({
                             <div className="flex items-center justify-between">
                                 <span className="text-sm" style={{ color: '#9BA8B5' }}>Listing Fee</span>
                                 <span className={`text-sm font-medium ${hasDiscount ? 'line-through text-gray-500' : 'text-[#F9F9FB]'}`}>
-                                    ${originalPrice.toFixed(2)} USDC
+                                    {isCelo ? '' : '$'}{formatPrice(originalPrice)} {currency}
                                 </span>
                             </div>
 
@@ -217,7 +249,7 @@ export default function PaymentSummaryModal({
                                         </span>
                                     </div>
                                     <span className="text-sm font-medium text-[#81D7B4]">
-                                        -${discount.toFixed(2)}
+                                        -{isCelo ? '' : '$'}{formatPrice(discount)}
                                     </span>
                                 </div>
                             )}
@@ -230,9 +262,9 @@ export default function PaymentSummaryModal({
                                 <span className="text-base font-semibold text-[#F9F9FB]">Total Amount</span>
                                 <div className="text-right">
                                     <span className="text-2xl font-bold text-[#81D7B4]">
-                                        ${finalPrice.toFixed(2)}
+                                        {isCelo ? '' : '$'}{formatPrice(finalPrice)}
                                     </span>
-                                    <span className="text-sm ml-1" style={{ color: '#7B8B9A' }}>USDC</span>
+                                    <span className="text-sm ml-1" style={{ color: '#7B8B9A' }}>{currency}</span>
                                 </div>
                             </div>
                         </div>
@@ -244,8 +276,8 @@ export default function PaymentSummaryModal({
                         >
                             <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4] flex-shrink-0 mt-0.5" />
                             <p className="text-xs leading-relaxed" style={{ color: '#9BA8B5' }}>
-                                Your payment is secured on the Base blockchain. By proceeding,
-                                you authorize the transfer of USDC from your connected wallet.
+                                Your payment is secured on the {networkName} blockchain. By proceeding,
+                                you authorize the transfer of {currency} from your connected wallet.
                             </p>
                         </div>
                     </div>
@@ -303,7 +335,7 @@ export default function PaymentSummaryModal({
                             ) : (
                                 <>
                                     <HiOutlineCheckCircle className="w-5 h-5" />
-                                    <span>Pay ${finalPrice.toFixed(2)}</span>
+                                    <span>Pay {isCelo ? '' : '$'}{formatPrice(finalPrice)} {isCelo ? 'G$' : ''}</span>
                                 </>
                             )}
                         </button>

@@ -556,6 +556,124 @@ export function useSavingsData(): UseSavingsDataReturn {
         }
       });
 
+      // Fetch shared plans for the current user's Savvy Name
+      try {
+        const sharedRes = await fetch(`/api/savings/shared?walletAddress=${address}`);
+        if (sharedRes.ok) {
+          const sharedData = await sharedRes.json();
+          const sharedPlans = sharedData.sharedPlans || [];
+
+          if (sharedPlans.length > 0) {
+            const sharedPromises = sharedPlans.map(async (sp: any) => {
+              try {
+                const netConfig = NETWORKS_CONFIG.find(n => n.name === sp.network);
+                if (!netConfig) return null;
+
+                const provider = new ethers.JsonRpcProvider(netConfig.rpcUrl);
+                let targetContractAddress = sp.contractAddress;
+                if (!targetContractAddress) {
+                  const masterContract = new ethers.Contract(netConfig.contractAddress, BitSaveABI, provider);
+                  const promise = masterContract.getUserChildContractAddress({ from: sp.ownerAddress });
+                  const timeout = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
+                  targetContractAddress = await Promise.race([promise, timeout]);
+                }
+                if (!targetContractAddress || targetContractAddress === ethers.ZeroAddress) return null;
+
+                const childContract = new ethers.Contract(targetContractAddress, childContractABI, provider);
+                const savingPromise = childContract.getSaving(sp.savingName);
+                const timeout = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
+                const savingData: any = await Promise.race([savingPromise, timeout]);
+
+                if (!savingData || !savingData.isValid) return null;
+
+                const tokenId = savingData.tokenId || ethers.ZeroAddress;
+                const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
+                let decimals = isEth ? 18 : 6;
+
+                let tokenName = "USDC";
+                let tokenLogo = '/usdclogo.png';
+
+                if (isEth) {
+                  tokenName = "ETH";
+                  tokenLogo = '/eth.png';
+                } else if (netConfig.chainId === CELO_CHAIN_ID) {
+                  const tokenInfo = CELO_TOKEN_MAP[(tokenId as string).toLowerCase()];
+                  if (tokenInfo) {
+                    tokenName = tokenInfo.name;
+                    decimals = tokenInfo.decimals;
+                    tokenLogo = tokenInfo.logo;
+                  } else {
+                    tokenName = 'USDGLO';
+                    tokenLogo = '/usdglo.png';
+                  }
+                } else if (netConfig.chainId === BASE_CHAIN_ID) {
+                  if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
+                    tokenName = "USDC"; decimals = 6; tokenLogo = '/usdclogo.png';
+                  } else if (tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
+                    tokenName = "USDGLO"; decimals = 18; tokenLogo = '/usdglo.png';
+                  } else if (tokenId.toLowerCase() === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
+                    tokenName = "cNGN"; decimals = 6; tokenLogo = '/cngn.png';
+                  }
+                } else if (netConfig.chainId === HEDERA_CHAIN_ID) {
+                  tokenName = 'HBAR'; decimals = 18; tokenLogo = '/hedera-logo.svg';
+                } else if (netConfig.chainId === LISK_CHAIN_ID) {
+                  tokenName = 'USDC'; decimals = 6; tokenLogo = '/usdclogo.png';
+                } else if (netConfig.chainId === AVALANCHE_CHAIN_ID) {
+                  tokenName = 'USDC'; decimals = 6; tokenLogo = '/usdclogo.png';
+                }
+
+                let amountFormatted = "0";
+                try { amountFormatted = ethers.formatUnits(savingData.amount, decimals); } catch (e) { }
+
+                const now = Math.floor(Date.now() / 1000);
+                const startTime = savingData.startTime ? Number(savingData.startTime) : now;
+                const maturityTime = savingData.maturityTime ? Number(savingData.maturityTime) : startTime + (30 * 24 * 60 * 60);
+                let progress = 0;
+                if (maturityTime <= startTime || now >= maturityTime) progress = 100;
+                else progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
+
+                const isCompleted = savingData.isCompleted || progress >= 100;
+
+                return {
+                  id: `${sp.savingName}-${sp.ownerAddress}`,
+                  name: sp.savingName,
+                  amount: amountFormatted,
+                  currentAmount: amountFormatted,
+                  startTime,
+                  maturityTime,
+                  isEth,
+                  tokenName,
+                  tokenLogo,
+                  progress,
+                  status: isCompleted ? 'Completed' : 'Active',
+                  timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / 86400)} days`,
+                  penalty: (savingData.penaltyPercentage ?? 0).toString(),
+                  penaltyPercentage: Number(savingData.penaltyPercentage ?? 0),
+                  network: sp.network,
+                  chainId: netConfig.chainId,
+                  contractAddress: targetContractAddress,
+                  isShared: true,
+                  sharedBy: sp.ownerAddress
+                };
+              } catch (e) {
+                console.warn(`Failed to fetch shared plan ${sp.savingName}:`, e);
+                return null;
+              }
+            });
+
+            const sharedResults = await Promise.allSettled(sharedPromises);
+            sharedResults.forEach((result: any) => {
+              if (result.status === 'fulfilled' && result.value) {
+                if (result.value.status === 'Completed') aggregatedCompletedPlans.push(result.value);
+                else aggregatedPlans.push(result.value);
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Error fetching shared plans mapping:", err);
+      }
+
       const finalSavingsData: SavingsData = {
         totalLocked: aggregatedTotalUsdValue.toFixed(2),
         deposits: aggregatedDeposits,

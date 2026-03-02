@@ -12,6 +12,8 @@
     "start:agent": "npx tsx scripts/agent-server.ts"
   },
   "dependencies": {
+    "@chainrails/react": "^0.3.4",
+    "@chainrails/sdk": "^0.3.3",
     "@coinbase/cbpay-js": "^2.4.0",
     "@coinbase/cdp-core": "^0.0.75",
     "@coinbase/cdp-hooks": "^0.0.75",

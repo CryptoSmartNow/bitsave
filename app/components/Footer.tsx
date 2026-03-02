@@ -16,7 +16,8 @@ const footerLinks = {
   ],
   resources: [
     { name: 'Blog', href: '/blog' },
-    { name: 'Docs', href: 'https://docs.bitsave.finance' },
+    { name: 'SaveFi Docs', href: '/docs' },
+    { name: 'BizFi Docs', href: 'https://bizfi.mintlify.app/' },
     { name: 'FAQ', href: '#faq' }
   ],
   company: [
@@ -55,7 +56,7 @@ export default function Footer() {
 
   return (
     <footer className="relative bg-white pt-16 md:pt-24 pb-12 overflow-hidden border-t border-gray-100">
-      
+
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -bottom-[20%] -right-[10%] w-[40%] h-[40%] bg-[#81D7B4]/5 rounded-full blur-[100px]" />
@@ -63,7 +64,7 @@ export default function Footer() {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
-          
+
           {/* Brand Column */}
           <div className="lg:col-span-4 space-y-6">
             <Link href="/" className="inline-block">
@@ -109,7 +110,7 @@ export default function Footer() {
               <ul className="space-y-4">
                 {footerLinks.resources.map((link) => (
                   <li key={link.name}>
-                    {link.name === 'Docs' ? (
+                    {link.href.startsWith('http') ? (
                       <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#81D7B4] transition-colors text-sm font-medium">
                         {link.name}
                       </a>
