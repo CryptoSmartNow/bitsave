@@ -13,7 +13,6 @@ import {
     HiOutlineBeaker,
     HiOutlineTrophy,
     HiOutlineUsers,
-    HiOutlineCurrencyDollar,
     HiOutlineChatBubbleLeftRight,
     HiOutlineClipboardDocumentCheck,
     HiOutlineCheckCircle,
@@ -27,7 +26,6 @@ import { FaWhatsapp } from "react-icons/fa";
 import { Exo } from "next/font/google";
 import WizardForm from "./components/WizardForm";
 import WalletDetailsModal from "./components/WalletDetailsModal";
-import FiatRampModal from "@/components/FiatRampModal";
 import "../bizfi-colors.css";
 
 const exo = Exo({
@@ -106,7 +104,6 @@ export default function BizFiDashboardPage() {
     const [businessCount, setBusinessCount] = useState(1000);
     const [copiedAddress, setCopiedAddress] = useState(false);
     const [showBuyCryptoModal, setShowBuyCryptoModal] = useState(false);
-    const [showFiatRampModal, setShowFiatRampModal] = useState(false);
     const [showWalletModal, setShowWalletModal] = useState(false);
     const [validatingReferral, setValidatingReferral] = useState(false);
 
@@ -155,14 +152,9 @@ export default function BizFiDashboardPage() {
         const handleOpenBuyCryptoModal = () => {
             setShowBuyCryptoModal(true);
         };
-        const handleOpenFiatRampModal = () => {
-            setShowFiatRampModal(true);
-        };
         window.addEventListener('openBuyCryptoModal', handleOpenBuyCryptoModal);
-        window.addEventListener('openFiatRampModal', handleOpenFiatRampModal);
         return () => {
             window.removeEventListener('openBuyCryptoModal', handleOpenBuyCryptoModal);
-            window.removeEventListener('openFiatRampModal', handleOpenFiatRampModal);
         };
     }, [address]);
 
@@ -606,31 +598,6 @@ export default function BizFiDashboardPage() {
                                         </div>
                                     </div>
                                 </a>
-
-                                {/* Fiat Ramp Option */}
-                                <button
-                                    disabled
-                                    className="w-full p-6 rounded-xl border transition-all opacity-50 cursor-not-allowed text-left filter grayscale"
-                                    style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', borderColor: 'rgba(123, 139, 154, 0.3)' }}
-                                    title="Fiat On/Off Ramp is currently unavailable"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 rounded-lg bg-[#81D7B4]/10">
-                                            <HiOutlineCurrencyDollar className="w-6 h-6 text-gray-400" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-bold mb-2 text-gray-400">
-                                                Fiat On/Off Ramp
-                                            </h3>
-                                            <p className="text-sm leading-relaxed" style={{ color: '#9BA8B5' }}>
-                                                Purchase or sell USDC instantly with your local currency using DexPay or Chainrails.
-                                            </p>
-                                            <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-gray-500">
-                                                <span>Currently Unavailable</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
                             </div>
 
                             <div className="mt-6 p-4 rounded-lg border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
@@ -648,12 +615,6 @@ export default function BizFiDashboardPage() {
                 onClose={() => setShowWalletModal(false)}
                 address={address as `0x${string}` | undefined}
                 logout={() => handleLogout()}
-            />
-
-            <FiatRampModal
-                isOpen={showFiatRampModal}
-                onClose={() => setShowFiatRampModal(false)}
-                walletAddress={user?.wallet?.address}
             />
         </div >
     );
