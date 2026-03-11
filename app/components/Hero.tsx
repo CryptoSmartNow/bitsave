@@ -153,7 +153,7 @@ const Hero = memo(() => {
                   <Image src="/celo.png" alt="Celo" width={20} height={20} className="w-5 h-5 object-contain" />
                   <Image src="/lisk-logo.png" alt="Lisk" width={20} height={20} className="w-5 h-5 object-contain" />
                   <Image src="/bsc.png" alt="BSC" width={20} height={20} className="w-5 h-5 object-contain" />
-                  <Image src="https://cryptologos.cc/logos/avalanche-avax-logo.svg?v=025" alt="Avalanche" width={20} height={20} className="w-5 h-5 object-contain" />
+                  <Image src="/avalanche-logo.svg" alt="Avalanche" width={20} height={20} className="w-5 h-5 object-contain" />
                 </span>
                 networks.
               </motion.p>

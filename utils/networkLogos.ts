@@ -43,7 +43,7 @@ const FALLBACK_LOGOS: { [key: string]: string } = {
   'base': '/base.png',
   'celo': '/celo.png',
   'lisk': '/lisk-logo.png',
-  'avalanche': '/eth.png', // Using ETH logo as fallback for Avalanche
+  'avalanche': '/avalanche-logo.svg', // Using local avalanche logo
   'ethereum': '/eth.png',
   'polygon': '/polygon.png',
   'arbitrum': '/arbitrum.png',
