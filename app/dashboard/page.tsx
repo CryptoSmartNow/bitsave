@@ -451,7 +451,7 @@ export default function Dashboard() {
     { name: 'Celo', desc: 'Mobile-First', icon: networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png', isActive: isCeloNetwork },
     { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
     { name: 'Binance Smart Chain', desc: 'EVM Mainnet', icon: networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png', isActive: isBSCNetwork },
-    { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png', isActive: isAvalancheNetwork },
+    { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/avalanche-logo.svg', isActive: isAvalancheNetwork },
     { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: false, isComingSoon: true }
   ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
 
