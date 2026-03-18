@@ -1,0 +1,39 @@
+diff --git a/app/components/Hero.tsx b/app/components/Hero.tsx
+index d064a15..aa7b80d 100644
+--- a/app/components/Hero.tsx
++++ b/app/components/Hero.tsx
+@@ -153,7 +153,7 @@ const Hero = memo(() => {
+                   <Image src="/celo.png" alt="Celo" width={20} height={20} className="w-5 h-5 object-contain" />
+                   <Image src="/lisk-logo.png" alt="Lisk" width={20} height={20} className="w-5 h-5 object-contain" />
+                   <Image src="/bsc.png" alt="BSC" width={20} height={20} className="w-5 h-5 object-contain" />
+-                  <Image src="https://cryptologos.cc/logos/avalanche-avax-logo.svg?v=025" alt="Avalanche" width={20} height={20} className="w-5 h-5 object-contain" />
++                  <Image src="/avalanche-logo.svg" alt="Avalanche" width={20} height={20} className="w-5 h-5 object-contain" />
+                 </span>
+                 networks.
+               </motion.p>
+diff --git a/app/dashboard/page.tsx b/app/dashboard/page.tsx
+index ed0ccfc..6475229 100644
+--- a/app/dashboard/page.tsx
++++ b/app/dashboard/page.tsx
+@@ -451,7 +451,7 @@ export default function Dashboard() {
+     { name: 'Celo', desc: 'Mobile-First', icon: networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png', isActive: isCeloNetwork },
+     { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
+     { name: 'Binance Smart Chain', desc: 'EVM Mainnet', icon: networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png', isActive: isBSCNetwork },
+-    { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png', isActive: isAvalancheNetwork },
++    { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/avalanche-logo.svg', isActive: isAvalancheNetwork },
+     { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: false, isComingSoon: true }
+   ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
+ 
+diff --git a/utils/networkLogos.ts b/utils/networkLogos.ts
+index 0a71da7..07122b1 100644
+--- a/utils/networkLogos.ts
++++ b/utils/networkLogos.ts
+@@ -43,7 +43,7 @@ const FALLBACK_LOGOS: { [key: string]: string } = {
+   'base': '/base.png',
+   'celo': '/celo.png',
+   'lisk': '/lisk-logo.png',
+-  'avalanche': '/eth.png', // Using ETH logo as fallback for Avalanche
++  'avalanche': '/avalanche-logo.svg', // Using local avalanche logo
+   'ethereum': '/eth.png',
+   'polygon': '/polygon.png',
+   'arbitrum': '/arbitrum.png',

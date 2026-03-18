@@ -386,70 +386,45 @@ const WithdrawModal = memo(function WithdrawModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="ds-modal-overlay">
           {showTransactionModal ? (
             <motion.div
-              className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="ds-modal-content max-w-md"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="p-8 flex flex-col items-center">
                 {/* ... Simplified transaction modal UI ... */}
 
-                <h2 className="text-2xl font-bold mb-4">{success ? "Success!" : "Failed"}</h2>
-                <p className="mb-4 text-center">{error || (success ? "Withdrawal successful." : "")}</p>
-                <button className="w-full py-3 bg-[#81D7B4] text-white rounded-xl" onClick={handleCloseTransactionModal}>Close</button>
+                <h2 className="text-xl font-bold mb-3">{success ? "Success!" : "Failed"}</h2>
+                <p className="mb-4 text-sm text-gray-600 text-center">{error || (success ? "Withdrawal successful." : "")}</p>
+                <button className="ds-btn-primary w-full py-3" onClick={handleCloseTransactionModal}>Close</button>
               </div>
             </motion.div>
           ) : (
             <motion.div
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="ds-modal-content max-w-md"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              {/* Top accent bar with animation */}
-              <motion.div
-                className="absolute top-0 left-0 right-0 h-1.5 bg-[#81D7B4]"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-              ></motion.div>
+              <div className="ds-modal-accent" />
 
-              <div className="p-8 relative z-10 flex flex-col max-h-full">
+              <div className="ds-modal-body pt-6 flex flex-col max-h-full">
                 {/* Header with close button */}
-                <div className="flex justify-between items-start mb-8">
+                <div className="ds-modal-header mb-6">
                   <div>
-                    <motion.h2
-                      className="text-2xl font-bold text-gray-900 mb-1"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      Withdraw Funds
-                    </motion.h2>
-                    <motion.p
-                      className="text-sm text-gray-500"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      Withdraw from your savings plan
-                    </motion.p>
+                    <h2 className="ds-modal-title">Withdraw Funds</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Withdraw from your savings plan</p>
                   </div>
-                  <motion.button
-                    onClick={onClose}
-                    className="group p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200"
-                    whileHover={{ scale: 1.05, rotate: 90 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button onClick={onClose} className="ds-modal-close" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </motion.button>
+                  </button>
                 </div>
 
                 {/* Info Card */}
@@ -483,18 +458,18 @@ const WithdrawModal = memo(function WithdrawModal({
                   <motion.div
                     className="flex flex-col space-y-3 pt-2"
                   >
-                    <motion.button
+                    <button
                       onClick={handleWithdraw}
                       disabled={isLoading}
-                      className="w-full py-3 text-center text-base font-bold text-white bg-[#81D7B4] rounded-xl shadow-lg transition-all disabled:opacity-50"
+                      className="ds-btn-primary w-full py-3 disabled:opacity-50"
                     >
                       {isLoading ? 'Processing...' : 'Confirm Withdrawal'}
-                    </motion.button>
+                    </button>
 
                     <button
                       onClick={onClose}
                       disabled={isLoading}
-                      className="w-full py-3 text-center text-sm font-semibold text-gray-500 hover:text-gray-700 rounded-xl"
+                      className="ds-btn-secondary w-full py-3"
                     >
                       Cancel
                     </button>

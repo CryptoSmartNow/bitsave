@@ -200,6 +200,61 @@ export default function SavvySpacePage() {
       {/* Main Content Area */}
       <div className="space-y-16">
 
+        {/* Wrapped CTA Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <div className="relative overflow-hidden rounded-[28px] bg-white p-8 sm:p-10 border border-gray-100 shadow-[0_4px_24px_rgb(0,0,0,0.03)] group cursor-pointer">
+            {/* Subtle background orbs */}
+            <div className="absolute top-[-40px] right-[-40px] w-48 h-48 bg-[#81D7B4]/10 rounded-full blur-3xl group-hover:bg-[#81D7B4]/15 transition-all duration-700"></div>
+            <div className="absolute bottom-[-60px] left-[-30px] w-56 h-56 bg-[#81D7B4]/5 rounded-full blur-3xl group-hover:bg-[#81D7B4]/10 transition-all duration-700 delay-100"></div>
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="flex-1 min-w-0">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 mb-5">
+                  <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse"></span>
+                  <span className="text-xs font-black text-[#81D7B4] uppercase tracking-widest">New Feature</span>
+                </div>
+
+                <h3 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight mb-3 leading-tight">
+                  Your Savings,<br />
+                  <span className="text-[#81D7B4]">Wrapped.</span>
+                </h3>
+                <p className="text-base text-[#64748b] font-medium leading-relaxed max-w-md">
+                  Discover your savings journey — total locked, longest streak, favorite network, top currency, and more. All beautifully visualized.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3 mt-6">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f8faf9] border border-gray-100">
+                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                    <span className="text-xs font-bold text-[#0f172a]">Stats Breakdown</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f8faf9] border border-gray-100">
+                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span className="text-xs font-bold text-[#0f172a]">Saving Streaks</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f8faf9] border border-gray-100">
+                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                    <span className="text-xs font-bold text-[#0f172a]">Shareable</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full lg:w-auto shrink-0">
+                <button
+                  onClick={() => window.location.href = '/wrapped'}
+                  className="w-full lg:w-auto bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-8 py-4 rounded-2xl text-base font-black transition-all duration-300 shadow-[0_4px_20px_rgb(129,215,180,0.4)] hover:shadow-[0_8px_30px_rgb(129,215,180,0.5)] inline-flex items-center justify-center gap-3"
+                >
+                  View My Wrapped
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Videos Section */}
         <section>
           <div className="flex items-center justify-between mb-8">
@@ -218,31 +273,7 @@ export default function SavvySpacePage() {
           </Suspense>
         </section>
 
-        {/* Social Feed Section */}
-        <section>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                <span className="w-2 h-8 bg-[#81D7B4] rounded-full"></span>
-                Community Pulse
-              </h2>
-              <p className="text-gray-500 mt-1 ml-4 text-sm">See what's happening in the Bitsave ecosystem</p>
-            </div>
-            <a
-              href="https://x.com/bitsaveprotocol"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full text-sm font-bold hover:bg-gray-800 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-              Follow Us
-            </a>
-          </div>
 
-          <Suspense fallback={<div className="h-96 bg-gray-50 rounded-2xl animate-pulse" />}>
-            <TwitterFeed links={twitterLinks} />
-          </Suspense>
-        </section>
 
       </div>
     </div>
