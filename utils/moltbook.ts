@@ -34,17 +34,9 @@ export class MoltbookClient {
    */
   async verifyIdentity(): Promise<boolean> {
     try {
-      // Based on docs, there might be a verification endpoint, 
-      // or we just check if a simple call works.
-      // Search result mentions: POST /api/v1/agents/verify-identity
-      // But also mentions "extract header... verify token".
-      // For a client, we usually just make a request.
-      // Let's try to get the agent's own profile or a lightweight endpoint.
-      // If specific verify endpoint exists:
-      await this.client.post('/agents/verify-identity', {}, {
-        headers: { 'X-Moltbook-App-Key': this.apiKey } 
-      });
-      return true;
+      // Check the agent status endpoint
+      const res = await this.client.get('/agents/status');
+      return res.data?.status === 'claimed';
     } catch (error) {
       console.error('Moltbook verification failed:', (error as any).message);
       return false;
@@ -58,8 +50,10 @@ export class MoltbookClient {
     try {
       const response = await this.client.post('/posts', post);
       return response.data;
-    } catch (error) {
-      // console.error('Failed to create Moltbook post:', (error as any).message);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message + (error.response.data.hint ? ` (${error.response.data.hint})` : ''));
+      }
       throw error;
     }
   }
@@ -78,4 +72,46 @@ export class MoltbookClient {
       return [];
     }
   }
+
+  /**
+   * Get the personalized home feed (notifications, DMs, followed posts).
+   */
+  async getHome(): Promise<any> {
+    try {
+      const response = await this.client.get('/home');
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to fetch Moltbook home feed:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Reply to a specific post (add a comment).
+   */
+  async replyToPost(postId: string, content: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/posts/${postId}/comments`, { content });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message + (error.response.data.hint ? ` (${error.response.data.hint})` : ''));
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Mark all notifications for a specific post as read.
+   */
+  async markNotificationRead(postId: string): Promise<boolean> {
+    try {
+      await this.client.post(`/notifications/read-by-post/${postId}`);
+      return true;
+    } catch (error: any) {
+      console.error(`Failed to mark post ${postId} notifications as read:`, error.message);
+      return false;
+    }
+  }
 }
+

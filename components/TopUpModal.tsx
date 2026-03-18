@@ -856,15 +856,14 @@ const TopUpModal = memo(function TopUpModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="ds-modal-overlay">
           {showTransactionModal ? (
             <motion.div
-
-              className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="ds-modal-content max-w-md"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="p-8 flex flex-col items-center">
 
@@ -890,30 +889,29 @@ const TopUpModal = memo(function TopUpModal({
                   </a>
                 )}
 
-                <button className="w-full py-3 bg-[#81D7B4] text-white rounded-xl" onClick={handleCloseTransactionModal}>Close</button>
+                <button className="ds-btn-primary w-full py-3" onClick={handleCloseTransactionModal}>Close</button>
               </div>
             </motion.div>
           ) : (
             <motion.div
               ref={modalRef}
-              className="bg-white rounded-3xl shadow-xl w-full max-w-md mx-auto overflow-hidden text-left"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="ds-modal-content max-w-md text-left"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               onClick={handleModalClick}
             >
-              {/* Top accent bar */}
-              <div className="h-2 bg-[#81D7B4] w-full" />
+              <div className="ds-modal-accent" />
 
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-6">
+              <div className="ds-modal-body pt-6">
+                <div className="ds-modal-header mb-5">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Top Up Savings</h2>
-                    <p className="text-sm text-gray-500 mt-1">Add funds to {planName}</p>
+                    <h2 className="ds-modal-title">Top Up Savings</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Add funds to {planName}</p>
                   </div>
-                  <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button onClick={onClose} className="ds-modal-close" aria-label="Close">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -929,7 +927,7 @@ const TopUpModal = memo(function TopUpModal({
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#81D7B4] focus:border-[#81D7B4] transition-colors"
+                        className="ds-input"
                         placeholder="0.00"
                         step="any"
                         min="0"
@@ -967,7 +965,7 @@ const TopUpModal = memo(function TopUpModal({
                   <button
                     type="submit"
                     disabled={loading || !!balanceWarning}
-                    className="w-full py-4 text-white bg-[#81D7B4] hover:bg-[#66C4A3] rounded-xl font-bold shadow-lg shadow-[#81D7B4]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="ds-btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {loading ? (
                       <>

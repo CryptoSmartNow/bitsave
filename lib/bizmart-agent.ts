@@ -60,36 +60,36 @@ const FLOW_STEPS = {
     DEPLOY: 14
 };
 
-    // EXACT text as requested by user
+// EXACT text as requested by user
 const SCRIPT = {
     INIT: "Hey 👋 I’m $BizMart. I help tokenize ideas, businesses, and even careers and launch their prediction markets. Takes about 10 minutes. If you’re ready just type ‘BizMart’ or ‘Savvy’",
-    
+
     TYPE: "First things first — what are we tokenizing today?",
-    
+
     NAME: "What should we call it publicly?",
-    
+
     LINKS: "Include links to your/business socials or website so I can do my research.",
 
     DESCRIPTION: "Explain your business/your career in a few sentence.\n Pretend you’re explaining it to someone on X scrolling fast.",
-    
+
     VALUE: "What value are you providing and who is your target audience?",
-    
+
     STAGE: "Be honest — what stage are you at?",
-    
+
     GOAL: "Let’s make this interesting 😈\n What should the market predict?",
-    
+
     QUESTION: "Write the prediction in plain English.\n Example: “Will this business make $3,000 in the next 30 days?”",
-    
+
     DURATION: "How long should the prediction run?",
-    
+
     CHAIN: "What chain should I deploy your Prediction on?",
-    
+
     VIBE: "What vibe should the prediction have?",
-    
+
     MARKETING: "Last thing — can I market this publicly for you?",
-    
+
     WALLET: "Drop a USDC address for settlement, this is where your revenue from the prediction market will come.",
-    
+
     DONE: "That’s Savvy, fund the BizFun wallet with the 10USDC fee;\n- 5 USDC is the starting liquidity for your prediction\n- 5 USDC is the fee for deploying the prediction market, and letting the agents cook 🧠📈🔥"
 };
 
@@ -104,7 +104,7 @@ export class BizMartAgent {
         this.name = name;
         this.openclawBin = path.resolve(process.cwd(), 'node_modules', '.bin', 'openclaw');
         this.stateDir = process.env.OPENCLAW_STATE_DIR || path.join(process.cwd(), '.bizmart-agent');
-        
+
         if (process.env.MOLTBOOK_API_KEY) {
             this.moltbook = new MoltbookClient(process.env.MOLTBOOK_API_KEY);
         }
@@ -140,20 +140,20 @@ export class BizMartAgent {
 
     private async *_processJsonPayload(json: any): AsyncGenerator<AgentResponse> {
         if (json.action) {
-             if (json.message || json.reply || json.text) {
-                 yield { type: 'message', content: json.message || json.reply || json.text };
-             }
+            if (json.message || json.reply || json.text) {
+                yield { type: 'message', content: json.message || json.reply || json.text };
+            }
 
-             yield { type: 'thought', content: `Executing tool: ${json.action}` };
-             try {
-                 let result: any = null;
-                 const params = json.parameters || {};
-                 
-                 if (json.action === 'create_market') {
+            yield { type: 'thought', content: `Executing tool: ${json.action}` };
+            try {
+                let result: any = null;
+                const params = json.parameters || {};
+
+                if (json.action === 'create_market') {
                     result = await agentTools.createMarket(params as any);
                     if (result && result.proposal) {
-                        yield { 
-                            type: 'proposal', 
+                        yield {
+                            type: 'proposal',
                             content: result.message || 'Market Creation Proposed',
                             data: result.proposal
                         };
@@ -167,19 +167,19 @@ export class BizMartAgent {
                     else if (json.action === 'resolve_market') result = await agentTools.resolveMarket(params as any);
                     else if (json.action === 'redeem_winnings') result = await agentTools.redeemWinnings(params as any);
                 }
-                 
-                 if (result) {
-                     yield { type: 'message', content: `✅ **Action Executed**: ${result.message}` };
-                 } else {
-                     yield { type: 'error', content: `Unknown action: ${json.action}` };
-                 }
-                 return true;
-             } catch (e: any) {
-                 yield { type: 'error', content: `❌ **Action Failed**: ${e.message}` };
-                 return true;
-             }
+
+                if (result) {
+                    yield { type: 'message', content: `✅ **Action Executed**: ${result.message}` };
+                } else {
+                    yield { type: 'error', content: `Unknown action: ${json.action}` };
+                }
+                return true;
+            } catch (e: any) {
+                yield { type: 'error', content: `❌ **Action Failed**: ${e.message}` };
+                return true;
+            }
         }
-        
+
         if (json.reply || json.message) {
             yield { type: 'message', content: json.reply || json.message };
             return true;
@@ -188,7 +188,7 @@ export class BizMartAgent {
         if (json.thought) {
             yield { type: 'thought', content: json.thought };
         }
-        
+
         return false;
     }
 
@@ -196,8 +196,8 @@ export class BizMartAgent {
      * Handles the structured conversational flow for creating a market.
      */
     private async *handleConversationalFlow(
-        message: string, 
-        state: CreationState, 
+        message: string,
+        state: CreationState,
         sessionId: string
     ): AsyncGenerator<AgentResponse> {
         const collection = await getChatSessionsCollection();
@@ -217,8 +217,8 @@ export class BizMartAgent {
         // If user says "yes" or "ready", move to TYPE.
         if (state.step === FLOW_STEPS.INIT) {
             // Assume any positive intent starts it, or really anything since they engaged
-            yield { 
-                type: 'message', 
+            yield {
+                type: 'message',
                 content: SCRIPT.TYPE,
                 options: ["A business", "A startup / product", "An idea", "My career / personal brand", "Just an experiment"]
             };
@@ -256,56 +256,56 @@ export class BizMartAgent {
             case FLOW_STEPS.LINKS: yield { type: 'message', content: SCRIPT.LINKS }; break;
             case FLOW_STEPS.DESCRIPTION: yield { type: 'message', content: SCRIPT.DESCRIPTION }; break;
             case FLOW_STEPS.VALUE: yield { type: 'message', content: SCRIPT.VALUE }; break;
-            case FLOW_STEPS.STAGE: 
-                yield { 
-                    type: 'message', 
+            case FLOW_STEPS.STAGE:
+                yield {
+                    type: 'message',
                     content: SCRIPT.STAGE,
                     options: ["Just an idea", "Building", "Launched, no revenue yet", "Making money", "Growing my career fast"]
-                }; 
+                };
                 break;
-            case FLOW_STEPS.GOAL: 
-                yield { 
-                    type: 'message', 
+            case FLOW_STEPS.GOAL:
+                yield {
+                    type: 'message',
                     content: SCRIPT.GOAL,
                     options: ["Revenue goal", "Sales target", "User growth", "Launch milestone", "Social growth"]
-                }; 
+                };
                 break;
             case FLOW_STEPS.QUESTION: yield { type: 'message', content: SCRIPT.QUESTION }; break;
-            case FLOW_STEPS.DURATION: 
-                yield { 
-                    type: 'message', 
+            case FLOW_STEPS.DURATION:
+                yield {
+                    type: 'message',
                     content: SCRIPT.DURATION,
                     options: ["7 days", "14 days", "30 days"]
-                }; 
+                };
                 break;
-            case FLOW_STEPS.CHAIN: 
-                yield { 
-                    type: 'message', 
+            case FLOW_STEPS.CHAIN:
+                yield {
+                    type: 'message',
                     content: SCRIPT.CHAIN,
                     checkboxes: ["Base", "Monad", "BSC"]
-                }; 
+                };
                 break;
-            case FLOW_STEPS.VIBE: 
-                yield { 
-                    type: 'message', 
+            case FLOW_STEPS.VIBE:
+                yield {
+                    type: 'message',
                     content: SCRIPT.VIBE,
                     options: ["Meme", "Serious", "Experimental"]
-                }; 
+                };
                 break;
-            case FLOW_STEPS.MARKETING: 
-                yield { 
-                    type: 'message', 
+            case FLOW_STEPS.MARKETING:
+                yield {
+                    type: 'message',
                     content: SCRIPT.MARKETING,
                     checkboxes: ["Post on MoltBook", "Spark AI agent debates", "Reply under big accounts", "Go full chaos mode"]
-                }; 
+                };
                 break;
             case FLOW_STEPS.WALLET: yield { type: 'message', content: SCRIPT.WALLET }; break;
             case FLOW_STEPS.DEPLOY:
                 yield { type: 'message', content: SCRIPT.DONE };
-                
+
                 // Execute Creation
                 yield { type: 'thought', content: "Preparing prediction market proposal..." };
-                
+
                 // Parse duration
                 let resolveTime = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // Default 30 days
                 if (newData.duration?.includes('7')) resolveTime = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
@@ -320,17 +320,17 @@ export class BizMartAgent {
 
                 // Call Agent Tool
                 const result = await agentTools.createMarket(marketParams);
-                
+
                 if (result.proposal) {
                     // Override description with user question for UI display
                     result.proposal.description = newData.predictionQuestion || result.proposal.description;
-                    
-                    yield { 
-                        type: 'proposal', 
+
+                    yield {
+                        type: 'proposal',
                         content: "Sign the transactions below to create your market.",
                         data: result.proposal
                     };
-                    
+
                     // Save to Markets Collection
                     const marketsCollection = await getMarketsCollection();
                     if (marketsCollection) {
@@ -353,7 +353,7 @@ export class BizMartAgent {
                     // Step 4: Marketing on MoltBook
                     if (this.moltbook && newData.marketing?.toLowerCase().includes('moltbook')) {
                         try {
-                            const marketLink = "https://bitsave.vercel.app/bizfun/market"; // In prod, append ID
+                            const marketLink = "https://bitsave.io/bizfun/market"; // In prod, append ID
                             await this.moltbook.createPost({
                                 submolt: "BizFun",
                                 title: `🚀 New Prediction: ${newData.predictionQuestion}`,
@@ -393,14 +393,14 @@ export class BizMartAgent {
             const cleanMsg = lowerMsg.replace(/[^a-z0-9\s]/g, '').trim();
             const greetings = ['hello', 'hi', 'hey', 'start', 'begin', 'yo'];
             const triggers = ['create', 'tokenize', 'launch', 'deploy'];
-            
+
             const isGreeting = greetings.some(g => cleanMsg === g || cleanMsg.startsWith(g + ' '));
             const isTrigger = triggers.some(t => cleanMsg.includes(t));
 
             if (isBizMart) {
                 // Initialize Flow - Skip INIT for direct triggers
-                yield { 
-                    type: 'message', 
+                yield {
+                    type: 'message',
                     content: SCRIPT.TYPE,
                     options: ["A business", "A startup / product", "An idea", "My career / personal brand", "Just an experiment"]
                 };
@@ -441,13 +441,13 @@ DO NOT respond as a web developer building a website. DO NOT mention localhost.
 DO NOT ask for the user's name or onboarding details unless they explicitly asked to start the flow (which should have been caught by the trigger).
 IMMEDIATELY generate the JSON action block for the requested task if applicable.
 If the user just says "hello" or greets you, simply respond with a short greeting like "Hey! Want to tokenize something?" without listing all capabilities.]`;
-            
+
             const fullMessage = `${systemReminder}\n\nUser: ${message}`;
             const result = await this.callOpenClaw(fullMessage, sessionId);
-            
+
             if (result.error) {
-                 yield { type: 'error', content: `OpenClaw Error: ${result.error}` };
-                 return;
+                yield { type: 'error', content: `OpenClaw Error: ${result.error}` };
+                return;
             }
 
             if (result.json) {
@@ -479,17 +479,17 @@ If the user just says "hello" or greets you, simply respond with a short greetin
         while (startIndex !== -1) {
             let braceCount = 0;
             let endIndex = -1;
-            
+
             for (let i = startIndex; i < text.length; i++) {
                 if (text[i] === '{') braceCount++;
                 else if (text[i] === '}') braceCount--;
-                
+
                 if (braceCount === 0) {
                     endIndex = i;
                     break;
                 }
             }
-            
+
             if (endIndex !== -1) {
                 const jsonStr = text.substring(startIndex, endIndex + 1);
                 try {
@@ -506,41 +506,41 @@ If the user just says "hello" or greets you, simply respond with a short greetin
 
     private callOpenClaw(message: string, sessionId: string): Promise<{ json?: any, raw?: string, error?: string }> {
         return new Promise((resolve, reject) => {
-             // Mock implementation since I can't run the binary in this environment check
-             // In real env, this spawns the process.
-             
-             if (!fs.existsSync(this.openclawBin)) {
-                 // UPDATED mock to avoid the unwanted capability list
-                 resolve({ raw: "Hey! 🦞 Want to create a prediction market? Just say 'start' or 'create'!" });
-                 return;
-             }
-             
-             const childProcess = spawn(this.openclawBin, ['chat', '--agent', 'bizmart', '--session', sessionId], {
-                 env: { ...process.env, OPENCLAW_STATE_DIR: this.stateDir }
-             });
+            // Mock implementation since I can't run the binary in this environment check
+            // In real env, this spawns the process.
 
-             let output = '';
-             let errorOutput = '';
+            if (!fs.existsSync(this.openclawBin)) {
+                // UPDATED mock to avoid the unwanted capability list
+                resolve({ raw: "Hey! 🦞 Want to create a prediction market? Just say 'start' or 'create'!" });
+                return;
+            }
 
-             childProcess.stdout.on('data', (data: any) => { output += data.toString(); });
-             childProcess.stderr.on('data', (data: any) => { errorOutput += data.toString(); });
+            const childProcess = spawn(this.openclawBin, ['chat', '--agent', 'bizmart', '--session', sessionId], {
+                env: { ...process.env, OPENCLAW_STATE_DIR: this.stateDir }
+            });
 
-             childProcess.on('close', (code: number) => {
-                 if (code !== 0) {
-                     resolve({ error: `Agent process exited with code ${code}: ${errorOutput}` });
-                 } else {
-                     try {
+            let output = '';
+            let errorOutput = '';
+
+            childProcess.stdout.on('data', (data: any) => { output += data.toString(); });
+            childProcess.stderr.on('data', (data: any) => { errorOutput += data.toString(); });
+
+            childProcess.on('close', (code: number) => {
+                if (code !== 0) {
+                    resolve({ error: `Agent process exited with code ${code}: ${errorOutput}` });
+                } else {
+                    try {
                         const json = JSON.parse(output);
                         resolve({ json });
-                     } catch (e) {
+                    } catch (e) {
                         resolve({ raw: output });
-                     }
-                 }
-             });
-             
-             childProcess.on('error', (err: any) => {
-                 resolve({ error: err.message });
-             });
+                    }
+                }
+            });
+
+            childProcess.on('error', (err: any) => {
+                resolve({ error: err.message });
+            });
         });
     }
 }

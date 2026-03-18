@@ -86,111 +86,132 @@ export default function DashboardLayout({
             />
           )}
 
-          <div className={`fixed inset-y-0 left-0 h-full transition-transform duration-300 ease-in-out z-50 ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 w-[260px] md:w-[240px]' : 'translate-x-0 w-[260px] md:w-[240px]'
+          <div className={`fixed inset-y-0 left-0 h-full transition-transform duration-300 ease-in-out z-50 ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 w-[260px] md:w-[260px]' : 'translate-x-0 w-[260px] md:w-[260px]'
             }`}>
 
             {/* Main Sidebar Container — solid white, clean border */}
-            <div className="h-full bg-white border-r border-gray-200 flex flex-col">
+            <div className="h-full bg-white border-r border-gray-100 shadow-[4px_0_24px_rgba(0,0,0,0.01)] flex flex-col">
 
               {/* Logo */}
-              <div className="flex items-center justify-center px-5 pt-6 pb-4">
+              <div className="flex items-center justify-start px-8 pt-8 pb-6">
                 <Image
                   src="/bitsavelogo.png"
                   alt="Bitsave logo"
                   width={140}
                   height={40}
-                  className="h-8 w-auto"
+                  className="h-8 w-auto hover:opacity-80 transition-opacity"
                   priority
                 />
               </div>
 
-              {/* Divider */}
-              <div className="mx-5 border-b border-gray-100" />
+              {/* Primary Action */}
+              <div className="px-5 mb-4">
+                <Link href="/dashboard/create-savings" onClick={handleMobileNavClick} className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#81D7B4] hover:bg-opacity-90 text-white rounded-2xl font-bold shadow-[0_4px_15px_rgba(129,215,180,0.3)] transition-all transform hover:-translate-y-0.5">
+                  <HiOutlinePlus className="w-5 h-5" strokeWidth={2.5} />
+                  <span>Create Plan</span>
+                </Link>
+              </div>
 
               {/* Navigation */}
-              <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-                <Link href="/dashboard" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              <nav className="flex-1 overflow-y-auto py-2 px-4 space-y-1.5 custom-scrollbar">
+                
+                <div className="px-3 pt-2 pb-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Main Menu</span>
+                </div>
+
+                <Link href="/dashboard" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlineHome className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineHome className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>Dashboard</span>
                 </Link>
 
-                <Link href="/dashboard/create-savings" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/create-savings')
-                  ? 'bg-[#81D7B4]/8 text-[#2D5A4A] border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                <Link href="/dashboard/plans" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/plans')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlinePlus className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span>Create Plan</span>
-                </Link>
-
-                <Link href="/dashboard/plans" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/plans')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                  <HiOutlineDocumentText className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/plans') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineDocumentText className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>My Plans</span>
                 </Link>
 
-                <Link href="/dashboard/leaderboard" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/leaderboard')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                <div className="px-3 pt-6 pb-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Community & Rewards</span>
+                </div>
+
+                <Link href="/dashboard/leaderboard" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/leaderboard')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlineTrophy className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/leaderboard') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineTrophy className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>Leaderboard</span>
                 </Link>
 
-                <Link href="/dashboard/activity" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/activity')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                <Link href="/dashboard/activity" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/activity')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlineCurrencyDollar className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/activity') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineCurrencyDollar className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>Earn $BTS</span>
                 </Link>
 
-                <Link href="/dashboard/referrals" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/referrals')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                <Link href="/dashboard/referrals" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/referrals')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlineUserPlus className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/referrals') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineUserPlus className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>Referrals</span>
                 </Link>
 
-                {/* Divider before secondary */}
-                <div className="!my-3 mx-1 border-b border-gray-100" />
-
-                <Link href="/dashboard/social" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/social')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                <Link href="/dashboard/social" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/social')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlineUserGroup className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/social') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineUserGroup className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>Savvy Space</span>
                 </Link>
+                
+                <div className="px-3 pt-6 pb-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Preferences</span>
+                </div>
 
-                <Link href="/dashboard/settings" onClick={handleMobileNavClick} className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard/settings')
-                  ? 'bg-gray-50 text-gray-900 border-l-2 border-[#81D7B4] -ml-px'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                <Link href="/dashboard/settings" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/settings')
+                  ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                  : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                   }`}>
-                  <HiOutlineCog className="w-[18px] h-[18px] flex-shrink-0" />
+                  <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/settings') ? 'bg-[#81D7B4]/20 text-[#2D5A4A]' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                    <HiOutlineCog className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span>Settings</span>
                 </Link>
               </nav>
 
               {/* Bottom Section */}
-              <div className="px-3 pb-4 pt-2 border-t border-gray-100">
+              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
                 <button
                   onClick={() => { disconnect(); }}
                   disabled={isDisconnecting}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-white border border-gray-200 text-gray-600 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-50 shadow-sm"
                 >
                   {isDisconnecting ? (
-                    <svg className="animate-spin w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   ) : (
-                    <HiOutlineArrowRightOnRectangle className="w-[18px] h-[18px] flex-shrink-0" />
+                    <HiOutlineArrowRightOnRectangle className="w-5 h-5 flex-shrink-0" />
                   )}
                   <span>{isDisconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
                 </button>
@@ -228,12 +249,12 @@ export default function DashboardLayout({
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ease-in-out ${isConnected ? 'md:ml-[240px]' : 'md:ml-0'} ml-0 overflow-x-hidden relative min-h-screen bg-[#F9FAFB]`}>
+      <div className={`transition-all duration-300 ease-in-out ${isConnected ? 'md:ml-[260px]' : 'md:ml-0'} ml-0 overflow-x-hidden relative min-h-screen bg-[#F8FAF9]`}>
 
         {mounted && isConnected && (
           <>
             {/* Desktop Language Selector: Absolute top-right */}
-            <div className="hidden md:block absolute top-5 right-6 z-30 w-[140px]">
+            <div className="hidden md:block absolute top-6 right-8 z-30 w-[140px]">
               <LanguageSelector />
             </div>
           </>
@@ -241,7 +262,7 @@ export default function DashboardLayout({
 
         {mounted ? (
           isConnected ? (
-            <div className="mt-16 md:mt-6 px-4 sm:px-6 lg:px-8 pb-6">
+            <div className="mt-20 md:mt-8 px-4 sm:px-6 lg:px-10 pb-12">
               {(() => {
                 const pageTitles: Record<string, string> = {
                   '/dashboard': 'Dashboard',
@@ -257,9 +278,11 @@ export default function DashboardLayout({
                 };
                 const title = pageTitles[pathname];
                 if (!title) return null;
+                // Exclude displaying the title on dashboard home since we already have "Good morning, User"
+                if (pathname === '/dashboard') return null;
                 return (
-                  <div className="mb-6">
-                    <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+                  <div className="mb-8 pl-1">
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h1>
                   </div>
                 );
               })()}
@@ -281,7 +304,7 @@ export default function DashboardLayout({
           )
         ) : (
           <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+            <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full shadow-lg"></div>
           </div>
         )}
       </div>

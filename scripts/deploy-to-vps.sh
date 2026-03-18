@@ -126,13 +126,27 @@ $SSH_CMD $VPS_USER@$VPS_HOST << 'EOF'
     # Start with pm2 using tsx (forcing environment update)
     OPENCLAW_STATE_DIR=$(pwd)/.bizmart-agent pm2 start scripts/agent-server.ts --name bizmart-agent --interpreter tsx --update-env
     
+    # Start Telegram Bot alongside the agent
+    echo "Starting Telegram Bot..."
+    pm2 stop bizmart-telegram-bot 2>/dev/null || true
+    pm2 delete bizmart-telegram-bot 2>/dev/null || true
+    pm2 start scripts/telegram-bot.ts --name bizmart-telegram-bot --interpreter tsx --update-env
+
+    # Start Heartbeat Bot
+    echo "Starting Heartbeat Cron Bot..."
+    pm2 stop bizmart-heartbeat-bot 2>/dev/null || true
+    pm2 delete bizmart-heartbeat-bot 2>/dev/null || true
+    pm2 start scripts/heartbeat.ts --name bizmart-heartbeat-bot --interpreter tsx --update-env
+    
     pm2 save
     
     # Get IP address
     IP=$(hostname -I | awk '{print $1}')
     
     echo "✅ Agent deployed successfully!"
-    echo "🌍 Agent is running at: http://$IP:3001"
+    echo "🌍 Agent Server running at: http://$IP:3001"
+    echo "🤖 Telegram Bot running (pm2 logs bizmart-telegram-bot)"
+    echo "💓 Heartbeat Cron running (pm2 logs bizmart-heartbeat-bot)"
     echo "🔑 API Key: $(grep AGENT_SERVER_API_KEY .env | cut -d '=' -f2)"
 EOF
 

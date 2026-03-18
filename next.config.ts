@@ -1,18 +1,17 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+const isDev = process.env.NODE_ENV !== "production";
 
 const withPWA = require("next-pwa")({
   dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  register: true,
+  disable: isDev,
+  register: !isDev,
   skipWaiting: true,
 });
 
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  // REQUIRED FIX — disable Turbopack completely.
-  // WalletConnect + Privy + Pino + Thread-stream WILL NOT build under Turbo.
   experimental: {
     optimizePackageImports: [
       "framer-motion",
@@ -25,34 +24,60 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
-  // Prevent Pino from being bundled in browser builds
-  serverExternalPackages: ["pino", "pino-pretty", "thread-stream"],
+  // Turbopack-specific config: stub out pino/thread-stream so Turbopack
+  // does NOT try to resolve or bundle them (they are server-only Node
+  // logging libs dragged in by @walletconnect/logger). Multiple nested
+  // copies exist at incompatible versions (0.15.2 vs 3.1.0 vs 4.0.0)
+  // which makes serverExternalPackages fail and causes 4GB memory usage.
+  turbopack: {
+    resolveAlias: {
+      // Stub these server-only packages to empty modules in the browser bundle
+      "pino": { browser: "./empty-module.js" },
+      "pino-pretty": { browser: "./empty-module.js" },
+      "thread-stream": { browser: "./empty-module.js" },
+    },
+    rules: {
+      // Ignore .ts test files inside thread-stream (no loader configured for them)
+      "node_modules/**/thread-stream/test/**/*.ts": {
+        loaders: [],
+        as: "*.js",
+      },
+    },
+  },
 
-  webpack(config) {
-    // --- FIX #1: Ignore ALL test files inside ANY node_modules ---
+  webpack(config, { isServer }) {
+    // --- FIX #1: Ignore ALL test files inside thread-stream ---
     config.module.rules.push({
-      test: /thread-stream\/test\/.*\.js$/,
+      test: /thread-stream\/test\/.*\.(js|ts)$/,
       use: "null-loader",
     });
 
-    // --- FIX #2: Prevent optional test-only deps from resolving ---
+    // --- FIX #2: Prevent optional/unused deps from resolving ---
     config.resolve.fallback = {
       ...config.resolve.fallback,
       "pino-elasticsearch": false,
       tape: false,
       "why-is-node-running": false,
       "real-require": false,
-      "pino-pretty": false,
       "lokijs": false,
       "encoding": false,
       "@react-native-async-storage/async-storage": false,
     };
 
-    // --- FIX #3: Silence nested warnings from Privy + WalletConnect ---
+    // Stub pino/thread-stream on client side only (server can use real ones)
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "pino": false,
+        "pino-pretty": false,
+        "thread-stream": false,
+      };
+    }
+
+    // --- FIX #3: Silence nested warnings from WalletConnect ---
     config.ignoreWarnings = [
       { module: /thread-stream\/test/ },
       { module: /@walletconnect\/.*\/thread-stream\/test/ },
-      { module: /@privy-io\/.*\/thread-stream\/test/ },
     ];
 
     return config;

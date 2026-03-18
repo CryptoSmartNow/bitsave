@@ -397,696 +397,329 @@ export default function Settings() {
   }
 
   return (
-    <div className={`${exo.variable} font-sans relative min-h-screen bg-gradient-to-br from-gray-50 via-[#81D7B4]/5 to-white overflow-hidden`}>
-      {/* Network Detection Component */}
+    <div className={`${exo.variable} font-sans relative min-h-screen bg-[#f8faf9] overflow-hidden`}>
       <NetworkDetection />
+            
+      <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
+        {/* Header Section */}
+        <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-black text-[#0f172a] tracking-tight mb-2">Settings</h1>
+            <p className="text-[#64748b] font-medium text-[15px]">Manage your account preferences and configurations.</p>
+        </div>
 
-      {/* Enhanced Background Elements */}
-      {/* Noise background removed per redesign spec */}
-
-      {/* Decorative background elements removed per request */}
-
-      {/* Main Content Container */}
-      <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
-
-        {/* Copy notification banner */}
-        <AnimatePresence>
-          {showCopyNotification && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-[#81D7B4]/30 flex items-center"
+        {/* Minimal Pill Tabs */}
+        <div className="flex overflow-x-auto hide-scrollbar mb-8 p-1.5 bg-white border border-gray-100 rounded-[1.2rem] w-fit shadow-sm">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setSelectedTab(tab)}
+              className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all whitespace-nowrap tracking-wide ${selectedTab === tab ? 'bg-[#81D7B4] text-white shadow-md' : 'text-[#64748b] hover:text-[#0f172a] hover:bg-gray-50'}`}
             >
-              <div className="bg-[#81D7B4]/10 p-1.5 rounded-full mr-3">
-                <HiOutlineCheck className="w-4 h-4 text-[#81D7B4]" />
-              </div>
-              <span className="text-sm font-medium text-gray-700">Address copied to clipboard</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {tab}
+            </button>
+          ))}
+        </div>
 
-        {/* Removed Account Settings header per request; pills moved to top */}
-
-        <div className="max-w-6xl mx-auto px-2 sm:px-0">
-          {/* Pill Tabs Navigation (bubble style) */}
-          <div className="mb-6 sm:mb-8 flex justify-start">
-            <div className="bg-gray-100 rounded-full p-2 sm:p-3 flex items-center gap-2 sm:gap-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setSelectedTab(tab)}
-                  className={`px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold transition-all ${selectedTab === tab ? 'bg-white text-[#81D7B4] shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* Modern Layout */}
-          <div className="space-y-6 sm:space-y-8 lg:space-y-10">
-            {/* Language Settings Card - Full Width */}
-            <div className={selectedTab === 'Language' ? 'block' : 'hidden'}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
-              >
-                {/* Decorative background circles removed */}
-
-                <div className="relative z-10">
-                  <div className="flex items-center mb-6 sm:mb-8">
-                    <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-4 sm:mr-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                      <HiOutlineGlobeAlt className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Language Settings</h2>
-                      <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Choose your preferred language for the interface</p>
-                    </div>
+        {/* Content Container */}
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.03)] overflow-hidden">
+          
+          {/* PROFILE TAB */}
+          {selectedTab === 'Profile' && (
+            <div className="divide-y divide-gray-100">
+               {/* Wallet & ENS Section */}
+               <div className="p-6 sm:p-10">
+                  <h2 className="text-xl font-bold text-[#0f172a] mb-6 tracking-tight">Wallet & Identity</h2>
+                  
+                  {/* Address */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9] hover:border-gray-200 transition-colors">
+                     <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100 shrink-0">
+                           <HiOutlineWallet className="w-6 h-6 text-[#81D7B4]" />
+                        </div>
+                        <div className="overflow-hidden">
+                           <p className="font-bold text-[#0f172a] text-[15px]">Wallet Address</p>
+                           <p className="text-[13px] text-[#64748b] font-medium mt-0.5 font-mono truncate">{address || 'Not connected'}</p>
+                        </div>
+                     </div>
+                     <button onClick={copyToClipboard} className="text-[13px] font-bold text-[#0f172a] bg-white border border-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm shrink-0">
+                       Copy
+                     </button>
                   </div>
 
-                  <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-4 sm:p-6 rounded-xl border border-[#81D7B4]/20 mb-6">
-                    <p className="text-gray-700 font-medium leading-relaxed text-sm sm:text-base">
-                      Select your preferred language to customize the interface. Changes will be applied immediately across the entire application.
-                    </p>
+                  {/* ENS */}
+                  <div className="-mx-10 px-10">
+                     <ENSLinking />
                   </div>
+               </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-gray-50/80 rounded-lg sm:rounded-xl border border-gray-200/50 hover:bg-gray-50 transition-colors duration-200 gap-3 sm:gap-0">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Interface Language</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Choose your preferred language for the interface</p>
-                    </div>
-                    <div className="w-full sm:w-64">
-                      <LanguageSelector />
-                    </div>
+               {/* Socials & Display Name */}
+               <div className="p-6 sm:p-10">
+                  <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Social Connections</h2>
+                  <p className="text-[#64748b] text-[14px] mb-8 font-medium">Link your social accounts to use as your display name or enable extra features.</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {/* Twitter */}
+                     <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-white hover:border-gray-200 transition-colors shadow-sm">
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center font-bold text-xl">𝕏</div>
+                           <div>
+                              <p className="font-bold text-[#0f172a] text-[15px]">X (Twitter)</p>
+                              <p className="text-[13px] text-[#64748b] font-medium mt-0.5">{isXConnected && xUsername ? `@${xUsername}` : 'Not connected'}</p>
+                           </div>
+                        </div>
+                        {isXConnected && xUsername ? (
+                           <button onClick={handleDisconnectX} className="text-[13px] font-bold text-[#ea580c] hover:bg-orange-50 bg-white border border-gray-100 px-4 py-2 rounded-xl transition-colors">Disconnect</button>
+                        ) : (
+                           <button onClick={handleConnectX} disabled={isConnectingX} className="text-[13px] font-bold text-[#81D7B4] bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50">
+                             {isConnectingX ? 'Connecting...' : 'Connect'}
+                           </button>
+                        )}
+                     </div>
+
+                     {/* Farcaster */}
+                     <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-white shadow-sm opacity-60 grayscale cursor-not-allowed">
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 bg-[#8a63d2] text-white rounded-xl flex items-center justify-center font-bold text-sm">FC</div>
+                           <div>
+                              <p className="font-bold text-[#0f172a] text-[15px]">Farcaster</p>
+                              <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Coming soon</p>
+                           </div>
+                        </div>
+                     </div>
                   </div>
-                </div>
-              </motion.div>
-            </div>
+               </div>
 
-            {/* Profile Settings Card - Full Width (background wrapper removed) */}
-            <div className={`${selectedTab === 'Profile' ? 'block' : 'hidden'}`}>
-              {/* Noise texture removed per redesign spec */}
-              {/* Decorative background removed */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 lg:mb-10"
-              >
-                <div className="flex items-center mb-4 lg:mb-0">
-                  <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-4 sm:mr-6 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <HiOutlineUserCircle className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Profile Settings</h2>
-                    <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Manage your identity and social connections</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Bitsave Savvy Name */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="mb-10"
-              >
-                <div className="flex items-center mb-4 sm:mb-6">
-                  <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <HiOutlineUserCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">Bitsave Savvy Name</h3>
-                </div>
-
-                <div className="p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20 bg-white shadow-sm hover:shadow-md transition-all">
-                  <div className="relative">
-                    <p className="text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
-                      Your Savvy Name is your unique identity within the Bitsave community. Use it to receive shared savings invites, build reputation, and interact with others without exposing your full wallet address.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full">
-                      <div className="flex-1 w-full relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">@</span>
+               {/* Bitsave Savvy Name */}
+               <div className="p-6 sm:p-10">
+                  <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Bitsave Savvy Name</h2>
+                  <p className="text-[#64748b] text-[14px] mb-8 font-medium max-w-2xl">Claim your unique username within the Bitsave ecosystem for peer-to-peer sharing and easier transfers.</p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
+                     <div className="relative flex-1">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">@</span>
                         <input
                           type="text"
                           value={savvyNameInput}
                           onChange={(e) => setSavvyNameInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                          placeholder="e.g. crypto_wizard"
-                          className="w-full bg-gray-50 border-2 border-[#81D7B4]/30 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-xl pl-10 pr-5 py-3 text-gray-900 font-medium text-sm sm:text-base outline-none transition-all"
+                          className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-[15px] font-bold text-[#0f172a] shadow-sm transition-all bg-white"
+                          placeholder="your_username"
                         />
-                      </div>
-                      <button
+                     </div>
+                     <button
                         onClick={handleSaveSavvyName}
                         disabled={isSavingSavvyName || savvyNameInput === currentSavvyName}
-                        className="w-full sm:w-auto bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] flex items-center justify-center gap-2"
-                      >
-                        {isSavingSavvyName ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          currentSavvyName ? (savvyNameInput === currentSavvyName ? 'Saved' : 'Update Name') : 'Claim Name'
-                        )}
-                      </button>
-                    </div>
-                    {currentSavvyName && (
-                      <p className="mt-3 text-sm text-[#81D7B4] font-medium flex items-center gap-1">
-                        <HiOutlineCheck className="w-4 h-4" />
-                        Your Savvy Name is active
-                      </p>
-                    )}
+                        className="px-8 py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 min-w-[140px]"
+                     >
+                        {isSavingSavvyName ? 'Saving...' : (currentSavvyName && savvyNameInput === currentSavvyName ? 'Saved' : 'Update Name')}
+                     </button>
                   </div>
-                </div>
-              </motion.div>
-
-              {/* Display Name from Social Connections */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mb-10"
-              >
-                <div className="flex items-center mb-4 sm:mb-6">
-                  <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <HiOutlineTag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">Display Name</h3>
-                </div>
-
-                <div className="p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-[#81D7B4]/20">
-
-                  <div className="relative">
-                    <p className="text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
-                      Your display name is automatically pulled from your connected social accounts.
-                      <span className="font-semibold text-[#81D7B4]">Connect your social accounts below</span> to set your display name.
-                    </p>
-
-                    {/* Social Account Integration Status */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                      {/* X (Twitter) Status */}
-                      <motion.div
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-lg sm:rounded-xl border border-gray-200/50 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-lg hover:shadow-xl transition-all duration-300 gap-3 sm:gap-0"
-                      >
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-gray-800 to-black rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4 shadow-lg">
-                            <span className="text-white font-bold text-base sm:text-lg">𝕏</span>
-                          </div>
-                          <div>
-                            <span className="font-semibold text-gray-800 text-base sm:text-lg">X (Twitter)</span>
-                            <p className="text-gray-500 text-xs sm:text-sm">
-                              {isXConnected && xUsername ? `@${xUsername}` : 'Social platform'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-start sm:items-end gap-2">
-                          {isXConnected && xUsername ? (
-                            <>
-                              <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium border border-green-200">Connected</span>
-                              <button
-                                onClick={handleDisconnectX}
-                                className="text-xs text-red-600 hover:text-red-800 underline"
-                              >
-                                Disconnect
-                              </button>
-                            </>
-                          ) : (
-                            <span className="text-xs sm:text-sm text-red-600 bg-red-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium border border-red-200">Not Connected</span>
-                          )}
-                        </div>
-                      </motion.div>
-
-                      {/* Farcaster Status */}
-                      <motion.div
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        className="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-lg sm:rounded-xl border border-gray-200/50 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-lg hover:shadow-xl transition-all duration-300 gap-3 sm:gap-0"
-                      >
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4 shadow-lg">
-                            <span className="text-white font-bold text-xs sm:text-sm">FC</span>
-                          </div>
-                          <div>
-                            <span className="font-semibold text-gray-800 text-base sm:text-lg">Farcaster</span>
-                            <p className="text-gray-500 text-xs sm:text-sm">Decentralized social</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-start sm:items-end">
-                          <span className="text-xs sm:text-sm text-red-600 bg-red-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium border border-red-200">Not Connected</span>
-                        </div>
-                      </motion.div>
-                    </div>
-
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#81D7B4]/20"
-                    >
-                      <div className="flex items-start">
-                        <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-1.5 sm:p-2 rounded-lg mr-3 sm:mr-4 mt-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 text-white">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">💡 Pro Tip</h4>
-                          <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
-                            Connect your social accounts to automatically set your display name and enhance your profile with verified social presence.
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* ENS Domain */}
-              <div className={selectedTab === 'Profile' ? 'block' : 'hidden'}>
-                <ENSLinking />
-              </div>
-
-              {/* Spacing between sections */}
-              <div className="h-6 sm:h-8 lg:h-10"></div>
-
-              {/* Wallet Address (moved under Profile tab) */}
-              <div className={selectedTab === 'Profile' ? 'block' : 'hidden'}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="lg:col-span-3 bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
-                >
-                  {/* Noise background removed per redesign spec */}
-                  {/* Decorative background removed */}
-
-                  <div className="flex items-center mb-6 sm:mb-8">
-                    <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] p-2 sm:p-3 rounded-lg sm:rounded-xl mr-3 sm:mr-4 shadow-lg">
-                      <HiOutlineWallet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black">Wallet Address</h3>
-                  </div>
-
-                  <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-3 sm:gap-0">
-                      <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl mr-0 sm:mr-4 lg:mr-6 shadow-lg w-fit">
-                        <HiOutlineWallet className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-col gap-2 sm:gap-3">
-                          <div className="badge-container">
-                            <p className="ens-name">
-                              {hasENS && ensName ? ensName : getDisplayName()}
-                            </p>
-                            <div className="status-badge status-badge-connected">
-                              <div className="status-dot"></div>
-                              <span className="status-text">Connected</span>
-                            </div>
-                            {hasENS && (
-                              <div className="status-badge status-badge-ens">
-                                <span className="status-icon">⟠</span>
-                                <span className="status-text">ENS Connected</span>
-                              </div>
-                            )}
-                            {isXConnected && xUsername && (
-                              <div className="status-badge status-badge-x">
-                                <span className="status-icon">𝕏</span>
-                                <span className="status-text">X Connected</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-black text-sm sm:text-base lg:text-lg font-semibold">
-                            {hasENS ? 'Your ENS domain name' : (isXConnected && xUsername ? 'Your X/Twitter display name' : 'Your primary wallet address')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={copyToClipboard}
-                      className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 min-w-[120px] sm:min-w-[140px] text-sm sm:text-base"
-                    >
-                      <HiOutlineClipboard className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="hidden sm:inline">Copy Address</span>
-                      <span className="sm:hidden">Copy</span>
-                    </motion.button>
-                  </div>
-                </motion.div>
-              </div>
+                  {currentSavvyName && (
+                     <p className="mt-4 text-[13px] text-[#81D7B4] font-black uppercase tracking-widest flex items-center gap-1.5">
+                       <HiOutlineCheck className="w-4 h-4" /> Active Savvy Name
+                     </p>
+                  )}
+               </div>
             </div>
+          )}
 
-            {/* Secondary Grid Layout for Additional Settings */}
-            <div className="space-y-6 sm:space-y-8 lg:space-y-10 mt-12 sm:mt-16 lg:mt-20">
-              {/* Email Connect Card */}
-              <div className={selectedTab === 'Notifications' ? 'block' : 'hidden'}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
-                >
-                  {/* Noise texture removed per redesign spec */}
-                  {/* Decorative background removed */}
+          {/* LANGUAGE TAB */}
+          {selectedTab === 'Language' && (
+            <div className="p-6 sm:p-10">
+               <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Language</h2>
+               <p className="text-[#64748b] text-[14px] mb-8 font-medium">Select your preferred interface language. This will update the entire application.</p>
+               
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9]">
+                  <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
+                        <HiOutlineGlobeAlt className="w-6 h-6 text-[#81D7B4]" />
+                     </div>
+                     <div>
+                        <p className="font-bold text-[#0f172a] text-[15px]">Interface Language</p>
+                        <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Currently available in select languages</p>
+                     </div>
+                  </div>
+                  <div className="w-full sm:w-64">
+                     <LanguageSelector />
+                  </div>
+               </div>
+            </div>
+          )}
 
-                  <div className="relative z-10">
-                    <div className="flex items-center mb-6 sm:mb-8">
-                      <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <HiOutlineEnvelope className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Email Connect</h2>
-                        <p className="text-gray-600 text-sm sm:text-base">Secure notifications & updates</p>
-                      </div>
-                    </div>
+          {/* APPEARANCE TAB */}
+          {selectedTab === 'Appearance' && (
+            <div className="p-6 sm:p-10">
+               <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Appearance</h2>
+               <p className="text-[#64748b] text-[14px] mb-8 font-medium">Customize the look and feel of your layout.</p>
+               
+               <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9]">
+                  <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
+                        <HiOutlineSun className="w-6 h-6 text-[#81D7B4]" />
+                     </div>
+                     <div>
+                        <div className="flex items-center gap-2">
+                           <p className="font-bold text-[#0f172a] text-[15px]">Dark Theme</p>
+                           <span className="text-[10px] bg-slate-200 text-slate-600 font-black uppercase tracking-widest px-2 py-0.5 rounded-md">Coming Soon</span>
+                        </div>
+                        <p className="text-[13px] text-[#64748b] font-medium mt-0.5">A more soothing visual experience for low light.</p>
+                     </div>
+                  </div>
+                  <div className="relative opacity-50 cursor-not-allowed hidden sm:block">
+                     <div className="w-12 h-6 bg-gray-300 rounded-full shadow-inner">
+                        <div className="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 translate-x-0.5 translate-y-0.5"></div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
 
-                    <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-[#81D7B4]/20 mb-6 sm:mb-8">
-                      <p className="text-gray-700 font-medium leading-relaxed text-sm sm:text-base">
-                        Connect your email to receive updates, rewards, and important notifications about your savings and SaveFi activities.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-3 sm:gap-4 mb-4">
-                      <div className="flex-1">
+          {/* NOTIFICATIONS TAB */}
+          {selectedTab === 'Notifications' && (
+            <div className="divide-y divide-gray-100">
+               <div className="p-6 sm:p-10">
+                  <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Email Notifications</h2>
+                  <p className="text-[#64748b] text-[14px] mb-8 font-medium">Connect your email to receive important account alerts and transaction updates.</p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
+                     <div className="relative flex-1">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                           <HiOutlineEnvelope className="w-5 h-5" />
+                        </span>
                         <input
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your email address"
                           disabled={isEmailConnected}
-                          className="w-full bg-white/80 border-2 border-[#81D7B4]/30 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-lg sm:rounded-xl px-4 sm:px-5 py-3 sm:py-4 text-gray-900 shadow-lg transition-all placeholder:text-gray-400 font-medium text-sm sm:text-base outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="name@example.com"
+                          className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-[15px] font-bold text-[#0f172a] shadow-sm transition-all bg-white disabled:bg-gray-50 disabled:text-gray-500"
                         />
-                      </div>
-                      {isEmailConnected ? (
-                        <div className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
-                          <HiOutlineCheck className="w-4 h-4 sm:w-5 sm:h-5" />
-                          Email Connected
+                     </div>
+                     {isEmailConnected ? (
+                        <div className="px-8 py-3.5 bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] font-black rounded-xl flex items-center justify-center gap-2 min-w-[160px]">
+                           <HiOutlineCheck className="w-5 h-5 stroke-[3]" /> Verified
                         </div>
-                      ) : (
-                        <motion.button
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleConnectEmail}
-                          disabled={!email.trim() || isConnecting}
-                          className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+                     ) : (
+                        <button
+                           onClick={handleConnectEmail}
+                           disabled={!email.trim() || isConnecting}
+                           className="px-8 py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                         >
-                          {isConnecting ? (
-                            <>
-                              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Sending Code...
-                            </>
-                          ) : (
-                            <>
-                              <HiOutlineLink className="w-4 h-4 sm:w-5 sm:h-5" />
-                              Connect Email
-                            </>
-                          )}
-                        </motion.button>
-                      )}
-                    </div>
+                           {isConnecting ? (
+                             <>
+                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                               Sending...
+                             </>
+                           ) : 'Connect Email'}
+                        </button>
+                     )}
                   </div>
-                </motion.div>
-              </div>
+               </div>
 
-              {/* Social Connect Card */}
-              <div className={selectedTab === 'Profile' ? 'block' : 'hidden'}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                  className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
-                >
-                  {/* Noise texture removed per redesign spec */}
-                  {/* Decorative background removed */}
-
-                  <div className="relative z-10">
-                    <div className="flex items-center mb-6 sm:mb-8">
-                      <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <HiOutlineUsers className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Social Connect</h2>
-                        <p className="text-gray-600 text-sm sm:text-base">Link your social accounts</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-[#81D7B4]/20 mb-6 sm:mb-8">
-                      <p className="text-gray-700 font-medium leading-relaxed text-sm sm:text-base">
-                        Connect your social accounts to enhance your profile and unlock exclusive features.
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 sm:space-y-4">
-                      <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#81D7B4] text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
-                      >
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center">
-                          <span className="text-[#81D7B4] font-bold text-xs sm:text-sm">FC</span>
-                        </div>
-                        Connect Farcaster
-                      </motion.button>
-
-                      {isXConnected && xUsername ? (
-                        <motion.button
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleDisconnectX}
-                          className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
-                        >
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center">
-                            <span className="text-red-600 font-bold text-sm sm:text-lg">𝕏</span>
-                          </div>
-                          Disconnect @{xUsername}
-                        </motion.button>
-                      ) : (
-                        <motion.button
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleConnectX}
-                          disabled={isConnectingX}
-                          className="w-full bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base disabled:cursor-not-allowed"
-                        >
-                          {isConnectingX ? (
-                            <>
-                              <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Connecting...
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center">
-                                <span className="text-black font-bold text-sm sm:text-lg">𝕏</span>
-                              </div>
-                              Connect X/Twitter
-                            </>
-                          )}
-                        </motion.button>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Appearance Settings */}
-              <div className={selectedTab === 'Appearance' ? 'block' : 'hidden'}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.7 }}
-                  className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-visible group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
-                >
-                  {/* Noise background removed per redesign spec */}
-                  {/* Decorative background removed */}
-
-                  <div className="relative z-10">
-                    <div className="flex items-center mb-8">
-                      <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-4 rounded-2xl mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <HiOutlineSun className="w-7 h-7 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Appearance</h2>
-                        <p className="text-gray-600 text-sm sm:text-base">Customize your visual experience</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-6 rounded-xl border border-[#81D7B4]/20 mb-8">
-                      <p className="text-gray-700 font-medium leading-relaxed">
-                        Choose your preferred theme and customize the look of your dashboard.
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 sm:space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-gray-50/80 rounded-lg sm:rounded-xl border border-gray-200/50 hover:bg-gray-50 transition-colors duration-200 gap-3 sm:gap-0">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Dark Mode</h3>
-                            <span className="px-2 py-1 text-xs font-medium text-orange-600 bg-orange-100 rounded-full border border-orange-200">Coming Soon</span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600 mt-1">Switch to dark theme for better viewing in low light</p>
-                        </div>
-                        <div className="relative opacity-50 cursor-not-allowed">
-                          <input type="checkbox" className="sr-only" disabled />
-                          <div className="w-10 h-5 sm:w-12 sm:h-6 bg-gray-300 rounded-full shadow-inner">
-                            <div className="w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 translate-x-0.5 translate-y-0.5"></div>
-                          </div>
-                        </div>
-                      </div>
-
-
-
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Notifications Settings */}
-              <div className={selectedTab === 'Notifications' ? 'block' : 'hidden'}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.8 }}
-                  className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
-                >
-                  {/* Noise background removed per redesign spec */}
-                  {/* Decorative background removed */}
-
-                  <div className="relative z-10">
-                    <div className="flex items-center mb-8">
-                      <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-4 rounded-2xl mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <HiOutlineBellAlert className="w-7 h-7 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">Notifications</h2>
-                        <p className="text-gray-600 text-sm sm:text-base">Manage your alert preferences</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-[#81D7B4]/8 to-[#6BC5A0]/8 p-6 rounded-xl border border-[#81D7B4]/20 mb-8">
-                      <p className="text-gray-700 font-medium leading-relaxed">
-                        Stay updated with important account activities and transaction alerts.
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 sm:space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-gray-50/80 rounded-lg sm:rounded-xl border border-gray-200/50 hover:bg-gray-50 transition-colors duration-200 gap-3 sm:gap-0">
+               <div className="p-6 sm:p-10 bg-[#f8faf9]">
+                  <div className="space-y-6 max-w-2xl">
+                     <div className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-gray-100 shadow-sm">
                         <div>
-                          <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Email Notifications</h3>
-                          <p className="text-xs sm:text-sm text-gray-600">Receive updates via email</p>
+                           <p className="font-bold text-[#0f172a] text-[15px]">Marketing Announcements</p>
+                           <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Receive news and promotional offers</p>
                         </div>
-                        <div className="relative">
-                          <input type="checkbox" className="sr-only" defaultChecked />
-                          <div className="w-10 h-5 sm:w-12 sm:h-6 bg-[#81D7B4] rounded-full shadow-inner cursor-pointer transition-colors duration-300">
-                            <div className="w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 translate-x-5 sm:translate-x-6 translate-y-0.5"></div>
-                          </div>
+                        <div className="relative cursor-pointer">
+                           <div className="w-12 h-6 bg-[#81D7B4] rounded-full shadow-inner transition-colors">
+                              <div className="w-5 h-5 bg-white rounded-full shadow-md transform translate-x-6 translate-y-0.5 transition-transform"></div>
+                           </div>
                         </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-gray-50/80 rounded-lg sm:rounded-xl border border-gray-200/50 hover:bg-gray-50 transition-colors duration-200 gap-3 sm:gap-0">
+                     </div>
+                     <div className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-gray-100 shadow-sm opacity-60">
                         <div>
-                          <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Push Notifications</h3>
-                          <p className="text-xs sm:text-sm text-gray-600">Browser notifications</p>
+                           <p className="font-bold text-[#0f172a] text-[15px]">Push Notifications</p>
+                           <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Receive alerts in your browser</p>
                         </div>
-                        <div className="relative">
-                          <input type="checkbox" className="sr-only" />
-                          <div className="w-10 h-5 sm:w-12 sm:h-6 bg-gray-300 rounded-full shadow-inner cursor-pointer transition-colors duration-300 hover:bg-gray-400">
-                            <div className="w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 translate-x-0.5 translate-y-0.5"></div>
-                          </div>
+                        <div className="relative cursor-not-allowed">
+                           <div className="w-12 h-6 bg-gray-200 rounded-full shadow-inner transition-colors">
+                              <div className="w-5 h-5 bg-white rounded-full shadow-md transform translate-x-0.5 translate-y-0.5 transition-transform"></div>
+                           </div>
                         </div>
-                      </div>
-                    </div>
+                     </div>
                   </div>
-                </motion.div>
-              </div>
+               </div>
             </div>
-          </div>
+          )}
         </div>
-
+        
         {/* OTP Modal */}
-        {showOtpModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/30 shadow-[0_20px_50px_-15px_rgba(129,215,180,0.3)] max-w-md w-full relative overflow-hidden"
-            >
-              {/* Decorative background circles removed */}
+        <AnimatePresence>
+          {showOtpModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-white rounded-[2rem] p-8 sm:p-10 max-w-[400px] w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-gray-100"
+              >
+                <div className="bg-[#81D7B4]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <HiOutlineEnvelope className="w-8 h-8 text-[#81D7B4]" />
+                </div>
+                <h3 className="text-[24px] font-black text-center text-[#0f172a] mb-2 tracking-tight">Verify Email</h3>
+                <p className="text-center text-[#64748b] text-[14px] font-medium mb-8 leading-relaxed">Enter the 6-digit code sent to<br/><span className="text-[#0f172a] font-bold">{email}</span></p>
 
-              <div className="relative z-10">
-                <div className="text-center mb-6 sm:mb-8">
-                  <div className="bg-[#81D7B4]/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 sm:w-8 sm:h-8 text-[#81D7B4]">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Verify Your Email</h3>
-                  <p className="text-gray-600 text-xs sm:text-sm">We&apos;ve sent a 6-digit verification code to</p>
-                  <p className="text-[#81D7B4] font-semibold text-xs sm:text-sm">{email}</p>
+                <div className="flex justify-between gap-2 sm:gap-3 mb-8">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-black text-[#0f172a] bg-gray-50 border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-xl outline-none transition-all shadow-inner"
+                      maxLength={1}
+                    />
+                  ))}
                 </div>
 
-                <div className="mb-6 sm:mb-8">
-                  <div className="flex justify-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
-                    {otp.map((digit, index) => (
-                      <input
-                        key={index}
-                        id={`otp-${index}`}
-                        type="text"
-                        value={digit}
-                        onChange={(e) => handleOtpChange(index, e.target.value)}
-                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-xl font-bold bg-white/80 border-2 border-[#81D7B4]/30 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-lg sm:rounded-xl shadow-[inset_2px_2px_8px_rgba(129,215,180,0.08)] transition-all outline-none"
-                        maxLength={1}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                    <button
-                      onClick={() => setShowOtpModal(false)}
-                      className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300 text-sm sm:text-base"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleVerifyOtp}
-                      disabled={otp.some(digit => !digit) || isVerifying}
-                      className="flex-1 bg-gradient-to-r from-[#81D7B4] to-[#6bc4a1] text-white py-3 rounded-lg sm:rounded-xl font-semibold shadow-[0_4px_15px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_20px_rgba(129,215,180,0.4)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
-                    >
-                      {isVerifying ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span>Verifying...</span>
-                        </div>
-                      ) : (
-                        'Verify Email'
-                      )}
-                    </button>
-                  </div>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleVerifyOtp}
+                    disabled={otp.some(digit => !digit) || isVerifying}
+                    className="w-full bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white py-3.5 rounded-xl font-black tracking-wide transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:text-gray-500 shadow-md"
+                  >
+                    {isVerifying ? 'Verifying...' : 'Verify Email'}
+                  </button>
+                  <button
+                    onClick={() => setShowOtpModal(false)}
+                    className="w-full bg-white border border-gray-200 text-[#0f172a] py-3.5 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </button>
                 </div>
 
-                <div className="text-center">
-                  <p className="text-xs sm:text-sm text-gray-500 mb-2">Didn&apos;t receive the code?</p>
+                <div className="mt-6 text-center">
                   <button
                     onClick={handleResendCode}
                     disabled={isConnecting}
-                    className="text-[#81D7B4] text-xs sm:text-sm font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 mx-auto"
+                    className="text-[13px] font-bold text-[#64748b] hover:text-[#0f172a] transition-colors"
                   >
-                    {isConnecting ? (
-                      <>
-                        <div className="w-3 h-3 border border-[#81D7B4]/30 border-t-[#81D7B4] rounded-full animate-spin"></div>
-                        Sending...
-                      </>
-                    ) : (
-                      'Resend Code'
-                    )}
+                    {isConnecting ? 'Sending...' : 'Resend Code'}
                   </button>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
+      
+      {/* Copy Notification Toast */}
+      <AnimatePresence>
+        {showCopyNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className="fixed top-8 left-1/2 z-50 bg-[#0f172a] text-white px-5 py-3 rounded-full font-bold text-[14px] shadow-xl flex items-center gap-2"
+          >
+            <HiOutlineCheck className="w-5 h-5 text-[#81D7B4]" /> Address copied!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
