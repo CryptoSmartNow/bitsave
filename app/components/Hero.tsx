@@ -53,7 +53,7 @@ const Hero = memo(() => {
       tokens: ['USDC', 'USDGLO'],
       accentColor: '#0052FF',
       gradient: 'from-[#81D7B4] to-[#6BC5A0]',
-      savingsLocked: '$12,450.00',
+      savingsLocked: '$512,450.00',
       floatingBadge: { text: 'High Yield', icon: TrendingUp }
     },
     {
@@ -63,7 +63,7 @@ const Hero = memo(() => {
       tokens: ['USDGLO', 'cUSD', 'USDC'],
       accentColor: '#FCFF52',
       gradient: 'from-yellow-400 to-yellow-500',
-      savingsLocked: '$8,320.50',
+      savingsLocked: '$308,320.50',
       floatingBadge: { text: 'Eco-Friendly', icon: Globe }
     },
     {
@@ -73,7 +73,7 @@ const Hero = memo(() => {
       tokens: ['USDC'],
       accentColor: '#0842D4',
       gradient: 'from-[#81D7B4] to-[#6BC5A0]',
-      savingsLocked: '$5,180.25',
+      savingsLocked: '$500,180.25',
       floatingBadge: { text: 'Low Fees', icon: Wallet }
     },
     {
@@ -83,7 +83,7 @@ const Hero = memo(() => {
       tokens: ['USDC', 'USDT'],
       accentColor: '#F0B90B',
       gradient: 'from-yellow-400 to-yellow-600',
-      savingsLocked: '$15,750.00',
+      savingsLocked: '$415,750.00',
       floatingBadge: { text: 'Popular', icon: TrendingUp }
     },
     {
@@ -93,7 +93,7 @@ const Hero = memo(() => {
       tokens: ['USDC', 'USDT'],
       accentColor: '#E84142',
       gradient: 'from-red-500 to-red-600',
-      savingsLocked: '$9,940.75',
+      savingsLocked: '$209,940.75',
       floatingBadge: { text: 'Fast', icon: Zap }
     }
   ];
@@ -136,8 +136,8 @@ const Hero = memo(() => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-gray-900 leading-[0.95]"
               >
-                Give Tomorrow a<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0]">Soft Landing</span>
+                Your Crypto<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0]">Savings Protocol</span>
               </motion.h1>
               
               <motion.p
@@ -146,8 +146,8 @@ const Hero = memo(() => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-lg sm:text-xl text-gray-500 font-light leading-relaxed max-w-xl mx-auto lg:mx-0"
               >
-                Your <span className="text-gray-900 font-medium">Onchain Savings Nest</span>. 
-                Save securely, earn rewards, and build wealth across 
+                Save your <span className="text-gray-900 font-medium">Stable Coins</span>. 
+                Lock your Crypto. Build Wealth on Bitsave That Stops You From Rugging Yourself across
                 <span className="inline-flex items-center align-middle mx-2 gap-1">
                   <Image src="/base.svg" alt="Base" width={20} height={20} className="w-5 h-5 object-contain" />
                   <Image src="/celo.png" alt="Celo" width={20} height={20} className="w-5 h-5 object-contain" />
@@ -174,7 +174,7 @@ const Hero = memo(() => {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a
-                href="https://www.youtube.com/shorts/CWRQ7rgtHzU"
+                href="https://youtu.be/BDQxf_fgsNo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group w-full sm:w-auto px-8 py-4 bg-white text-gray-900 font-semibold text-lg rounded-full border border-gray-200 hover:border-[#81D7B4] hover:text-[#81D7B4] transition-all flex items-center justify-center gap-2"

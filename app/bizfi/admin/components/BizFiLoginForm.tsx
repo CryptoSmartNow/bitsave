@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/adminAuth';
 
 export default function BizFiLoginForm() {
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +17,7 @@ export default function BizFiLoginForm() {
     setIsLoading(true);
     setError('');
 
-    const success = await login(password, username);
+    const success = await login(password);
     if (success) {
       // The layout will handle the redirect/rendering
     } else {
@@ -42,18 +41,6 @@ export default function BizFiLoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-[#9BA8B5] mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#0F1825] border border-[#7B8B9A]/20 text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-colors"
-              required
-            />
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-[#9BA8B5] mb-2">

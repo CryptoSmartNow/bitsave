@@ -105,7 +105,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto bg-[#0F1825]/50 relative">
-          <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none" />
 
           {step === 'edit' ? (
             <div className="max-w-3xl mx-auto p-8 space-y-8">

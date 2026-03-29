@@ -5,7 +5,7 @@ import Security from './components/Security';
 import Features from './components/Features';
 import BlogSection from './components/BlogSection';
 import Team from './components/Team';
-import BizFiSection from './components/BizFiSection';
+import CredibilitySection from './components/CredibilitySection';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -17,9 +17,9 @@ export default function Home() {
       <main>
         <Hero />
         <HowItWorks />
+        <CredibilitySection />
         <Security />
         <Features />
-        <BizFiSection />
         <BlogSection />
         <Team />
         <FAQ />

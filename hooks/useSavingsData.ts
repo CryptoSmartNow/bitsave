@@ -674,10 +674,29 @@ export function useSavingsData(): UseSavingsDataReturn {
         console.warn("Error fetching shared plans mapping:", err);
       }
 
+      let finalRewards = aggregatedRewards;
+      if (address) {
+        try {
+          const res = await fetch('/api/users/rewards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address, currentRewards: aggregatedRewards })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.rewards !== undefined) {
+              finalRewards = data.rewards;
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to sync rewards:', err);
+        }
+      }
+
       const finalSavingsData: SavingsData = {
         totalLocked: aggregatedTotalUsdValue.toFixed(2),
         deposits: aggregatedDeposits,
-        rewards: aggregatedRewards.toFixed(0),
+        rewards: finalRewards.toFixed(0),
         currentPlans: aggregatedPlans,
         completedPlans: aggregatedCompletedPlans
       };

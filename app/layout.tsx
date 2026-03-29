@@ -18,24 +18,24 @@ import InstallPWA from '@/components/InstallPWA';
 // import "../styles/date-picker.css";
 
 export const metadata: Metadata = {
-  title: 'BitSave - Simplified Crypto Savings',
-  description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
-  metadataBase: new URL('https://bitsave.app'),
+  title: 'BitSave - Your Crypto Savings Protocol',
+  description: 'Save your Stable Coins. Lock your Crypto. Build Wealth on Bitsave That Stops You From Rugging Yourself. Web3 onchain savings platform.',
+  metadataBase: new URL('https://bitsave.io'),
   openGraph: {
-    title: 'BitSave - Simplified Crypto Savings',
-    description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
+    title: 'BitSave - Your Crypto Savings Protocol',
+    description: 'Save your Stable Coins. Lock your Crypto. Build Wealth on Bitsave That Stops You From Rugging Yourself.',
     images: [{
       url: '/bitsavepreview.png',
       width: 1200,
       height: 630,
-      alt: 'BitSave - Simplified Crypto Savings'
+      alt: 'BitSave - Crypto Savings Protocol'
     }],
     type: 'website'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BitSave - Simplified Crypto Savings',
-    description: 'BitSave offers a simplified approach to crypto investing with professionally managed portfolios.',
+    title: 'BitSave - Your Crypto Savings Protocol',
+    description: 'Save your Stable Coins. Lock your Crypto. Build Wealth on Bitsave.',
     images: ['/bitsavepreview.png']
   },
   icons: {

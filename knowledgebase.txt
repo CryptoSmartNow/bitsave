@@ -1,0 +1,1070 @@
+================================================================================
+                          BITSAVE KNOWLEDGEBASE
+                    Complete Platform Documentation
+================================================================================
+
+Last Updated: March 29, 2026
+Repository: CryptoSmartNow/bitsave
+Website: https://bitsave.io
+Documentation: https://bitsave.io/docs
+Support Email: support@bitsave.io
+Community: https://t.me/+YimKRR7wAkVmZGRk
+
+================================================================================
+1. PLATFORM OVERVIEW
+================================================================================
+
+Bitsave is a decentralized savings finance (SaveFi) platform that enables users
+to create secure, time-locked savings plans across multiple blockchain networks.
+Built by the CryptoSmartNow team, it combines traditional savings discipline
+with blockchain technology, offering features like penalty-based early withdrawal
+deterrents, multi-chain support, referral rewards, and loyalty tokens ($BTS).
+
+The platform has three main product verticals:
+  1. SaveFi — Time-locked crypto savings with configurable penalties
+  2. BizFi — On-chain business attestation and SME financing protocol
+  3. BizFun — Prediction markets for community engagement
+
+Company: Bitsave Smart Limited (incorporated in Nigeria)
+Founder & CEO: Karla Nwaeke
+
+================================================================================
+2. TECHNOLOGY STACK
+================================================================================
+
+2.1 Frontend
+─────────────
+- Framework: Next.js 16.0.10 (App Router) with Turbopack for dev
+- Language: TypeScript 5.x
+- UI Library: React 18.2.0
+- Styling: Tailwind CSS 4.x with custom design system
+- Animations: Framer Motion 12.x
+- Icons: Lucide React, React Icons (HeroIcons v2)
+- Font: Exo (Google Fonts)
+- State Management: TanStack React Query 5.x
+- Charts: Recharts 3.x
+- Theme: next-themes (dark/light/system modes)
+- Date Handling: date-fns 4.x, react-datepicker, react-day-picker
+- Rich Text: Custom RichTextEditor component
+- PDF Generation: jspdf + jspdf-autotable
+- Toast Notifications: react-hot-toast
+- Markdown: marked library
+- PWA: next-pwa (Progressive Web App support)
+- Internationalization: next-intl 4.x (15 languages)
+
+2.2 Web3 / Blockchain
+──────────────────────
+- Wallet Auth: Privy (@privy-io/react-auth 3.x + @privy-io/wagmi 3.x)
+- Wallet Connection: wagmi 2.x + viem 2.x
+- Smart Contract Interaction: ethers.js 6.15.0
+- WalletConnect: @reown/appkit + @walletconnect/modal
+- Coinbase Integration: @coinbase/onchainkit
+- ENS Resolution: Custom useENSData hook
+- Ethereum Identity: ethereum-identity-kit
+- Hedera Integration: hashconnect 3.x
+
+2.3 Backend / Infrastructure
+────────────────────────────
+- Database: MongoDB 6.x (optional, app works without it)
+- Authentication: JWT-based admin auth (via jose library)
+- Email: Nodemailer 7.x with SMTP
+- Image Storage: Cloudinary 2.x
+- Logging: Pino + pino-pretty
+- Scheduling: node-cron 4.x
+- HTTP Client: axios
+- Deployment: Vercel (primary), VPS (Docker-based for backend services)
+- Proxy: Custom ISP bypass proxy for Coinbase/RPC endpoints
+
+2.4 Development Tools
+─────────────────────
+- Build: Next.js with Webpack (production) / Turbopack (dev)
+- Linting: ESLint 9 with eslint-config-next
+- Testing: tap 21.x
+- Express: Used for proxy server and agent server
+- Rate Limiting: express-rate-limit
+- Deployment Scripts: Shell scripts, Expect scripts for automated VPS deploy
+
+================================================================================
+3. PROJECT STRUCTURE
+================================================================================
+
+bitsave/
+├── app/                          # Next.js App Router pages
+│   ├── [locale]/                 # Internationalized landing pages
+│   ├── abi/                      # Smart contract ABIs (JSON/JS)
+│   │   ├── BizFi.json           # BizFi contract ABI
+│   │   ├── contractABI.js       # Main Bitsave savings contract ABI
+│   │   ├── childContractABI.js  # User child contract ABI
+│   │   ├── erc20ABI.json        # Standard ERC-20 ABI
+│   │   ├── PredictionMarket.js  # Prediction market ABI
+│   │   ├── PredictionMarketFactory.js  # Prediction market factory ABI
+│   │   └── MockUSDC.js          # Test USDC token ABI
+│   ├── admin/                    # Blog admin panel
+│   │   ├── categories/          # Blog category management
+│   │   ├── posts/               # Blog post management
+│   │   ├── layout.tsx           # Admin layout with sidebar
+│   │   └── page.tsx             # Admin dashboard
+│   ├── api/                      # Next.js API routes (27 endpoints)
+│   │   ├── admin/               # Admin auth & operations
+│   │   ├── auth/                # User authentication
+│   │   ├── bizfi/               # BizFi API routes
+│   │   │   ├── admin/           # BizFi admin analytics & management
+│   │   │   ├── attest/          # EAS attestation endpoints
+│   │   │   ├── business/        # Business registration/management
+│   │   │   ├── chat/            # BizFi chat system
+│   │   │   ├── counter/         # Visit counter
+│   │   │   ├── draft/           # Draft management
+│   │   │   ├── logs/            # Activity logs
+│   │   │   ├── pay/             # Payment processing
+│   │   │   └── referral/        # BizFi referral system
+│   │   ├── bizfun/              # BizFun prediction market APIs
+│   │   ├── blog/                # Blog CRUD API
+│   │   ├── coinbase-proxy/      # ISP bypass proxy for Coinbase
+│   │   ├── contract-metrics/    # Smart contract metrics
+│   │   ├── dashboard-metrics/   # Dashboard analytics
+│   │   ├── email/               # Email sending service
+│   │   ├── hbar-price/          # HBAR price feed
+│   │   ├── health/              # System health check
+│   │   ├── images/              # Image upload (Cloudinary)
+│   │   ├── leaderboard/         # Leaderboard data
+│   │   ├── migrate/             # Database migration
+│   │   ├── parse-savings-nlp/   # Natural language savings parsing
+│   │   ├── referrals/           # Referral system API
+│   │   ├── savings/             # Savings sharing
+│   │   ├── system-health/       # Extended system health
+│   │   ├── test-email/          # Email testing
+│   │   ├── track-interaction/   # User interaction tracking
+│   │   ├── transactions/        # Transaction history
+│   │   ├── tvl/                 # Total Value Locked calculation
+│   │   ├── updates/             # Platform updates/announcements
+│   │   ├── user-interactions/   # User analytics
+│   │   └── users/               # User management
+│   ├── auth/                     # Auth pages (Twitter OAuth)
+│   ├── bizfi/                    # BizFi module
+│   │   ├── admin/               # BizFi admin panel
+│   │   │   ├── analytics/       # BizFi analytics dashboard
+│   │   │   ├── audit/           # Audit logs
+│   │   │   ├── businesses/      # Business management
+│   │   │   │   └── [id]/        # Individual business detail
+│   │   │   ├── chat/            # Admin chat
+│   │   │   ├── components/      # Admin components
+│   │   │   │   ├── BizFiLoginForm.tsx    # Admin login (password only)
+│   │   │   │   └── LoanAgreementEditor.tsx  # Loan agreement editor
+│   │   │   ├── reports/         # Business reports
+│   │   │   └── settings/        # Admin settings
+│   │   ├── dashboard/           # BizFi user dashboard
+│   │   │   ├── bizcontent/      # Business content management
+│   │   │   ├── chat/            # Business chat
+│   │   │   ├── components/      # Dashboard components
+│   │   │   │   └── WizardForm.tsx  # Business registration wizard
+│   │   │   ├── launchpad/       # Business launchpad
+│   │   │   ├── support/         # Support center
+│   │   │   └── terminal/        # BizFi terminal
+│   │   ├── hooks/               # BizFi custom hooks
+│   │   └── page.tsx             # BizFi landing/marketing page
+│   ├── bizfun/                   # BizFun prediction markets
+│   │   ├── agent/               # AI agent for predictions
+│   │   ├── market/              # Market pages
+│   │   └── page.tsx             # BizFun main page
+│   ├── blog/                     # Public blog
+│   ├── connect/                  # Wallet connection page
+│   ├── dashboard/                # Main SaveFi dashboard
+│   │   ├── activity/            # User activity / Earn $BTS
+│   │   ├── create-savings/      # Create new savings plan flow
+│   │   │   ├── components/      # Multi-step form components
+│   │   │   │   ├── StepTwoConfiguration.tsx  # Plan configuration
+│   │   │   │   └── TransactionStatusModal.tsx  # TX status UI
+│   │   │   └── lib/             # Create savings utilities
+│   │   ├── leaderboard/         # User leaderboard (top savers)
+│   │   ├── plans/               # View all savings plans
+│   │   ├── referrals/           # Referral management
+│   │   ├── settings/            # User settings (theme, profile)
+│   │   ├── social/              # "Savvy Space" social features
+│   │   └── withdraw/            # Withdrawal interface
+│   ├── dev-admin/                # Developer admin panel
+│   ├── docs/                     # Documentation pages
+│   │   ├── data-protection/     # Data protection policy
+│   │   └── terms-of-service/    # Terms of service
+│   ├── offline/                  # PWA offline page
+│   ├── providers/                # Additional provider wrappers
+│   ├── ref/                      # Referral link handler
+│   ├── usdglo/                   # USDGLO token info
+│   ├── user-interactions/        # User analytics client page
+│   ├── globals.css              # Global stylesheet (~31KB)
+│   ├── layout.tsx               # Root layout (Providers, ReferralTracker, PWA)
+│   ├── page.tsx                 # App entry point (redirects)
+│   └── providers.tsx            # Web3/Auth/Theme provider stack
+├── components/                   # Shared React components (35+)
+│   ├── AdminLoginForm.tsx       # Admin panel login
+│   ├── AnalyticsDisplay.tsx     # Analytics visualization
+│   ├── AnalyticsModal.tsx       # Analytics modal popup
+│   ├── BizFiAuth.tsx            # BizFi authentication wrapper
+│   ├── Comments.tsx             # Comment system
+│   ├── ConfirmationModal.tsx    # Reusable confirmation dialog
+│   ├── CustomConnectButton.tsx  # Custom wallet connect button
+│   ├── CustomDatePicker.tsx     # Calendar date picker
+│   ├── DashboardSkeleton.tsx    # Loading skeleton
+│   ├── ENSErrorModal.tsx        # ENS error handling modal
+│   ├── ENSLinking.tsx           # ENS domain linking
+│   ├── GoogleTranslate.tsx      # Google Translate widget
+│   ├── InstallPWA.tsx           # PWA install prompt
+│   ├── LanguageSelector.tsx     # Language selection dropdown
+│   ├── MarketProposalCard.tsx   # BizFun market proposal card
+│   ├── MarketWizard.tsx         # BizFun market creation wizard
+│   ├── NetworkConnectionUI.tsx  # Network connection UI
+│   ├── NetworkDetection.tsx     # Auto network detection
+│   ├── NetworkSelectionModal.tsx # Network switching modal
+│   ├── PlanDetailsModal.tsx     # Savings plan details
+│   ├── ReferralTracker.tsx      # Referral tracking
+│   ├── RichTextEditor.tsx       # WYSIWYG editor
+│   ├── ShareButtons.tsx         # Social share buttons
+│   ├── SharePlanModal.tsx       # Share savings plan modal
+│   ├── ShimmerLoading.tsx       # Shimmer/skeleton loading
+│   ├── ThemeSelector.tsx        # Dark/light theme toggle
+│   ├── TopUpModal.tsx           # Top-up savings plan modal
+│   ├── UserInteractionsSidebar.tsx  # User analytics sidebar
+│   ├── ViewCounter.tsx          # Page view counter
+│   ├── WalletRecommendationModal.tsx  # Wallet recommendation
+│   ├── WithdrawModal.tsx        # Withdrawal modal
+│   ├── contract/                # Contract interaction components
+│   ├── dashboard/               # Dashboard-specific components
+│   └── ui/                      # Base UI components
+├── hooks/                        # Global custom React hooks
+│   ├── useAnalytics.ts          # Analytics tracking hook
+│   ├── useComments.ts           # Comments CRUD hook
+│   ├── useENSData.ts            # ENS name resolution hook
+│   ├── useNetworkSync.ts        # Network sync & switching
+│   ├── useSavingsData.ts        # Savings plan data fetching
+│   └── useWalletDetection.ts    # Wallet type detection
+├── lib/                          # Core libraries
+│   ├── adminAuth.tsx            # JWT-based admin authentication
+│   ├── bizmart-agent.ts         # AI agent for BizMart
+│   ├── blogDatabase.ts          # Blog CRUD with MongoDB
+│   ├── contractErrorHandler.ts  # Smart contract error parsing
+│   ├── imageStorage.ts          # Cloudinary image upload
+│   ├── interactionTracker.ts    # User behavior tracking
+│   ├── mongodb.ts               # MongoDB connection & collections
+│   ├── optimizeDatabase.ts      # DB optimization utilities
+│   ├── useOptimizedDisconnect.ts  # Wallet disconnect optimization
+│   ├── useReferrals.ts          # Referral system hook
+│   ├── utils.ts                 # General utilities
+│   └── web3/                    # Web3 configuration
+│       ├── abi.ts               # Contract ABIs (PredictionMarket, ERC20, MockUSDC)
+│       ├── agent-tools.ts       # AI agent blockchain tools
+│       └── config.ts            # Chain configs (Base, BSC, Monad)
+├── utils/                        # Utility modules
+│   ├── contractDataUtils.ts     # Contract data formatting
+│   ├── contractUtils.ts         # Contract interaction helpers
+│   ├── dateUtils.ts             # Date formatting functions
+│   ├── moltbook.ts              # Moltbook utility
+│   ├── networkLogos.ts          # CoinGecko network logo fetcher
+│   ├── savingsCache.ts          # Client-side savings data cache
+│   ├── tvlCalculationUtils.ts   # TVL calculation logic
+│   ├── tweetUtils.ts            # Twitter/tweet generation
+│   ├── walletDetection.ts       # Wallet provider detection
+│   ├── bizfi.md                 # BizFi protocol documentation
+│   └── integrations.md          # Integration documentation
+├── scripts/                      # DevOps & utility scripts
+│   ├── agent-server.ts          # AI agent HTTP server
+│   ├── bizmart-agent.ts         # BizMart AI agent runner
+│   ├── deploy-to-vps.sh         # VPS deployment script
+│   ├── heartbeat.ts             # Service heartbeat monitor
+│   ├── initialize-bizfi-sepolia.ts  # BizFi testnet init
+│   ├── migrate-to-mongodb.js    # Database migration
+│   ├── proxy-server.js          # Standalone proxy server
+│   └── telegram-bot.ts          # Telegram notification bot
+├── i18n/                         # Internationalization config
+├── messages/                     # Translation message files
+├── styles/                       # Additional stylesheets
+├── types/                        # TypeScript type definitions
+├── data/                         # Static data files
+├── docs/                         # Documentation files
+└── public/                       # Static assets (logos, images)
+
+================================================================================
+4. SAVEFI — DECENTRALIZED SAVINGS
+================================================================================
+
+4.1 Core Concept
+────────────────
+Users create time-locked savings plans on-chain. Each plan has:
+- A name (custom)
+- A token to save in (USDC, ETH, cUSD, CELO, USDGLO, $G, HBAR, etc.)
+- A maturity date (when funds can be withdrawn penalty-free)
+- A penalty percentage (5%, 10%, 15%, or 20%) for early withdrawal
+- Top-up capability (add more funds to existing plans)
+
+4.2 Smart Contract Architecture
+────────────────────────────────
+The savings system uses a factory pattern:
+- Main Contract: Creates child contracts for each user
+- Child Contract: Holds individual user's savings plans
+
+Smart Contract Functions:
+  - joinBitsave()              — Register user, deploy child contract
+  - createSaving()             — Create a new savings plan
+  - topUpSaving()              — Add funds to existing plan
+  - withdrawSaving()           — Withdraw from matured plan
+  - getUserChildContractAddress() — Get user's child contract address
+
+Contract Addresses (Bitsave Savings):
+  - Base:  0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+  - Celo:  0x7d839923Eb2DAc3A0d1cABb270102E481A208F33
+  - Lisk:  0x3593546078eECD0FFd1c19317f53ee565be6ca13
+
+4.3 Supported Networks
+──────────────────────
+  ┌──────────────────────┬───────────┬────────────────────────────────┐
+  │ Network              │ Chain ID  │ Supported Tokens               │
+  ├──────────────────────┼───────────┼────────────────────────────────┤
+  │ Base (Ethereum L2)   │ 8453      │ USDC, ETH                     │
+  │ Celo                 │ 42220     │ cUSD, CELO, USDGLO, $G        │
+  │ Lisk (Ethereum L2)   │ 1135      │ USDC, ETH                     │
+  │ Avalanche            │ 43114     │ AVAX tokens                    │
+  │ BSC (Binance)        │ 56        │ BNB, USDC                     │
+  │ Hedera Testnet       │ 296       │ HBAR                           │
+  │ Ethereum Mainnet     │ 1         │ ETH (for ENS resolution only)  │
+  │ Solana               │ —         │ Coming Soon                    │
+  └──────────────────────┴───────────┴────────────────────────────────┘
+
+4.4 $BTS Loyalty Token
+──────────────────────
+Users earn $BTS tokens as loyalty rewards based on their savings activity.
+Reward formula: (USD value * 0.005 * 1000) = estimated $BTS reward.
+$BTS is displayed in the dashboard and rewards section.
+
+4.5 Penalty System
+──────────────────
+Early withdrawal before maturity incurs a configurable penalty:
+  - 5% (default minimum)
+  - 10%
+  - 15%
+  - 20%
+Penalty is deducted from the saved amount at withdrawal time.
+
+4.6 Savings Data Hook (useSavingsData)
+──────────────────────────────────────
+The main data-fetching hook provides:
+  - savingsData.totalLocked    — Total portfolio value in USD
+  - savingsData.currentPlans   — Active savings plans
+  - savingsData.completedPlans — Matured plans
+  - savingsData.rewards        — $BTS reward balance
+  - isBaseNetwork, isCeloNetwork, isLiskNetwork, etc. — Network detection
+  - ethPrice                   — Current ETH price
+
+4.7 Create Savings Flow
+───────────────────────
+Multi-step form process:
+  Step 1: Choose token and network
+  Step 2: Configure plan (name, amount, maturity date, penalty %)
+  Step 3: Confirm and execute on-chain transaction
+  Step 4: Transaction status modal (pending → confirmed → success/fail)
+
+4.8 Network Sync System (useNetworkSync)
+────────────────────────────────────────
+Ensures the app's displayed network matches the wallet's actual network:
+  - syncToWalletNetwork()  — Sync app UI to wallet's network
+  - switchToNetwork(name)  — Switch wallet AND app to target network
+  - isNetworkSynced        — Boolean indicating sync status
+  - currentNetworkName     — Display name of current network
+
+4.9 Savings Cache (savingsCache)
+────────────────────────────────
+Client-side caching system to minimize redundant contract calls:
+  - Caches savings data per network per wallet address
+  - Automatic invalidation on plan creation/withdrawal
+  - initializeSavingsCache() called on dashboard mount
+
+================================================================================
+5. BIZFI — BUSINESS ATTESTATION & FINANCING
+================================================================================
+
+5.1 Overview
+────────────
+BizFi is an on-chain business attestation protocol built on Base. It allows
+businesses to register on-chain with verifiable attestations using the Ethereum
+Attestation Service (EAS). It also provides SME loan agreements and financing.
+
+5.2 Smart Contract
+──────────────────
+Protocol: UUPS upgradeable proxy pattern
+Security: Role-based access control, pausable, reentrancy guard, EIP-712 signatures
+
+Contract Addresses:
+  - BizFi Proxy (Base Mainnet):     0x7C24A938e086d01d252f1cde36783c105784c770
+  - BizFi Implementation:           0x852B241E5423EF038a0F3B637dbc51f94CAfB9C4
+  - USDC (Base):                     0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+  - EAS (Base):                      0x4200000000000000000000000000000000000021
+
+  - BizFi Proxy (Base Sepolia):     0xc0789113A01E4cAF1C37F4E90D588987ebeD1eb0
+  - MockUSDC (Sepolia):              0x348d092d22E561F30CB14faE561B4D8DbEfB78c9
+
+EAS Schema UID: 0xdf6d46c2112c326d65068fab3aadc96347d2d543fad9d969ba27c427e2687404
+Schema Fields: businessName, metadataHash, tier, status, owner, registeredAt
+
+Owner/Admin/Signer: 0x125629FAab442e459C1015FCBa50499D0aAB8EE0
+
+5.3 Business Tiers & Pricing
+─────────────────────────────
+  ┌─────────────┬──────────────┬──────────────────────────┐
+  │ Tier        │ Price (USDC) │ Use Case                 │
+  ├─────────────┼──────────────┼──────────────────────────┤
+  │ MICRO       │ $10          │ Small businesses         │
+  │ BUILDER     │ $35          │ Growing companies        │
+  │ GROWTH      │ $60          │ Established businesses   │
+  │ ENTERPRISE  │ $120         │ Large enterprises        │
+  └─────────────┴──────────────┴──────────────────────────┘
+
+5.4 Registration Flow (WizardForm)
+──────────────────────────────────
+Multi-step wizard for business registration:
+  Step 1: Basic Information
+  Step 2: Business details (businessName, isRegistered, businessType,
+          businessDescription, yearStarted, countryOfOperation,
+          cityOfOperation, businessAddress, ownerName, businessEmail,
+          businessPhone)
+  Step 3: KYC Documents (ID document, selfie, business documents)
+  Step 4: Payment & on-chain registration
+
+5.5 BizFi Dashboard Features
+─────────────────────────────
+For registered businesses:
+  - Business Content Management (bizcontent)
+  - Chat System
+  - Business Launchpad
+  - Support Center
+  - Terminal (business operations)
+
+5.6 BizFi Admin Panel
+──────────────────────
+Accessible at /bizfi/admin with password-only authentication.
+
+Admin Features:
+  - Overview Dashboard (KPIs, business growth chart, tier distribution pie chart)
+  - Business Management (list, search by name/owner, filter by status)
+  - Status Management (pending → approved/rejected)
+  - Loan Agreement Editor (borrower details, loan terms, repayment schedule,
+    legal document preview with print capability)
+  - Analytics Dashboard
+  - Audit Logs
+  - Chat System
+  - Reports
+  - Settings
+
+Search: Admin can search businesses by business name, wallet address (owner),
+and owner name (from metadata.ownerName).
+
+5.7 BizFi API Endpoints (/api/bizfi/)
+──────────────────────────────────────
+  - /admin/analytics          — Dashboard metrics
+  - /admin/business/update-status  — Update business status
+  - /admin/business/update-agreement  — Save loan agreement
+  - /attest                   — Create EAS attestation
+  - /business                 — Business CRUD
+  - /chat                     — Chat messages
+  - /counter                  — Visitor counter
+  - /draft                    — Draft management
+  - /logs                     — Activity logs
+  - /pay                      — Payment processing
+  - /referral                 — Referral system
+
+5.8 Loan Agreement System
+──────────────────────────
+Full legal loan agreement generator for SME financing:
+  - Editable form fields: borrower name, address, principal sum, tenor,
+    interest rate, repayment schedule, commencement date, witness details
+  - Legal document preview with Nigerian law compliance
+  - Sections: Parties, Purpose, Loan Facility, Conditions Precedent,
+    Tenor/Interest/Repayment, Set-off Rights, Borrower's Undertakings,
+    Representations & Warranties, Events of Default, Confidentiality,
+    Ethical Considerations, Dispute Resolution, Governing Law
+  - Print and save functionality
+  - Digital signature areas
+
+================================================================================
+6. BIZFUN — PREDICTION MARKETS
+================================================================================
+
+6.1 Overview
+────────────
+BizFun is an on-chain prediction market platform where users can create and
+participate in binary outcome markets (Yes/No questions). Uses USDC as
+collateral with an Automated Market Maker (AMM) based on logarithmic scoring.
+
+6.2 Smart Contracts
+───────────────────
+PredictionMarketFactory (deployed on Base, BSC, Monad):
+  - Base: 0xADBeAF3b2C610fa71003660605087341779f2EE9
+  - BSC:  0xADBeAF3b2C610fa71003660605087341779f2EE9
+  - Monad: 0xADBeAF3b2C610fa71003660605087341779f2EE9
+
+Functions:
+  - createMarket(oracle, tradingDeadline, resolveTime, b, metadataUri)
+  - getAllMarkets()
+  - getMarketInfo(id)
+  - getMarketMetadata(market)
+  - withdrawFees(to, amount)
+
+PredictionMarket (individual market contract):
+  - buyYes(amountShares)     — Buy YES outcome shares
+  - buyNo(amountShares)      — Buy NO outcome shares
+  - sellYes(amountShares)    — Sell YES shares
+  - sellNo(amountShares)     — Sell NO shares
+  - quoteBuyYes/No(amount)   — Get price quotes
+  - resolve(outcome)         — Oracle resolves market
+  - redeem()                 — Redeem winning shares
+  - closeMarket()            — Close market
+  - pause() / unpause()      — Emergency controls
+
+Market States: Active → Closed → Resolved
+
+6.3 AI Agent (BizMart Agent)
+────────────────────────────
+An AI-powered agent that can interact with prediction markets:
+  - agent-tools.ts provides blockchain interaction capabilities
+  - bizmart-agent.ts implements agent logic
+  - Can be accessed via HTTP server (agent-server.ts) or Telegram bot
+
+================================================================================
+7. DATABASE (MongoDB)
+================================================================================
+
+7.1 Connection
+──────────────
+Database: MongoDB with connection pooling (max 10 connections)
+Database Name: "bitsave" (configurable via MONGODB_DB_NAME env var)
+Optional: App can function without MongoDB
+
+7.2 Collections
+───────────────
+  ┌──────────────────────┬──────────────────────────────────────────────┐
+  │ Collection           │ Purpose                                      │
+  ├──────────────────────┼──────────────────────────────────────────────┤
+  │ user_interactions    │ User behavior & analytics tracking           │
+  │ transactions         │ Transaction logs                             │
+  │ chat_sessions        │ BizFi chat sessions                         │
+  │ markets              │ BizFun prediction markets metadata          │
+  │ leaderboard          │ Savings leaderboard rankings                │
+  │ updates              │ Platform announcements & updates            │
+  │ user_read_updates    │ Per-user update read status                 │
+  │ market_comments      │ Comments on prediction markets              │
+  └──────────────────────┴──────────────────────────────────────────────┘
+
+7.3 UserInteraction Interface
+─────────────────────────────
+  {
+    type: string,
+    walletAddress?: string,
+    userAgent?: string,
+    data: Record<string, unknown>,
+    id: string,
+    timestamp: string,
+    sessionId: string,
+    ip: string
+  }
+
+================================================================================
+8. AUTHENTICATION & AUTHORIZATION
+================================================================================
+
+8.1 User Authentication (Privy)
+───────────────────────────────
+Primary auth: Privy (@privy-io/react-auth)
+
+SaveFi Login Methods: Wallet only
+BizFi Login Methods: wallet, email, Google, Twitter, LinkedIn, Discord, Apple
+
+Privy creates embedded wallets for users without wallets.
+Supported chains configured in provider: Base, Celo, Avalanche, Lisk, Hedera, Mainnet
+
+8.2 Admin Authentication
+────────────────────────
+JWT-based authentication via /api/admin/auth endpoint.
+AuthProvider wraps admin pages with login/logout/checkAuth functionality.
+
+Admin Panel (Blog): Uses AdminLoginForm with username + password
+BizFi Admin: Uses BizFiLoginForm with password only (username removed)
+
+Auth flow:
+  POST /api/admin/auth — Login (returns JWT in cookie)
+  GET /api/admin/auth  — Check current session
+  DELETE /api/admin/auth — Logout (clear cookie)
+
+================================================================================
+9. API ROUTES
+================================================================================
+
+9.1 Core API Endpoints
+──────────────────────
+  POST/GET/DELETE /api/admin/auth     — Admin authentication
+  GET  /api/contract-metrics          — Smart contract metrics
+  GET  /api/dashboard-metrics         — Dashboard analytics data
+  POST /api/email                     — Send transactional emails
+  GET  /api/hbar-price                — HBAR token price feed
+  GET  /api/health                    — Basic health check
+  GET  /api/system-health             — Extended system health
+  POST /api/images                    — Upload images to Cloudinary
+  GET  /api/leaderboard               — Top savers leaderboard
+  POST /api/migrate                   — Database migration
+  POST /api/parse-savings-nlp         — NLP-based savings plan creation
+  GET/POST /api/referrals             — Referral management
+  GET/POST /api/savings/share         — Share savings plans
+  POST /api/track-interaction         — Track user interactions
+  GET  /api/transactions              — Transaction history
+  GET  /api/tvl                       — Total Value Locked
+  GET/POST /api/updates               — Platform announcements
+  GET  /api/updates/user/[address]    — User-specific update read status
+  PUT  /api/updates/[id]/read         — Mark update as read
+  GET  /api/user-interactions         — User analytics data
+  GET/POST /api/users                 — User management
+  ALL  /api/coinbase-proxy            — Coinbase domain proxy
+
+9.2 BizFi API Endpoints
+────────────────────────
+  GET  /api/bizfi/admin/analytics     — BizFi admin dashboard data
+  POST /api/bizfi/admin/business/update-status  — Change business status
+  POST /api/bizfi/admin/business/update-agreement  — Save loan agreement
+  POST /api/bizfi/attest              — Create EAS attestation
+  CRUD /api/bizfi/business            — Business registration
+  CRUD /api/bizfi/chat                — Chat system
+  GET  /api/bizfi/counter             — Visitor counter
+  CRUD /api/bizfi/draft               — Draft management
+  GET  /api/bizfi/logs                — Activity logs
+  POST /api/bizfi/pay                 — Process payments
+  CRUD /api/bizfi/referral            — Referral management
+
+9.3 BizFun API Endpoints
+────────────────────────
+  CRUD /api/bizfun                    — Prediction market management
+
+9.4 Blog API Endpoints
+──────────────────────
+  CRUD /api/blog                      — Blog post management
+
+================================================================================
+10. DASHBOARD FEATURES
+================================================================================
+
+10.1 Main Dashboard (/dashboard)
+────────────────────────────────
+- Portfolio balance card (total USD value)
+- Loyalty rewards display ($BTS earned)
+- Network selector (Base, Celo, Lisk, Avalanche, BSC, Solana/coming)
+- Active / Completed plans tabs
+- Platform updates/notifications bell
+- ENS name display
+- Time-of-day greeting
+- SaveFi ↔ BizFi mode toggle
+
+10.2 Sidebar Navigation
+───────────────────────
+Main Menu:
+  - Dashboard          /dashboard
+  - My Plans           /dashboard/plans
+
+Community & Rewards:
+  - Leaderboard        /dashboard/leaderboard
+  - Earn $BTS          /dashboard/activity
+  - Referrals          /dashboard/referrals
+  - Savvy Space        /dashboard/social
+
+Preferences:
+  - Settings           /dashboard/settings
+
+Actions:
+  - Create Plan        /dashboard/create-savings
+  - Disconnect Wallet
+
+10.3 Create Savings (/dashboard/create-savings)
+───────────────────────────────────────────────
+Multi-step wizard:
+  1. Select token and network
+  2. Configure plan name, amount, maturity date, penalty percentage
+  3. Review and confirm
+  4. On-chain transaction execution with status tracking
+
+Components:
+  - StepTwoConfiguration.tsx  — Plan configuration form
+  - TransactionStatusModal.tsx — Real-time transaction status
+
+10.4 Settings (/dashboard/settings)
+────────────────────────────────────
+- Theme selection (Light/Dark/System)
+- ENS domain linking
+- Language preference
+- Profile management
+
+10.5 Social / Savvy Space (/dashboard/social)
+─────────────────────────────────────────────
+Social features for the Bitsave community.
+
+10.6 Referral System (/dashboard/referrals)
+───────────────────────────────────────────
+- Unique referral links per user
+- Referral tracking and analytics
+- Reward distribution tracking
+
+10.7 Leaderboard (/dashboard/leaderboard)
+─────────────────────────────────────────
+Top savers ranked by total value locked across all networks.
+
+10.8 Activity / Earn $BTS (/dashboard/activity)
+────────────────────────────────────────────────
+Activity Feed & $BTS earning opportunities.
+
+================================================================================
+11. INTERNATIONALIZATION (i18n)
+================================================================================
+
+15 supported languages:
+  en (English), es (Spanish), fr (French), de (German), zh (Chinese),
+  ja (Japanese), nl (Dutch), pt (Portuguese), ko (Korean), ru (Russian),
+  ar (Arabic), hi (Hindi), it (Italian), sv (Swedish), tr (Turkish)
+
+Implementation:
+  - next-intl 4.x for server-side translations
+  - LanguageSelector component for user choice
+  - Middleware handles locale routing for non-dashboard pages
+  - Dashboard routes are NOT internationalized (explicit redirect to /dashboard)
+  - Language preference stored in bitsave_preferred_language cookie (1 year)
+
+Middleware Logic:
+  - Locale-prefixed dashboard routes → redirect to plain /dashboard
+  - Dashboard routes → skip i18n middleware
+  - All other routes → standard next-intl locale routing
+
+================================================================================
+12. ENS INTEGRATION
+================================================================================
+
+Custom useENSData hook provides:
+  - ensName              — User's ENS name (e.g., "user.eth")
+  - getDisplayName()     — Priority: ENS > Twitter > saved name > truncated address
+  - hasENS               — Boolean flag
+  - ENSLinking component — Link ENS domains to Bitsave profile
+  - ENSErrorModal        — Error handling for ENS operations
+
+================================================================================
+13. DESIGN SYSTEM
+================================================================================
+
+13.1 Brand Colors
+─────────────────
+  Primary:    #81D7B4 (mint green)
+  Dark BG:    #0F1825
+  Card BG:    #1A2538
+  Text:       #F9F9FB (light on dark)
+  Text Muted: #9BA8B5
+  Text Dim:   #7B8B9A
+  Accent:     #2D5A4A (dark green)
+  Error:      Red-400/500
+
+13.2 SaveFi Theme (Light)
+─────────────────────────
+  Background: #F8FAF9 / #F7FCFA
+  Cards: White with gray-100 borders
+  Text: Gray-900, Gray-500, Gray-400
+  Accent: #81D7B4
+
+13.3 BizFi Theme (Dark — forced)
+─────────────────────────────────
+  Background: #0F1825
+  Cards: #1A2538/50 with backdrop blur
+  Text: #F9F9FB (white)
+  Accent: #81D7B4
+  Borders: #7B8B9A/10-20
+
+13.4 Typography
+───────────────
+  Font: Exo (Google Fonts) — all weights 300-700
+  CSS Variable: --font-exo
+
+13.5 Border Radius
+──────────────────
+  Small: rounded-lg (8px)
+  Medium: rounded-xl (12px)
+  Large: rounded-2xl (16px)
+  XL: rounded-3xl (24px)
+  Hero: rounded-[2.5rem] (40px)
+
+================================================================================
+14. PROXY & ISP BYPASS
+================================================================================
+
+Problem: Some ISPs block Coinbase and RPC endpoints.
+
+Two solutions:
+  1. Integrated Next.js Proxy (default, recommended)
+     - Routes through /api/coinbase-proxy
+     - Auto-enabled (USE_PROXY = true in providers.tsx)
+     - Features: auto-retry, domain whitelisting, global fetch interception
+
+  2. Standalone Proxy Server
+     - Run: npm run proxy
+     - Runs on http://localhost:3001 (configurable PORT env)
+     - scripts/proxy-server.js
+     - Express-based with rate limiting
+
+================================================================================
+15. DEPLOYMENT
+================================================================================
+
+15.1 Vercel (Primary — Frontend)
+────────────────────────────────
+  - Automatic deployment from Git
+  - vercel.json for configuration
+  - Environment variables managed in Vercel dashboard
+
+15.2 VPS (Backend Services)
+───────────────────────────
+  - scripts/deploy-to-vps.sh — Automated VPS deployment
+  - Docker-based containerization
+  - Expect scripts for automated SSH operations
+  - Services: Telegram bot, heartbeat monitor, AI agent
+
+15.3 Available Scripts
+──────────────────────
+  npm run dev           — Start dev server (Turbopack)
+  npm run build         — Production build (Webpack)
+  npm run start         — Start production server
+  npm run lint          — Run ESLint
+  npm run proxy         — Start standalone proxy server
+  npm run agent         — Run BizMart AI agent
+  npm run start:agent   — Start agent HTTP server
+  npm run telegram:bot  — Start Telegram bot
+  npm run heartbeat:bot — Start heartbeat monitor
+
+================================================================================
+16. ENVIRONMENT VARIABLES
+================================================================================
+
+Required:
+  MONGODB_URI                  — MongoDB connection string
+  MONGODB_DB_NAME              — Database name (default: "bitsave")
+  NEXT_PUBLIC_PRIVY_APP_ID     — Privy application ID
+  NEXT_PUBLIC_RPC_URL          — Default RPC URL for Base
+
+BizFi:
+  PREDICTION_MARKET_FACTORY_ADDRESS  — Factory contract address
+  MOCK_USDC_ADDRESS                  — USDC contract address
+
+Admin:
+  ADMIN_PASSWORD               — Admin panel password
+  JWT_SECRET                   — JWT signing secret
+
+Email:
+  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  — Email configuration
+
+Cloudinary:
+  CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+
+Other:
+  BASESCAN_API_KEY             — For contract verification
+  PRIVATE_KEY                  — Deployer wallet private key (scripts only)
+
+================================================================================
+17. BLOG / ADMIN PANEL
+================================================================================
+
+Content management system at /admin:
+  - Blog post CRUD (create, edit, delete, publish)
+  - Category management
+  - Rich text editor (RichTextEditor component)
+  - Image upload via Cloudinary
+  - Published at /blog
+
+Admin authentication: username + password (AdminLoginForm.tsx)
+Blog database: MongoDB via lib/blogDatabase.ts
+
+================================================================================
+18. TELEGRAM BOT
+================================================================================
+
+scripts/telegram-bot.ts:
+  - Telegram notification bot using telegraf library
+  - Sends alerts about platform activity
+  - Configurable via environment variables
+
+scripts/heartbeat.ts:
+  - Service health monitoring
+  - Periodic checks on all platform services
+  - Alerts on failures
+
+================================================================================
+19. AI / NLP FEATURES
+================================================================================
+
+19.1 Natural Language Savings (/api/parse-savings-nlp)
+──────────────────────────────────────────────────────
+Users can describe savings plans in natural language and the system
+parses it into structured plan parameters.
+
+19.2 BizMart AI Agent
+─────────────────────
+  - lib/bizmart-agent.ts — Core agent logic
+  - lib/web3/agent-tools.ts — Blockchain interaction tools
+  - Can interact with prediction markets programmatically
+  - HTTP API server (scripts/agent-server.ts) on configurable port
+  - Telegram bot integration (scripts/telegram-bot.ts)
+
+================================================================================
+20. ANALYTICS & TRACKING
+================================================================================
+
+20.1 User Interaction Tracking
+──────────────────────────────
+  - lib/interactionTracker.ts handles event tracking
+  - Types: page views, button clicks, wallet connections, plan operations
+  - Stored in MongoDB user_interactions collection
+  - API: POST /api/track-interaction
+
+20.2 Analytics Components
+─────────────────────────
+  - AnalyticsDisplay.tsx — Visualization dashboard
+  - AnalyticsModal.tsx — Detailed analytics popup
+  - UserInteractionsSidebar.tsx — Admin analytics sidebar
+  - useAnalytics.ts hook — Frontend tracking
+
+20.3 TVL (Total Value Locked)
+─────────────────────────────
+  - API: GET /api/tvl
+  - utils/tvlCalculationUtils.ts — Calculation across all chains
+  - Aggregates value from all networks and tokens
+
+================================================================================
+21. SECURITY FEATURES
+================================================================================
+
+- Smart Contract: ReentrancyGuard, Pausable, Access Control (RBAC)
+- UUPS Proxy: Upgradeable contracts with proper access control
+- JWT Auth: Secure admin sessions with jose library
+- Input Validation: Form validation on all user inputs
+- Rate Limiting: API rate limiting via express-rate-limit
+- HTTPS: Enforced in production
+- Environment Variables: Sensitive data never committed
+- EIP-712: Typed signatures for BizFi referral system
+- Cookie Security: HttpOnly, Secure, SameSite attributes
+- CORS: Configured for allowed origins
+- Abort Controllers: Request timeout protection (4-6 second timeouts)
+
+================================================================================
+22. THIRD-PARTY INTEGRATIONS
+================================================================================
+
+  ┌──────────────────────┬────────────────────────────────────────────┐
+  │ Service              │ Purpose                                    │
+  ├──────────────────────┼────────────────────────────────────────────┤
+  │ Privy                │ Wallet authentication & embedded wallets   │
+  │ WalletConnect        │ Multi-wallet support                       │
+  │ Coinbase OnchainKit  │ Coinbase wallet integration                │
+  │ EAS                  │ Ethereum Attestation Service for BizFi     │
+  │ MongoDB              │ Application database                       │
+  │ Cloudinary           │ Image storage & optimization               │
+  │ CoinGecko            │ Token prices & network logos               │
+  │ Nodemailer           │ Transactional emails                       │
+  │ Telegram (telegraf)  │ Bot notifications                          │
+  │ Vercel               │ Frontend deployment                        │
+  │ ENS                  │ Ethereum Name Service resolution           │
+  │ Google Translate     │ Additional translation support             │
+  └──────────────────────┴────────────────────────────────────────────┘
+
+================================================================================
+23. COMMON PATTERNS & CONVENTIONS
+================================================================================
+
+23.1 Component Patterns
+───────────────────────
+- 'use client' directive for client components
+- Hydration safety: mounted state check before rendering
+- Error handling: handleContractError() wrapper
+- Loading states: ShimmerLoading/skeleton components
+- Modals: AnimatePresence + motion.div from Framer Motion
+- Network-aware: Components adapt based on connected network
+
+23.2 File Naming
+────────────────
+- Pages: page.tsx (App Router convention)
+- Layouts: layout.tsx
+- Components: PascalCase.tsx
+- Hooks: useHookName.ts
+- Utilities: camelCase.ts
+- API Routes: route.ts inside directory
+
+23.3 State Management
+─────────────────────
+- Server state: TanStack React Query
+- Auth state: Privy (usePrivy) + Wagmi (useAccount)
+- UI state: React useState
+- Theme: next-themes (useTheme)
+- Admin auth: Custom AuthProvider context
+
+23.4 Error Handling
+───────────────────
+- lib/contractErrorHandler.ts parses smart contract errors
+- API routes return appropriate HTTP status codes
+- UI shows toast notifications for user-facing errors
+- Timeout protection with AbortController (4-6s timeouts)
+- Optimistic updates with rollback on failure
+
+================================================================================
+24. KEY URLS & ROUTES
+================================================================================
+
+Public Routes:
+  /                        — Landing / marketing page
+  /[locale]                — Localized landing page
+  /blog                    — Public blog
+  /docs/terms-of-service   — Terms of Service
+  /docs/data-protection    — Data Protection Policy
+  /ref/[code]              — Referral link handler
+  /connect                 — Wallet connection
+  /usdglo                  — USDGLO token info
+
+Dashboard Routes (authenticated):
+  /dashboard               — Main dashboard
+  /dashboard/create-savings — Create savings plan
+  /dashboard/plans         — View all plans
+  /dashboard/leaderboard   — Leaderboard
+  /dashboard/activity      — Earn $BTS / Activity
+  /dashboard/referrals     — Referrals
+  /dashboard/social        — Savvy Space
+  /dashboard/settings      — User settings
+  /dashboard/withdraw      — Withdrawal
+
+BizFi Routes:
+  /bizfi                   — BizFi landing page
+  /bizfi/dashboard         — BizFi user dashboard
+  /bizfi/admin             — BizFi admin panel
+
+BizFun Routes:
+  /bizfun                  — Prediction markets
+  /bizfun/market/[id]      — Individual market
+
+Admin Routes:
+  /admin                   — Blog admin dashboard
+  /dev-admin               — Developer admin panel
+
+================================================================================
+25. GLOSSARY
+================================================================================
+
+$BTS        — Bitsave loyalty/reward token
+SaveFi      — Savings Finance (time-locked crypto savings)
+BizFi       — Business Finance (on-chain business attestation + SME lending)
+BizFun      — Prediction market platform
+EAS         — Ethereum Attestation Service
+UUPS        — Universal Upgradeable Proxy Standard
+TVL         — Total Value Locked
+ENS         — Ethereum Name Service
+KYC         — Know Your Customer
+AMM         — Automated Market Maker
+LMSR        — Logarithmic Market Scoring Rule (prediction market pricing)
+Child Contract — User-specific savings contract deployed by factory
+Maturity    — Date when savings can be withdrawn without penalty
+Penalty     — Fee charged for early withdrawal (5-20%)
+Tier        — Business classification level (Micro/Builder/Growth/Enterprise)
+Attestation — On-chain verification of business registration
+
+================================================================================
+END OF KNOWLEDGEBASE
+================================================================================

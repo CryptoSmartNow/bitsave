@@ -14,8 +14,10 @@ import {
     HiOutlineChevronLeft,
     HiOutlineChevronRight,
     HiOutlineBuildingStorefront,
-    HiOutlineChartBar
+    HiOutlineChartBar,
+    HiOutlineSparkles
 } from "react-icons/hi2";
+import { Bot } from "lucide-react";
 import { Exo } from "next/font/google";
 import { AnimatePresence, motion } from "framer-motion";
 import "../bizfi-colors.css";
@@ -42,6 +44,7 @@ export default function BizFiDashboardLayout({
         { href: "/bizfi/dashboard/bizcontent", label: "BizContent", icon: HiOutlineVideoCamera },
         { href: "/bizfi/dashboard/terminal", label: "BizMarket", icon: HiOutlineBuildingStorefront },
         { href: "/bizfi/dashboard/chat", label: "Chat", icon: HiOutlineChatBubbleBottomCenterText },
+        { href: "/bizfi/dashboard/ai", label: "BizFi AI", icon: Bot as any },
         { href: "/bizfi/dashboard/support", label: "Support and FAQs", icon: HiOutlineQuestionMarkCircle },
     ];
 
