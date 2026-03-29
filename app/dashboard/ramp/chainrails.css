@@ -1,0 +1,63 @@
+/* 
+  ChainRails SDK Overrides
+  Locking both the loader and modal to the exact center of the viewport
+*/
+
+/* Only apply wrapper effects when the modal is actually active */
+.payment-modal-wrapper.open {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+  z-index: 10000 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+/* 
+  Force both the loader and the actual modal to the shared viewport center.
+  Using fixed coordinates for both ensures they never disconnect.
+*/
+.payment-modal-loader-container,
+.payment-modal {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  
+  width: 90% !important;
+  max-width: 450px !important;
+  height: 454px !important;
+  
+  border-radius: 2rem !important;
+  box-shadow: 0 25px 50px -20px rgba(0, 0, 0, 0.6) !important;
+  background: white !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+}
+
+/* Modal must sit on top of the loader */
+.payment-modal { z-index: 10002 !important; }
+.payment-modal-loader-container { z-index: 10001 !important; }
+
+/* Ensure the iframe fills its fixed container perfectly */
+.payment-modal iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  display: block !important;
+}
+
+/* Force light mode backgrounds */
+.payment-modal-loader-container.light-mode { background: #ffffff !important; }
+
+/* Global anchor reset for all SDK classes */
+@media (min-width: 0px) {
+  .payment-modal-loader-container,
+  .payment-modal {
+    bottom: auto !important;
+    top: 50% !important;
+    left: 50% !important;
+  }
+}

@@ -9,6 +9,7 @@ import { HiOutlineTrophy, HiOutlineUserGroup, HiOutlineGlobeAlt } from 'react-ic
 // Lazy load heavy components
 const TwitterFeed = lazy(() => import('./components/TwitterFeed'))
 const SavvyFinanceVideos = lazy(() => import('./components/SavvyFinanceVideos'))
+const SavvyForum = lazy(() => import('./components/SavvyForum'))
 
 // Declare Twitter widgets for TypeScript
 declare global {
@@ -253,6 +254,17 @@ export default function SavvySpacePage() {
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Savvy Forum Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+        >
+          <Suspense fallback={<div className="h-64 bg-gray-50 rounded-2xl animate-pulse" />}>
+            <SavvyForum />
+          </Suspense>
         </motion.div>
 
         {/* Videos Section */}

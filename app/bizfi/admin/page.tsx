@@ -96,7 +96,8 @@ export default function BizFiAdminPage() {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(b =>
         b.businessName.toLowerCase().includes(lowerTerm) ||
-        b.owner.toLowerCase().includes(lowerTerm)
+        b.owner.toLowerCase().includes(lowerTerm) ||
+        (b.metadata?.ownerName && b.metadata.ownerName.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -457,7 +458,7 @@ export default function BizFiAdminPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A]" />
               <input
                 type="text"
-                placeholder="Search businesses..."
+                placeholder="Search by business or owner name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-[#1A2538]/50 border border-[#7B8B9A]/20 rounded-xl pl-11 pr-4 py-2.5 text-sm text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all shadow-sm"
