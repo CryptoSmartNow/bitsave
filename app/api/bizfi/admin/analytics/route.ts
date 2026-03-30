@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         // Total Revenue (Estimated snapshot)
         const allBusinesses = await collection.find({}, { projection: { tier: 1 } }).toArray();
         const totalRevenue = allBusinesses.reduce((acc, curr) => {
-            const tier = curr.tier?.toLowerCase();
+            const tier = typeof curr.tier === 'string' ? curr.tier.toLowerCase() : '';
             if (tier === 'enterprise') return acc + 100;
             if (tier === 'premium') return acc + 50;
             if (tier === 'standard') return acc + 10;

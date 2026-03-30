@@ -51,6 +51,11 @@ export default function BizFiAdminPage() {
   const [metrics, setMetrics] = useState<{
     totalBusinesses: number;
     statusDistribution: { _id: string; count: number }[];
+    tierDistribution: { _id: string; count: number }[];
+    totalRevenue: number;
+    growthData: any[];
+    revenueTrend: any[];
+    userActivity: any[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,8 +71,8 @@ export default function BizFiAdminPage() {
   };
 
   // Derived Data
-  const tierChartData = metrics?.statusDistribution?.map(item => ({
-    name: item._id,
+  const tierChartData = metrics?.tierDistribution?.map(item => ({
+    name: item._id || 'Standard',
     value: item.count
   })) || [];
 
@@ -308,7 +313,7 @@ export default function BizFiAdminPage() {
           <div className="relative z-10 pr-12">
             <p className="text-[#9BA8B5] text-sm font-medium mb-1">Approved</p>
             <h3 className="text-3xl font-bold text-[#F9F9FB] tracking-tight">
-              {metrics?.statusDistribution.find(s => s._id === 'approved' || s._id === 'active')?.count || 0}
+              {metrics?.statusDistribution?.find(s => s._id === 'approved' || s._id === 'active')?.count || 0}
             </h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
@@ -324,7 +329,7 @@ export default function BizFiAdminPage() {
           <div className="relative z-10 pr-12">
             <p className="text-[#9BA8B5] text-sm font-medium mb-1">Pending review</p>
             <h3 className="text-3xl font-bold text-[#F9F9FB] tracking-tight">
-              {metrics?.statusDistribution.find(s => s._id === 'pending')?.count || 0}
+              {metrics?.statusDistribution?.find(s => s._id === 'pending')?.count || 0}
             </h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
@@ -339,7 +344,9 @@ export default function BizFiAdminPage() {
         <motion.div variants={item} className="relative bg-[#1A2538]/50 backdrop-blur-sm p-6 rounded-2xl border border-[#7B8B9A]/10 hover:border-[#81D7B4]/30 transition-all group hover:shadow-lg hover:shadow-[#81D7B4]/5 flex flex-col justify-between overflow-hidden">
           <div className="relative z-10 pr-12">
             <p className="text-[#9BA8B5] text-sm font-medium mb-1">Est. Revenue</p>
-            <h3 className="text-3xl font-bold text-[#F9F9FB] tracking-tight">--</h3>
+            <h3 className="text-3xl font-bold text-[#F9F9FB] tracking-tight">
+              ${metrics?.totalRevenue?.toLocaleString() || '0'}
+            </h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
             <span className="text-lg font-bold group-hover:text-[#0F1825]">$</span>
