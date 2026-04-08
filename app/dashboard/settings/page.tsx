@@ -68,7 +68,7 @@ export default function Settings() {
           const data = await res.json();
           if (data.savvyName) {
             setCurrentSavvyName(data.savvyName);
-            setSavvyNameInput(data.savvyName);
+            setSavvyNameInput(data.savvyName.replace(/\.savvy$/, ''));
           }
         } catch (e) {
           console.error(e);
@@ -85,12 +85,14 @@ export default function Settings() {
       return toast.error('Savvy name must be 3-20 characters long and contain only letters, numbers, and underscores');
     }
 
+    const finalSavvyName = `${savvyNameInput.trim()}.savvy`;
+
     setIsSavingSavvyName(true);
     try {
       const response = await fetch('/api/users/savvy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, savvyName: savvyNameInput })
+        body: JSON.stringify({ walletAddress: address, savvyName: finalSavvyName })
       });
       const data = await response.json();
       if (response.ok && data.success) {
@@ -501,16 +503,17 @@ export default function Settings() {
                           type="text"
                           value={savvyNameInput}
                           onChange={(e) => setSavvyNameInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                          className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-[15px] font-bold text-[#0f172a] shadow-sm transition-all bg-white"
+                          className="w-full pl-10 pr-20 py-3.5 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-[15px] font-bold text-[#0f172a] shadow-sm transition-all bg-white"
                           placeholder="your_username"
                         />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[15px] pointer-events-none select-none">.savvy</span>
                      </div>
                      <button
                         onClick={handleSaveSavvyName}
-                        disabled={isSavingSavvyName || savvyNameInput === currentSavvyName}
+                        disabled={isSavingSavvyName || `${savvyNameInput}.savvy` === currentSavvyName}
                         className="px-8 py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 min-w-[140px]"
                      >
-                        {isSavingSavvyName ? 'Saving...' : (currentSavvyName && savvyNameInput === currentSavvyName ? 'Saved' : 'Update Name')}
+                        {isSavingSavvyName ? 'Saving...' : (currentSavvyName && `${savvyNameInput}.savvy` === currentSavvyName ? 'Saved' : 'Update Name')}
                      </button>
                   </div>
                   {currentSavvyName && (

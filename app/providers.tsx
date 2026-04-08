@@ -112,20 +112,22 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <InnerProviders>
-        {children}
-        <Toaster position="top-center" toastOptions={{
-          style: {
-            background: '#333',
-            color: '#fff',
-            borderRadius: '10px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#81D7B4',
-              secondary: '#fff',
+        <>
+          {children}
+          <Toaster position="top-center" toastOptions={{
+            style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
             },
-          },
-        }} />
+            success: {
+              iconTheme: {
+                primary: '#81D7B4',
+                secondary: '#fff',
+              },
+            },
+          }} />
+        </>
       </InnerProviders>
     </ThemeProvider>
   );

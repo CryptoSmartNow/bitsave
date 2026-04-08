@@ -14,7 +14,7 @@ import { Bot } from 'lucide-react';
 import SavvyBotWidget from '@/components/SavvyBotWidget';
 import { FiMenu as FiMenuIcon, FiX as FiXIcon } from 'react-icons/fi';
 import LanguageSelector from '@/components/LanguageSelector';
-
+import NetworkDetection from '@/components/NetworkDetection';
 
 // Removed custom network connection UI in favor of RainbowKit modal-only
 
@@ -87,10 +87,9 @@ export default function DashboardLayout({
   return (
     <div className={`${exo.variable} font-sans min-h-screen dashboard-page text-gray-800 overflow-x-hidden`}>
       {/* Sidebar - Mobile drawer with overlay and solid background; transparent on desktop */}
-      {isConnected && (
-        <>
-          {/* Mobile overlay when drawer is open */}
-          {!sidebarCollapsed && (
+      <>
+        {/* Mobile overlay when drawer is open */}
+        {!sidebarCollapsed && (
             <div
               className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40 md:hidden"
               onClick={toggleSidebar}
@@ -278,14 +277,12 @@ export default function DashboardLayout({
                   <span>{isDisconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
                 </button>
               </div>
-            </div>
           </div>
-        </>
-      )}
+        </div>
+      </>
 
       {/* Mobile sidebar toggle button */}
-      {isConnected && (
-        <div className="fixed right-4 top-4 z-[100] md:hidden">
+      <div className="fixed right-4 top-4 z-[100] md:hidden">
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSidebar(); }}
             className="p-2.5 rounded-xl transition-all duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center bg-white shadow-md border border-gray-200"
@@ -299,10 +296,9 @@ export default function DashboardLayout({
             )}
           </button>
         </div>
-      )}
 
       {/* Mobile Language Selector: Fixed top-right (left of menu) - Root Level */}
-      {mounted && isConnected && (
+      {mounted && (
         <div className="md:hidden fixed top-4 right-[72px] z-30 w-[100px]">
           <LanguageSelector />
         </div>
@@ -311,9 +307,9 @@ export default function DashboardLayout({
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ease-in-out ${isConnected ? 'md:ml-[260px]' : 'md:ml-0'} ml-0 overflow-x-hidden relative min-h-screen bg-[#F8FAF9]`}>
+      <div className={`transition-all duration-300 ease-in-out md:ml-[260px] ml-0 overflow-x-hidden relative min-h-screen bg-[#F8FAF9]`}>
 
-        {mounted && isConnected && (
+        {mounted && (
           <>
             {/* Desktop Language Selector: Absolute top-right */}
             <div className="hidden md:block absolute top-6 right-8 z-30 w-[140px]">
@@ -323,7 +319,8 @@ export default function DashboardLayout({
         )}
 
         {mounted ? (
-          isConnected ? (
+          <>
+            <NetworkDetection />
             <div className="mt-20 md:mt-8 px-4 sm:px-6 lg:px-10 pb-12">
               {(() => {
                 const pageTitles: Record<string, string> = {
@@ -356,18 +353,31 @@ export default function DashboardLayout({
               </div>
               <SavvyBotWidget />
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center min-h-screen gap-6 p-4 text-center">
-              <div className="w-24 h-24 relative mb-2">
-                <Image src="/bitsavelogo.png" alt="BitSave" fill className="object-contain" />
+
+            {/* Wallet Connect Modal Overlay */}
+            {!isConnected && ready && (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 backdrop-blur-[6px] p-4 transition-all duration-300">
+                <div className="bg-white rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.2)] w-full max-w-[400px] mx-auto overflow-hidden p-8 flex flex-col items-center text-center relative border border-gray-100/80 transform transition-all">
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 left-0 right-0 h-32 bg-[#F8FAF9] pointer-events-none rounded-t-[2.5rem] border-b border-gray-100" />
+                  <div className="absolute -left-16 -top-16 w-64 h-64 bg-[#81D7B4]/10 rounded-full blur-3xl pointer-events-none" />
+                  
+                  <div className="w-24 h-24 relative mb-6 mt-4 z-10 bg-white flex items-center justify-center border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-3xl group-hover:scale-105 transition-transform">
+                    <Image src="/bitsavelogo.png" alt="BitSave" fill className="object-contain p-3" />
+                  </div>
+                  
+                  <div className="z-10 w-full flex flex-col items-center mx-auto text-center">
+                    <h2 className="text-[26px] font-black tracking-tight text-gray-900 mb-2.5 leading-tight">Access Dashboard</h2>
+                    <p className="text-[15px] text-gray-500 mb-8 max-w-[280px] font-medium leading-relaxed">Connect your wallet securely to view your savings and manage your portfolio.</p>
+                    
+                    <div className="w-full max-w-[300px]">
+                      <CustomConnectButton />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your Wallet</h2>
-                <p className="text-gray-500 max-w-md mx-auto">Please connect your wallet to access your BitSave dashboard and manage your savings.</p>
-              </div>
-              <CustomConnectButton />
-            </div>
-          )
+            )}
+          </>
         ) : (
           <div className="flex items-center justify-center min-h-screen">
             <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full shadow-lg"></div>

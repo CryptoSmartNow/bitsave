@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -10,175 +10,182 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   const [mounted, setMounted] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Log error for debugging
     console.error('Error occurred:', error);
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({
+        x: (e.clientX / window.innerWidth - 0.5) * 20,
+        y: (e.clientY / window.innerHeight - 0.5) * 20,
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [error]);
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#fef5f1] to-[#fee8e0] flex items-center justify-center p-6 overflow-hidden relative">
-      {/* Subtle animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-[#ff6b6b] rounded-full opacity-5 blur-3xl animate-float-slow"></div>
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#81D7B4] rounded-full opacity-5 blur-3xl animate-float-slower"></div>
+    <div className="min-h-screen bg-[#0a0f0d] flex items-center justify-center p-6 overflow-hidden relative font-sans">
+
+      {/* Layered background orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Red-tinted top orb for error feel */}
+        <div
+          className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(248,113,113,0.1) 0%, transparent 70%)',
+            transform: `translate(${mousePos.x * 0.4}px, ${mousePos.y * 0.4}px)`,
+            transition: 'transform 0.8s ease-out',
+          }}
+        />
+        {/* Brand green bottom orb */}
+        <div
+          className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(129,215,180,0.07) 0%, transparent 70%)',
+            transform: `translate(${mousePos.x * -0.3}px, ${mousePos.y * -0.3}px)`,
+            transition: 'transform 1s ease-out',
+          }}
+        />
+        {/* Grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(129,215,180,1) 1px, transparent 1px), linear-gradient(90deg, rgba(129,215,180,1) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
       </div>
 
-      <div className="relative z-10 text-center max-w-3xl mx-auto">
-        {/* Clean 500 with visual hierarchy */}
-        <div className="mb-6">
-          <div className="inline-block relative">
-            <h1 className="text-[10rem] md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-br from-[#81D7B4] via-[#ff6b6b] to-[#81D7B4] leading-none tracking-tight">
-              500
-            </h1>
-            {/* Subtle shadow effect */}
-            <div className="absolute inset-0 text-[10rem] md:text-[14rem] font-black text-[#ff6b6b] opacity-10 blur-sm -z-10 translate-x-2 translate-y-2">
-              500
-            </div>
+      <div className="relative z-10 w-full max-w-2xl mx-auto text-center">
+
+        {/* Brand chip */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 mb-12">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+          <span className="text-xs font-bold text-red-400 tracking-widest uppercase">System Error</span>
+        </div>
+
+        {/* Giant 500 */}
+        <div className="relative mb-6 select-none">
+          <div
+            className="text-[clamp(100px,22vw,220px)] font-black leading-none tracking-tighter"
+            style={{
+              background: 'linear-gradient(135deg, rgba(248,113,113,0.9) 0%, rgba(248,113,113,0.3) 50%, rgba(129,215,180,0.4) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            500
+          </div>
+          {/* Glow behind */}
+          <div
+            className="absolute inset-0 flex items-center justify-center -z-10 blur-3xl opacity-15"
+            style={{ color: '#f87171', fontSize: 'clamp(100px,22vw,220px)', fontWeight: 900 }}
+          >
+            500
           </div>
         </div>
 
-        {/* Clear message hierarchy */}
-        <div className="mb-10 space-y-3">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
-            Internal Server Error
-          </h2>
-          <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl mx-auto">
-            Something went wrong on our end. We're working to fix it.
-          </p>
+        {/* Divider */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-red-500/30" />
+          <div className="w-2 h-2 rounded-full bg-red-400/60" />
+          <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-red-500/30" />
         </div>
 
-        {/* Minimalist icon */}
-        <div className="mb-10 flex justify-center">
-          <div className="relative">
-            <div className="w-20 h-20 bg-[#ff6b6b] rounded-2xl flex items-center justify-center shadow-lg transform rotate-12 hover:rotate-0 transition-transform duration-500">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-[#ff6b6b] rounded-2xl blur-xl opacity-20 animate-pulse-slow"></div>
-          </div>
-        </div>
+        {/* Heading & description */}
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+          Internal Server Error
+        </h1>
+        <p className="text-gray-400 text-lg leading-relaxed max-w-md mx-auto mb-8">
+          Something went wrong on our end. Our team has been notified and we're working on a fix.
+        </p>
 
-        {/* Error details (if available) */}
+        {/* Error details toggle */}
         {error.message && (
-          <div className="mb-10 p-5 bg-white/90 backdrop-blur-sm rounded-2xl border border-red-200/50 shadow-lg max-w-lg mx-auto">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-red-900 rounded-lg flex items-center justify-center mt-0.5">
-                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <div className="text-left flex-1">
-                <h3 className="font-semibold text-gray-100 mb-1 text-sm">Error Details</h3>
-                <p className="text-xs text-gray-400 font-mono break-all leading-relaxed">
+          <div className="mb-10 max-w-lg mx-auto">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="flex items-center gap-2 text-xs text-gray-600 hover:text-gray-400 transition-colors mx-auto mb-3 font-mono"
+            >
+              <svg
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              {showDetails ? 'Hide' : 'Show'} error details
+            </button>
+            {showDetails && (
+              <div className="p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 rounded-full bg-red-400" />
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Error Log</span>
+                </div>
+                <p className="text-xs text-gray-500 font-mono break-all leading-loose">
                   {error.message}
                 </p>
                 {error.digest && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    <span className="font-semibold">ID:</span> {error.digest}
+                  <p className="text-[10px] text-gray-600 mt-3 font-mono">
+                    <span className="text-gray-500">digest:</span> {error.digest}
                   </p>
                 )}
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Clean action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+        {/* Action buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-12">
           <button
             onClick={reset}
-            className="group px-8 py-4 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4] text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-[#81D7B4]/20 transform hover:-translate-y-1 transition-all duration-300"
+            className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0a0f0d] font-bold rounded-xl transition-all duration-200 shadow-[0_0_30px_rgba(129,215,180,0.2)] hover:shadow-[0_0_40px_rgba(129,215,180,0.35)]"
           >
-            <span className="flex items-center gap-2">
-              <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Try Again
-            </span>
+            <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Try Again
           </button>
           <Link
             href="/"
-            className="group px-8 py-4 bg-white text-[#81D7B4] font-semibold rounded-xl border-2 border-[#81D7B4] hover:bg-[#81D7B4] hover:text-white hover:border-[#81D7B4] transform hover:-translate-y-1 transition-all duration-300 shadow-md hover:shadow-xl"
+            className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white font-semibold rounded-xl border border-white/10 hover:border-white/20 transition-all duration-200"
           >
-            <span className="flex items-center gap-2">
-              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Back to Home
-            </span>
+            <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
           </Link>
         </div>
 
-        {/* Support info card with brand colors */}
-        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/30 shadow-xl max-w-md mx-auto">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-[#81D7B4] rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+        {/* Status + support strip */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          {/* Status badge */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-400" />
             </div>
-            <div className="text-left flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">Need Help?</h3>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Our team has been notified and is working on a fix. If the problem persists, please contact support.
-              </p>
-              <a
-                href="mailto:support@bitsave.io"
-                className="inline-flex items-center gap-1 text-sm text-[#81D7B4] hover:text-[#66C4A3] font-medium transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Contact Support
-              </a>
-            </div>
+            <span className="text-sm text-gray-500 font-medium">Investigating issue</span>
           </div>
+
+          {/* Support link */}
+          <a
+            href="mailto:support@bitsave.io"
+            className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-gray-500 hover:text-[#81D7B4] transition-colors font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Contact Support
+          </a>
         </div>
 
-        {/* Status indicator */}
-        <div className="mt-6 flex justify-center items-center gap-2">
-          <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff6b6b] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#ff6b6b]"></span>
-          </div>
-          <span className="text-sm text-gray-500 font-medium">Investigating Issue</span>
-        </div>
       </div>
-
-      <style jsx>{`
-        @keyframes float-slow {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          50% {
-            transform: translate(30px, -30px) scale(1.05);
-          }
-        }
-        @keyframes float-slower {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          50% {
-            transform: translate(-20px, 20px) scale(1.03);
-          }
-        }
-        .animate-float-slow {
-          animation: float-slow 8s ease-in-out infinite;
-        }
-        .animate-float-slower {
-          animation: float-slower 10s ease-in-out infinite;
-        }
-        .animate-pulse-slow {
-          animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-      `}</style>
     </div>
   );
 }

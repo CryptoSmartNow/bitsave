@@ -5,6 +5,92 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlineChatBubbleLeftRight, HiOutlineHeart, HiOutlinePaperAirplane, HiOutlinePlus, HiOutlineXMark, HiOutlineSparkles, HiOutlineHashtag } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 
+function MentionInput({ value, onChange, onKeyDown, placeholder, className, participants, isTextarea = false }: any) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    const match = value.match(/@([a-zA-Z0-9_\.]*)$/);
+    if (match) {
+      setShowSuggestions(true);
+      setMentionQuery(match[1]);
+      setSelectedIndex(0);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [value]);
+
+  const filteredParticipants = participants.filter((p: string) => 
+    p.toLowerCase().includes(mentionQuery.toLowerCase())
+  );
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showSuggestions && filteredParticipants.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((i) => (i + 1) % filteredParticipants.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((i) => (i - 1 + filteredParticipants.length) % filteredParticipants.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        insertMention(filteredParticipants[selectedIndex]);
+        return;
+      }
+    }
+    if (onKeyDown) onKeyDown(e as any);
+  };
+
+  const insertMention = (participant: string) => {
+    const newValue = value.replace(/@([a-zA-Z0-9_\.]*)$/, `@${participant} `);
+    onChange(newValue);
+    setShowSuggestions(false);
+  };
+
+  return (
+    <div className={`relative ${isTextarea ? 'w-full' : 'flex-1'}`}>
+      <AnimatePresence>
+        {showSuggestions && filteredParticipants.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-full mb-2 left-0 w-64 bg-white border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)] rounded-xl overflow-hidden z-50 flex flex-col"
+          >
+            <div className="text-[10px] uppercase font-black tracking-wider text-gray-400 bg-gray-50 px-3 py-1.5 border-b border-gray-100">
+              Mentions
+            </div>
+            <div className="max-h-48 overflow-y-auto">
+              {filteredParticipants.map((p: string, idx: number) => (
+                <button
+                  key={p}
+                  onClick={() => insertMention(p)}
+                  className={`w-full text-left px-3 py-2.5 text-[13px] font-bold flex items-center gap-2 transition-colors ${idx === selectedIndex ? 'bg-[#81D7B4]/10 text-[#2D5A4A]' : 'hover:bg-gray-50 text-gray-700'}`}
+                >
+                  {p === 'SavvyBot' ? (
+                    <span className="w-5 h-5 rounded-md bg-[#81D7B4] flex items-center justify-center text-white"><HiOutlineSparkles className="w-3 h-3"/></span>
+                  ) : (
+                     <span className="w-5 h-5 rounded-md bg-gray-100 flex items-center justify-center text-gray-500 font-mono text-[9px]">@</span>
+                  )}
+                  {p}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {isTextarea ? (
+        <textarea value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder={placeholder} className={className} rows={4} />
+      ) : (
+        <input value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder={placeholder} className={className} />
+      )}
+    </div>
+  );
+}
+
 interface Reply {
   _id: string;
   content: string;
@@ -49,15 +135,16 @@ export default function SavvyForum() {
   const [askBotChat, setAskBotChat] = useState<{role: 'user'|'bot', content: string}[]>([]);
   const [askBotInput, setAskBotInput] = useState('');
   const [isBotThinking, setIsBotThinking] = useState(false);
+  const [botTypingInPost, setBotTypingInPost] = useState<string | null>(null); // New state for inline bot typing in threads
   const botChatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     botChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [askBotChat, isBotThinking]);
 
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (initialLoad = false) => {
     try {
-      setIsLoading(true);
+      if (initialLoad) setIsLoading(true);
       const url = activeTag ? `/api/forum?tag=${activeTag}` : '/api/forum';
       const res = await fetch(url);
       if (res.ok) {
@@ -67,11 +154,11 @@ export default function SavvyForum() {
     } catch {
       console.error('Failed to fetch posts');
     } finally {
-      setIsLoading(false);
+      if (initialLoad) setIsLoading(false);
     }
   }, [activeTag]);
 
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+  useEffect(() => { fetchPosts(true); }, [fetchPosts]);
 
   const handleCreatePost = async () => {
     if (!newTitle.trim() || !newContent.trim()) { toast.error('Title and content are required'); return; }
@@ -84,10 +171,46 @@ export default function SavvyForum() {
         body: JSON.stringify({ title: newTitle, content: newContent, walletAddress: address, tags: newTags }),
       });
       if (res.ok) {
+        const createdData = await res.json();
         toast.success('Post created!');
         setShowCreateForm(false);
         setNewTitle(''); setNewContent(''); setNewTags([]);
-        fetchPosts();
+        await fetchPosts(false);
+        
+        // Auto-reply if bot is tagged in new post
+        if (newContent.toLowerCase().includes('@savvybot') && createdData.post?._id) {
+            setBotTypingInPost(createdData.post._id);
+            setExpandedPost(createdData.post._id);
+            try {
+              const botRes = await fetch('/api/savvy-bot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  question: newContent.replace(/@savvy(?:bot)?\b/gi, '').trim() || 'Talk about this.',
+                  chatHistory: [{ role: 'System', content: `Forum discussion context: "${newTitle}" - ${newContent}` }]
+                })
+              });
+              if (botRes.ok) {
+                const botData = await botRes.json();
+                await fetch('/api/forum', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    postId: createdData.post._id, 
+                    walletAddress: '0x0000000000000000000000000000000SavvyBot', 
+                    replyContent: botData.reply, 
+                    action: 'reply',
+                    savvyName: 'SavvyBot'
+                  }),
+                });
+                await fetchPosts(false);
+              }
+            } catch (e) {
+              console.error('Failed to get bot reply on new post', e);
+            } finally {
+              setBotTypingInPost(null);
+            }
+        }
       } else { toast.error('Failed to create post'); }
     } catch { toast.error('An error occurred'); } finally { setIsPosting(false); }
   };
@@ -103,10 +226,11 @@ export default function SavvyForum() {
       });
       if (res.ok) {
         setReplyInputs(prev => ({ ...prev, [postId]: '' }));
-        await fetchPosts();
+        await fetchPosts(false);
 
         // Check if reply invokes the bot
-        if (replyContent.toLowerCase().match(/^@savvy(?:bot)?\b/)) {
+        if (replyContent.toLowerCase().includes('@savvybot')) {
+          setBotTypingInPost(postId);
           const currentPost = posts.find(p => p._id === postId);
           const context = currentPost ? `Forum discussion context: "${currentPost.title}" - ${currentPost.content}` : '';
           
@@ -115,7 +239,7 @@ export default function SavvyForum() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                question: replyContent.replace(/^@savvy(?:bot)?\b/i, '').trim() || 'Respond to this discussion.',
+                question: replyContent.replace(/@savvy(?:bot)?\b/gi, '').trim() || 'Respond to this discussion.',
                 chatHistory: [{ role: 'System', content: context }]
               })
             });
@@ -133,10 +257,12 @@ export default function SavvyForum() {
                   savvyName: 'SavvyBot'
                 }),
               });
-              await fetchPosts();
+              await fetchPosts(false);
             }
           } catch (e) {
             console.error('Failed to get bot reply', e);
+          } finally {
+            setBotTypingInPost(null);
           }
         }
       }
@@ -318,13 +444,13 @@ export default function SavvyForum() {
                 {expandedPost === post._id && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-gray-50 bg-[#FAFBFA]">
                     <div className="p-4 space-y-2.5 max-h-60 overflow-y-auto">
-                      {(!post.replies || post.replies.length === 0) && (
+                      {(!post.replies || post.replies.length === 0) && !botTypingInPost && (
                         <p className="text-xs text-gray-400 text-center py-2">No replies yet</p>
                       )}
                       {post.replies?.map((reply) => (
                         <div key={reply._id} className="flex gap-2.5">
-                          <div className="w-6 h-6 rounded-full bg-[#81D7B4]/15 flex items-center justify-center text-[8px] font-black text-[#2D5A4A] shrink-0 mt-0.5">
-                            {reply.savvyName ? reply.savvyName.slice(0, 2).toUpperCase() : reply.walletAddress.slice(2, 4).toUpperCase()}
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${reply.savvyName === 'SavvyBot' ? 'bg-[#81D7B4] text-white shadow-sm' : 'bg-[#81D7B4]/15 text-[#2D5A4A]'}`}>
+                            {reply.savvyName === 'SavvyBot' ? <HiOutlineSparkles className="w-3.5 h-3.5"/> : <span className="text-[8px] font-black">{reply.savvyName ? reply.savvyName.slice(0, 2).toUpperCase() : reply.walletAddress.slice(2, 4).toUpperCase()}</span>}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
@@ -335,16 +461,39 @@ export default function SavvyForum() {
                           </div>
                         </div>
                       ))}
+                      {botTypingInPost === post._id && (
+                        <div className="flex gap-2.5 opacity-70">
+                          <div className="w-6 h-6 rounded-full bg-[#81D7B4] flex items-center justify-center text-white shrink-0 mt-0.5 shadow-sm">
+                            <HiOutlineSparkles className="w-3.5 h-3.5"/>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-[#81D7B4]">@SavvyBot</span>
+                              <span className="text-[9px] text-gray-400">typing...</span>
+                            </div>
+                            <div className="flex gap-1 mt-1.5 ml-1">
+                              <span className="w-1.5 h-1.5 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-1.5 h-1.5 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="w-1.5 h-1.5 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Reply Input */}
                     <div className="p-3 border-t border-gray-100 flex gap-2">
-                      <input
+                      <MentionInput
                         value={replyInputs[post._id] || ''}
-                        onChange={(e) => setReplyInputs(prev => ({ ...prev, [post._id]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleReply(post._id); }}
-                        placeholder="Write a reply..."
-                        className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium outline-none focus:border-[#81D7B4]"
+                        onChange={(val: string) => setReplyInputs(prev => ({ ...prev, [post._id]: val }))}
+                        onKeyDown={(e: any) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply(post._id); } }}
+                        placeholder="Write a reply... Try @mentioning"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium outline-none focus:border-[#81D7B4]"
+                        participants={Array.from(new Set([
+                          'SavvyBot',
+                          post.savvyName || post.walletAddress?.slice(0,6) || '',
+                          ...(post.replies?.map(r => r.savvyName || r.walletAddress?.slice(0,6) || '') || [])
+                        ])).filter(Boolean)}
                       />
                       <button onClick={() => handleReply(post._id)} disabled={!replyInputs[post._id]?.trim()} className="w-8 h-8 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-white rounded-lg disabled:opacity-40 shrink-0">
                         <HiOutlinePaperAirplane className="w-3.5 h-3.5" />
@@ -439,7 +588,14 @@ export default function SavvyForum() {
                 <div className="space-y-4">
                   <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Discussion title" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-sm font-bold text-gray-900" />
 
-                  <textarea value={newContent} onChange={e => setNewContent(e.target.value)} placeholder="Share your thoughts..." rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-sm font-medium text-gray-900 resize-none" />
+                  <MentionInput
+                    value={newContent}
+                    onChange={(val: string) => setNewContent(val)}
+                    placeholder="Share your thoughts... Type @ to mention a bot"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-sm font-medium text-gray-900 resize-none"
+                    participants={['SavvyBot']}
+                    isTextarea={true}
+                  />
 
                   <div>
                     <p className="text-xs font-bold text-gray-500 mb-2">Tags</p>
