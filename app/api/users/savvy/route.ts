@@ -39,9 +39,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Wallet address and savvy name are required' }, { status: 400 });
         }
 
-        // Basic validation for savvy name (e.g., alphanumeric, underscores, 3-20 chars)
+        // Basic validation for savvy name (e.g., alphanumeric, underscores, 3-20 chars base part)
+        const baseName = savvyName.endsWith('.savvy') ? savvyName.slice(0, -6) : savvyName;
+        const finalSavvyName = savvyName.endsWith('.savvy') ? savvyName : `${savvyName}.savvy`;
+
         const savvyNameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-        if (!savvyNameRegex.test(savvyName)) {
+        if (!savvyNameRegex.test(baseName)) {
             return NextResponse.json({
                 error: 'Savvy name must be 3-20 characters long and contain only letters, numbers, and underscores'
             }, { status: 400 });
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
 
         // Check if savvy name is already taken (case-insensitive)
         const existingName = await collection.findOne({
-            savvyName: { $regex: new RegExp(`^${savvyName}$`, 'i') }
+            savvyName: { $regex: new RegExp(`^${finalSavvyName}$`, 'i') }
         });
 
         if (existingName) {
@@ -72,7 +75,7 @@ export async function POST(request: Request) {
             { walletAddress: walletAddress.toLowerCase() },
             {
                 $set: {
-                    savvyName: savvyName,
+                    savvyName: finalSavvyName,
                     updatedAt: new Date()
                 },
                 $setOnInsert: {
@@ -82,7 +85,7 @@ export async function POST(request: Request) {
             { upsert: true }
         );
 
-        return NextResponse.json({ success: true, savvyName });
+        return NextResponse.json({ success: true, savvyName: finalSavvyName });
     } catch (error) {
         console.error('Error setting savvy name:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

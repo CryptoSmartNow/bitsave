@@ -6,10 +6,11 @@ import { useReferrals } from '@/lib/useReferrals';
 import { useSavingsData } from '@/hooks/useSavingsData';
 import { HiOutlineTrophy, HiOutlineUserGroup, HiOutlineGlobeAlt } from 'react-icons/hi2';
 
-// Lazy load heavy components
+// Import dependencies
+import SavvyForum from './components/SavvyForum'
+
 const TwitterFeed = lazy(() => import('./components/TwitterFeed'))
 const SavvyFinanceVideos = lazy(() => import('./components/SavvyFinanceVideos'))
-const SavvyForum = lazy(() => import('./components/SavvyForum'))
 
 // Declare Twitter widgets for TypeScript
 declare global {
@@ -262,9 +263,7 @@ export default function SavvySpacePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.25 }}
         >
-          <Suspense fallback={<div className="h-64 bg-gray-50 rounded-2xl animate-pulse" />}>
-            <SavvyForum />
-          </Suspense>
+          <SavvyForum />
         </motion.div>
 
         {/* Videos Section */}

@@ -372,6 +372,16 @@ export default function BizFiDashboardPage() {
                                             </span>
                                         </label>
                                     </div>
+                                    <p className="text-xs mb-3" style={{ color: '#7B8B9A' }}>
+                                        Don't have one?{' '}
+                                        <Link
+                                            href="/dashboard/referrals"
+                                            className="text-[#81D7B4] hover:underline font-semibold inline-flex items-center gap-1 group"
+                                        >
+                                            Head to your referrals page to get one
+                                            <HiOutlineArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                        </Link>
+                                    </p>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
