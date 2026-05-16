@@ -120,8 +120,8 @@ export default function StepOnePlanDetails({
 
           <button
             type="button"
-            onClick={() => setIsNetworkOpen(true)}
-            className="w-full flex items-center justify-between bg-white border border-gray-200 hover:border-[#81D7B4] px-5 py-4 rounded-[16px] transition-all focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/30 shadow-sm"
+            onClick={() => chain !== 'solana' && setIsNetworkOpen(true)}
+            className={`w-full flex items-center justify-between bg-white border border-gray-200 px-5 py-4 rounded-[16px] transition-all focus:outline-none shadow-sm ${chain === 'solana' ? 'cursor-default opacity-90' : 'hover:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/30'}`}
           >
             {selectedChainObj ? (
               <div className="flex items-center gap-3">
@@ -139,7 +139,7 @@ export default function StepOnePlanDetails({
             ) : (
               <span className="font-medium text-gray-400">Select Network</span>
             )}
-            <HiChevronDown className="w-5 h-5 text-gray-500 transition-transform" />
+            {chain !== 'solana' && <HiChevronDown className="w-5 h-5 text-gray-500 transition-transform" />}
           </button>
         </div>
 
