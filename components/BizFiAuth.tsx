@@ -2,6 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount, useDisconnect } from "wagmi";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { HiOutlineArrowLeftOnRectangle } from "react-icons/hi2";
 import { useState, useEffect } from "react";
 
@@ -14,22 +15,23 @@ export function BizFiAuthButton({ className }: { className?: string }) {
     const { login, ready, authenticated, user, logout } = usePrivy();
     const { isConnected: isWagmiConnected, address: wagmiAddress } = useAccount();
     const { disconnect: wagmiDisconnect } = useDisconnect();
+    const { publicKey, connected: isSolanaConnected, disconnect: solanaDisconnect } = useWallet();
 
     const [isDisconnecting, setIsDisconnecting] = useState(false);
 
     // Determine if user is signed in (either via Privy or external Wallet)
-    const isSignedIn = ready && (authenticated || isWagmiConnected) && !isDisconnecting;
+    const isSignedIn = ready && (authenticated || isWagmiConnected || isSolanaConnected) && !isDisconnecting;
 
     // Reset disconnecting state when fully disconnected
     useEffect(() => {
-        if (!authenticated && !isWagmiConnected) {
+        if (!authenticated && !isWagmiConnected && !isSolanaConnected) {
             setIsDisconnecting(false);
         }
-    }, [authenticated, isWagmiConnected]);
+    }, [authenticated, isWagmiConnected, isSolanaConnected]);
 
     if (isSignedIn) {
         // Prefer Wagmi address if connected, otherwise Privy wallet
-        const address = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
+        const address = isSolanaConnected ? publicKey?.toBase58() : (isWagmiConnected ? wagmiAddress : user?.wallet?.address);
 
         // Truncate address for display or use email if no wallet address
         const displayAddress = address
@@ -40,6 +42,9 @@ export function BizFiAuthButton({ className }: { className?: string }) {
             setIsDisconnecting(true);
             if (isWagmiConnected) {
                 wagmiDisconnect();
+            }
+            if (isSolanaConnected) {
+                solanaDisconnect();
             }
             await logout();
         };

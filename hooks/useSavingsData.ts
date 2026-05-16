@@ -14,7 +14,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount, useChainId } from 'wagmi';
-import { usePrivy } from '@privy-io/react-auth';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import {
@@ -82,6 +83,7 @@ interface UseSavingsDataReturn {
   isBSCNetwork: boolean;
   isHederaNetwork: boolean;
   isAvalancheNetwork: boolean;
+  isSolanaNetwork: boolean;
   isCorrectNetwork: boolean;
   refetch: (forceRefresh?: boolean) => Promise<void>;
   clearCache: () => void;
@@ -113,14 +115,42 @@ export function useSavingsData(): UseSavingsDataReturn {
   // Wagmi hooks for wallet connection
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const chainId = useChainId();
+  
+  // Solana hook
+  const { publicKey } = useWallet();
+  const solanaWalletAdapterAddress = publicKey?.toBase58();
 
   // Privy hooks for authentication state
   const { ready, authenticated, user } = usePrivy();
+  const { wallets } = useWallets();
+
+  // Detect Solana wallet from all Privy sources including MetaMask Solana
+  const privySolanaWallet = wallets?.find((w: any) => {
+    if (w.chainType === 'solana') return true;
+    if (['phantom', 'solflare', 'backpack'].includes(w.walletClientType)) return true;
+    if (w.chainId && String(w.chainId).startsWith('solana')) return true;
+    // Any wallet with a Solana-style address (base58, 32-44 chars, not 0x-prefixed)
+    if (w.address && !w.address.startsWith('0x') && w.address.length >= 32 && w.address.length <= 44) return true;
+    return false;
+  });
+  // Also check Privy user's linked accounts for Solana wallet addresses
+  const privyLinkedSolanaAddress = (user as any)?.linkedAccounts?.find(
+    (account: any) => (account.type === 'wallet' && account.chainType === 'solana') || account.chainId === 'solana:mainnet'
+  )?.address;
+  const solanaAddress = solanaWalletAdapterAddress || privySolanaWallet?.address || privyLinkedSolanaAddress;
+
+  // Network overrides from storage
+  const activeNetwork = typeof window !== 'undefined' ? localStorage.getItem('bitsave_active_network') : null;
+  const isSolanaActive = activeNetwork === 'solana';
 
   // Use Privy's wallet address as fallback, prioritizing wagmi address
-  const address = wagmiAddress || user?.wallet?.address as `0x${string}` | undefined;
-  // Consider connected if either Privy is authenticated or wagmi is connected
-  const isConnected = (ready && authenticated) || isWagmiConnected;
+  const evmAddress = wagmiAddress || user?.wallet?.address as `0x${string}` | undefined;
+  
+  // The effective address based on the active network (fall back to EVM address if no Solana wallet)
+  const address = isSolanaActive ? (solanaAddress || evmAddress) : evmAddress;
+  
+  // Consider connected if either Privy is authenticated, wagmi is connected, or solana wallet is connected
+  const isConnected = isSolanaActive ? (!!solanaAddress || (ready && authenticated) || isWagmiConnected) : ((ready && authenticated) || isWagmiConnected);
 
 
 
@@ -137,7 +167,29 @@ export function useSavingsData(): UseSavingsDataReturn {
   const [isBSCNetwork, setIsBSCNetwork] = useState(false);
   const [isHederaNetwork, setIsHederaNetwork] = useState(false);
   const [isAvalancheNetwork, setIsAvalancheNetwork] = useState(false);
+  const [isSolanaNetwork, setIsSolanaNetwork] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+
+  // Determine current network string identifier
+  useEffect(() => {
+    if (isSolanaNetwork) {
+      setCurrentNetwork('solana');
+    } else if (isBaseNetwork) {
+      setCurrentNetwork('base');
+    } else if (isCeloNetwork) {
+      setCurrentNetwork('celo');
+    } else if (isLiskNetwork) {
+      setCurrentNetwork('lisk');
+    } else if (isBSCNetwork) {
+      setCurrentNetwork('bsc');
+    } else if (isHederaNetwork) {
+      setCurrentNetwork('hedera');
+    } else if (isAvalancheNetwork) {
+      setCurrentNetwork('avalanche');
+    } else {
+      setCurrentNetwork(null);
+    }
+  }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isHederaNetwork, isAvalancheNetwork, isSolanaNetwork]);
 
   // Ref to track if component is mounted
   const isMountedRef = useRef(true);
@@ -151,16 +203,36 @@ export function useSavingsData(): UseSavingsDataReturn {
 
   // Update network states based on wagmi chainId
   useEffect(() => {
-    if (!chainId) {
+    // Also check local storage for manually selected network overrides
+    // or solana wallet adapter connection
+    const activeNetwork = localStorage.getItem('bitsave_active_network');
+    const isSolana = activeNetwork === 'solana';
+
+    if (!chainId && !isSolana) {
       setIsBaseNetwork(false);
       setIsCeloNetwork(false);
       setIsLiskNetwork(false);
       setIsBSCNetwork(false);
       setIsHederaNetwork(false);
       setIsAvalancheNetwork(false);
+      setIsSolanaNetwork(false);
       setIsCorrectNetwork(false);
       return;
     }
+
+    if (isSolana) {
+      setIsSolanaNetwork(true);
+      setIsBaseNetwork(false);
+      setIsCeloNetwork(false);
+      setIsLiskNetwork(false);
+      setIsBSCNetwork(false);
+      setIsHederaNetwork(false);
+      setIsAvalancheNetwork(false);
+      setIsCorrectNetwork(true);
+      return;
+    }
+
+    if (!chainId) return;
 
     const chainIdBigInt = BigInt(chainId);
     const isBase = chainIdBigInt === BASE_CHAIN_ID;
@@ -170,14 +242,17 @@ export function useSavingsData(): UseSavingsDataReturn {
     const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
     const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
-    // Force immediate state updates
+    setIsSolanaNetwork(false);
     setIsBaseNetwork(isBase);
     setIsCeloNetwork(isCelo);
     setIsLiskNetwork(isLisk);
     setIsBSCNetwork(isBSC);
     setIsHederaNetwork(isHedera);
     setIsAvalancheNetwork(isAvalanche);
-    setIsCorrectNetwork(isBase || isCelo || isLisk || isBSC || isHedera || isAvalanche);
+
+    // Check if user is on one of the supported EVM networks
+    const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche || isHedera;
+    setIsCorrectNetwork(isSupported);
   }, [chainId]);
 
   // Handle initial loading state when wallet connection changes
@@ -262,6 +337,27 @@ export function useSavingsData(): UseSavingsDataReturn {
   ): Promise<SavingsData | null> => {
     if (!isConnected || !address) {
       return null;
+    }
+
+    // Check if Solana is the active network
+    const activeNetwork = localStorage.getItem('bitsave_active_network');
+    const isSolanaActive = activeNetwork === 'solana';
+
+    if (isSolanaActive) {
+      if (DEBUG) console.log(`=== Mocking Solana savings fetch for user: ${address} ===`);
+      // Return mocked Solana data for now until backend indexer is ready
+      return {
+        totalLocked: "0.00",
+        totalRewards: "0.00",
+        savingsPlans: [],
+        networks: {
+          Solana: {
+            balance: "0.00",
+            percentage: 100,
+            plans: []
+          }
+        }
+      } as any;
     }
 
     if (DEBUG) console.log(`=== Starting savings fetch for user: ${address} ===`);
@@ -732,7 +828,11 @@ export function useSavingsData(): UseSavingsDataReturn {
 
   // Main fetch function with caching logic
   const fetchSavingsData = useCallback(async (forceRefresh = false) => {
-    if (!isConnected || !address || !chainId) {
+    // Check if Solana is the active network
+    const activeNetwork = localStorage.getItem('bitsave_active_network');
+    const isSolanaActive = activeNetwork === 'solana';
+
+    if (!isConnected || !address || (!chainId && !isSolanaActive)) {
       setSavingsData(defaultSavingsData);
       setIsLoading(false);
       setIsBackgroundLoading(false);
@@ -741,7 +841,8 @@ export function useSavingsData(): UseSavingsDataReturn {
     }
 
     // Use "all-chains" as the cache key since data is aggregated across all networks
-    const networkChainId = "all-chains";
+    // But for Solana, keep it isolated
+    const networkChainId = isSolanaActive ? "solana" : "all-chains";
     const cachedData = getCachedSavingsData(address, networkChainId);
     const needsRefresh = needsBackgroundRefresh(address, networkChainId);
 
@@ -811,25 +912,42 @@ export function useSavingsData(): UseSavingsDataReturn {
       const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
       const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
-      setIsBaseNetwork(isBase);
-      setIsCeloNetwork(isCelo);
-      setIsLiskNetwork(isLisk);
-      setIsBSCNetwork(isBSC);
-      setIsHederaNetwork(isHedera);
-      setIsAvalancheNetwork(isAvalanche);
-      setIsCorrectNetwork(isBase || isCelo || isLisk || isBSC || isHedera || isAvalanche);
+      // Also check local storage for manually selected network overrides
+      // or solana wallet adapter connection
+      const activeNetwork = localStorage.getItem('bitsave_active_network');
+      const isSolana = activeNetwork === 'solana';
+      setIsSolanaNetwork(isSolana);
+
+      setIsBaseNetwork(isSolana ? false : isBase);
+      setIsCeloNetwork(isSolana ? false : isCelo);
+      setIsLiskNetwork(isSolana ? false : isLisk);
+      setIsBSCNetwork(isSolana ? false : isBSC);
+      setIsHederaNetwork(isSolana ? false : isHedera);
+      setIsAvalancheNetwork(isSolana ? false : isAvalanche);
+
+      // Check if user is on one of the supported EVM networks or solana
+      const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche || isHedera || isSolana;
+      setIsCorrectNetwork(isSupported);
+    } else {
+      // If no chainId, check if we're explicitly on Solana
+      const activeNetwork = localStorage.getItem('bitsave_active_network');
+      const isSolana = activeNetwork === 'solana';
+      if (isSolana) {
+        setIsSolanaNetwork(true);
+        setIsCorrectNetwork(true);
+      }
     }
   }, [chainId]);
 
   // Initial data fetch on mount or when dependencies change
   useEffect(() => {
-    if (isConnected && address && chainId) {
+    if (isConnected && address && (chainId || isSolanaNetwork)) {
       fetchSavingsData();
     } else {
       setSavingsData(defaultSavingsData);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, chainId]);
+  }, [isConnected, address, chainId, isSolanaNetwork]);
 
   return {
     savingsData,
@@ -844,6 +962,7 @@ export function useSavingsData(): UseSavingsDataReturn {
     isBSCNetwork,
     isHederaNetwork,
     isAvalancheNetwork,
+    isSolanaNetwork,
     isCorrectNetwork,
     refetch,
     clearCache,

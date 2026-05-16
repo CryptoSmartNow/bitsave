@@ -16,6 +16,7 @@ import InstallPWA from '@/components/InstallPWA';
 
 // Add this import to your layout file
 // import "../styles/date-picker.css";
+import '@solana/wallet-adapter-react-ui/styles.css';
 
 export const metadata: Metadata = {
   title: 'BitSave - Your Crypto Savings Protocol',
@@ -74,8 +75,8 @@ export default function RootLayout({
     <html lang="en" className={`${exo.variable}`} suppressHydrationWarning>
       <body className={`${exo.className}`}>
         <Providers>
-          <ReferralTracker />
-          <InstallPWA />
+          <ReferralTracker key="referral-tracker" />
+          <InstallPWA key="install-pwa" />
           {children}
         </Providers>
       </body>

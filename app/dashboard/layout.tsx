@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useOptimizedDisconnect } from '../../lib/useOptimizedDisconnect';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -38,6 +39,7 @@ export default function DashboardLayout({
   });
   const { ready, authenticated, user } = usePrivy();
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
+  const { connected: isSolanaConnected, publicKey } = useWallet();
   const { disconnect, isDisconnecting } = useOptimizedDisconnect();
   const router = useRouter();
   const pathname = usePathname();
@@ -47,11 +49,11 @@ export default function DashboardLayout({
   };
 
   // Compute common address
-  const activeAddress = wagmiAddress || user?.wallet?.address;
+  const activeAddress = publicKey?.toBase58() || wagmiAddress || user?.wallet?.address;
 
-  // Use Privy's authenticated state or Wagmi connection state
-  // Show as connected if either Privy is authenticated or Wagmi is connected
-  const isConnected = ready && (authenticated || isWagmiConnected);
+  // Use Privy's authenticated state, Wagmi connection state, or Solana connection state
+  // Show as connected if any of these are active
+  const isConnected = ready && (authenticated || isWagmiConnected || isSolanaConnected);
 
   useEffect(() => {
     setMounted(true);

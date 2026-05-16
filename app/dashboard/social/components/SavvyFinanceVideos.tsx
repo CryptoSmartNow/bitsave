@@ -8,19 +8,8 @@ const getYouTubeThumbnail = (videoId: string, quality: 'maxresdefault' | 'hqdefa
   return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
 };
 
-// Function to fetch video title from YouTube Embed API
-const fetchVideoTitle = async (videoId: string): Promise<string> => {
-  try {
-    const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
-    if (response.ok) {
-      const data = await response.json();
-      return data.title || 'Video Title';
-    }
-  } catch (error) {
-    console.error('Error fetching video title:', error);
-  }
-  return 'Video Title'; // Fallback title
-};
+// Function to fetch video title from YouTube Embed API removed as it fails on client side due to CORS.
+// Titles are now provided directly in the video object.
 
 // Video data will be passed as props
 type Video = {
@@ -37,29 +26,11 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
   const [showPlayer, setShowPlayer] = useState(false)
   const [isInView, setIsInView] = useState(false)
   const [thumbnailError, setThumbnailError] = useState(false)
-  const [actualTitle, setActualTitle] = useState(video.title)
-  const [titleLoading, setTitleLoading] = useState(true)
   const cardRef = useRef<HTMLDivElement>(null)
   
   // Generate thumbnail URL with fallback
   const thumbnailUrl = video.thumbnail || getYouTubeThumbnail(video.id)
   const fallbackThumbnailUrl = getYouTubeThumbnail(video.id, 'hqdefault')
-
-  // Fetch actual video title
-  useEffect(() => {
-    const getTitle = async () => {
-      try {
-        const title = await fetchVideoTitle(video.id);
-        setActualTitle(title);
-      } catch (error) {
-        console.error('Failed to fetch video title:', error);
-      } finally {
-        setTitleLoading(false);
-      }
-    };
-    
-    getTitle();
-  }, [video.id]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -99,7 +70,7 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
           <div className="aspect-video rounded-t-2xl overflow-hidden">
             <iframe
               src={video.embedUrl}
-              title={actualTitle}
+              title={video.title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -113,7 +84,7 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
             
             <Image
               src={thumbnailError ? fallbackThumbnailUrl : thumbnailUrl}
-              alt={actualTitle}
+              alt={video.title}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               onLoad={() => setIsLoaded(true)}
@@ -156,14 +127,7 @@ const VideoCard = ({ video, index }: { video: Video; index: number }) => {
           </div>
           
           <h3 className="text-base font-bold text-gray-900 mb-4 line-clamp-2 leading-tight flex-grow group-hover:text-[#2D5A4A] transition-colors duration-300">
-            {titleLoading ? (
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-100 rounded animate-pulse w-full"></div>
-                <div className="h-4 bg-gray-100 rounded w-2/3 animate-pulse"></div>
-              </div>
-            ) : (
-              actualTitle
-            )}
+            {video.title}
           </h3>
           
           <motion.button

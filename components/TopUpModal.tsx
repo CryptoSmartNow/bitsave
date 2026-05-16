@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
+import { useBitsaveSolana } from '@/hooks/useBitsaveSolana';
+import { PublicKey } from '@solana/web3.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
@@ -128,6 +130,7 @@ const TopUpModal = memo(function TopUpModal({
   const { address, isConnected } = useAccount()
   const signer = useEthersSigner()
   const chainId = useChainId()
+  const { incrementSaving: incrementSolanaSaving } = useBitsaveSolana()
 
   // Wallet balance checking states
   const [walletBalance, setWalletBalance] = useState<string>('0')
@@ -351,8 +354,10 @@ const TopUpModal = memo(function TopUpModal({
       const LISK_CHAIN_ID = BigInt(1135);
       const BSC_CHAIN_ID = BigInt(56);
 
-      let networkType = 'celo'; // default
-      if (network.chainId === BASE_CHAIN_ID) {
+      let networkType: string = 'celo'; // default
+      if (currentNetwork as string === 'solana') {
+        networkType = 'solana';
+      } else if (network.chainId === BASE_CHAIN_ID) {
         networkType = 'base';
       } else if (network.chainId === LISK_CHAIN_ID) {
         networkType = 'lisk';
@@ -362,6 +367,7 @@ const TopUpModal = memo(function TopUpModal({
         networkType = 'celo';
       }
 
+
       if (networkType === 'celo') {
         // currencyName logic moved below
       } else if (networkType === 'bsc') {
@@ -369,9 +375,9 @@ const TopUpModal = memo(function TopUpModal({
       }
 
       let contractAddress;
-      let tokenAddress;
+      let tokenAddress: string = '';
       let decimals = 6;
-      let tokenNameToUse;
+      let tokenNameToUse = '';
 
       if (networkType === 'base') {
         contractAddress = getBaseContractAddress(planContractAddress, planStartTime);
@@ -385,6 +391,10 @@ const TopUpModal = memo(function TopUpModal({
         contractAddress = BSC_CONTRACT_ADDRESS;
         tokenAddress = USDC_BSC_ADDRESS;
         tokenNameToUse = "USDC";
+      } else if (networkType === 'solana') {
+        tokenAddress = tokenName === 'USDT' ? 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' : 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+        tokenNameToUse = tokenName || "USDC";
+        decimals = 6;
       } else {
         contractAddress = CELO_CONTRACT_ADDRESS;
         tokenAddress = USDGLO_CELO_ADDRESS;
@@ -451,6 +461,57 @@ const TopUpModal = memo(function TopUpModal({
         const networkLabel = networkType.charAt(0).toUpperCase() + networkType.slice(1);
         currencyName = `${networkLabel}(${tokenNameToUse})`;
       }
+
+      if (networkType === 'solana') {
+        const tx = await incrementSolanaSaving(
+          savingsPlanName,
+          userEnteredAmount,
+          decimals,
+          new PublicKey(tokenAddress)
+        );
+
+        setTxHash(tx);
+        
+        try {
+          await axios.post(
+            "/api/transactions",
+            {
+              amount: userEnteredAmount,
+              txnhash: tx,
+              chain: 'solana',
+              savingsname: savingsPlanName,
+              useraddress: address,
+              transaction_type: "topup",
+              currency: tokenNameToUse
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              }
+            }
+          );
+        } catch (apiError) {
+          console.error("Error sending transaction data to API:", apiError);
+        }
+
+        if (address) {
+          trackTransaction(address, {
+            type: 'top_up',
+            amount: userEnteredAmount.toString(),
+            currency: tokenNameToUse,
+            chain: 'solana',
+            planName: savingsPlanName,
+            txHash: tx
+          });
+        }
+
+        setSuccess(true);
+        setShowTransactionModal(true);
+        setLoading(false);
+        return;
+      }
+
+      if (!contractAddress) throw new Error("Contract address not set");
 
       const code = await provider.getCode(contractAddress);
       if (code === "0x") {

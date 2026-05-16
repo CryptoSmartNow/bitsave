@@ -2,6 +2,8 @@
 
 import { usePrivy } from '@privy-io/react-auth';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useEffect, useState } from 'react';
 import { HiOutlineArrowRightOnRectangle, HiOutlineWallet } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
@@ -10,6 +12,7 @@ export default function CustomConnectButton() {
   const { login, ready, authenticated, user, logout } = usePrivy();
   const { isConnected: isWagmiConnected, address: wagmiAddress } = useAccount();
   const { disconnect: wagmiDisconnect } = useDisconnect();
+  const { connected: isSolanaConnected, publicKey, disconnect: solanaDisconnect } = useWallet();
 
   // We use local state to ensure hydration match
   const [mounted, setMounted] = useState(false);
@@ -21,19 +24,27 @@ export default function CustomConnectButton() {
 
   // Reset disconnecting state when both auth states are cleared
   useEffect(() => {
-    if (!authenticated && !isWagmiConnected) {
+    if (!authenticated && !isWagmiConnected && !isSolanaConnected) {
       setIsDisconnecting(false);
     }
-  }, [authenticated, isWagmiConnected]);
+  }, [authenticated, isWagmiConnected, isSolanaConnected]);
+
+  // Set active network to solana when native solana wallet connects
+  useEffect(() => {
+    if (isSolanaConnected) {
+      localStorage.setItem('bitsave_active_network', 'solana');
+      window.dispatchEvent(new Event('storage'));
+    }
+  }, [isSolanaConnected]);
 
   if (!mounted) return null;
 
-  // Use Privy's authenticated state as primary indicator
-  // Only show as connected if Privy is authenticated AND not in disconnecting state
-  const isConnected = ready && authenticated && !isDisconnecting;
+  // Use Privy's authenticated state or Solana state as primary indicator
+  // Only show as connected if Privy is authenticated or Solana is connected AND not in disconnecting state
+  const isConnected = ready && (authenticated || isSolanaConnected) && !isDisconnecting;
 
   // Determine display address
-  const address = user?.wallet?.address || wagmiAddress;
+  const address = publicKey?.toBase58() || user?.wallet?.address || wagmiAddress;
   const displayAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : user?.email?.address || "Connected";
@@ -45,6 +56,11 @@ export default function CustomConnectButton() {
       // Disconnect Wagmi first
       if (isWagmiConnected) {
         wagmiDisconnect();
+      }
+
+      // Disconnect Solana native
+      if (isSolanaConnected) {
+        await solanaDisconnect();
       }
 
       // Then logout from Privy to ensure auth state is cleared
@@ -79,14 +95,19 @@ export default function CustomConnectButton() {
   }
 
   return (
-    <div className="flex justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full gap-3">
       <button
         onClick={() => login({ loginMethods: ['wallet'] })}
         className="w-full justify-center bg-gradient-to-r from-[#81D7B4] to-[#66C4A3] hover:from-[#66C4A3] hover:to-[#81D7B4] text-white font-semibold py-3.5 px-8 rounded-[1.25rem] transition-all duration-300 shadow-[0_8px_20px_rgba(129,215,180,0.25)] hover:shadow-[0_12px_25px_rgba(129,215,180,0.35)] hover:-translate-y-0.5 active:scale-95 active:translate-y-0 flex items-center gap-2"
       >
-        <HiOutlineWallet className="w-5 h-5 flex-shrink-0" />
-        <span className="text-[15px]">Connect Wallet</span>
+        <span className="text-[15px]">Connect EVM Wallet</span>
       </button>
+
+      <div className="w-full relative [&_.wallet-adapter-button]:w-full [&_.wallet-adapter-button]:justify-center [&_.wallet-adapter-button]:bg-transparent [&_.wallet-adapter-button]:hover:bg-[#81D7B4]/5 [&_.wallet-adapter-button]:text-[#81D7B4] [&_.wallet-adapter-button]:border-2 [&_.wallet-adapter-button]:border-[#81D7B4] [&_.wallet-adapter-button]:font-semibold [&_.wallet-adapter-button]:py-3.5 [&_.wallet-adapter-button]:px-8 [&_.wallet-adapter-button]:rounded-[1.25rem] [&_.wallet-adapter-button]:h-[auto] [&_.wallet-adapter-button]:min-h-[52px] [&_.wallet-adapter-button]:transition-all [&_.wallet-adapter-button]:duration-300 [&_.wallet-adapter-dropdown]:w-full">
+        <WalletMultiButton>
+          <span className="text-[15px]">Connect Solana</span>
+        </WalletMultiButton>
+      </div>
     </div>
   );
 }

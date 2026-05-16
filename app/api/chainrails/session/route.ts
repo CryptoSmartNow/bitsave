@@ -11,9 +11,16 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const recipient = searchParams.get('recipient') || '';
-        const amount = searchParams.get('amount') || '0';
+        let amount = searchParams.get('amount') || '0';
         const destinationChain = searchParams.get('chain') || 'BASE';
         const token = searchParams.get('token') || 'USDC';
+        const mode = searchParams.get('mode') || 'buy';
+
+        // Pass exact amount to Chainrails so the UI matches what the user entered
+        let finalAmount = parseFloat(amount);
+        if (!isNaN(finalAmount)) {
+            amount = finalAmount.toFixed(2);
+        }
 
         if (!recipient) {
             return NextResponse.json({ error: 'Recipient wallet address is required' }, { status: 400 });
@@ -30,8 +37,6 @@ export async function GET(request: Request) {
             token: token as any,
         });
 
-        // The SDK returns the session URL directly or an object. Let's return the whole thing.
-        // It's likely returning `{ url: "...", token: "..." }`
         return NextResponse.json(session);
     } catch (error: any) {
         console.error('ChainRails session error:', error);

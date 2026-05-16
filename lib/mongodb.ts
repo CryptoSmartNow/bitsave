@@ -10,11 +10,12 @@ const options = {
   serverSelectionTimeoutMS: 10000, // Increase timeout to 10s
   connectTimeoutMS: 10000, // Give up initial connection after 10s
   socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-  maxPoolSize: 10, // Maintain up to 10 socket connections
+  maxPoolSize: 50, // Increase pool size to 50 for blazing fast concurrency handling
   retryWrites: true,
   writeConcern: new WriteConcern('majority'),
   directConnection: false, // Allow driver to discover all nodes
-  readPreference: ReadPreference.PRIMARY
+  readPreference: ReadPreference.PRIMARY,
+  family: 4 // Force IPv4 to fix ENOTFOUND DNS resolution errors on some networks/Node versions
 };
 
 let client: MongoClient | null = null;

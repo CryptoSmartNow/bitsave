@@ -33,7 +33,37 @@ export function useReferrals(): UseReferralsReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generateReferralCode = async () => {
+  const refreshReferralData = useCallback(async () => {
+    if (!address) {
+      setReferralData(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/referrals/track?walletAddress=${address}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // User doesn't have a referral code yet
+          setReferralData(null);
+          return;
+        }
+        throw new Error('Failed to fetch referral data');
+      }
+
+      const data = await response.json();
+      setReferralData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, [address]);
+
+  const generateReferralCode = useCallback(async () => {
     if (!address) {
       setError('Wallet not connected');
       return;
@@ -62,7 +92,7 @@ export function useReferrals(): UseReferralsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [address, refreshReferralData]);
 
   const trackReferralVisit = useCallback(async (referralCode: string) => {
     try {
@@ -113,35 +143,7 @@ export function useReferrals(): UseReferralsReturn {
     }
   }, [address]);
 
-  const refreshReferralData = useCallback(async () => {
-    if (!address) {
-      setReferralData(null);
-      return;
-    }
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/referrals/track?walletAddress=${address}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          // User doesn't have a referral code yet
-          setReferralData(null);
-          return;
-        }
-        throw new Error('Failed to fetch referral data');
-      }
-
-      const data = await response.json();
-      setReferralData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, [address]);
 
   // Auto-fetch referral data when wallet connects
   useEffect(() => {

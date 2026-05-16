@@ -1,8 +1,8 @@
-import { useDisconnect } from 'wagmi';
+import { useDisconnect, useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { trackWalletDisconnect } from './interactionTracker';
 
 /**
@@ -13,6 +13,7 @@ export function useOptimizedDisconnect() {
   const router = useRouter();
   const { address } = useAccount();
   const { logout } = usePrivy();
+  const { disconnect: solanaDisconnect } = useWallet();
 
   const { disconnect: wagmiDisconnect, isPending } = useDisconnect({
     mutation: {
@@ -36,6 +37,9 @@ export function useOptimizedDisconnect() {
 
     // Disconnect wagmi first to clear wallet state immediately
     wagmiDisconnect();
+    
+    // Disconnect solana wallet if present
+    solanaDisconnect();
 
     // Then logout from Privy (wait for it to ensure clean state)
     try {

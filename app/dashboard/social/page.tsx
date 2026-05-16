@@ -62,66 +62,50 @@ const twitterLinks = [
 
 const savvyFinanceVideos = [
   {
-    id: 'yxEQHPaM6MU',
-    title: 'How to Tokenise Your Business on BizMarket and Raise Capital from the Web3 Space.',
+    id: 'daOztI1KsS8',
+    title: 'Bitsave Story',
     creator: 'Bitsave Protocol',
-    embedUrl: 'https://www.youtube.com/embed/yxEQHPaM6MU',
-    url: 'https://www.youtube.com/watch?v=yxEQHPaM6MU',
+    embedUrl: 'https://www.youtube.com/embed/daOztI1KsS8',
+    url: 'https://www.youtube.com/watch?v=daOztI1KsS8',
     views: '1.2K',
     duration: '2:45'
   },
   {
-    id: 'kTGV7mCBF_s',
-    title: 'How to innovate your business with tech in 2026',
+    id: 'OG6NC_6_9Oo',
+    title: 'DeFi in 2026 is SaveFi - (What you need to know about Vitalik Buterin\'s Low Risk #defi)',
     creator: 'Bitsave Protocol',
-    embedUrl: 'https://www.youtube.com/embed/kTGV7mCBF_s',
-    url: 'https://www.youtube.com/watch?v=kTGV7mCBF_s',
+    embedUrl: 'https://www.youtube.com/embed/OG6NC_6_9Oo',
+    url: 'https://www.youtube.com/watch?v=OG6NC_6_9Oo',
     views: '850',
     duration: '3:12'
   },
   {
-    id: 'DMtgJmsRj8w',
-    title: 'Earn up to $1,000 Monthly as a BizFi Merchant',
+    id: 'BDQxf_fgsNo',
+    title: 'How To Save Onchain - (Use Bitsave.io)',
     creator: 'Bitsave Protocol',
-    embedUrl: 'https://www.youtube.com/embed/DMtgJmsRj8w',
-    url: 'https://www.youtube.com/watch?v=DMtgJmsRj8w',
+    embedUrl: 'https://www.youtube.com/embed/BDQxf_fgsNo',
+    url: 'https://www.youtube.com/watch?v=BDQxf_fgsNo',
     views: '2.1K',
     duration: '1:58'
   },
   {
-    id: 'DmcrSzhP0uA',
-    title: 'How to Raise Capital Without Banks in 2026',
+    id: 'InTpwxsQkzs',
+    title: 'How to hide your funds on Bitsave from your wallet #blockchain #savings #onchain',
     creator: 'Bitsave Protocol',
-    embedUrl: 'https://www.youtube.com/embed/DmcrSzhP0uA',
-    url: 'https://www.youtube.com/watch?v=DmcrSzhP0uA',
+    embedUrl: 'https://www.youtube.com/embed/InTpwxsQkzs',
+    url: 'https://www.youtube.com/watch?v=InTpwxsQkzs',
     views: '1.5K',
     duration: '4:20'
-  },
-  {
-    id: 'DmwqIOPQ70A',
-    title: 'Your Government Is Tokenizing Assets — Why Isn’t Your Business?',
-    creator: 'Bitsave Protocol',
-    embedUrl: 'https://www.youtube.com/embed/DmwqIOPQ70A',
-    url: 'https://www.youtube.com/watch?v=DmwqIOPQ70A',
-    views: '920',
-    duration: '3:35'
-  },
-  {
-    id: '0tYXxQOHvFA',
-    title: 'Bitsave\'s BizMarket Is Live: The New Way Businesses Raise Capital Onchain',
-    creator: 'Bitsave Protocol',
-    embedUrl: 'https://www.youtube.com/embed/0tYXxQOHvFA',
-    url: 'https://www.youtube.com/watch?v=0tYXxQOHvFA',
-    views: '3.4K',
-    duration: '5:10'
-  },
+  }
 ];
 
 export default function SavvySpacePage() {
   const [userData] = useState(MOCK_USER_DATA)
   const [showModal, setShowModal] = useState(false)
-  const { referralData, loading: referralLoading, generateReferralCode } = useReferrals()
-  const { savingsData } = useSavingsData()
+  const { referralData, loading: referralLoading, error: referralError, generateReferralCode } = useReferrals()
+  const { savingsData, isLoading: savingsLoading } = useSavingsData()
+
+  const isPageLoading = referralLoading || savingsLoading;
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -136,10 +120,10 @@ export default function SavvySpacePage() {
 
   // Generate referral code on component mount if user doesn't have one
   useEffect(() => {
-    if (!referralData && !referralLoading) {
+    if (!referralData && !referralLoading && !referralError) {
       generateReferralCode()
     }
-  }, [referralData, referralLoading, generateReferralCode])
+  }, [referralData, referralLoading, referralError, generateReferralCode])
 
   const referralLink = referralData?.referralLink || 'https://bitsave.io'
 
@@ -279,7 +263,11 @@ export default function SavvySpacePage() {
             {/* <button className="text-[#81D7B4] font-bold text-sm hover:underline">View All</button> */}
           </div>
 
-          <Suspense fallback={<div className="h-64 bg-gray-50 rounded-2xl animate-pulse" />}>
+          <Suspense fallback={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map(i => <div key={i} className="bg-white rounded-2xl border border-gray-100 h-[240px] animate-[shimmer_1.5s_infinite]"></div>)}
+            </div>
+          }>
             <SavvyFinanceVideos videos={savvyFinanceVideos} />
           </Suspense>
         </section>
@@ -331,7 +319,46 @@ export default function SavvySpacePage() {
           </motion.div>
         </header>
 
-        <SavvySpace />
+        {isPageLoading ? (
+          <div className="space-y-12 pb-20">
+            {/* Stats Bar Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between h-[88px]">
+                <div className="w-full h-full flex flex-col justify-center gap-3">
+                  <div className="w-24 h-3 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
+                  <div className="w-32 h-6 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite] shrink-0"></div>
+              </div>
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-center h-[88px]">
+                <div className="w-24 h-3 rounded-full bg-gray-100 mb-3 animate-[shimmer_1.5s_infinite]"></div>
+                <div className="w-full h-8 rounded-lg bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
+              </div>
+            </div>
+
+            {/* Wrapped CTA Skeleton */}
+            <div className="rounded-[28px] bg-white p-8 sm:p-10 border border-gray-100 shadow-sm h-[250px] flex flex-col justify-center gap-6">
+               <div className="w-24 h-6 rounded-full bg-[#81D7B4]/20 animate-[shimmer_1.5s_infinite]"></div>
+               <div className="w-64 h-12 rounded-lg bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
+               <div className="w-full max-w-md h-4 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
+            </div>
+
+            {/* Forum Skeleton */}
+            <div className="rounded-2xl bg-white border border-gray-100 h-[400px] animate-[shimmer_1.5s_infinite]"></div>
+
+            {/* Videos Skeleton */}
+            <div>
+              <div className="w-48 h-8 rounded bg-gray-100 mb-6 animate-[shimmer_1.5s_infinite]"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="bg-white rounded-2xl border border-gray-100 h-[240px] animate-[shimmer_1.5s_infinite]"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <SavvySpace />
+        )}
       </div>
 
       {/* Success Modal */}

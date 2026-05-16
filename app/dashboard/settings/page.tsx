@@ -373,7 +373,7 @@ export default function Settings() {
   const generateCodeChallenge = async (verifier: string) => {
     const encoder = new TextEncoder();
     const data = encoder.encode(verifier);
-    const digest = await crypto.subtle.digest('SHA-256', data);
+    const digest = await crypto.subtle.digest('SHA-256', data as any);
     return btoa(String.fromCharCode(...new Uint8Array(digest)))
       .replace(/=/g, '')
       .replace(/\+/g, '-')

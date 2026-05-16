@@ -27,11 +27,18 @@ export function useWalletDetection(): UseWalletDetectionReturn {
     // Detect wallet type
     const detectedWallet = detectWalletType();
     setWalletInfo(detectedWallet);
+
+    // Check if user has already dismissed this modal
+    const dismissed = localStorage.getItem(DONT_SHOW_AGAIN_KEY);
+    if (dismissed) {
+      setIsDismissed(true);
+    }
   }, []);
 
   const dismissRecommendation = () => {
-    // Hide modal for this session only - will show again on next page visit
+    // Hide modal permanently for this browser
     setIsDismissed(true);
+    localStorage.setItem(DONT_SHOW_AGAIN_KEY, 'true');
   };
 
   const isRabby = walletInfo?.name === 'Rabby Wallet' || false;

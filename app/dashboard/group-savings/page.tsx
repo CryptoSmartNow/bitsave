@@ -3,8 +3,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
-import { HiOutlinePlus, HiOutlineUsers, HiOutlineXMark, HiOutlineUserPlus, HiOutlineChartBar, HiOutlineCalendar } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineUsers, HiOutlineXMark, HiOutlineUserPlus, HiOutlineChartBar, HiOutlineCalendar, HiOutlineTrash, HiOutlineChevronDown } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
+import { format, parseISO } from 'date-fns';
+import CustomDatePicker from '@/components/CustomDatePicker';
 
 const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
@@ -22,7 +24,6 @@ interface GroupSavings {
   _id: string;
   name: string;
   description: string;
-  goalAmount: number;
   currentAmount: number;
   token: string;
   network: string;
@@ -42,7 +43,6 @@ export default function GroupSavingsPage() {
 
   // Create form state
   const [formName, setFormName] = useState('');
-  const [formGoal, setFormGoal] = useState('');
   const [formToken, setFormToken] = useState('USDC');
   const [formChain, setFormChain] = useState('Base');
   const [formPenalty, setFormPenalty] = useState('10%');
@@ -50,6 +50,8 @@ export default function GroupSavingsPage() {
   const [formMaturity, setFormMaturity] = useState('');
   const [formInvites, setFormInvites] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showFormCalendar, setShowFormCalendar] = useState(false);
 
   const fetchGroups = useCallback(async () => {
     if (!address) return;
@@ -84,7 +86,7 @@ export default function GroupSavingsPage() {
   }, [formChain, availableTokens, formToken]);
 
   const handleCreate = async () => {
-    if (!formName.trim() || !formGoal) { toast.error('Name and goal amount are required'); return; }
+    if (!formName.trim()) { toast.error('Name is required'); return; }
     setIsCreating(true);
     try {
       const invitedSavvyNames = formInvites.split(',').map(s => s.trim().replace('@', '')).filter(Boolean);
@@ -92,7 +94,7 @@ export default function GroupSavingsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formName, goalAmount: formGoal, token: formToken, description: formDescription,
+          name: formName, token: formToken, description: formDescription,
           maturityDate: formMaturity || null, creatorWallet: address, invitedSavvyNames, network: formChain, penalty: formPenalty
         }),
       });
@@ -100,7 +102,7 @@ export default function GroupSavingsPage() {
       if (res.ok && data.success) {
         toast.success('Group created!');
         setShowCreateModal(false);
-        setFormName(''); setFormGoal(''); setFormDescription(''); setFormMaturity(''); setFormInvites('');
+        setFormName(''); setFormDescription(''); setFormMaturity(''); setFormInvites('');
         fetchGroups();
       } else {
         toast.error(data.error || 'Failed to create group');
@@ -108,7 +110,31 @@ export default function GroupSavingsPage() {
     } catch { toast.error('An error occurred'); } finally { setIsCreating(false); }
   };
 
-  const getProgress = (group: GroupSavings) => Math.min((group.currentAmount / group.goalAmount) * 100, 100);
+  const handleDelete = async (groupId: string) => {
+    if (!address) return;
+    if (!window.confirm('Are you sure you want to delete this group? This will only delete the group record; individual savings will remain intact.')) return;
+    
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/savings/group?groupId=${groupId}&walletAddress=${address}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('Group deleted successfully');
+        setSelectedGroup(null);
+        fetchGroups();
+      } else {
+        toast.error(data.error || 'Failed to delete group');
+      }
+    } catch {
+      toast.error('An error occurred while deleting');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+
 
   return (
     <div className={`${exo.variable} font-sans max-w-5xl mx-auto`}>
@@ -159,16 +185,15 @@ export default function GroupSavingsPage() {
                 </span>
               </div>
 
-              {/* Progress Bar */}
+              {/* Stats */}
               <div className="mb-4">
                 <div className="flex justify-between text-xs font-bold mb-1.5">
-                  <span className="text-gray-500">{group.currentAmount.toLocaleString()} {group.token}</span>
-                  <span className="text-[#81D7B4]">{group.goalAmount.toLocaleString()} {group.token}</span>
+                  <span className="text-gray-500 uppercase tracking-wider">Total Saved</span>
+                  <span className="text-[#81D7B4]">{group.currentAmount.toLocaleString()} {group.token}</span>
                 </div>
-                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#81D7B4] to-[#5CB899] rounded-full transition-all duration-500" style={{ width: `${getProgress(group)}%` }} />
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#81D7B4] rounded-full" style={{ width: '100%' }} />
                 </div>
-                <p className="text-[10px] text-gray-400 font-bold mt-1">{getProgress(group).toFixed(0)}% of goal</p>
               </div>
 
               {/* Members */}
@@ -222,11 +247,9 @@ export default function GroupSavingsPage() {
                     </div>
                   </div>
 
+
                   <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-4">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Parameters</label>
-                    <div>
-                      <input value={formGoal} onChange={e => setFormGoal(e.target.value)} type="number" placeholder="Goal Amount" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#81D7B4] outline-none text-xl font-black text-gray-900 shadow-sm transition-all focus:ring-4 focus:ring-[#81D7B4]/10 text-center" />
-                    </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Network *</label>
@@ -248,9 +271,52 @@ export default function GroupSavingsPage() {
                         {['10%', '20%', '30%'].map((p: string) => <option key={p} value={p}>{p}</option>)}
                       </select>
                     </div>
-                    <div>
+                    <div className="relative">
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Target Date</label>
-                      <input value={formMaturity} onChange={e => setFormMaturity(e.target.value)} type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#81D7B4] outline-none text-sm font-bold text-gray-900 shadow-sm transition-all focus:ring-4 focus:ring-[#81D7B4]/10" />
+                      <button 
+                        type="button"
+                        onClick={() => setShowFormCalendar(!showFormCalendar)}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 bg-white hover:border-[#81D7B4] focus:ring-4 focus:ring-[#81D7B4]/10 transition-all text-sm font-bold text-gray-900 shadow-sm outline-none"
+                      >
+                        <span className={formMaturity ? 'text-gray-900' : 'text-gray-400 font-medium'}>
+                          {formMaturity ? format(parseISO(formMaturity), 'MMM d, yyyy') : 'Select Date'}
+                        </span>
+                        <HiOutlineCalendar className="w-5 h-5 text-gray-400" />
+                      </button>
+
+                      <AnimatePresence>
+                        {showFormCalendar && (
+                          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                            <motion.div 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={() => setShowFormCalendar(false)}
+                              className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"
+                            />
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                              className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden w-full max-w-[320px] sm:max-w-[400px]"
+                            >
+                              <div className="p-4 bg-[#81D7B4]/5 border-b border-gray-100 flex items-center justify-between">
+                                <h3 className="text-sm font-black text-gray-900 tracking-tight">Select Target Date</h3>
+                                <button onClick={() => setShowFormCalendar(false)} className="text-gray-400 hover:text-gray-600">
+                                  <HiOutlineXMark className="w-5 h-5" />
+                                </button>
+                              </div>
+                              <CustomDatePicker
+                                selectedDate={formMaturity ? parseISO(formMaturity) : null}
+                                onSelectDate={(date) => {
+                                  setFormMaturity(format(date, 'yyyy-MM-dd'));
+                                  setShowFormCalendar(false);
+                                }}
+                              />
+                            </motion.div>
+                          </div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                   </div>
@@ -293,21 +359,34 @@ export default function GroupSavingsPage() {
 
                 {selectedGroup.description && <p className="text-sm text-gray-500 mb-4">{selectedGroup.description}</p>}
 
-                {/* Progress */}
+                {/* Stats */}
                 <div className="bg-[#F8FAF9] rounded-2xl p-5 mb-6 border border-[#81D7B4]/10">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <HiOutlineChartBar className="w-5 h-5 text-[#81D7B4]" />
-                      <span className="text-sm font-bold text-gray-700">Progress</span>
+                      <span className="text-sm font-bold text-gray-700">Group Status</span>
                     </div>
-                    <span className="text-lg font-black text-[#81D7B4]">{getProgress(selectedGroup).toFixed(0)}%</span>
                   </div>
-                  <div className="w-full h-3 bg-white rounded-full overflow-hidden mb-2">
-                    <div className="h-full bg-gradient-to-r from-[#81D7B4] to-[#5CB899] rounded-full transition-all" style={{ width: `${getProgress(selectedGroup)}%` }} />
-                  </div>
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-gray-500">{selectedGroup.currentAmount.toLocaleString()} {selectedGroup.token} saved</span>
-                    <span className="text-gray-400">Goal: {selectedGroup.goalAmount.toLocaleString()} {selectedGroup.token}</span>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Savings</p>
+                      <p className="text-2xl font-black text-gray-900">{selectedGroup.currentAmount.toLocaleString()} <span className="text-[#81D7B4] text-lg">{selectedGroup.token}</span></p>
+                    </div>
+                    
+                    <button 
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          groupId: selectedGroup._id,
+                          currency: selectedGroup.token,
+                          chain: selectedGroup.network.toLowerCase()
+                        });
+                        window.location.href = `/dashboard/create-savings?${params.toString()}`;
+                      }}
+                      className="w-full py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(129,215,180,0.2)] transition-all flex items-center justify-center gap-2"
+                    >
+                      <HiOutlinePlus className="w-5 h-5" />
+                      Create Savings for Group
+                    </button>
                   </div>
                 </div>
 
@@ -334,9 +413,21 @@ export default function GroupSavingsPage() {
                   ))}
                 </div>
 
-                <button onClick={() => setSelectedGroup(null)} className="w-full py-3.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl shadow-md transition-all">
-                  Close
-                </button>
+                <div className="flex gap-3">
+                  <button onClick={() => setSelectedGroup(null)} className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors">
+                    Close
+                  </button>
+                  {selectedGroup.creatorWallet.toLowerCase() === address?.toLowerCase() && (
+                    <button 
+                      onClick={() => handleDelete(selectedGroup._id)} 
+                      disabled={isDeleting}
+                      className="flex-1 py-3.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-red-100 disabled:opacity-50"
+                    >
+                      <HiOutlineTrash className="w-5 h-5" />
+                      {isDeleting ? 'Deleting...' : 'Delete Group'}
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
