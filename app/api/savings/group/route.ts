@@ -9,10 +9,10 @@ export async function POST(request: Request) {
         const db = client.db('bitsave');
 
         const body = await request.json();
-        const { name, goalAmount, token, network, maturityDate, creatorWallet, invitedSavvyNames, description } = body;
+        const { name, token, network, maturityDate, creatorWallet, invitedSavvyNames, description } = body;
 
-        if (!name || !goalAmount || !token || !creatorWallet) {
-            return NextResponse.json({ error: 'Name, goal amount, token, and creator wallet are required' }, { status: 400 });
+        if (!name || !token || !creatorWallet) {
+            return NextResponse.json({ error: 'Name, token, and creator wallet are required' }, { status: 400 });
         }
 
         // Resolve Savvy Names to wallet addresses
@@ -31,7 +31,6 @@ export async function POST(request: Request) {
         const group = {
             name,
             description: description || '',
-            goalAmount: parseFloat(goalAmount),
             currentAmount: 0,
             token,
             network: network || 'Base',
@@ -130,6 +129,41 @@ export async function PUT(request: Request) {
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     } catch (error) {
         console.error('Error updating group savings:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const client = await clientPromise;
+        if (!client) return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+        const db = client.db('bitsave');
+
+        const { searchParams } = new URL(request.url);
+        const groupId = searchParams.get('groupId');
+        const walletAddress = searchParams.get('walletAddress');
+
+        if (!groupId || !walletAddress) {
+            return NextResponse.json({ error: 'Group ID and wallet address are required' }, { status: 400 });
+        }
+
+        const collection = db.collection('group_savings');
+        const group = await collection.findOne({ _id: new ObjectId(groupId) });
+
+        if (!group) {
+            return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+        }
+
+        // Verify creator
+        if (group.creatorWallet.toLowerCase() !== walletAddress.toLowerCase()) {
+            return NextResponse.json({ error: 'Only the creator can delete the group' }, { status: 403 });
+        }
+
+        await collection.deleteOne({ _id: new ObjectId(groupId) });
+
+        return NextResponse.json({ success: true, message: 'Group deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting group savings:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -84,14 +84,13 @@ export const NETWORKS: NetworkConfig[] = [
     {
         id: 'solana',
         name: 'Solana',
-        chainId: 0, // Placeholder - Solana uses different chain identification
-        contractAddress: '', // Coming soon - no contract yet
+        chainId: 0, // Solana uses clusters, not EVM chainIds
+        contractAddress: '3Tt5SpCSTEPseAaA9hSov5TCr8j6bksN4oWZ1x5y2321', // Bitsave Program ID
         tokens: [
-            { symbol: 'SOL', address: '', decimals: 9 },
-            { symbol: 'USDC', address: '', decimals: 6 },
-            { symbol: 'USDT', address: '', decimals: 6 },
+            { symbol: 'USDC', address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 },
+            { symbol: 'USDT', address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', decimals: 6 },
         ],
-        isComingSoon: true,
+        isComingSoon: false,
     },
 ];
 
@@ -123,6 +122,12 @@ export const createSavingsGeneric = async ({
 }) => {
     const network = NETWORKS.find(n => n.id === networkId);
     if (!network) throw new Error('Invalid network selected.');
+    
+    // Solana uses a completely different architecture
+    if (networkId === 'solana') {
+        throw new Error('Solana creations should be routed through useBitsaveSolana hook in the UI layer');
+    }
+    
     const tokenObj = network.tokens.find(t => t.symbol === tokenSymbol);
     if (!tokenObj || !tokenObj.address) throw new Error('Invalid or missing token address for selected network.');
     let provider, signer;

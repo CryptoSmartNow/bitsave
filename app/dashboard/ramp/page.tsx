@@ -1,62 +1,199 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
 import { Exo } from 'next/font/google';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  HiOutlineArrowsRightLeft,
-  HiOutlineBanknotes,
   HiOutlineArrowDownTray,
   HiOutlineArrowUpTray,
   HiOutlineCheckCircle,
-  HiOutlineInformationCircle,
-  HiOutlineCurrencyDollar,
-  HiOutlineBolt,
-  HiOutlineLink,
-  HiOutlineLockClosed,
-  HiOutlineChartBar
+  HiOutlineBanknotes
 } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import { PaymentModal } from '@chainrails/react';
+import { ShimmerLoader } from '@/components/ShimmerLoader';
 import './chainrails.css';
 
 const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 const SUPPORTED_TOKENS = [
-  { symbol: 'USDC', name: 'USD Coin', network: 'Base' },
-  { symbol: 'ETH', name: 'Ethereum', network: 'Base' },
+  { symbol: 'USDT', name: 'Tether', network: 'BSC', dexpPayNetwork: 'BSC' },
+  { symbol: 'USDC', name: 'USD Coin', network: 'Base', dexpPayNetwork: 'BASE' }
 ];
 
-const FEATURES = [
-  { icon: <HiOutlineBolt className="w-6 h-6 text-[#81D7B4]" />, title: 'Instant Settlement', desc: 'Funds arrive in minutes, not days' },
-  { icon: <HiOutlineLink className="w-6 h-6 text-[#81D7B4]" />, title: 'Any Chain', desc: 'Pay from any supported blockchain' },
-  { icon: <HiOutlineLockClosed className="w-6 h-6 text-[#81D7B4]" />, title: 'Non-Custodial', desc: 'Funds go directly to your wallet' },
-  { icon: <HiOutlineChartBar className="w-6 h-6 text-[#81D7B4]" />, title: 'Best Rates', desc: 'Automatic best-rate routing' },
-];
+const BUY_AMOUNT_PRESETS_NGN = [5000, 10000, 25000, 50000, 100000];
+const SELL_AMOUNT_PRESETS_USD = [10, 25, 50, 100, 250];
 
 export default function OnOffRampPage() {
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
+  const { user } = usePrivy();
+  const address = user?.wallet?.address || wagmiAddress;
+
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
   const [selectedToken, setSelectedToken] = useState(SUPPORTED_TOKENS[0]);
   const [amount, setAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
+  
+  // Quotes state
+  const [quotes, setQuotes] = useState<any>(null);
+  const [selectedProvider, setSelectedProvider] = useState<'chainrails' | 'dexpay' | null>(null);
+  
+  // DexPay specifics
+  const [banks, setBanks] = useState<any[]>([]);
+  const [selectedBank, setSelectedBank] = useState('');
+  const [accountName, setAccountName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [isProcessingDexPay, setIsProcessingDexPay] = useState(false);
+  const [dexPayOrder, setDexPayOrder] = useState<any>(null);
+  const pollInterval = useRef<NodeJS.Timeout | null>(null);
+  
+  // Chainrails specifics
   const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChainrailsModalOpen, setIsChainrailsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    setMounted(true); 
+    fetchBanks();
+    return () => clearPolling(); // Cleanup on unmount
+  }, []);
 
-  const handleOpenRamp = async () => {
-    if (!address) { toast.error('Please connect your wallet first'); return; }
-    if (!amount || parseFloat(amount) <= 0) { toast.error('Please enter an amount'); return; }
+  const clearPolling = () => {
+    if (pollInterval.current) {
+      clearInterval(pollInterval.current);
+      pollInterval.current = null;
+    }
+  };
 
-    setIsLoading(true);
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.replace(/,/g, '');
+    if (/^\d*\.?\d*$/.test(rawVal)) {
+      setAmount(rawVal);
+      setQuotes(null);
+      setSelectedProvider(null);
+    }
+  };
+
+  const getDisplayAmount = (val: string) => {
+    if (!val) return '';
+    const parts = val.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join('.');
+  };
+
+  const amountPresets = mode === 'buy' ? BUY_AMOUNT_PRESETS_NGN : SELL_AMOUNT_PRESETS_USD;
+  const amountSymbol = mode === 'buy' ? '₦' : '$';
+
+  const fetchBanks = async () => {
     try {
+      const res = await fetch('/api/dexpay/banks');
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || data.message || 'DexPay banks currently unavailable');
+        return;
+      }
+      if (data.data) {
+        setBanks(data.data);
+      }
+    } catch (e) {
+      toast.error('Failed to fetch banks');
+      console.error("Failed to fetch banks", e);
+    }
+  };
+
+  const handleGetQuotes = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
+    if (mode === 'sell' && (!selectedBank || !accountNumber || !accountName)) {
+      toast.error('Please fill in your bank details to get accurate quotes');
+      return;
+    }
+    
+    setIsLoadingQuotes(true);
+    setQuotes(null);
+    setDexPayOrder(null);
+    setSelectedProvider(null);
+
+    try {
+      // Fetch DexPay quote
+      const dexPayRes = await fetch('/api/dexpay/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...(mode === 'buy' ? { fiatAmount: parseFloat(amount) } : { tokenAmount: parseFloat(amount) }),
+            type: mode.toUpperCase(),
+            asset: selectedToken.symbol,
+            chain: selectedToken.dexpPayNetwork,
+            receivingAddress: mode === 'buy' ? (address || '0x0000000000000000000000000000000000000000') : undefined,
+            ...(mode === 'sell' ? {
+              bankCode: selectedBank,
+              accountNumber,
+              accountName
+            } : {})
+          })
+        });
+      const dexPayData = await dexPayRes.json();
+
+      if (!dexPayRes.ok) {
+        toast.error(dexPayData.error || dexPayData.message || 'DexPay quote currently unavailable');
+      }
+
+      const dexpayQuote = dexPayRes.ok && dexPayData?.data?.id ? dexPayData.data : null;
+      if (dexPayRes.ok && !dexpayQuote) {
+        toast.error(dexPayData?.error || dexPayData?.message || 'DexPay returned an invalid quote');
+      }
+      
+      const chainrailsBaseRate = dexpayQuote?.price || dexpayQuote?.rate || dexpayQuote?.exchangeRate || 1409;
+      // For buy, we calculate crypto from fiat. For sell, the input IS the crypto amount.
+      const chainrailsCryptoAmount = mode === 'buy' ? parseFloat(amount) / chainrailsBaseRate : parseFloat(amount);
+
+      setQuotes({
+        dexpay: dexpayQuote,
+        chainrails: { 
+          available: true,
+          adjustedRate: chainrailsBaseRate,
+          cryptoAmount: chainrailsCryptoAmount
+        }
+      });
+      
+    } catch (error) {
+      toast.error('Failed to fetch quotes');
+      console.error(error);
+    } finally {
+      setIsLoadingQuotes(false);
+    }
+  };
+
+  const handleProceed = async () => {
+    if (!selectedProvider) {
+      toast.error('Please select a provider');
+      return;
+    }
+
+    if (selectedProvider === 'chainrails') {
+      await handleOpenChainrails();
+    } else {
+      await handleOpenDexPay();
+    }
+  };
+
+  const handleOpenChainrails = async () => {
+    if (!address) { toast.error('Please connect your wallet first'); return; }
+
+    setIsProcessingDexPay(true);
+    try {
+      const amountToPass = quotes?.chainrails?.cryptoAmount?.toFixed(2) || (parseFloat(amount) / 1409).toFixed(2);
+      
       const params = new URLSearchParams({
         recipient: address,
-        amount: amount,
+        amount: amountToPass,
         chain: selectedToken.network.toUpperCase(),
         token: selectedToken.symbol,
+        mode: mode
       });
 
       const res = await fetch(`/api/chainrails/session?${params}`);
@@ -67,11 +204,10 @@ export default function OnOffRampPage() {
         return;
       }
 
-      // If we got a session token, use it
       if (data.sessionToken || data.token || data.session_token || typeof data === 'string') {
         const token = data.sessionToken || data.token || data.session_token || (typeof data === 'string' ? data : '');
         setSessionToken(token);
-        setIsModalOpen(true);
+        setIsChainrailsModalOpen(true);
       } else {
         toast.error('Failed to parse session token.');
       }
@@ -79,198 +215,380 @@ export default function OnOffRampPage() {
       toast.error('Failed to open payment. Please try again.');
       console.error('Ramp error:', error);
     } finally {
-      setIsLoading(false);
+      setIsProcessingDexPay(false);
     }
+  };
+
+  const handleOpenDexPay = async () => {
+    if (!quotes?.dexpay?.id) {
+      toast.error('Invalid DexPay quote');
+      return;
+    }
+
+    if (mode === 'buy' && !address) {
+      toast.error('Please connect your wallet to proceed');
+      return;
+    }
+
+    setIsProcessingDexPay(true);
+    try {
+      let quoteIdToUse = quotes.dexpay.id;
+      
+      const dexPayRes = await fetch('/api/dexpay/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...(mode === 'buy' ? { fiatAmount: parseFloat(amount) } : { tokenAmount: parseFloat(amount) }),
+          type: mode.toUpperCase(),
+          asset: selectedToken.symbol,
+          chain: selectedToken.dexpPayNetwork,
+          ...(mode === 'sell' ? {
+            bankCode: selectedBank,
+            accountNumber,
+            accountName
+          } : {
+            receivingAddress: address
+          })
+        })
+      });
+      const dexPayData = await dexPayRes.json();
+      if (!dexPayRes.ok) throw new Error(dexPayData.message || dexPayData.error || 'Failed to re-quote');
+      quoteIdToUse = dexPayData.data.id;
+
+      const orderRes = await fetch('/api/dexpay/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteId: quoteIdToUse })
+      });
+      
+      const orderData = await orderRes.json();
+      
+      if (!orderRes.ok) {
+        toast.error(orderData.message || orderData.error || 'Failed to create order');
+        return;
+      }
+
+      setDexPayOrder(orderData.data);
+      pollDexPayStatus(orderData.data.id);
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create DexPay order');
+      console.error(error);
+    } finally {
+      setIsProcessingDexPay(false);
+    }
+  };
+
+  const pollDexPayStatus = (orderId: string) => {
+    clearPolling();
+    pollInterval.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/dexpay/status?orderId=${orderId}`);
+        const data = await res.json();
+        if (data.data?.status === 'COMPLETED') {
+          toast.success('Payment completed!');
+          clearPolling();
+          setDexPayOrder(null);
+          setQuotes(null);
+        } else if (data.data?.status === 'FAILED' || data.data?.status === 'CANCELLED') {
+          toast.error('Payment failed or cancelled.');
+          clearPolling();
+          setDexPayOrder(null);
+        }
+      } catch (e) {
+        console.error('Polling error', e);
+      }
+    }, 5000);
   };
 
   if (!mounted) return null;
 
   return (
-    <div className={`${exo.variable} font-sans max-w-4xl mx-auto`}>
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-gray-500 text-sm font-medium mt-1">
-          Seamlessly convert between fiat currency and crypto using ChainRails.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Main Ramp Card */}
-        <div>
-          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-            {/* Mode Toggle */}
-            <div className="flex p-2 gap-1 bg-gray-50 border-b border-gray-100">
-              <button
-                onClick={() => setMode('buy')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${mode === 'buy' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                <HiOutlineArrowDownTray className="w-4 h-4" /> Buy Crypto
-              </button>
-              <button
-                onClick={() => setMode('sell')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${mode === 'sell' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                <HiOutlineArrowUpTray className="w-4 h-4" /> Sell Crypto
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Amount */}
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-                  {mode === 'buy' ? 'You Pay (USD)' : 'You Sell'}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">
-                    {mode === 'buy' ? '$' : selectedToken.symbol[0]}
-                  </span>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    min="0"
-                    className="w-full pl-10 pr-4 py-4 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-xl font-black text-gray-900"
-                  />
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
-                  {['20', '50', '100', '250', '500', '1000'].map(v => (
-                    <button
-                      key={v}
-                      onClick={() => setAmount(v)}
-                      className="py-2.5 bg-gray-50 hover:bg-[#81D7B4]/10 hover:text-[#81D7B4] text-gray-600 border border-gray-100/50 hover:border-[#81D7B4]/30 rounded-xl text-xs font-black transition-all"
-                    >
-                      ${v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Token Select */}
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-                  {mode === 'buy' ? 'You Receive' : 'Token'} 
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {SUPPORTED_TOKENS.map((token) => (
-                    <button
-                      key={token.symbol}
-                      onClick={() => setSelectedToken(token)}
-                      className={`flex flex-col items-center justify-center gap-1 p-4 rounded-xl border text-center transition-all ${selectedToken.symbol === token.symbol ? 'border-[#81D7B4] bg-[#81D7B4]/5' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
-                    >
-                      <span className={`text-sm font-black ${selectedToken.symbol === token.symbol ? 'text-[#81D7B4]' : 'text-gray-700'}`}>{token.symbol}</span>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{token.network}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recipient */}
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Recipient Wallet</label>
-                <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                  <p className="text-sm font-mono text-gray-600 truncate">
-                    {address ? address : 'Connect wallet to continue'}
-                  </p>
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <button
-                onClick={handleOpenRamp}
-                disabled={isLoading || !address || !amount}
-                className="w-full py-4 bg-gradient-to-r from-[#81D7B4] to-[#5CB899] hover:from-[#6BC4A0] hover:to-[#4DA880] text-white font-black rounded-xl shadow-[0_4px_20px_rgba(129,215,180,0.35)] hover:shadow-[0_6px_28px_rgba(129,215,180,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Opening...</>
-                ) : (
-                  <><HiOutlineArrowsRightLeft className="w-5 h-5" /> {mode === 'buy' ? 'Buy Crypto' : 'Sell Crypto'} via ChainRails</>
-                )}
-              </button>
-
-              <div className="flex items-center justify-center gap-3 text-[9px] text-gray-400 font-bold uppercase tracking-widest opacity-60">
-                <span className="whitespace-nowrap">Powered by ChainRails</span>
-                <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0"></span>
-                <span className="whitespace-nowrap">Direct-to-Wallet</span>
-                <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0"></span>
-                <span className="whitespace-nowrap">Non-Custodial</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Session Ready state removed -- we use the modal overlay */}
+    <div className={`min-h-full w-full bg-[#f8fafc] ${exo.variable} font-sans pb-16`}>
+      <div className="max-w-xl mx-auto px-4 pt-8">
+        
+        {/* Header Section */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-semibold text-[#0F1825] tracking-tight">Buy & Sell Crypto</h1>
         </div>
 
-        {/* Right column */}
-        <div className="space-y-5">
-          {/* How it works */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
-            <h3 className="font-black text-gray-900 mb-5 flex items-center gap-2">
-              <HiOutlineInformationCircle className="w-5 h-5 text-[#81D7B4]" /> How it works
-            </h3>
-            <ol className="space-y-4">
-              {[
-                { step: '1', title: 'Choose token & amount', desc: 'Select the crypto you want and how much to buy or sell' },
-                { step: '2', title: 'Connect your wallet', desc: 'Your wallet address will be the destination for purchased crypto' },
-                { step: '3', title: 'Pay via ChainRails', desc: 'Use your preferred payment method — card, bank, or crypto' },
-                { step: '4', title: 'Funds arrive instantly', desc: 'Crypto lands in your wallet and is ready to save on Bitsave' },
-              ].map(item => (
-                <li key={item.step} className="flex gap-3">
-                  <span className="w-7 h-7 rounded-full bg-[#81D7B4]/15 text-[#81D7B4] text-xs font-black flex items-center justify-center shrink-0">{item.step}</span>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">{item.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+        {/* Main Action Card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-[#e2e8f0] overflow-hidden">
+          
+          {/* Clean Tab Switcher */}
+          <div className="flex border-b border-[#e2e8f0]">
+            <button
+              onClick={() => { setMode('buy'); setQuotes(null); setDexPayOrder(null); clearPolling(); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-colors ${mode === 'buy' ? 'bg-white text-[#059669] border-b-2 border-[#059669]' : 'text-[#64748b] hover:text-[#0F1825] bg-[#f8fafc] hover:bg-gray-50 border-b-2 border-transparent'}`}
+            >
+              <HiOutlineArrowDownTray className="w-5 h-5" /> Buy
+            </button>
+            <button
+              onClick={() => { setMode('sell'); setQuotes(null); setDexPayOrder(null); clearPolling(); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-colors ${mode === 'sell' ? 'bg-white text-[#059669] border-b-2 border-[#059669]' : 'text-[#64748b] hover:text-[#0F1825] bg-[#f8fafc] hover:bg-gray-50 border-b-2 border-transparent'}`}
+            >
+              <HiOutlineArrowUpTray className="w-5 h-5" /> Sell
+            </button>
+          </div>
+
+          <div className="p-6 md:p-8 space-y-6">
+            {!dexPayOrder ? (
+              <>
+                {/* Token Selection */}
+                <div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {SUPPORTED_TOKENS.map((token) => (
+                      <button
+                        key={`${token.symbol}-${token.network}`}
+                        onClick={() => { setSelectedToken(token); setQuotes(null); }}
+                        className={`flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border transition-all ${selectedToken.symbol === token.symbol && selectedToken.network === token.network ? 'border-[#81D7B4] bg-[#f0fdf4] text-[#0F1825]' : 'border-[#e2e8f0] hover:border-[#cbd5e1] bg-white text-[#0F1825]'}`}
+                      >
+                        <span className="text-base font-semibold">{token.symbol}</span>
+                        <span className={`text-[10px] font-medium uppercase tracking-widest ${selectedToken.symbol === token.symbol && selectedToken.network === token.network ? 'text-[#059669]' : 'text-[#64748b]'}`}>{token.network}</span>
+                      </button>
+                    ))}
                   </div>
-                </li>
-              ))}
-            </ol>
-          </div>
+                </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-2 gap-3">
-            {FEATURES.map(f => (
-              <div key={f.title} className="bg-white rounded-[1.5rem] border border-gray-100 p-4 shadow-sm">
-                <div className="mb-3">{f.icon}</div>
-                <p className="text-sm font-black text-gray-900">{f.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+                {/* Amount Input */}
+                <div>
+                  <div className="relative flex items-center bg-[#f8fafc] rounded-2xl border border-transparent focus-within:border-[#81D7B4] focus-within:bg-white transition-all overflow-hidden">
+                    <span className="pl-6 pr-2 text-[#94a3b8] font-medium text-2xl shrink-0">{amountSymbol}</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={getDisplayAmount(amount)}
+                      onChange={handleAmountChange}
+                      placeholder="0.00"
+                      className="w-full py-5 pr-6 bg-transparent outline-none text-3xl font-semibold text-[#0F1825] placeholder:text-[#cbd5e1]"
+                    />
+                  </div>
+                  <div className="flex w-full mt-3 gap-2">
+                    {amountPresets.map((preset, idx) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          setAmount(String(preset));
+                          setQuotes(null);
+                          setDexPayOrder(null);
+                          setSelectedProvider(null);
+                        }}
+                        className="flex-1 py-2 rounded-lg text-xs font-medium bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0] hover:text-[#0F1825] transition-colors"
+                      >
+                        {amountSymbol}{preset >= 1000 ? `${preset/1000}k` : preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sell Form (Bank Details) */}
+                {mode === 'sell' && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-[#0F1825]">Receiving Bank Account</p>
+                    </div>
+                    <select 
+                      value={selectedBank}
+                      onChange={(e) => { setSelectedBank(e.target.value); setQuotes(null); }}
+                      className="w-full px-4 py-3.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] focus:bg-white focus:border-[#81D7B4] outline-none text-[#0F1825] font-medium transition-all text-sm"
+                    >
+                      <option value="">Select Receiving Bank</option>
+                      {banks.map((b: any) => (
+                        <option key={b.code} value={b.code}>{b.name}</option>
+                      ))}
+                    </select>
+                    <input 
+                      type="text"
+                      placeholder="Account Number"
+                      value={accountNumber}
+                      onChange={(e) => { setAccountNumber(e.target.value); setQuotes(null); }}
+                      className="w-full px-4 py-3.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] focus:bg-white focus:border-[#81D7B4] outline-none text-[#0F1825] font-medium transition-all text-sm placeholder:text-[#94a3b8]"
+                    />
+                    <input 
+                      type="text"
+                      placeholder="Account Name"
+                      value={accountName}
+                      onChange={(e) => { setAccountName(e.target.value); setQuotes(null); }}
+                      className="w-full px-4 py-3.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] focus:bg-white focus:border-[#81D7B4] outline-none text-[#0F1825] font-medium transition-all text-sm placeholder:text-[#94a3b8]"
+                    />
+                  </div>
+                )}
+
+                {/* Quotes Results */}
+                {quotes ? (
+                  <div className="space-y-3 pt-4 border-t border-[#f1f5f9]">
+                    <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-widest text-center mb-4">Select Provider</p>
+                    
+                    {/* DexPay Card */}
+                    {quotes.dexpay ? (
+                      <div 
+                        onClick={() => setSelectedProvider('dexpay')}
+                        className={`p-4 md:p-5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${selectedProvider === 'dexpay' ? 'border-[#059669] bg-[#f0fdf4] shadow-sm' : 'border-[#e2e8f0] hover:border-[#cbd5e1] bg-white'}`}
+                      >
+                        <div>
+                          <span className="font-semibold text-[#0F1825] text-base block">DexPay Local</span>
+                          <span className="text-[11px] font-medium text-[#64748b] mt-0.5 block">Local Bank Transfer</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[#059669] font-semibold text-lg block">{quotes.dexpay.adjustedRate ? `₦${Number(quotes.dexpay.adjustedRate).toFixed(2)}` : 'Best Rate'}</span>
+                          <span className="text-[10px] font-medium text-[#94a3b8] uppercase tracking-widest mt-0.5 block">Exchange Rate</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl border border-dashed border-[#e2e8f0] bg-[#f8fafc]">
+                        <p className="text-sm font-medium text-[#94a3b8] text-center">DexPay unavailable for this amount</p>
+                      </div>
+                    )}
+
+                    {/* Chainrails Card */}
+                    <div 
+                      onClick={() => setSelectedProvider('chainrails')}
+                      className={`p-4 md:p-5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${selectedProvider === 'chainrails' ? 'border-[#059669] bg-[#f0fdf4] shadow-sm' : 'border-[#e2e8f0] hover:border-[#cbd5e1] bg-white'}`}
+                    >
+                      <div>
+                        <span className="font-semibold text-[#0F1825] text-base block">ChainRails</span>
+                        <span className="text-[11px] font-medium text-[#64748b] mt-0.5 block">Card & Apple Pay</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[#059669] font-semibold text-lg block">{quotes.chainrails?.adjustedRate ? `₦${Number(quotes.chainrails.adjustedRate).toFixed(2)}` : 'Best Rate'}</span>
+                        <span className="text-[10px] font-medium text-[#94a3b8] uppercase tracking-widest mt-0.5 block">Exchange Rate</span>
+                      </div>
+                    </div>
+
+                    {isProcessingDexPay ? (
+                      <ShimmerLoader type="button" className="mt-6 bg-[#0F1825]/30 rounded-2xl h-12" />
+                    ) : (
+                      <button
+                        onClick={handleProceed}
+                        disabled={!selectedProvider}
+                        className="w-full mt-6 py-3.5 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] hover:from-[#6BC4A0] hover:to-[#81D7B4] text-white font-semibold text-base rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+                      >
+                        Proceed to Payment
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  isLoadingQuotes ? (
+                    <ShimmerLoader type="button" className="mt-6 bg-[#81D7B4]/40 rounded-2xl h-12" />
+                  ) : (
+                    <button
+                      onClick={handleGetQuotes}
+                      disabled={!amount}
+                      className="w-full mt-6 py-3.5 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] hover:from-[#6BC4A0] hover:to-[#81D7B4] text-white font-semibold text-base rounded-2xl transition-all disabled:opacity-50 disabled:grayscale shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+                    >
+                      Get Quotes
+                    </button>
+                  )
+                )}
+              </>
+            ) : (
+              
+              /* DexPay Order Active State */
+              <div className="space-y-5 py-2">
+                <div className="text-center">
+                  <div className="w-14 h-14 mx-auto bg-[#f0fdf4] text-[#059669] rounded-full flex items-center justify-center mb-3">
+                    <HiOutlineCheckCircle className="w-7 h-7" />
+                  </div>
+                  <h3 className="font-semibold text-xl text-[#0F1825]">Awaiting Transfer</h3>
+                  <p className="text-sm font-medium text-[#64748b] mt-1">Please complete the payment using the details below.</p>
+                </div>
+
+                <div className="bg-[#f8fafc] p-5 rounded-2xl border border-[#e2e8f0] space-y-4">
+                  {mode === 'buy' ? (
+                    <>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-[#94a3b8] font-medium">Bank Name</span>
+                        <span className="font-semibold text-[#0F1825]">{dexPayOrder.paymentAccount?.bankName || dexPayOrder.bankName || 'DexPay Partner Bank'}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-[#94a3b8] font-medium">Account Number</span>
+                        <span className="font-semibold text-[#0F1825] text-base font-mono tracking-wider">{dexPayOrder.paymentAccount?.accountNumber || dexPayOrder.accountNumber || '1234567890'}</span>
+                      </div>
+                      <div className="h-px w-full bg-[#e2e8f0]"></div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#94a3b8] font-medium">Amount to Send</span>
+                        <span className="font-semibold text-lg text-[#059669]">₦{amount}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start text-sm flex-col gap-2">
+                        <span className="text-[#94a3b8] font-medium">Deposit Address</span>
+                        <div className="w-full bg-white border border-[#e2e8f0] p-3.5 rounded-xl font-mono font-medium text-xs text-[#0F1825] break-all">
+                          {dexPayOrder.address || dexPayOrder.depositAddress || 'Txxx...'}
+                        </div>
+                      </div>
+                      <div className="h-px w-full bg-[#e2e8f0] mt-3"></div>
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-[#94a3b8] font-medium">Amount to Send</span>
+                        <span className="font-semibold text-lg text-[#059669]">{quotes.dexpay?.cryptoAmount || dexPayOrder.tokenAmount || amount} {selectedToken.symbol}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="relative overflow-hidden flex items-center justify-center gap-2 text-sm font-medium text-[#b45309] bg-[#fffbeb] p-3.5 rounded-2xl isolate border border-[#fef3c7]">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent z-[-1]"></div>
+                  Listening for incoming payment...
+                </div>
+
+                <button
+                  onClick={() => { setDexPayOrder(null); setQuotes(null); clearPolling(); }}
+                  className="w-full py-3 text-[#94a3b8] text-sm font-medium hover:text-[#0F1825] transition-colors"
+                >
+                  Cancel & Go Back
+                </button>
               </div>
-            ))}
-          </div>
-
-          {/* Tip */}
-          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-            <HiOutlineBanknotes className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700 font-medium">
-              <strong>Pro tip:</strong> After buying crypto, head to the <span className="font-black">Create Plan</span> page to lock it in a time-locked savings plan and earn $BTS rewards!
-            </p>
+            )}
           </div>
         </div>
+
+        {/* Promo Section */}
+        <div className="mt-6 bg-[#f0fdf4] border border-[#81D7B4]/30 rounded-3xl p-5 md:p-6 text-[#0F1825] relative overflow-hidden">
+          <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#81D7B4] rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
+          <div className="flex items-start gap-4 relative z-10">
+            <HiOutlineBanknotes className="w-7 h-7 text-[#059669] shrink-0" />
+            <div>
+              <h4 className="font-semibold text-base text-[#0F1825] mb-1">Make Your Money Work</h4>
+              <p className="text-sm font-medium text-[#64748b] leading-relaxed">
+                After completing your on-ramp, head over to the <Link href="/dashboard/create-savings" className="text-[#059669] underline decoration-[#81D7B4] underline-offset-2 hover:text-[#81D7B4] transition-colors">Create Plan</Link> page. Lock your crypto to earn native $BTS rewards!
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <PaymentModal
         sessionToken={sessionToken}
-        isOpen={isModalOpen}
-        amount={amount}
-        styles={{
-          theme: 'light',
-          accentColor: '#81D7B4'
-        }}
-        open={() => setIsModalOpen(true)}
-        close={() => {
-          setIsModalOpen(false);
-          setIsLoading(false);
-        }}
+        isOpen={isChainrailsModalOpen}
+        amount={quotes?.chainrails?.cryptoAmount?.toFixed(2) || (parseFloat(amount) / 1409).toFixed(2)}
+        styles={{ theme: 'light', accentColor: '#81D7B4' }}
+        open={() => setIsChainrailsModalOpen(true)}
+        close={() => setIsChainrailsModalOpen(false)}
         onSuccess={() => {
-          setIsModalOpen(false);
-          setIsLoading(false);
-          toast.success('Crypto payment verified! Check your wallet.');
+          setIsChainrailsModalOpen(false);
+          toast.success('Payment verified! Check your wallet.');
         }}
         onCancel={() => {
-          setIsModalOpen(false);
-          setIsLoading(false);
+          setIsChainrailsModalOpen(false);
           toast.error('Payment cancelled.');
         }}
       />
+      
+      {isChainrailsModalOpen && (
+        <button
+          onClick={() => {
+            setIsChainrailsModalOpen(false);
+            setSessionToken(null);
+            toast.error('Payment cancelled.');
+          }}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[2147483647] bg-white hover:bg-gray-100 text-[#0F1825] rounded-full px-8 py-4 shadow-[0_10px_40px_rgba(0,0,0,0.25)] font-bold transition-all flex items-center justify-center gap-2 text-base w-[90%] max-w-[320px] border border-gray-200"
+        >
+          ✕ Cancel Payment
+        </button>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { Exo } from 'next/font/google';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import axios from 'axios';
 import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interactionTracker';
@@ -28,6 +28,8 @@ import {
   fetchGoodDollarPrice,
   parseNLPInput,
 } from './lib/createSavingsLogic';
+import { useBitsaveSolana } from '@/hooks/useBitsaveSolana';
+import { PublicKey } from '@solana/web3.js';
 
 import TransactionStatusModal from './components/TransactionStatusModal';
 import NLPInputBlock from './components/NLPInputBlock';
@@ -41,8 +43,18 @@ export default function CreateSavingsPage() {
   const router = useRouter();
   const { address } = useAccount();
   const { referralData, generateReferralCode, markReferralConversion } = useReferrals();
-  const { savingsData } = useSavingsData();
+  const { 
+    savingsData,
+    isBaseNetwork,
+    isCeloNetwork,
+    isLiskNetwork,
+    isBSCNetwork,
+    isAvalancheNetwork,
+    isSolanaNetwork
+  } = useSavingsData();
   const { walletInfo, shouldShowModal, dismissRecommendation } = useWalletDetection();
+  const searchParams = useSearchParams();
+  const { createSaving: createSolanaSaving, joinBitsave: joinSolanaBitsave, hasJoinedBitsave: hasJoinedSolanaBitsave } = useBitsaveSolana();
 
   // ─── Core form state ───
   const [step, setStep] = useState(1);
@@ -64,6 +76,7 @@ export default function CreateSavingsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [showCustomName, setShowCustomName] = useState(false);
+  const [groupId, setGroupId] = useState<string | null>(null);
 
   // NLP mode state
   const [nlpMode, setNlpMode] = useState(false);
@@ -98,7 +111,7 @@ export default function CreateSavingsPage() {
     { id: 'lisk', name: 'Lisk', logo: networkLogos['lisk']?.logoUrl || '/lisk-logo.png', color: 'bg-purple-100', textColor: 'text-purple-600', active: true },
     { id: 'avalanche', name: 'Avalanche', logo: networkLogos['avalanche']?.logoUrl || '/avalanche-logo.svg', color: 'bg-red-100', textColor: 'text-red-600', active: true },
     { id: 'bsc', name: 'Binance Smart Chain', logo: networkLogos['bsc']?.logoUrl || '/bsc.png', color: 'bg-yellow-100', textColor: 'text-yellow-600', active: true },
-    { id: 'solana', name: 'Solana', logo: networkLogos['solana']?.logoUrl || '/solana.png', color: 'bg-purple-100', textColor: 'text-purple-600', isComingSoon: true },
+    { id: 'solana', name: 'Solana', logo: networkLogos['solana']?.logoUrl || '/solana.png', color: 'bg-purple-100', textColor: 'text-purple-600', active: true },
   ], [networkLogos]);
 
   // ─── DayRange tracking for maturity calculation ───
@@ -133,6 +146,16 @@ export default function CreateSavingsPage() {
     else setNlpParsed(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nlpText, nlpMode]);
+
+  // Sync chain selection with connected network
+  useEffect(() => {
+    if (isSolanaNetwork) setChain('solana');
+    else if (isCeloNetwork) setChain('celo');
+    else if (isLiskNetwork) setChain('lisk');
+    else if (isBSCNetwork) setChain('bsc');
+    else if (isAvalancheNetwork) setChain('avalanche');
+    else if (isBaseNetwork) setChain('base');
+  }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork, isSolanaNetwork]);
 
   // Wallet connection check
   useEffect(() => {
@@ -179,6 +202,17 @@ export default function CreateSavingsPage() {
   // GoodDollar price fetching
   useEffect(() => { fetchGoodDollarPrice().then(setGoodDollarPrice); }, []);
 
+  // Handle search params for group savings context
+  useEffect(() => {
+    const gId = searchParams.get('groupId');
+    const curr = searchParams.get('currency');
+    const ch = searchParams.get('chain');
+
+    if (gId) setGroupId(gId);
+    if (curr) setCurrency(curr);
+    if (ch) setChain(ch.toLowerCase());
+  }, [searchParams]);
+
   useEffect(() => {
     if (currency === 'Gooddollar' && amount && goodDollarPrice) {
       const cleanAmount = amount.replace(/[^0-9.]/g, '');
@@ -193,7 +227,7 @@ export default function CreateSavingsPage() {
     const loadNetworkLogos = async () => {
       try {
         setIsLoadingLogos(true);
-        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'bsc']);
+        const logos = await fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'bsc', 'solana']);
         setNetworkLogos(logos);
       } catch (error) { console.error('Error loading network logos:', error); }
       finally { setIsLoadingLogos(false); }
@@ -268,17 +302,43 @@ export default function CreateSavingsPage() {
       if (!selectedNetwork || !tokenObj) throw new Error('Selected network or token is not supported.');
 
       const maturity = calculateMaturityTime();
-      const receipt = await createSavingsGeneric({
-        networkId: selectedNetwork.id,
-        tokenSymbol: tokenObj.symbol,
-        planName: name,
-        amountRaw: amount,
-        maturity,
-        penalty: selectedPenalty,
-        safeMode: false,
-        address: address || '',
-        additionalOptions: {}
-      });
+      let receiptHash = '';
+      
+      if (selectedNetwork.id === 'solana') {
+        const daysToMaturity = Math.ceil((maturity - Date.now() / 1000) / (24 * 60 * 60));
+        const adminPubkey = new PublicKey("7rKx1F8gWv32B5eM3W7N5pPqW7q4n9X4Q9w7nZ6V4N5v"); // TODO: Use real admin pubkey
+        const mintPubkey = new PublicKey(tokenObj.address);
+        
+        // First check if user has joined Bitsave, if not, join
+        const hasJoined = await hasJoinedSolanaBitsave();
+        if (!hasJoined) {
+          console.log("User hasn't joined bitsave on solana yet. Joining now...");
+          await joinSolanaBitsave(mintPubkey, adminPubkey);
+        }
+        
+        const tx = await createSolanaSaving(
+          name,
+          parseFloat(amount),
+          tokenObj.decimals,
+          daysToMaturity,
+          mintPubkey,
+          adminPubkey
+        );
+        receiptHash = tx;
+      } else {
+        const receipt = await createSavingsGeneric({
+          networkId: selectedNetwork.id,
+          tokenSymbol: tokenObj.symbol,
+          planName: name,
+          amountRaw: amount,
+          maturity,
+          penalty: selectedPenalty,
+          safeMode: false,
+          address: address || '',
+          additionalOptions: {}
+        });
+        receiptHash = receipt.hash;
+      }
 
       // Referral conversion
       const referralCode = localStorage.getItem('referralCode') || new URLSearchParams(window.location.search).get('ref');
@@ -287,16 +347,31 @@ export default function CreateSavingsPage() {
       // Record transaction
       try {
         await axios.post('/api/transactions', {
-          amount: parseFloat(amount), txnhash: receipt.hash, chain, savingsname: name,
+          amount: parseFloat(amount), txnhash: receiptHash, chain, savingsname: name,
           useraddress: address, transaction_type: 'deposit', currency
         }, { headers: { 'accept': 'application/json', 'Content-Type': 'application/json' } });
       } catch (apiError) { console.error('Failed to record transaction:', apiError); }
 
       if (address) {
-        trackSavingsCreated(address, { amount, currency, chain, planName: name, txHash: receipt.hash });
+        trackSavingsCreated(address, { amount, currency, chain, planName: name, txHash: receiptHash });
       }
 
-      setTxHash(receipt.hash);
+      // If this is part of a group saving, record the contribution
+      if (groupId && address) {
+        try {
+          await axios.put('/api/savings/group', {
+            groupId,
+            walletAddress: address,
+            amount,
+            action: 'contribute'
+          });
+        } catch (groupErr) {
+          console.error('Failed to record group contribution:', groupErr);
+          // We don't throw here as the main saving was successful
+        }
+      }
+
+      setTxHash(receiptHash);
       setSuccess(true);
     } catch (err) {
       console.error('Error creating savings plan:', err);

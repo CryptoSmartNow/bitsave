@@ -117,7 +117,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-
 };
 
 export default withNextIntl(withPWA(nextConfig));

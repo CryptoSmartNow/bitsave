@@ -6,9 +6,23 @@ import { createConfig, http } from 'wagmi';
 import { base, celo, avalanche, mainnet } from 'viem/chains';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { PrivyProvider } from '@privy-io/react-auth';
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { usePathname } from 'next/navigation';
 import { injected } from 'wagmi/connectors';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl } from '@solana/web3.js';
+import { useMemo } from 'react';
+import { 
+  PhantomWalletAdapter, 
+  SolflareWalletAdapter,
+  CoinbaseWalletAdapter,
+  TrustWalletAdapter,
+  LedgerWalletAdapter,
+  TrezorWalletAdapter,
+  BitgetWalletAdapter
+} from '@solana/wallet-adapter-wallets';
 
 // Define the project ID for WalletConnect (used by Privy if configured, or internally)
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
@@ -65,6 +79,11 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
+// Define Solana clusters
+const solanaConnectors = toSolanaWalletConnectors({
+  shouldAutoConnect: false,
+});
+
 function InnerProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   const pathname = usePathname();
@@ -72,6 +91,17 @@ function InnerProviders({ children }: { children: ReactNode }) {
 
   // Force dark theme for BizFi pages
   const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
+
+  const solanaNetwork = clusterApiUrl('devnet');
+  const wallets = useMemo(() => [
+    new PhantomWalletAdapter(),
+    new SolflareWalletAdapter(),
+    new CoinbaseWalletAdapter(),
+    new TrustWalletAdapter(),
+    new LedgerWalletAdapter(),
+    new TrezorWalletAdapter(),
+    new BitgetWalletAdapter(),
+  ], []);
 
   return (
     <PrivyProvider
@@ -94,12 +124,19 @@ function InnerProviders({ children }: { children: ReactNode }) {
         supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
           walletConnect: { enabled: true },
+          solana: { connectors: solanaConnectors }
         },
       }}
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
-          {children}
+          <ConnectionProvider endpoint={solanaNetwork}>
+            <WalletProvider wallets={wallets} autoConnect>
+              <WalletModalProvider>
+                {children}
+              </WalletModalProvider>
+            </WalletProvider>
+          </ConnectionProvider>
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
@@ -112,8 +149,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <InnerProviders>
-        <>
-          {children}
+        {children}
           <Toaster position="top-center" toastOptions={{
             style: {
               background: '#333',
@@ -127,7 +163,6 @@ export function Providers({ children }: { children: ReactNode }) {
               },
             },
           }} />
-        </>
       </InnerProviders>
     </ThemeProvider>
   );

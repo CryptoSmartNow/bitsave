@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 // Wagmi hooks for wallet connection and network switching
 import { useAccount } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 // Next.js navigation utilities
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -59,21 +61,64 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false); // Prevents hydration issues
 
   // Wallet connection hooks from wagmi
-  const { address, isConnected } = useAccount();
-  const router = useRouter();
-
-  // Custom hook for savings data with caching
+  const { address: wagmiAddress, isConnected } = useAccount();
+  const { publicKey } = useWallet();
+  const solanaWalletAdapterAddress = publicKey?.toBase58();
+  const { user } = usePrivy();
+  const { wallets } = useWallets();
+  // Detect Solana wallet from all sources:
+  // 1. Wallet adapter (useWallet) — works for Phantom, Solflare, MetaMask Solana, etc.
+  // 2. Privy wallets (useWallets) — catches any wallet with chainType 'solana' or non-0x address
+  // 3. Privy linked accounts — catches embedded/linked Solana wallets
+  const privySolanaWallet = wallets?.find((w: any) => {
+    // Direct Solana chain type (works for MetaMask Solana, Phantom, etc.)
+    if (w.chainType === 'solana') return true;
+    // Known Solana-only wallet clients
+    if (['phantom', 'solflare', 'backpack'].includes(w.walletClientType)) return true;
+    // Solana chain ID prefix
+    if (w.chainId && String(w.chainId).startsWith('solana')) return true;
+    // Any wallet with a Solana-style address (base58, 32-44 chars, not 0x-prefixed)
+    if (w.address && !w.address.startsWith('0x') && w.address.length >= 32 && w.address.length <= 44) return true;
+    return false;
+  });
+  // Also check Privy user's linked accounts for Solana wallet addresses
+  const privyLinkedSolanaAddress = (user as any)?.linkedAccounts?.find(
+    (account: any) => (account.type === 'wallet' && account.chainType === 'solana') || account.chainId === 'solana:mainnet'
+  )?.address;
+  const solanaAddress = solanaWalletAdapterAddress || privySolanaWallet?.address || privyLinkedSolanaAddress;
+  const evmAddress = wagmiAddress || user?.wallet?.address;
+  
+  // Custom hooks
   const {
     savingsData,
     isLoading,
+    isBackgroundLoading,
+    ethPrice,
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
     isBSCNetwork,
     isAvalancheNetwork,
-    ethPrice,
+    isSolanaNetwork,
+    currentNetwork,
     refetch: refetchSavingsData
   } = useSavingsData();
+  
+  const address = isSolanaNetwork ? (solanaAddress || evmAddress) : evmAddress;
+
+  // Debug: log wallet sources when on Solana to help trace address resolution
+  if (isSolanaNetwork && typeof window !== 'undefined') {
+    console.log('[Solana Address Debug]', {
+      walletAdapterPublicKey: publicKey?.toBase58() || null,
+      privySolanaWallet: privySolanaWallet?.address || null,
+      privyLinkedSolana: privyLinkedSolanaAddress || null,
+      resolvedSolanaAddress: solanaAddress || null,
+      fallbackEvmAddress: evmAddress || null,
+      finalAddress: address || null,
+      allWallets: wallets?.map((w: any) => ({ address: w.address, chainType: w.chainType, clientType: w.walletClientType, chainId: w.chainId }))
+    });
+  }
+  const router = useRouter();
 
   // Network synchronization hook for automatic wallet-UI sync
   const {
@@ -85,7 +130,7 @@ export default function Dashboard() {
   } = useNetworkSync();
 
   // ENS data hook for identity resolution
-  const { ensName, getDisplayName, hasENS } = useENSData();
+  const { ensName, getDisplayName, hasENS } = useENSData(address);
 
   // UI state management
   const [activeTab, setActiveTab] = useState('current'); // Toggle between current/completed savings
@@ -130,9 +175,13 @@ export default function Dashboard() {
 
   // Effect hook to set user display name based on connected accounts
   useEffect(() => {
-    if (mounted && address) {
-      // Use ENS hook's getDisplayName which prioritizes ENS > Twitter > saved name > truncated address
-      setDisplayName(getDisplayName());
+    if (mounted) {
+      if (address) {
+        // Use ENS hook's getDisplayName which prioritizes ENS > Twitter > saved name > truncated address
+        setDisplayName(getDisplayName(address));
+      } else {
+        setDisplayName('User');
+      }
     }
   }, [mounted, address, getDisplayName]);
 
@@ -449,8 +498,8 @@ export default function Dashboard() {
     { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
     { name: 'Binance Smart Chain', desc: 'EVM Mainnet', icon: networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png', isActive: isBSCNetwork },
     { name: 'Avalanche', desc: 'EVM Mainnet', icon: networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/avalanche-logo.svg', isActive: isAvalancheNetwork },
-    { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: false, isComingSoon: true }
-  ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork]);
+    { name: 'Solana', desc: 'High-Performance Blockchain', icon: networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png', isActive: isSolanaNetwork, isComingSoon: false }
+  ], [networkLogos, isBaseNetwork, isCeloNetwork, isLiskNetwork, isAvalancheNetwork, isSolanaNetwork]);
 
 
   // Initialize cache system on component mount
@@ -581,7 +630,7 @@ export default function Dashboard() {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-gray-500 font-medium break-all">
-                {displayName || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User')}
+                {displayName && displayName !== 'Not connected' ? displayName : (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User')}
               </span>
               {hasENS && ensName && <span className="inline-flex items-center bg-[#81D7B4]/10 text-[#81D7B4] px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap">⟠ ENS: {ensName}</span>}
             </div>
@@ -644,7 +693,7 @@ export default function Dashboard() {
 
                     <div className="relative z-20">
                       <button id="network-button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNetworkModal(true); }} disabled={hookNetworkSwitching} className="flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-xl border border-[#81D7B4]/30 transition-all shadow-sm">
-                        <Image priority src={ensureImageUrl(isBaseNetwork ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg') : isCeloNetwork ? (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png') : isLiskNetwork ? (networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png') : isAvalancheNetwork ? (networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png') : (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg'))} alt={currentNetworkName || 'Network'} width={18} height={18} className="w-4.5 h-4.5 object-contain" />
+                        <Image priority src={ensureImageUrl(isSolanaNetwork ? (networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png') : isBaseNetwork ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg') : isCeloNetwork ? (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png') : isLiskNetwork ? (networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png') : isAvalancheNetwork ? (networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png') : (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg'))} alt={currentNetworkName || 'Network'} width={18} height={18} className="w-4.5 h-4.5 object-contain" />
                         <span className="text-sm font-bold text-black hidden sm:inline">{currentNetworkName || 'Network'}</span>
                         <div className={`w-2 h-2 rounded-full shadow-sm ml-1 ${isNetworkSynced ? 'bg-[#81D7B4]' : 'bg-orange-400 animate-pulse'}`}></div>
                         {!isMobile && <HiOutlineChevronDown className="w-4 h-4 text-gray-400 ml-1" />}

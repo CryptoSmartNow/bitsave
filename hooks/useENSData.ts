@@ -20,8 +20,9 @@ interface CachedENSData {
 // Cache duration: 5 minutes
 const CACHE_DURATION = 5 * 60 * 1000
 
-export function useENSData() {
-  const { address } = useAccount()
+export function useENSData(overrideAddress?: string) {
+  const { address: wagmiAddress } = useAccount()
+  const address = overrideAddress || wagmiAddress;
   const [ensData, setENSData] = useState<ENSData>({
     ensName: null,
     avatar: null,
@@ -142,7 +143,7 @@ export function useENSData() {
 
   // Effect to resolve ENS data when address changes
   useEffect(() => {
-    if (address) {
+    if (address && address.startsWith('0x')) {
       resolveENSData(address)
     } else {
       setENSData({

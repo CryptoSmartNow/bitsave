@@ -34,7 +34,7 @@ export default function CustomDatePicker({
 
   const renderHeader = () => {
     return (
-      <div className="flex items-center justify-between px-2 xs:px-3 sm:px-4 md:px-6 py-2 xs:py-3 sm:py-4 bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-4 bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5">
         <motion.button 
           onClick={prevMonth} 
           whileHover={{ scale: 1.05 }}
@@ -89,7 +89,7 @@ export default function CustomDatePicker({
       )
     }
 
-    return <div className="grid grid-cols-7 gap-0.5 xs:gap-1 sm:gap-2 px-1 xs:px-2 sm:px-4">{days}</div>
+    return <div className="grid grid-cols-7 gap-1 sm:gap-2 px-2 sm:px-4">{days}</div>
   }
 
   const renderCells = () => {
@@ -177,7 +177,7 @@ export default function CustomDatePicker({
       weekIndex++
     }
 
-    return <div className="mt-2 sm:mt-4 px-2 sm:px-4">{rows}</div>
+    return <div className="mt-2 px-2 sm:px-4">{rows}</div>
   }
 
   return (
@@ -190,7 +190,7 @@ export default function CustomDatePicker({
       {/* Content */}
       <div className="relative z-10">
         {renderHeader()}
-        <div className="p-2 xs:p-3 sm:p-4 md:p-6">
+        <div className="p-2 sm:p-4">
           {renderDays()}
           {renderCells()}
         </div>
