@@ -85,10 +85,11 @@ export const NETWORKS: NetworkConfig[] = [
         id: 'solana',
         name: 'Solana',
         chainId: 0, // Solana uses clusters, not EVM chainIds
-        contractAddress: '3Tt5SpCSTEPseAaA9hSov5TCr8j6bksN4oWZ1x5y2321', // Bitsave Program ID
+        contractAddress: '2yx2FXwxyskf3qhrknysyqNTuXXVsyC1nxyjuLUrVQuJ', // Bitsave Program ID
         tokens: [
-            { symbol: 'USDC', address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 },
-            { symbol: 'USDT', address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', decimals: 6 },
+            { symbol: 'USDC', address: 'Cb8mk8FAg4Qa3H6mHAhgHFnp86j15gWZHowVM9Jz9ZoD', decimals: 6 },
+            { symbol: 'USDT', address: 'CAwSHfEPcYUzuKEzvRBSkPHrfsmSdpYjtKdEDydJPisi', decimals: 6 },
+            { symbol: 'cNGN', address: '9JGUWzdzncCzkcDDoJkNDsB4YJAgLimXG9mdwVkk1EyW', decimals: 6 },
         ],
         isComingSoon: false,
     },

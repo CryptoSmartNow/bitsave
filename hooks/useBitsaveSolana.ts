@@ -7,7 +7,7 @@ import { useWallets } from '@privy-io/react-auth';
 import { useMemo } from 'react';
 
 // You will need to update this with the actual deployed program ID
-const PROGRAM_ID = new PublicKey("3Tt5SpCSTEPseAaA9hSov5TCr8j6bksN4oWZ1x5y2321");
+const PROGRAM_ID = new PublicKey("2yx2FXwxyskf3qhrknysyqNTuXXVsyC1nxyjuLUrVQuJ");
 
 export function useBitsaveSolana() {
   const { connection } = useConnection();
