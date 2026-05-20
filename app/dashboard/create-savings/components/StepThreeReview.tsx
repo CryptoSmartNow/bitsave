@@ -62,7 +62,7 @@ export default function StepThreeReview({
         <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 to-transparent opacity-100 transition-opacity duration-500"></div>
 
         {/* Header */}
-        <div className="p-8 relative z-10 border-b border-gray-100">
+        <div className="p-4 sm:p-8 relative z-10 border-b border-gray-100">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <h3 className="text-2xl font-black text-[#0f172a] tracking-tight">
               {name || "My Savings Plan"}
@@ -299,7 +299,7 @@ export default function StepThreeReview({
         <button
           type="button"
           onClick={handlePrevious}
-          className="text-[#64748b] bg-white border border-gray-200 hover:border-gray-300 hover:text-[#0f172a] hover:bg-gray-50 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 inline-flex items-center justify-center gap-3 w-full sm:w-auto shadow-sm"
+          className="text-[#64748b] bg-white border border-gray-200 hover:border-gray-300 hover:text-[#0f172a] hover:bg-gray-50 px-6 py-2.5 sm:px-8 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 inline-flex items-center justify-center gap-3 w-full sm:w-auto shadow-sm"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -321,7 +321,7 @@ export default function StepThreeReview({
           type="button"
           onClick={handleSubmit}
           disabled={submitting || isLoading || !termsAgreed}
-          className={`bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-8 py-4 rounded-2xl text-base font-extrabold transition-all duration-300 inline-flex items-center justify-center gap-3 shadow-[0_4px_14px_rgb(129,215,180,0.4)] hover:shadow-[0_6px_20px_rgb(129,215,180,0.5)] w-full sm:w-auto ${submitting || isLoading || !termsAgreed ? "opacity-50 cursor-not-allowed shadow-none hover:shadow-none" : ""}`}
+          className={`bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-6 py-2.5 sm:px-8 sm:py-3.5 rounded-2xl text-sm sm:text-base font-extrabold transition-all duration-300 inline-flex items-center justify-center gap-3 shadow-[0_4px_14px_rgb(129,215,180,0.4)] hover:shadow-[0_6px_20px_rgb(129,215,180,0.5)] w-full sm:w-auto ${submitting || isLoading || !termsAgreed ? "opacity-50 cursor-not-allowed shadow-none hover:shadow-none" : ""}`}
         >
           {submitting || isLoading ? (
             <>

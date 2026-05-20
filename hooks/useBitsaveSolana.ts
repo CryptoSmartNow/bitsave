@@ -250,7 +250,7 @@ export function useBitsaveSolana() {
     const vaultTokenAta = await getAssociatedTokenAddress(stablecoinMint, userVaultPDA, true);
 
     const tx = await program.methods
-      .incrementTokenSaving(name, amount)
+      .incrementTokenSaving(amount)
       .accountsStrict({
         globalState: globalStatePDA,
         userVault: userVaultPDA,
@@ -272,6 +272,58 @@ export function useBitsaveSolana() {
           wallet.publicKey,
           vaultTokenAta,
           userVaultPDA,
+          stablecoinMint
+        )
+      ])
+      .rpc();
+    return tx;
+  };
+
+  const withdrawSaving = async (
+    name: string,
+    stablecoinMint: PublicKey,
+    adminPubkey: PublicKey
+  ) => {
+    if (!program || !wallet) throw new Error("Program or wallet not initialized");
+    await ensureDevnetSOL(wallet.publicKey);
+
+    const globalStatePDA = getGlobalStatePDA();
+    const userVaultPDA = getUserVaultPDA(wallet.publicKey);
+    const savingPDA = getSavingPDA(userVaultPDA, name);
+
+    const userTokenAta = await getAssociatedTokenAddress(stablecoinMint, wallet.publicKey);
+    const vaultTokenAta = await getAssociatedTokenAddress(stablecoinMint, userVaultPDA, true);
+    const adminTokenAta = await getAssociatedTokenAddress(stablecoinMint, adminPubkey);
+
+    const tx = await program.methods
+      .withdrawTokenSaving()
+      .accountsStrict({
+        globalState: globalStatePDA,
+        userVault: userVaultPDA,
+        saving: savingPDA,
+        user: wallet.publicKey,
+        userTokenAccount: userTokenAta,
+        vaultTokenAccount: vaultTokenAta,
+        adminTokenAccount: adminTokenAta,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          wallet.publicKey,
+          userTokenAta,
+          wallet.publicKey,
+          stablecoinMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          wallet.publicKey,
+          vaultTokenAta,
+          userVaultPDA,
+          stablecoinMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          wallet.publicKey,
+          adminTokenAta,
+          adminPubkey,
           stablecoinMint
         )
       ])
@@ -362,6 +414,7 @@ export function useBitsaveSolana() {
     joinBitsave,
     createSaving,
     incrementSaving,
+    withdrawSaving,
     createOrIncrementSaving,
     hasJoinedBitsave,
     getUserSavings

@@ -511,7 +511,7 @@ export default function Settings() {
                      <button
                         onClick={handleSaveSavvyName}
                         disabled={isSavingSavvyName || `${savvyNameInput}.savvy` === currentSavvyName}
-                        className="px-8 py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 min-w-[140px]"
+                        className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 min-w-[140px]"
                      >
                         {isSavingSavvyName ? 'Saving...' : (currentSavvyName && `${savvyNameInput}.savvy` === currentSavvyName ? 'Saved' : 'Update Name')}
                      </button>
@@ -598,14 +598,14 @@ export default function Settings() {
                         />
                      </div>
                      {isEmailConnected ? (
-                        <div className="px-8 py-3.5 bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] font-black rounded-xl flex items-center justify-center gap-2 min-w-[160px]">
+                        <div className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] font-black rounded-xl flex items-center justify-center gap-2 min-w-[160px]">
                            <HiOutlineCheck className="w-5 h-5 stroke-[3]" /> Verified
                         </div>
                      ) : (
                         <button
                            onClick={handleConnectEmail}
                            disabled={!email.trim() || isConnecting}
-                           className="px-8 py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                           className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                         >
                            {isConnecting ? (
                              <>

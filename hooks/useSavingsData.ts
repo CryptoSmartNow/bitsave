@@ -299,6 +299,12 @@ export function useSavingsData(): UseSavingsDataReturn {
       name: 'Base'
     },
     {
+      chainId: BASE_CHAIN_ID,
+      rpcUrl: 'https://base.publicnode.com',
+      contractAddress: BASE_CONTRACT_ADDRESS_NEW, // Use new contract to fetch new savings
+      name: 'Base'
+    },
+    {
       chainId: CELO_CHAIN_ID,
       rpcUrl: 'https://forno.celo.org',
       contractAddress: CELO_CONTRACT_ADDRESS,
@@ -716,9 +722,7 @@ export function useSavingsData(): UseSavingsDataReturn {
                   penaltyPercentage: Number(savingData.penaltyPercentage ?? savingData[5] ?? 0), // Add penaltyPercentage
                   network: network.name, // Add network name to plan
                   chainId: network.chainId, // Add chainId to plan
-                  contractAddress: network.chainId === BASE_CHAIN_ID
-                    ? getBaseContractAddress(startTime)
-                    : network.contractAddress // Store the actual contract address used
+                  contractAddress: network.contractAddress // Store the actual contract address used
                 };
 
                 if (isCompleted) {
@@ -968,7 +972,6 @@ export function useSavingsData(): UseSavingsDataReturn {
 
       // If cache is fresh enough, we are done
       if (!needsRefresh) {
-        if (DEBUG) console.log(`Using cached savings data for user ${address} on chain ${networkChainId}`);
         return;
       }
 

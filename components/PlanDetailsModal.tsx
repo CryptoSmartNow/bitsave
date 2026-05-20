@@ -113,93 +113,93 @@ const PlanDetailsModal: React.FC<PlanDetailsModalProps> = ({
                         {/* Hero Section */}
                         <div className="flex flex-col items-center text-center mb-8">
                             <div className="relative mb-5">
-                                <div className="w-24 h-24 rounded-[1.8rem] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-gray-100/80 flex items-center justify-center p-5 transform hover:scale-105 transition-all duration-300">
+                                <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center p-4">
                                     <Image
                                         src={tokenLogoUrl}
                                         alt={tokenName}
-                                        width={56}
-                                        height={56}
+                                        width={48}
+                                        height={48}
                                         className="object-contain"
                                     />
                                 </div>
-                                <div className="absolute -bottom-3 -right-3 bg-[#81D7B4] text-white text-[10px] font-black px-3 py-1.5 rounded-xl border-[3px] border-white shadow-md uppercase tracking-widest">
+                                <div className="absolute -bottom-2 -right-2 bg-[#81D7B4] text-white text-[10px] font-medium px-2 py-1 rounded-lg border-2 border-white shadow-sm uppercase tracking-wide">
                                     ACTIVE
                                 </div>
                             </div>
                             
-                            <h2 className="text-[26px] font-black text-gray-900 mb-1 tracking-tight leading-tight">{plan.name}</h2>
-                            <p className="text-gray-400 text-[12px] font-bold uppercase tracking-widest mb-6">Savings Plan</p>
+                            <h2 className="text-2xl font-medium text-gray-900 mb-1">{plan.name}</h2>
+                            <p className="text-gray-500 text-xs mb-6">Savings Plan</p>
                             
                             <div className="flex flex-col items-center">
-                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mb-1">Total Portfolio Value</span>
-                                <span className="text-[40px] font-black text-black tracking-tighter leading-none">
+                                <span className="text-xs text-gray-500 mb-1">Total Portfolio Value</span>
+                                <span className="text-4xl font-medium text-gray-900">
                                     {formatAmount(plan.currentAmount)}
                                 </span>
                             </div>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="mb-8 bg-[#F8FAF9] p-5 rounded-3xl border border-gray-100">
-                            <div className="flex justify-between items-end mb-2.5">
-                                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Lock Progress</span>
-                                <span className="text-[#2D5A4A] font-black text-sm">{Math.round(plan.progress)}%</span>
+                        <div className="mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-xs text-gray-500">Lock Progress</span>
+                                <span className="text-gray-900 font-medium text-sm">{Math.round(plan.progress)}%</span>
                             </div>
-                            <div className="h-3 w-full bg-gray-200/50 rounded-full overflow-hidden">
+                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                                 <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${plan.progress}%` }}
                                     transition={{ duration: 1, delay: 0.2 }}
-                                    className="h-full bg-[#81D7B4] rounded-full shadow-[0_0_10px_rgba(129,215,180,0.5)]" 
+                                    className="h-full bg-[#81D7B4] rounded-full" 
                                 />
                             </div>
                         </div>
 
                         {/* Stats Grid */}
                         <div className="grid grid-cols-2 gap-3 mb-4">
-                            <div className="p-4 rounded-[1.25rem] bg-white border border-gray-200 hover:border-[#81D7B4]/30 shadow-sm transition-colors text-center">
-                                <div className="flex items-center justify-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">
-                                    <HiOutlineCalendar className="w-3.5 h-3.5" /> Start Date
+                            <div className="p-4 rounded-xl bg-white border border-gray-200 text-center shadow-sm">
+                                <div className="flex items-center justify-center gap-1.5 text-gray-500 text-xs mb-1.5">
+                                    <HiOutlineCalendar className="w-4 h-4" /> Start Date
                                 </div>
-                                <div className="font-black text-gray-900 text-[13px]">{formatDate(Number(plan.startTime || 0))}</div>
+                                <div className="font-medium text-gray-900 text-sm">{formatDate(Number(plan.startTime || 0))}</div>
                             </div>
-                            <div className="p-4 rounded-[1.25rem] bg-white border border-gray-200 hover:border-[#81D7B4]/30 shadow-sm transition-colors text-center">
-                                <div className="flex items-center justify-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">
-                                    <HiOutlineCalendar className="w-3.5 h-3.5" /> Maturity
+                            <div className="p-4 rounded-xl bg-white border border-gray-200 text-center shadow-sm">
+                                <div className="flex items-center justify-center gap-1.5 text-gray-500 text-xs mb-1.5">
+                                    <HiOutlineCalendar className="w-4 h-4" /> Maturity
                                 </div>
-                                <div className="font-black text-[#2D5A4A] text-[13px]">{formatDate(Number(plan.maturityTime || 0))}</div>
+                                <div className="font-medium text-gray-900 text-sm">{formatDate(Number(plan.maturityTime || 0))}</div>
                             </div>
                         </div>
 
                         {/* Detailed Stats List */}
                         <div className="space-y-3 mt-4">
-                            <div className="flex justify-between items-center p-4 rounded-[1.25rem] bg-white border border-gray-200 hover:border-[#81D7B4]/50 shadow-sm transition-all group">
+                            <div className="flex justify-between items-center p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center text-[#2D5A4A] group-hover:scale-110 transition-transform">
-                                        <HiOutlineChartBar className="w-4 h-4" strokeWidth={2.5} />
+                                    <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+                                        <HiOutlineChartBar className="w-4 h-4" />
                                     </div>
-                                    <span className="font-bold text-gray-700 text-[13px]">Est. Rewards</span>
+                                    <span className="font-medium text-gray-700 text-sm">Est. Rewards</span>
                                 </div>
-                                <span className="font-black text-[#81D7B4] text-[15px]">+{calculateRewards()} $BTS</span>
+                                <span className="font-medium text-green-600 text-sm">+{calculateRewards()} $BTS</span>
                             </div>
 
-                            <div className="flex justify-between items-center p-4 rounded-[1.25rem] bg-white border border-gray-200 hover:border-red-200 shadow-sm transition-all group">
+                            <div className="flex justify-between items-center p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-                                        <HiOutlineExclamationTriangle className="w-4 h-4" strokeWidth={2.5} />
+                                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
+                                        <HiOutlineExclamationTriangle className="w-4 h-4" />
                                     </div>
-                                    <span className="font-bold text-gray-700 text-[13px]">Early Penalty Fee</span>
+                                    <span className="font-medium text-gray-700 text-sm">Early Penalty Fee</span>
                                 </div>
-                                <span className="font-black text-gray-900 text-[15px]">{plan.penaltyPercentage}%</span>
+                                <span className="font-medium text-gray-900 text-sm">{plan.penaltyPercentage}%</span>
                             </div>
 
-                            <div className="flex justify-between items-center p-4 rounded-[1.25rem] bg-white border border-gray-200 hover:border-blue-200 shadow-sm transition-all group">
+                            <div className="flex justify-between items-center p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                                        <HiOutlineClock className="w-4 h-4" strokeWidth={2.5} />
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                                        <HiOutlineClock className="w-4 h-4" />
                                     </div>
-                                    <span className="font-bold text-gray-700 text-[13px]">Total Duration</span>
+                                    <span className="font-medium text-gray-700 text-sm">Total Duration</span>
                                 </div>
-                                <span className="font-black text-gray-900 text-[15px]">
+                                <span className="font-medium text-gray-900 text-sm">
                                     {Math.ceil((Number(plan.maturityTime) - Number(plan.startTime)) / (24 * 60 * 60))} Days
                                 </span>
                             </div>
