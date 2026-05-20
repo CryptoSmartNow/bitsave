@@ -48,6 +48,20 @@ export const handleChildContractError = (error: unknown): string => {
 
   const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
 
+  // Solana specific errors
+  if (errorString.includes('custom program error: 0x0') || errorString.includes('error: 0x0') || errorString.includes('code: 0x0')) {
+    return 'Insufficient mock tokens (USDC/USDT/cNGN) or SOL in your Solana wallet to complete this savings plan.';
+  }
+  if (errorString.includes('attempt to debit an account')) {
+    return 'Your Solana wallet has zero SOL. Please request free SOL from the Devnet faucet (https://faucet.solana.com) to pay for transaction fees.';
+  }
+  if (errorString.includes('constrainttokenowner')) {
+    return 'ConstraintTokenOwner: Admin public key mismatch on-chain.';
+  }
+  if (errorString.includes('plugin closed')) {
+    return 'The transaction signing request was rejected or the wallet plugin was closed.';
+  }
+
   // Short, non-verbose fallbacks
   if (errorString.includes('callnotfrombitsave')) return 'CallNotFromBitsave';
   if (errorString.includes('invalidsaving')) return 'InvalidSaving';

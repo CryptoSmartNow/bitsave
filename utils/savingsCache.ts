@@ -93,6 +93,12 @@ function safeParseCache(cacheString: string | null): CachedSavingsData | null {
       console.warn('Invalid cache structure, ignoring cached data');
       return null;
     }
+    
+    // Validate schema of data
+    if (!Array.isArray(parsed.data.currentPlans) || !Array.isArray(parsed.data.completedPlans)) {
+      console.warn('Old cache schema detected (missing currentPlans/completedPlans), ignoring cached data');
+      return null;
+    }
 
     return parsed;
   } catch (error) {
