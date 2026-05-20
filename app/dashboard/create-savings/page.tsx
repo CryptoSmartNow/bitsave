@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { Exo } from 'next/font/google';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
 import axios from 'axios';
 import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interactionTracker';
 import { useReferrals } from '@/lib/useReferrals';
@@ -41,7 +42,8 @@ const exo = Exo({ subsets: ['latin'], display: 'swap' });
 
 export default function CreateSavingsPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address: evmAddress } = useAccount();
+  const { publicKey: solanaPublicKey } = useWallet();
   const { referralData, generateReferralCode, markReferralConversion } = useReferrals();
   const { 
     savingsData,
@@ -54,7 +56,10 @@ export default function CreateSavingsPage() {
   } = useSavingsData();
   const { walletInfo, shouldShowModal, dismissRecommendation } = useWalletDetection();
   const searchParams = useSearchParams();
-  const { createSaving: createSolanaSaving, joinBitsave: joinSolanaBitsave, hasJoinedBitsave: hasJoinedSolanaBitsave } = useBitsaveSolana();
+  const { createOrIncrementSaving, joinBitsave: joinSolanaBitsave, hasJoinedBitsave: hasJoinedSolanaBitsave } = useBitsaveSolana();
+
+  // Derive the correct address based on the active network
+  const address = isSolanaNetwork ? (solanaPublicKey?.toBase58() || evmAddress) : evmAddress;
 
   // ─── Core form state ───
   const [step, setStep] = useState(1);
@@ -157,8 +162,21 @@ export default function CreateSavingsPage() {
     else if (isBaseNetwork) setChain('base');
   }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork, isSolanaNetwork]);
 
-  // Wallet connection check
+  // Wallet connection check - skip EVM interactions when on Solana
   useEffect(() => {
+    // If on Solana, derive connection state from Solana wallet
+    if (isSolanaNetwork || chain === 'solana') {
+      if (solanaPublicKey) {
+        setIsConnected(true);
+        setWalletAddress(solanaPublicKey.toBase58());
+      } else {
+        setIsConnected(false);
+        setWalletAddress('');
+      }
+      return;
+    }
+
+    // EVM connection check
     const checkConnection = async () => {
       if (typeof window !== 'undefined' && window.ethereum) {
         try {
@@ -169,9 +187,12 @@ export default function CreateSavingsPage() {
       }
     };
     checkConnection();
-  }, []);
+  }, [isSolanaNetwork, chain, solanaPublicKey]);
 
   useEffect(() => {
+    // Skip EVM wallet request when on Solana - don't trigger MetaMask popups
+    if (isSolanaNetwork || chain === 'solana') return;
+
     const getWalletAddress = async () => {
       try {
         if (typeof window !== 'undefined' && window.ethereum) {
@@ -181,7 +202,7 @@ export default function CreateSavingsPage() {
       } catch (error) { console.error('Error getting wallet address:', error); }
     };
     getWalletAddress();
-  }, []);
+  }, [isSolanaNetwork, chain]);
 
   // Transaction modal trigger
   useEffect(() => {
@@ -272,8 +293,8 @@ export default function CreateSavingsPage() {
       else if (name !== name.trim()) { newErrors.name = 'Plan name cannot have leading or trailing spaces'; valid = false; }
       else {
         const existingPlanNames = [
-          ...savingsData.currentPlans.map(plan => plan.name.toLowerCase()),
-          ...savingsData.completedPlans.map(plan => plan.name.toLowerCase())
+          ...(savingsData?.currentPlans || []).map(plan => plan.name.toLowerCase()),
+          ...(savingsData?.completedPlans || []).map(plan => plan.name.toLowerCase())
         ];
         if (existingPlanNames.includes(name.trim().toLowerCase())) { newErrors.name = 'Plan name already exists. Please choose a different name.'; valid = false; }
       }
@@ -306,7 +327,7 @@ export default function CreateSavingsPage() {
       
       if (selectedNetwork.id === 'solana') {
         const daysToMaturity = Math.ceil((maturity - Date.now() / 1000) / (24 * 60 * 60));
-        const adminPubkey = new PublicKey("7rKx1F8gWv32B5eM3W7N5pPqW7q4n9X4Q9w7nZ6V4N5v"); // TODO: Use real admin pubkey
+        const adminPubkey = new PublicKey("A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5"); // Real admin pubkey from Global State
         const mintPubkey = new PublicKey(tokenObj.address);
         
         // First check if user has joined Bitsave, if not, join
@@ -316,7 +337,7 @@ export default function CreateSavingsPage() {
           await joinSolanaBitsave(mintPubkey, adminPubkey);
         }
         
-        const tx = await createSolanaSaving(
+        const tx = await createOrIncrementSaving(
           name,
           parseFloat(amount),
           tokenObj.decimals,

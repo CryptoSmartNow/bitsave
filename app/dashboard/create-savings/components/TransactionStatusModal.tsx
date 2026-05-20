@@ -33,6 +33,8 @@ export default function TransactionStatusModal({
   const getExplorerUrl = () => {
     if (!txHash) return "";
     switch (chain) {
+      case "solana":
+        return `https://explorer.solana.com/tx/${txHash}?cluster=devnet`;
       case "celo":
         return `https://explorer.celo.org/tx/${txHash}`;
       case "lisk":

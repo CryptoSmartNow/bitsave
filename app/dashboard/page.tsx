@@ -630,9 +630,13 @@ export default function Dashboard() {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-gray-500 font-medium break-all">
-                {displayName && displayName !== 'Not connected' ? displayName : (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User')}
+                {isSolanaNetwork && solanaAddress 
+                  ? `${solanaAddress.slice(0, 6)}...${solanaAddress.slice(-4)}` 
+                  : (displayName && displayName !== 'Not connected' && displayName !== 'User' 
+                      ? displayName 
+                      : (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User'))}
               </span>
-              {hasENS && ensName && <span className="inline-flex items-center bg-[#81D7B4]/10 text-[#81D7B4] px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap">⟠ ENS: {ensName}</span>}
+              {hasENS && ensName && !isSolanaNetwork && <span className="inline-flex items-center bg-[#81D7B4]/10 text-[#81D7B4] px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap">⟠ ENS: {ensName}</span>}
             </div>
           </div>
 
@@ -716,7 +720,7 @@ export default function Dashboard() {
                   </div>
 
                   <div className="relative z-10 flex items-baseline gap-3 mb-12">
-                    <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-black">${parseFloat(savingsData.totalLocked).toFixed(2)}</h2>
+                    <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-black">${parseFloat(savingsData?.totalLocked || "0").toFixed(2)}</h2>
                     <span className="text-xl font-bold text-gray-400">USD</span>
                   </div>
 
@@ -752,7 +756,7 @@ export default function Dashboard() {
                   <div className="relative mt-auto z-10">
                     <div className="flex items-baseline gap-2">
                       {/* Fallback to '0' if rewards not properly loaded yet */}
-                      <span className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tighter text-black">{savingsData.rewards || "0"}</span>
+                      <span className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tighter text-black">{savingsData?.rewards || "0"}</span>
                       <span className="text-lg font-bold text-[#81D7B4]">$BTS</span>
                     </div>
                   </div>
@@ -763,20 +767,20 @@ export default function Dashboard() {
               <div className="mb-8 flex gap-3 border-b border-gray-200">
                 <button onClick={() => setActiveTab('current')} className={`relative px-4 py-3 text-sm font-bold transition-all ${activeTab === 'current' ? 'text-black' : 'text-gray-400 hover:text-gray-900'}`}>
                   Active Plans
-                  <span className={`ml-2 py-1 px-2.5 rounded-lg text-xs transition-all tracking-wide ${activeTab === 'current' ? 'bg-[#81D7B4] text-white shadow-sm' : 'bg-gray-100 text-gray-500'}`}>{savingsData.currentPlans.length}</span>
+                  <span className={`ml-2 py-1 px-2.5 rounded-lg text-xs transition-all tracking-wide ${activeTab === 'current' ? 'bg-[#81D7B4] text-white shadow-sm' : 'bg-gray-100 text-gray-500'}`}>{savingsData?.currentPlans?.length || 0}</span>
                   {activeTab === 'current' && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-1.5 rounded-t-full bg-[#81D7B4]" />}
                 </button>
                 <button onClick={() => setActiveTab('completed')} className={`relative px-4 py-3 text-sm font-bold transition-all ${activeTab === 'completed' ? 'text-black' : 'text-gray-400 hover:text-gray-900'}`}>
                   Completed
-                  <span className={`ml-2 py-1 px-2.5 rounded-lg text-xs transition-all tracking-wide ${activeTab === 'completed' ? 'bg-[#81D7B4] text-white shadow-sm' : 'bg-gray-100 text-gray-500'}`}>{savingsData.completedPlans.length}</span>
+                  <span className={`ml-2 py-1 px-2.5 rounded-lg text-xs transition-all tracking-wide ${activeTab === 'completed' ? 'bg-[#81D7B4] text-white shadow-sm' : 'bg-gray-100 text-gray-500'}`}>{savingsData?.completedPlans?.length || 0}</span>
                   {activeTab === 'completed' && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-1.5 rounded-t-full bg-[#81D7B4]" />}
                 </button>
               </div>
 
               {/* Savings Grid -> Now Full Width Stack */}
               <div className="flex flex-col gap-5">
-                {isLoading ? <ShimmerList count={3} /> : (activeTab === 'current' ? savingsData.currentPlans : savingsData.completedPlans).length > 0 ? (
-                  (activeTab === 'current' ? savingsData.currentPlans : savingsData.completedPlans).map((plan) => {
+                {isLoading ? <ShimmerList count={3} /> : (activeTab === 'current' ? (savingsData?.currentPlans || []) : (savingsData?.completedPlans || [])).length > 0 ? (
+                  (activeTab === 'current' ? (savingsData?.currentPlans || []) : (savingsData?.completedPlans || [])).map((plan) => {
                     const amount = parseFloat(plan.currentAmount);
                     const safeAmount = !isNaN(amount) ? amount : 0;
                     let usdVal = safeAmount;
