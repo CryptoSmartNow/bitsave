@@ -10,8 +10,8 @@ export async function GET(req: Request) {
     }
 
     const baseUrl = "https://b2b.dexpay.io";
-    const apiKey = "DP_API_9D113B358BA85112DC468D61CF6976EE";
-    const apiSecret = "DP_SEC_1A74163BBA1F8212A97EE0EE47F8CA45";
+    const apiKey = process.env.DEXPAY_API_KEY || "";
+    const apiSecret = process.env.DEXPAY_API_SECRET || "";
 
     const isSandbox = false;
     const allowMocks = false;

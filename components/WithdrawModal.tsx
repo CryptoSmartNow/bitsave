@@ -233,7 +233,7 @@ const WithdrawModal = memo(function WithdrawModal({
         throw new Error(`Token ${tokenNameToUse} is not supported on Solana devnet.`);
       }
 
-      const adminPubkey = new PublicKey("A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5");
+      const adminPubkey = new PublicKey(process.env.NEXT_PUBLIC_SOLANA_ADMIN_PUBKEY || "A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5");
       const tx = await withdrawSolanaSaving(
         nameOfSavings,
         new PublicKey(tokenAddress),

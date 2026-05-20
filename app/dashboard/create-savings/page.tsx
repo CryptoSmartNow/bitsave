@@ -327,7 +327,7 @@ export default function CreateSavingsPage() {
       
       if (selectedNetwork.id === 'solana') {
         const daysToMaturity = Math.ceil((maturity - Date.now() / 1000) / (24 * 60 * 60));
-        const adminPubkey = new PublicKey("A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5"); // Real admin pubkey from Global State
+        const adminPubkey = new PublicKey(process.env.NEXT_PUBLIC_SOLANA_ADMIN_PUBKEY || "A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5");
         const mintPubkey = new PublicKey(tokenObj.address);
         
         // First check if user has joined Bitsave, if not, join
