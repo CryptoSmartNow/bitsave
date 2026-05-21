@@ -106,18 +106,7 @@ export default function Dashboard() {
   
   const address = isSolanaNetwork ? (solanaAddress || evmAddress) : evmAddress;
 
-  // Debug: log wallet sources when on Solana to help trace address resolution
-  if (isSolanaNetwork && typeof window !== 'undefined') {
-    console.log('[Solana Address Debug]', {
-      walletAdapterPublicKey: publicKey?.toBase58() || null,
-      privySolanaWallet: privySolanaWallet?.address || null,
-      privyLinkedSolana: privyLinkedSolanaAddress || null,
-      resolvedSolanaAddress: solanaAddress || null,
-      fallbackEvmAddress: evmAddress || null,
-      finalAddress: address || null,
-      allWallets: wallets?.map((w: any) => ({ address: w.address, chainType: w.chainType, clientType: w.walletClientType, chainId: w.chainId }))
-    });
-  }
+  // Debug removed
   const router = useRouter();
 
   // Network synchronization hook for automatic wallet-UI sync
@@ -143,7 +132,10 @@ export default function Dashboard() {
     planId: '',
     isEth: false,
     isGToken: false,
-    tokenName: ''
+    tokenName: '',
+    contractAddress: '',
+    network: '',
+    startTime: 0
   });
 
   // Modal state for plan details
@@ -333,7 +325,10 @@ export default function Dashboard() {
     isEth: false,
     penaltyPercentage: 0,
     tokenName: '',
-    isCompleted: false
+    isCompleted: false,
+    contractAddress: '',
+    network: '',
+    startTime: 0
   });
 
 
@@ -514,38 +509,44 @@ export default function Dashboard() {
 
 
   // Opens the top-up modal with plan details and token information
-  const openTopUpModal = (planName: string, planId: string, isEth: boolean, tokenName: string = '') => {
+  const openTopUpModal = (plan: any) => {
     setTopUpModal({
       isOpen: true,
-      planName,
-      planId,
-      isEth,
-      isGToken: tokenName === '$G',
-      tokenName
+      planName: plan.name,
+      planId: plan.id,
+      isEth: plan.isEth,
+      isGToken: plan.tokenName === '$G',
+      tokenName: plan.tokenName,
+      contractAddress: plan.contractAddress,
+      network: plan.network,
+      startTime: plan.startTime
     });
   };
 
   // Closes the top-up modal and resets all modal state
   const closeTopUpModal = () => {
-    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '' });
+    setTopUpModal({ isOpen: false, planName: '', planId: '', isEth: false, isGToken: false, tokenName: '', contractAddress: '', network: '', startTime: 0 });
   };
 
   // Opens the withdrawal modal with plan details, penalty information, and completion status
-  const openWithdrawModal = (planId: string, planName: string, isEth: boolean, penaltyPercentage: number = 5, tokenName: string = '', isCompleted: boolean = false) => {
+  const openWithdrawModal = (plan: any, isCompleted: boolean = false) => {
     setWithdrawModal({
       isOpen: true,
-      planId,
-      planName,
-      isEth,
-      penaltyPercentage,
-      tokenName,
-      isCompleted
+      planId: plan.id,
+      planName: plan.name,
+      isEth: plan.isEth,
+      penaltyPercentage: plan.penaltyPercentage || 5,
+      tokenName: plan.tokenName,
+      isCompleted,
+      contractAddress: plan.contractAddress,
+      network: plan.network,
+      startTime: plan.startTime
     });
   };
 
   // Closes the withdrawal modal and resets all modal state
   const closeWithdrawModal = () => {
-    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false });
+    setWithdrawModal({ isOpen: false, planId: '', planName: '', isEth: false, penaltyPercentage: 0, tokenName: '', isCompleted: false, contractAddress: '', network: '', startTime: 0 });
   };
 
 
@@ -586,7 +587,7 @@ export default function Dashboard() {
   // Prevent hydration mismatch by showing consistent loading state
   if (!mounted) {
     return (
-      <div className={`${exo.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#F7FCFA] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
+      <div className={`${exo.variable} font-sans px-0 py-4 sm:px-4 sm:py-6 md:p-8 bg-[#F7FCFA] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
         </div>
@@ -597,10 +598,10 @@ export default function Dashboard() {
 
   // Component displayed when user has no active savings plans
   return (
-    <div className={`${exo.variable} font-sans p-4 sm:p-6 md:p-8 bg-[#F8FAF9] text-gray-800 relative min-h-screen pb-12`}>
+    <div className={`${exo.variable} font-sans px-0 py-4 sm:px-4 sm:py-6 md:p-8 bg-[#F8FAF9] text-gray-800 relative min-h-screen pb-12`}>
       <NetworkDetection />
-      <TopUpModal isOpen={topUpModal.isOpen} onClose={closeTopUpModal} planName={topUpModal.planName} planId={topUpModal.planId} isEth={topUpModal.isEth} tokenName={topUpModal.tokenName} networkLogos={networkLogos} />
-      <WithdrawModal isOpen={withdrawModal.isOpen} onClose={closeWithdrawModal} planName={withdrawModal.planName} isEth={withdrawModal.isEth} penaltyPercentage={withdrawModal.penaltyPercentage} tokenName={withdrawModal.tokenName} isCompleted={withdrawModal.isCompleted} networkLogos={networkLogos} />
+      <TopUpModal isOpen={topUpModal.isOpen} onClose={closeTopUpModal} planName={topUpModal.planName} planId={topUpModal.planId} isEth={topUpModal.isEth} tokenName={topUpModal.tokenName} networkLogos={networkLogos} contractAddress={topUpModal.contractAddress} network={topUpModal.network} startTime={topUpModal.startTime} />
+      <WithdrawModal isOpen={withdrawModal.isOpen} onClose={closeWithdrawModal} planName={withdrawModal.planName} isEth={withdrawModal.isEth} penaltyPercentage={withdrawModal.penaltyPercentage} tokenName={withdrawModal.tokenName} isCompleted={withdrawModal.isCompleted} networkLogos={networkLogos} contractAddress={withdrawModal.contractAddress} network={withdrawModal.network} startTime={withdrawModal.startTime} />
       <PlanDetailsModal isOpen={planDetailsModal.isOpen} onClose={() => setPlanDetailsModal({ ...planDetailsModal, isOpen: false })} plan={planDetailsModal.plan} isEth={planDetailsModal.isEth} tokenName={planDetailsModal.tokenName} goodDollarPrice={0.0001086} networkLogos={networkLogos} />
       <NetworkSelectionModal isOpen={showNetworkModal} onClose={() => setShowNetworkModal(false)} networks={networkOptions} onSelectNetwork={async (network) => { await handleNetworkSelect(network); setShowNetworkModal(false); }} isNetworkSwitching={hookNetworkSwitching} isLoadingLogos={isLoadingLogos} />
 
@@ -817,8 +818,8 @@ export default function Dashboard() {
                           {/* Mobile Top Up / Completion Tag */}
                           <div className="md:hidden flex items-center">
                             {!isCompleted && (
-                              <button onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)} className="p-2 sm:p-3 bg-[#81D7B4]/10 text-black hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm" title="Top Up">
-                                <HiOutlinePlus className="w-4 h-4 sm:w-5 sm:h-5 font-bold" />
+                              <button onClick={() => openTopUpModal(plan)} className="px-3 py-1.5 bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-lg transition-colors shadow-sm text-xs font-bold" title="Top Up">
+                                Top Up
                               </button>
                             )}
                             {isCompleted && (
@@ -859,8 +860,8 @@ export default function Dashboard() {
                           {/* Desktop Top Up / Completion Tag */}
                           <div className="hidden md:flex items-center mr-2">
                             {!isCompleted && (
-                              <button onClick={() => openTopUpModal(plan.name, plan.id, plan.isEth, plan.tokenName)} className="p-3 bg-[#81D7B4]/10 text-black hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm" title="Top Up">
-                                <HiOutlinePlus className="w-5 h-5 font-bold" />
+                              <button onClick={() => openTopUpModal(plan)} className="px-4 py-2 bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm text-sm font-bold" title="Top Up">
+                                Top Up
                               </button>
                             )}
                             {isCompleted && (
@@ -873,7 +874,7 @@ export default function Dashboard() {
                             <button onClick={() => {
                               const maturityTimestamp = Number(plan.maturityTime || 0);
                               const isCurrentlyCompleted = Number(new Date()) >= maturityTimestamp * 1000;
-                              openWithdrawModal(plan.id, plan.name, plan.isEth, plan.penaltyPercentage, plan.tokenName, isCurrentlyCompleted);
+                              openWithdrawModal(plan, isCurrentlyCompleted);
                             }} className={`flex-1 md:flex-none px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold rounded-xl transition-colors border shadow-sm text-center whitespace-nowrap ${isCompleted ? 'bg-[#81D7B4] text-white hover:bg-opacity-90 border-transparent' : 'bg-white hover:bg-red-50 text-[#81D7B4] border-gray-200 hover:text-red-500 hover:border-red-200'}`}>Withdraw</button>
                           </div>
                         </div>

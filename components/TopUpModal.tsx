@@ -83,6 +83,7 @@ interface TopUpModalProps {
   networkLogos?: NetworkLogoData
   contractAddress?: string // Contract address from plan metadata
   startTime?: number // Plan creation timestamp for contract selection
+  network?: string
 }
 
 // Helper function to determine which Base contract to use

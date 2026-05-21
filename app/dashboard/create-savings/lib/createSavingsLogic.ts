@@ -6,6 +6,7 @@ const erc20ABI = erc20ABIFile.abi;
 import { getSavingFeeFromContract } from '@/utils/contractUtils';
 
 const CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"
+const BASE_CONTRACT_ADDRESS_NEW = "0x67FFa7a1eb0D05BEaF9dB039c1bD604063040be9"
 const BASE_CONTRACT_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33"
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932"
@@ -32,7 +33,7 @@ export const NETWORKS: NetworkConfig[] = [
         id: 'base',
         name: 'Base',
         chainId: 8453,
-        contractAddress: CONTRACT_ADDRESS,
+        contractAddress: BASE_CONTRACT_ADDRESS_NEW,
         tokens: [
             { symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals: 6 }, // Correct Base USDC address
             { symbol: 'USDGLO', address: '0x4f604735c1cf31399c6e711d5962b2b3e0225ad3', decimals: 18 },

@@ -12,6 +12,9 @@ import CONTRACT_ABI from '@/app/abi/contractABI.js';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
+import { useBitsaveSolana } from '@/hooks/useBitsaveSolana';
+import { PublicKey } from '@solana/web3.js';
+import axios from 'axios';
 
 // Contract addresses
 // Base network - dual contract support
@@ -61,6 +64,7 @@ interface WithdrawModalProps {
   networkLogos?: NetworkLogoData;
   contractAddress?: string; // Contract address from plan metadata
   startTime?: number; // Plan creation timestamp for contract selection
+  network?: string;
 }
 
 // Helper function to determine which Base contract to use
@@ -86,19 +90,22 @@ const WithdrawModal = memo(function WithdrawModal({
   isCompleted = false,
   networkLogos,
   contractAddress: planContractAddress,
-  startTime: planStartTime
+  startTime: planStartTime,
+  network: planNetwork
 }: WithdrawModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [txHash, setTxHash] = useState('');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk' | 'bsc'>('base');
+  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk' | 'bsc' | 'solana'>('base');
   const [currentTokenName, setCurrentTokenName] = useState(isEth ? 'ETH' : 'USDC');
 
   const { address } = useAccount();
   const signer = useEthersSigner();
   const chainId = useChainId();
+  
+  const { withdrawSaving: withdrawSolanaSaving } = useBitsaveSolana();
 
   useEffect(() => {
     const detectNetwork = async () => {
@@ -180,10 +187,18 @@ const WithdrawModal = memo(function WithdrawModal({
     try {
       const sanitizedPlanName = planName;
 
+      // Check if network is Solana
+      const isSolana = (planNetwork || '').toLowerCase() === 'solana' || currentNetwork === 'solana';
+
       // Added timeout to prevent hanging
-      const withdrawalPromise = isEth
-        ? handleEthWithdraw(sanitizedPlanName)
-        : handleTokenWithdraw(sanitizedPlanName);
+      let withdrawalPromise;
+      if (isSolana) {
+        withdrawalPromise = handleSolanaWithdraw(sanitizedPlanName);
+      } else {
+        withdrawalPromise = isEth
+          ? handleEthWithdraw(sanitizedPlanName)
+          : handleTokenWithdraw(sanitizedPlanName);
+      }
 
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => {
@@ -197,6 +212,60 @@ const WithdrawModal = memo(function WithdrawModal({
       setError(`Withdrawal failed: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
       setShowTransactionModal(true);
+    }
+  };
+
+  const handleSolanaWithdraw = async (nameOfSavings: string) => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const solanaTokenMap: Record<string, string> = {
+        'USDC': 'Cb8mk8FAg4Qa3H6mHAhgHFnp86j15gWZHowVM9Jz9ZoD',
+        'USDT': 'CAwSHfEPcYUzuKEzvRBSkPHrfsmSdpYjtKdEDydJPisi',
+        'cNGN': '9JGUWzdzncCzkcDDoJkNDsB4YJAgLimXG9mdwVkk1EyW'
+      };
+
+      const tokenNameToUse = tokenName || 'USDC';
+      const tokenAddress = solanaTokenMap[tokenNameToUse];
+      
+      if (!tokenAddress) {
+        throw new Error(`Token ${tokenNameToUse} is not supported on Solana devnet.`);
+      }
+
+      const adminPubkey = new PublicKey(process.env.NEXT_PUBLIC_SOLANA_ADMIN_PUBKEY || "A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5");
+      const tx = await withdrawSolanaSaving(
+        nameOfSavings,
+        new PublicKey(tokenAddress),
+        adminPubkey
+      );
+
+      setTxHash(tx);
+
+      // Track the withdrawal
+      try {
+        await axios.post(
+          "/api/transactions",
+          {
+            amount: 0, // In Solana, amount withdrawn is total amount minus penalty, but we may not have the exact value instantly.
+            txnhash: tx,
+            chain: 'solana',
+            savingsname: nameOfSavings,
+            useraddress: 'solana-user', // Add address if possible
+            transaction_type: "withdrawal",
+            currency: tokenNameToUse
+          }
+        );
+      } catch (apiError) {
+        console.warn('API tracking failed, but withdrawal succeeded:', apiError);
+      }
+
+      setSuccess(true);
+      setIsLoading(false);
+      setShowTransactionModal(true);
+    } catch (err) {
+      console.error("Solana withdrawal failed:", err);
+      throw err;
     }
   };
 
@@ -398,8 +467,22 @@ const WithdrawModal = memo(function WithdrawModal({
               <div className="p-8 flex flex-col items-center">
                 {/* ... Simplified transaction modal UI ... */}
 
-                <h2 className="text-xl font-bold mb-3">{success ? "Success!" : "Failed"}</h2>
-                <p className="mb-4 text-sm text-gray-600 text-center">{error || (success ? "Withdrawal successful." : "")}</p>
+                {success ? (
+                  <>
+                    <h2 className="text-xl font-bold mb-3 text-center">Success!</h2>
+                    <p className="mb-4 text-sm text-gray-600 text-center">Withdrawal successful.</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-xl font-bold mb-3 text-center text-red-600">Withdrawal Failed</h2>
+                    <p className="mb-6 text-sm text-gray-600 text-center bg-gray-50 p-4 rounded-xl border border-gray-100">{error || "An unexpected error occurred."}</p>
+                  </>
+                )}
                 <button className="ds-btn-primary w-full py-3" onClick={handleCloseTransactionModal}>Close</button>
               </div>
             </motion.div>

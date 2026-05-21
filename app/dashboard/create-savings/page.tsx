@@ -327,7 +327,7 @@ export default function CreateSavingsPage() {
       
       if (selectedNetwork.id === 'solana') {
         const daysToMaturity = Math.ceil((maturity - Date.now() / 1000) / (24 * 60 * 60));
-        const adminPubkey = new PublicKey("A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5"); // Real admin pubkey from Global State
+        const adminPubkey = new PublicKey(process.env.NEXT_PUBLIC_SOLANA_ADMIN_PUBKEY || "A5Ga4nzGc9iC3dWrSSB5NuCauhi965TYQP7AAo8X1ow5");
         const mintPubkey = new PublicKey(tokenObj.address);
         
         // First check if user has joined Bitsave, if not, join
@@ -438,7 +438,7 @@ export default function CreateSavingsPage() {
       )}
 
       {/* ─── Progress Stepper ─── */}
-      <div className="max-w-3xl lg:max-w-4xl mx-auto mt-6 mb-8 px-4 lg:px-8">
+      <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto mt-6 mb-8 px-0 sm:px-4 lg:px-8">
         <div className="flex items-center justify-between mb-4 px-2">
           {['Plan Details', 'Configuration', 'Review'].map((label, i) => {
             const stepNum = i + 1;
@@ -469,7 +469,7 @@ export default function CreateSavingsPage() {
       </div>
 
       {/* ─── Mode Toggle ─── */}
-      <div className="max-w-3xl lg:max-w-4xl mx-auto mb-8 flex justify-center px-4">
+      <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto mb-8 flex justify-center px-0 sm:px-4">
         <div className="inline-flex bg-white rounded-full p-1.5 shadow-[0_4px_24px_rgb(0,0,0,0.03)] border border-gray-100">
           <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={() => setNlpMode(false)}
             className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${!nlpMode ? 'bg-[#F4FBF8] text-[#81D7B4] shadow-sm ring-1 ring-[#81D7B4]/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}>
@@ -487,7 +487,7 @@ export default function CreateSavingsPage() {
       {nlpMode ? (
         <NLPInputBlock nlpText={nlpText} setNlpText={setNlpText} nlpParsed={nlpParsed} applyNLPValues={applyNLPValues} cancelNLP={() => { setNlpMode(false); setNlpText(''); }} chains={chains} />
       ) : (
-        <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 lg:px-8">
+        <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-0 sm:px-4 lg:px-8">
           <AnimatePresence mode="wait">
             {success ? (
               <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16">

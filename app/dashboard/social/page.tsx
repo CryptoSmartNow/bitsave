@@ -231,7 +231,7 @@ export default function SavvySpacePage() {
               <div className="w-full lg:w-auto shrink-0">
                 <button
                   onClick={() => window.location.href = '/wrapped'}
-                  className="w-full lg:w-auto bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-8 py-4 rounded-2xl text-base font-black transition-all duration-300 shadow-[0_4px_20px_rgb(129,215,180,0.4)] hover:shadow-[0_8px_30px_rgb(129,215,180,0.5)] inline-flex items-center justify-center gap-3"
+                  className="w-full lg:w-auto bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-4 py-3 sm:px-8 sm:py-4 rounded-2xl text-base font-black transition-all duration-300 shadow-[0_4px_20px_rgb(129,215,180,0.4)] hover:shadow-[0_8px_30px_rgb(129,215,180,0.5)] inline-flex items-center justify-center gap-3"
                 >
                   View My Wrapped
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>

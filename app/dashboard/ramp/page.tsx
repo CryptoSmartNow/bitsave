@@ -584,7 +584,7 @@ export default function OnOffRampPage() {
             setSessionToken(null);
             toast.error('Payment cancelled.');
           }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[2147483647] bg-white hover:bg-gray-100 text-[#0F1825] rounded-full px-8 py-4 shadow-[0_10px_40px_rgba(0,0,0,0.25)] font-bold transition-all flex items-center justify-center gap-2 text-base w-[90%] max-w-[320px] border border-gray-200"
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[2147483647] bg-white hover:bg-gray-100 text-[#0F1825] rounded-full px-4 sm:px-8 py-3 sm:py-4 shadow-[0_10px_40px_rgba(0,0,0,0.25)] font-bold transition-all flex items-center justify-center gap-2 text-base w-[90%] max-w-[320px] border border-gray-200"
         >
           ✕ Cancel Payment
         </button>
