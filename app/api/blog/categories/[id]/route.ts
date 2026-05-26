@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getBlogCategoriesCollection, generateSlug } from '@/lib/blogDatabase';
+import { clearCache } from '@/lib/redis';
 
 // GET /api/blog/categories/[id] - Get category by ID
 export async function GET(
@@ -129,6 +130,8 @@ export async function PUT(
       );
     }
 
+    await clearCache('api:blog:categories:all');
+
     return NextResponse.json({ 
       category: result,
       message: 'Category updated successfully'
@@ -192,6 +195,8 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await clearCache('api:blog:categories:all');
 
     return NextResponse.json({ 
       message: 'Category deleted successfully'

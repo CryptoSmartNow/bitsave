@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUpdatesCollection } from '@/lib/mongodb';
+import { getCache, setCache, clearCache } from '@/lib/redis';
+import { broadcastPushNotification } from '@/lib/push';
 
 export async function GET(request: NextRequest) {
   try {
+    const CACHE_KEY = 'api:updates:all';
+    
+    // Try to get from Redis cache first
+    const cachedUpdates = await getCache<any[]>(CACHE_KEY);
+    if (cachedUpdates) {
+      return NextResponse.json(cachedUpdates);
+    }
+
     const collection = await getUpdatesCollection();
     
     if (!collection) {
@@ -37,13 +47,18 @@ export async function GET(request: NextRequest) {
       updates = defaultUpdates;
     }
 
-    return NextResponse.json(updates.map((update: any) => ({
+    const responseData = updates.map((update: any) => ({
       id: update.id || update._id.toString(),
       title: update.title,
       content: update.content,
       date: update.date,
       isNew: update.isNew
-    })));
+    }));
+
+    // Cache the result for 60 seconds
+    await setCache(CACHE_KEY, responseData, 60);
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Error fetching updates:', error);
@@ -83,6 +98,21 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await collection.insertOne(newUpdate);
+
+    // Clear cache
+    await clearCache('api:updates:all');
+
+    // Broadcast push notification to all users about the new update
+    try {
+      await broadcastPushNotification({
+        title: `BitSave Update: ${title}`,
+        body: content,
+        url: '/dashboard'
+      });
+    } catch (pushError) {
+      console.error('Failed to broadcast push notification for new update:', pushError);
+      // We don't fail the API request if push fails
+    }
 
     return NextResponse.json({
       success: true,
@@ -150,6 +180,9 @@ export async function PUT(request: NextRequest) {
        }
     }
 
+    // Clear cache
+    await clearCache('api:updates:all');
+
     return NextResponse.json({ success: true });
 
   } catch (error) {
@@ -203,6 +236,9 @@ export async function DELETE(request: NextRequest) {
         );
       }
     }
+
+    // Clear cache
+    await clearCache('api:updates:all');
 
     return NextResponse.json({ success: true });
 

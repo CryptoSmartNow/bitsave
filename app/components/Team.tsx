@@ -88,7 +88,7 @@ const teamMembers = [
 
 export default function Team() {
   return (
-    <section id="team" className="py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white">
+    <section id="team" className="section-lazy py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white">
       <div className="container mx-auto max-w-7xl">
 
         {/* Header */}
@@ -102,16 +102,16 @@ export default function Team() {
             <span className="w-12 h-[1px] bg-[#81D7B4]"></span>
             <span className="text-sm font-bold text-[#81D7B4] tracking-widest uppercase">The Team</span>
           </motion.div>
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 leading-tight max-w-4xl mb-6">
-            Built by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#5fb392]">Builders</span>
+          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-tight max-w-4xl mb-6">
+            Built by <span className="text-gradient-animated">Builders</span>
           </h2>
           <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
             Passionate experts from across the globe, united by a mission to make onchain savings accessible, secure, and rewarding for everyone.
           </p>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16 md:gap-y-24">
+        {/* Grid / Carousel on Mobile */}
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 -mx-4 px-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-x-8 sm:gap-y-16 md:gap-y-24 sm:pb-0 sm:mx-0 sm:px-0 sm:overflow-visible sm:snap-none">
           {teamMembers.map((member, index) => (
             <motion.div
               key={member.name}
@@ -119,12 +119,12 @@ export default function Team() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group"
+              className="group snap-center shrink-0 min-w-[260px] max-w-[300px] sm:min-w-0 sm:max-w-none sm:shrink sm:snap-align-none"
             >
               <div className="flex flex-col">
 
                 {/* Avatar Container */}
-                <div className="relative mb-8 overflow-hidden rounded-2xl aspect-[4/5] bg-gray-100">
+                <div className="relative mb-8 overflow-hidden rounded-2xl aspect-[4/5] bg-gray-100 group-hover:shadow-xl group-hover:shadow-[#81D7B4]/10 transition-all duration-500">
                   <Image
                     src={member.avatar}
                     alt={member.name}
@@ -162,8 +162,8 @@ export default function Team() {
 
                 {/* Info */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-[#81D7B4] transition-colors">{member.name}</h3>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{member.role}</p>
+                  <h3 className="font-display text-xl font-bold text-gray-900 mb-1 group-hover:text-[#5fb392] transition-colors">{member.name}</h3>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{member.role}</p>
                 </div>
 
               </div>

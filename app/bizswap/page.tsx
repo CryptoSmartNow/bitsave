@@ -1,388 +1,342 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  HiOutlineArrowRight, HiOutlineArrowUpRight, HiOutlineChartBar,
-  HiOutlineCurrencyDollar, HiOutlineLockClosed, HiOutlineClock,
-  HiOutlineCheckCircle, HiOutlineShieldCheck, HiOutlineDocumentText,
-  HiOutlineUsers, HiOutlineScale, HiOutlineBuildingLibrary,
+  HiOutlineArrowRight,
+  HiOutlineCurrencyDollar,
+  HiOutlineShieldCheck,
+  HiOutlineChartBar,
+  HiOutlineArrowsRightLeft,
+  HiOutlineBuildingLibrary,
+  HiOutlineCheckBadge,
+  HiOutlineWallet
 } from 'react-icons/hi2';
 
 export default function BizSwapLandingPage() {
-  const payoutSchedule = [
-    { week: 'W1', date: 'Jun 8', amount: '$8.67' },
-    { week: 'W2', date: 'Jun 15', amount: '$8.67' },
-    { week: 'W3', date: 'Jun 22', amount: '$8.67' },
-    { week: 'W4', date: 'Jun 29', amount: '$8.67' },
-    { week: 'W5', date: 'Jul 6', amount: '$8.67' },
-    { week: 'W6', date: 'Jul 13', amount: '$8.67' },
-    { week: 'W7', date: 'Jul 20', amount: '$8.67' },
-    { week: 'W8', date: 'Jul 27', amount: '$8.67' },
-    { week: 'W9', date: 'Aug 3', amount: '$8.67' },
-    { week: 'W10', date: 'Aug 10', amount: '$8.67' },
-    { week: 'W11', date: 'Aug 17', amount: '$8.67' },
-    { week: 'W12', date: 'Aug 24', amount: '$8.67' },
-  ];
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-[#0F1825] text-[#F9F9FB] font-sans overflow-x-hidden selection:bg-[#81D7B4] selection:text-[#0F1825]">
+      {/* Background gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#81D7B4] opacity-[0.03] blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#3A4F73] opacity-[0.05] blur-[100px]" />
+        <div className="absolute top-[40%] left-[50%] translate-x-[-50%] w-[60%] h-[20%] rounded-full bg-[#81D7B4] opacity-[0.02] blur-[150px]" />
+      </div>
 
       {/* NAV */}
-      <nav className="border-b border-gray-100 sticky top-0 z-50 bg-white/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
-              <Image src="/bitsavelogo.png" alt="BitSave" width={110} height={36} className="object-contain" priority />
-              <span className="text-gray-300 font-light text-lg">/</span>
-              <span className="text-gray-900 font-bold text-sm tracking-wide">BIZSWAP</span>
-            </div>
-            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
-              <a href="#instrument" className="hover:text-gray-900 transition-colors">The Instrument</a>
-              <a href="#mechanics" className="hover:text-gray-900 transition-colors">Mechanics</a>
-              <a href="#schedule" className="hover:text-gray-900 transition-colors">Payout Schedule</a>
-              <a href="#phases" className="hover:text-gray-900 transition-colors">Market Phases</a>
-            </div>
-            <Link href="/bizswap/app" className="flex items-center gap-2 px-5 py-2.5 bg-[#81D7B4] hover:bg-[#6bc9a6] text-white text-sm font-bold rounded-lg transition-all shadow-sm">
-              Access Market <HiOutlineArrowUpRight className="w-4 h-4" />
-            </Link>
+      <nav className="fixed top-0 w-full z-50 border-b border-[#7B8B9A]/10 bg-[#0F1825]/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
+          <Link href="/bizswap" className="flex items-center gap-3 group">
+            <Image src="/bitsavelogo.png" alt="BizMarket" width={120} height={38} className="object-contain transition-opacity group-hover:opacity-80" priority />
+            <span className="text-[#7B8B9A] font-light text-lg">/</span>
+            <span className="text-[#F9F9FB] font-bold tracking-widest text-sm uppercase">BizSwap</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <a href="#about" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">About</a>
+            <a href="#instruments" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Instruments</a>
+            <a href="#how-it-works" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">How it Works</a>
+            <a href="#why" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Why Us</a>
           </div>
+          <Link href="/bizswap/app" className="group relative inline-flex items-center justify-center px-6 py-2.5 font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(129,215,180,0.3)]">
+            <span className="relative flex items-center gap-2">
+              Launch App <HiOutlineArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
         </div>
       </nav>
 
-      {/* HERO — finance terminal style */}
-      <section className="border-b border-gray-100 bg-[#FAFAFA]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-24">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            {/* Left */}
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#81D7B4] animate-pulse"></span>
-                <span className="text-xs font-bold text-[#81D7B4] uppercase tracking-widest">Primary Issuance Live · May 16 – May 30</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 leading-tight mb-5">
-                BizShares<br />
-                <span className="text-[#81D7B4]">Debt Instrument</span>
-              </h1>
-              <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-md">
-                A structured fixed-yield debt instrument issued via the BizSwap protocol. Acquire BizShares at a fixed price, receive automated weekly payouts for 12 weeks.
+      <main className="relative z-10">
+        {/* SECTION 1 - HERO */}
+        <section className="relative pt-40 pb-20 lg:pt-48 lg:pb-32 overflow-hidden px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A2538] border border-[#2C3E5D] mb-8">
+              <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
+              <span className="text-xs font-bold text-[#81D7B4] tracking-widest uppercase">Solana MVP Live</span>
+            </motion.div>
+            <motion.h1 initial="hidden" animate="visible" variants={fadeUp} className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-[1.1]">
+              Your RWA <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0]">Yield Aggregator</span>
+            </motion.h1>
+            <motion.p initial="hidden" animate="visible" variants={fadeUp} className="text-[#9BA8B5] text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
+              Earn yield in stablecoins from real world businesses, private credit, and government treasuries. Weekly, monthly or quarterly payouts directly to your wallet.
+            </motion.p>
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/bizswap/app" className="w-full sm:w-auto px-8 py-4 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] font-black rounded-xl text-lg transition-all shadow-[0_0_30px_rgba(129,215,180,0.2)] hover:shadow-[0_0_40px_rgba(129,215,180,0.4)] hover:-translate-y-1">
+                Earn Now
+              </Link>
+              <a href="#about" className="w-full sm:w-auto px-8 py-4 bg-[#1A2538] hover:bg-[#2C3E5D] text-[#F9F9FB] border border-[#2C3E5D] hover:border-[#3A4F73] font-bold rounded-xl text-lg transition-all">
+                Learn More
+              </a>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* SECTION 2 - WHAT IS BIZSWAP */}
+        <section id="about" className="py-24 border-y border-[#7B8B9A]/10 bg-[#0A0F17]">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+                <h2 className="text-4xl md:text-5xl font-black mb-6">Never run out of yield.</h2>
+                <p className="text-[#9BA8B5] text-lg leading-relaxed mb-8">
+                  BizSwap is the decentralized exchange (DEX) for swapping your stablecoins into BizShares. It provides seamless access to high-quality Real World Assets (RWAs) with transparent, predictable yield schedules.
+                </p>
+                <div className="flex items-center gap-4 text-[#F9F9FB]">
+                  <div className="flex items-center gap-2">
+                    <HiOutlineCheckBadge className="w-6 h-6 text-[#81D7B4]" />
+                    <span className="font-bold">100% On-Chain</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <HiOutlineCheckBadge className="w-6 h-6 text-[#81D7B4]" />
+                    <span className="font-bold">Stablecoin Payouts</span>
+                  </div>
+                </div>
+              </motion.div>
+              
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="relative">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#81D7B4]/20 to-transparent blur-3xl rounded-full" />
+                <div className="relative bg-[#1A2538] border border-[#2C3E5D] rounded-3xl p-8 shadow-2xl">
+                  <div className="flex justify-between items-center border-b border-[#2C3E5D] pb-6 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-[#2C3E5D] rounded-full flex items-center justify-center">
+                        <HiOutlineCurrencyDollar className="w-6 h-6 text-[#81D7B4]" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-[#9BA8B5]">You supply</p>
+                        <p className="font-bold text-xl">1,000 USDC</p>
+                      </div>
+                    </div>
+                    <HiOutlineArrowsRightLeft className="w-6 h-6 text-[#7B8B9A]" />
+                    <div className="flex items-center gap-3 text-right">
+                      <div>
+                        <p className="text-sm text-[#9BA8B5]">You receive</p>
+                        <p className="font-bold text-xl text-[#81D7B4]">BizBond</p>
+                      </div>
+                      <div className="w-12 h-12 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-full flex items-center justify-center">
+                        <HiOutlineShieldCheck className="w-6 h-6 text-[#81D7B4]" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-[#0F1825] rounded-xl p-6">
+                    <p className="text-center font-bold text-lg mb-2">Yield Generated</p>
+                    <p className="text-center text-3xl font-black text-[#81D7B4]">+ 10% Annually</p>
+                    <p className="text-center text-sm text-[#7B8B9A] mt-2">Paid directly to your wallet every quarter</p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 3 - WHAT ARE BIZSHARES */}
+        <section id="instruments" className="py-24">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-black mb-6">What are BizShares?</h2>
+              <p className="text-[#9BA8B5] text-lg max-w-3xl mx-auto">
+                BizShares are digital certificates representing ownership in Real World Assets. They are backed by real-world revenue from businesses, private credit pools, and government treasury bills.
               </p>
-              <div className="flex gap-3 flex-wrap">
-                <Link href="/bizswap/app" className="flex items-center gap-2 px-6 py-3 bg-[#81D7B4] hover:bg-[#6bc9a6] text-white font-bold rounded-lg text-sm transition-all shadow-sm">
-                  Acquire BizShares <HiOutlineArrowRight className="w-4 h-4" />
-                </Link>
-                <a href="#mechanics" className="px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-50 transition-all">
-                  Read Prospectus
-                </a>
-              </div>
             </div>
 
-            {/* Right — instrument data card */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 border-b border-gray-100 px-6 py-3 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Instrument Overview</span>
-                <span className="text-xs font-bold text-[#81D7B4] bg-[#81D7B4]/10 px-2 py-0.5 rounded">BZSHR-2026-Q2</span>
+            <motion.div 
+              initial="hidden" 
+              whileInView="visible" 
+              viewport={{ once: true }} 
+              variants={staggerContainer}
+              className="grid md:grid-cols-3 gap-6"
+            >
+              {/* BizYield */}
+              <motion.div variants={fadeUp} className="group bg-[#1A2538] border border-[#2C3E5D] hover:border-[#81D7B4]/50 rounded-3xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(129,215,180,0.15)]">
+                <div className="mb-6 flex justify-between items-start">
+                  <div className="w-14 h-14 bg-[#FF6B6B]/10 rounded-2xl flex items-center justify-center">
+                    <HiOutlineChartBar className="w-7 h-7 text-[#FF6B6B]" />
+                  </div>
+                  <span className="px-3 py-1 bg-[#FF6B6B]/10 text-[#FF6B6B] text-xs font-black tracking-widest uppercase rounded-full">High Risk</span>
+                </div>
+                <h3 className="text-2xl font-black mb-2">BizYield</h3>
+                <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by real business revenue sharing agreements.</p>
+                
+                <ul className="space-y-4 mb-8">
+                  <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
+                    <span className="text-[#7B8B9A]">Payouts</span>
+                    <span className="font-bold text-[#F9F9FB]">Monthly</span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
+                    <span className="text-[#7B8B9A]">Return</span>
+                    <span className="font-bold text-[#F9F9FB]">Variable APR</span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-[#7B8B9A]">Min. Buy-in</span>
+                    <span className="font-bold text-[#81D7B4]">$10.00</span>
+                  </li>
+                </ul>
+              </motion.div>
+
+              {/* BizCredit */}
+              <motion.div variants={fadeUp} className="group bg-[#1A2538] border border-[#2C3E5D] hover:border-[#81D7B4]/50 rounded-3xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(129,215,180,0.15)] relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#81D7B4] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="mb-6 flex justify-between items-start">
+                  <div className="w-14 h-14 bg-[#F5A623]/10 rounded-2xl flex items-center justify-center">
+                    <HiOutlineCurrencyDollar className="w-7 h-7 text-[#F5A623]" />
+                  </div>
+                  <span className="px-3 py-1 bg-[#F5A623]/10 text-[#F5A623] text-xs font-black tracking-widest uppercase rounded-full">Med Risk</span>
+                </div>
+                <h3 className="text-2xl font-black mb-2">BizCredit</h3>
+                <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by BizMarket's vetted SME credit pools.</p>
+                
+                <ul className="space-y-4 mb-8">
+                  <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
+                    <span className="text-[#7B8B9A]">Payouts</span>
+                    <span className="font-bold text-[#F9F9FB]">Weekly</span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
+                    <span className="text-[#7B8B9A]">Return</span>
+                    <span className="font-bold text-[#F9F9FB]">16% Annualised</span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-[#7B8B9A]">Min. Buy-in</span>
+                    <span className="font-bold text-[#81D7B4]">$100.00</span>
+                  </li>
+                </ul>
+              </motion.div>
+
+              {/* BizBond */}
+              <motion.div variants={fadeUp} className="group bg-[#1A2538] border border-[#2C3E5D] hover:border-[#81D7B4]/50 rounded-3xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(129,215,180,0.15)]">
+                <div className="mb-6 flex justify-between items-start">
+                  <div className="w-14 h-14 bg-[#81D7B4]/10 rounded-2xl flex items-center justify-center">
+                    <HiOutlineBuildingLibrary className="w-7 h-7 text-[#81D7B4]" />
+                  </div>
+                  <span className="px-3 py-1 bg-[#81D7B4]/10 text-[#81D7B4] text-xs font-black tracking-widest uppercase rounded-full">Low Risk</span>
+                </div>
+                <h3 className="text-2xl font-black mb-2">BizBond</h3>
+                <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by government treasury bills & sovereign instruments.</p>
+                
+                <ul className="space-y-4 mb-8">
+                  <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
+                    <span className="text-[#7B8B9A]">Payouts</span>
+                    <span className="font-bold text-[#F9F9FB]">Quarterly</span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
+                    <span className="text-[#7B8B9A]">Return</span>
+                    <span className="font-bold text-[#F9F9FB]">10% Fixed</span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-[#7B8B9A]">Min. Buy-in</span>
+                    <span className="font-bold text-[#81D7B4]">$1,000.00</span>
+                  </li>
+                </ul>
+              </motion.div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* SECTION 4 - HOW IT WORKS */}
+        <section id="how-it-works" className="py-24 border-y border-[#7B8B9A]/10 bg-[#0A0F17]">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-black mb-6">How it Works</h2>
+              <p className="text-[#9BA8B5] text-lg">Three simple steps to start earning real-world yield.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-12 relative">
+              <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-[#2C3E5D] via-[#81D7B4]/30 to-[#2C3E5D]" />
+              
+              {[
+                { step: '01', title: 'Connect', desc: 'Connect your wallet. Select an instrument that matches your risk appetite and investment size.', icon: HiOutlineWallet },
+                { step: '02', title: 'Swap', desc: 'Swap your stablecoins directly into your chosen BizShares instrument. Your funds go to work immediately.', icon: HiOutlineArrowsRightLeft },
+                { step: '03', title: 'Earn', desc: 'Receive yield payments directly to your wallet on schedule, weekly, monthly, or quarterly in stablecoins.', icon: HiOutlineCurrencyDollar }
+              ].map((item, i) => (
+                <div key={i} className="relative z-10 text-center">
+                  <div className="w-24 h-24 mx-auto bg-[#0F1825] border-2 border-[#2C3E5D] rounded-full flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                    <item.icon className="w-10 h-10 text-[#81D7B4]" />
+                  </div>
+                  <h3 className="text-2xl font-black mb-4">{item.title}</h3>
+                  <p className="text-[#9BA8B5] leading-relaxed px-4">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 5 - WHY BIZMARKET */}
+        <section id="why" className="py-24">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="grid lg:grid-cols-12 gap-16 items-center">
+              <div className="lg:col-span-5">
+                <h2 className="text-4xl md:text-5xl font-black mb-8 leading-tight">Built on Transparency & Real Assets.</h2>
+                <Link href="/bizswap/app" className="inline-flex items-center gap-2 px-8 py-4 bg-[#1A2538] hover:bg-[#2C3E5D] border border-[#2C3E5D] hover:border-[#81D7B4]/50 text-[#F9F9FB] font-bold rounded-xl text-lg transition-all">
+                  Start Earning Now <HiOutlineArrowRight />
+                </Link>
               </div>
-              <div className="divide-y divide-gray-50">
+              
+              <div className="lg:col-span-7 grid sm:grid-cols-2 gap-6">
                 {[
-                  { label: 'Instrument Type', value: 'Fixed-Yield Debt' },
-                  { label: 'Issuance Price', value: '$100.00 USDC' },
-                  { label: 'Gross Yield', value: '4.00% per quarter' },
-                  { label: 'Weekly Distribution', value: '$8.67 USDC / share' },
-                  { label: 'Distribution Schedule', value: '12 consecutive Sundays' },
-                  { label: 'Issuance Hard Cap', value: '1,000 BizShares' },
-                  { label: 'Total Capital Target', value: '$100,000 USDC' },
-                  { label: 'Primary Window', value: 'May 16 – May 30, 2026' },
-                  { label: 'Liquidity Phase', value: 'June 1, 2026 onwards' },
-                  { label: 'Transfer Restriction', value: 'Locked during primary phase' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between items-center px-6 py-3 hover:bg-gray-50 transition-colors">
-                    <span className="text-sm text-gray-500">{label}</span>
-                    <span className="text-sm font-bold text-gray-900">{value}</span>
+                  { title: 'Stablecoin Yield Only', desc: 'Every payment arrives in your chosen local stablecoin or USDC. No volatile token emissions.' },
+                  { title: 'Real Assets Underneath', desc: 'Every instrument is backed by a real world yield generating activity; a business revenue, a loan book, or a government bond.' },
+                  { title: 'Direct Oversight', desc: "BizMarket's private equity arm holds a stake in the business for every BizYield listing. We have access to the books." },
+                  { title: 'On-Chain Ownership', desc: 'Every purchase issues a digital certificate to your wallet. Your ownership is immutable and transparent.' }
+                ].map((item, i) => (
+                  <div key={i} className="bg-[#0A0F17] border border-[#2C3E5D] rounded-2xl p-6">
+                    <div className="w-10 h-10 bg-[#81D7B4]/10 rounded-lg flex items-center justify-center mb-4">
+                      <HiOutlineCheckBadge className="w-6 h-6 text-[#81D7B4]" />
+                    </div>
+                    <h4 className="font-bold text-lg mb-2">{item.title}</h4>
+                    <p className="text-[#7B8B9A] text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
-              <div className="p-4 bg-[#81D7B4]/5 border-t border-[#81D7B4]/10">
-                <Link href="/bizswap/app" className="flex items-center justify-center gap-2 w-full py-3 bg-[#81D7B4] hover:bg-[#6bc9a6] text-white text-sm font-bold rounded-lg transition-all">
-                  Acquire BizShares <HiOutlineArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* KEY STATS TICKER */}
-      <section className="border-b border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100">
-            {[
-              { label: 'Issue Price', value: '$100', sub: 'USDC per share' },
-              { label: 'Quarterly Yield', value: '4.00%', sub: 'Gross return' },
-              { label: 'Weekly Payout', value: '$8.67', sub: 'Per share held' },
-              { label: 'Total Issuance', value: '1,000', sub: 'BizShares (hard cap)' },
-            ].map(({ label, value, sub }) => (
-              <div key={label} className="py-6 px-8 text-center">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-                <p className="text-2xl font-black text-gray-900">{value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* INSTRUMENT MECHANICS */}
-      <section id="mechanics" className="py-20 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12">
-            <p className="text-xs font-bold text-[#81D7B4] uppercase tracking-widest mb-2">§ 01 — Instrument Structure</p>
-            <h2 className="text-3xl font-black text-gray-900">Capital Management Strategy</h2>
-            <p className="text-gray-500 mt-3 max-w-2xl">Full transparency on capital deployment to fund the 12-week payout obligation across the Q2 2026 cycle.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            <div className="md:col-span-3 bg-gray-50 border border-gray-200 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <HiOutlineBuildingLibrary className="w-5 h-5 text-[#81D7B4]" />
-                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Capital Deployment Flow</span>
-              </div>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-5">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Total Capital Raised</div>
-                  <div className="text-3xl font-black text-gray-900 mb-1">$100,000</div>
-                  <div className="text-sm text-gray-500">1,000 shares × $100 USDC</div>
-                  <div className="mt-4 w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-[#81D7B4] h-1.5 rounded-full w-full"></div>
-                  </div>
-                </div>
-                <div className="bg-white border border-[#81D7B4]/30 rounded-lg p-5">
-                  <div className="text-xs font-bold text-[#81D7B4] uppercase tracking-wider mb-3">Months 1–2 Reserve</div>
-                  <div className="text-3xl font-black text-gray-900 mb-1">$69,334</div>
-                  <div className="text-sm text-gray-500">May–June payout guarantee fund locked on-chain</div>
-                  <div className="mt-4 w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-[#81D7B4] h-1.5 rounded-full" style={{ width: '69.3%' }}></div>
-                  </div>
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-5">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Month 3 Yield Pool</div>
-                  <div className="text-3xl font-black text-gray-900 mb-1">$30,667</div>
-                  <div className="text-sm text-gray-500">Active yield generation to cover August obligation</div>
-                  <div className="mt-4 w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-gray-400 h-1.5 rounded-full" style={{ width: '30.7%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-[#81D7B4]/5 border border-[#81D7B4]/20 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <HiOutlineChartBar className="w-5 h-5 text-[#81D7B4]" />
-                <span className="text-sm font-bold text-gray-700">Best Case Scenario</span>
-                <span className="ml-auto text-xs font-bold text-[#81D7B4] bg-[#81D7B4]/10 px-2 py-0.5 rounded">+15.3% Return on Pool</span>
-              </div>
-              <p className="text-2xl font-black text-gray-900 mb-1">+$15,333 <span className="text-sm font-medium text-gray-500">protocol profit</span></p>
-              <p className="text-sm text-gray-500">July yield pool generates $46,000+ covering the $34,667 obligation with $11.3k surplus.</p>
-            </div>
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <HiOutlineScale className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-bold text-gray-700">Worst Case Scenario</span>
-                <span className="ml-auto text-xs font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded">+6.1% Return on Pool</span>
-              </div>
-              <p className="text-2xl font-black text-gray-900 mb-1">+$6,133 <span className="text-sm font-medium text-gray-500">protocol profit</span></p>
-              <p className="text-sm text-gray-500">July yield pool generates $40,800, covering full obligation with $6.1k surplus retained.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PAYOUT SCHEDULE TABLE */}
-      <section id="schedule" className="py-20 bg-gray-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12">
-            <p className="text-xs font-bold text-[#81D7B4] uppercase tracking-widest mb-2">§ 02 — Distribution Schedule</p>
-            <h2 className="text-3xl font-black text-gray-900">12-Week Payout Calendar</h2>
-            <p className="text-gray-500 mt-3 max-w-2xl">Every Sunday at 12:00 PM UTC, a snapshot captures all BizShare holders. $8.67 USDC is automatically distributed per share.</p>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-6 py-3.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Week</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Date</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Distribution / Share</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Total Pool (1,000 shares)</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Cumulative / Share</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {payoutSchedule.map(({ week, date, amount }, i) => {
-                  const cumulative = ((i + 1) * 8.67).toFixed(2);
-                  const pool = ((i + 1) * 8670).toLocaleString();
-                  const isUpcoming = i < 3;
-                  return (
-                    <tr key={week} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-3.5 font-bold text-gray-900">{week}</td>
-                      <td className="px-6 py-3.5 text-gray-600">2026 {date}</td>
-                      <td className="px-6 py-3.5 font-bold text-[#81D7B4]">{amount}</td>
-                      <td className="px-6 py-3.5 text-gray-600">${pool} USDC</td>
-                      <td className="px-6 py-3.5 font-bold text-gray-900">${cumulative}</td>
-                      <td className="px-6 py-3.5">
-                        <span className={`text-xs font-bold px-2 py-1 rounded ${isUpcoming ? 'bg-[#81D7B4]/10 text-[#81D7B4]' : 'bg-gray-100 text-gray-400'}`}>
-                          {isUpcoming ? 'Upcoming' : 'Scheduled'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-gray-50">
-                  <td colSpan={2} className="px-6 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Total</td>
-                  <td className="px-6 py-3.5 font-black text-gray-900">$104.04</td>
-                  <td className="px-6 py-3.5 font-black text-gray-900">$104,040 USDC</td>
-                  <td colSpan={2} className="px-6 py-3.5 text-xs text-gray-400">4% gross yield over 12 weeks</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* MARKET PHASES */}
-      <section id="phases" className="py-20 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12">
-            <p className="text-xs font-bold text-[#81D7B4] uppercase tracking-widest mb-2">§ 03 — Market Lifecycle</p>
-            <h2 className="text-3xl font-black text-gray-900">Two-Phase Market Structure</h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full bg-[#81D7B4] text-white text-xs font-black flex items-center justify-center">1</span>
-                  <span className="font-bold text-gray-900">Primary Issuance</span>
-                </div>
-                <span className="text-xs font-bold bg-[#81D7B4]/10 text-[#81D7B4] px-3 py-1 rounded-full">May 16 – May 30</span>
-              </div>
-              <div className="p-6 space-y-4">
-                <p className="text-sm text-gray-600 leading-relaxed">A fixed-window, fixed-price issuance of 1,000 BizShares. All shares are minted at exactly $100 USDC. <code className="text-xs bg-[#81D7B4]/10 text-[#81D7B4] px-1.5 py-0.5 rounded">transfer()</code> is disabled during this phase to prevent OTC leakage and price distortion.</p>
-                <div className="divide-y divide-gray-50">
-                  {[
-                    ['Mechanism', 'Fixed-price primary issuance'],
-                    ['Price', '$100.00 USDC per share'],
-                    ['Hard Cap', '1,000 BizShares'],
-                    ['Anti-Whale', 'Per-wallet limits enforced'],
-                    ['Transferability', 'Locked (non-transferable)'],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between py-2.5 text-sm">
-                      <span className="text-gray-500">{k}</span>
-                      <span className="font-bold text-gray-900">{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full border-2 border-[#81D7B4] text-[#81D7B4] text-xs font-black flex items-center justify-center">2</span>
-                  <span className="font-bold text-gray-900">Secondary Market (LP Pool)</span>
-                </div>
-                <span className="text-xs font-bold bg-gray-100 text-gray-500 px-3 py-1 rounded-full">From June 1</span>
-              </div>
-              <div className="p-6 space-y-4">
-                <p className="text-sm text-gray-600 leading-relaxed">Post-issuance, BizSwap opens a Liquidity Pool for secondary trading. Holders requiring early exit may liquidate at a 10% haircut ($90 USDC). Liquidity Providers earn 2% on every swap facilitated.</p>
-                <div className="divide-y divide-gray-50">
-                  {[
-                    ['Mechanism', 'AMM Liquidity Pool'],
-                    ['Emergency Exit Price', '$90.00 USDC (−10% haircut)'],
-                    ['LP Earn Rate', '2% fee per swap'],
-                    ['Transferability', 'Enabled (June 1 onward)'],
-                    ['Pool Currency', 'USDC'],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between py-2.5 text-sm">
-                      <span className="text-gray-500">{k}</span>
-                      <span className="font-bold text-gray-900">{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* RISK & COMPLIANCE */}
-      <section className="py-20 bg-gray-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-10">
-            <p className="text-xs font-bold text-[#81D7B4] uppercase tracking-widest mb-2">§ 04 — Risk Disclosure</p>
-            <h2 className="text-3xl font-black text-gray-900">Protocol Safeguards</h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { icon: HiOutlineShieldCheck, title: 'On-Chain Reserve', desc: 'Months 1–2 payouts are pre-funded directly on the smart contract at issuance.' },
-              { icon: HiOutlineLockClosed, title: 'Transfer Lock', desc: 'Transfers disabled during primary phase to prevent price manipulation.' },
-              { icon: HiOutlineDocumentText, title: 'Shelf-Life Expiry', desc: 'Each BizShare carries an on-chain expiry_date. Expired shares stop accruing yield automatically.' },
-              { icon: HiOutlineUsers, title: 'Anti-Whale Cap', desc: 'Per-wallet acquisition limits enforced at the contract level to maintain fair distribution.' },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                <Icon className="w-6 h-6 text-[#81D7B4] mb-3" />
-                <h4 className="font-bold text-gray-900 text-sm mb-2">{title}</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#81D7B4] animate-pulse"></span>
-            <span className="text-xs font-bold text-[#81D7B4] uppercase tracking-widest">Issuance Window Open</span>
-          </div>
-          <h2 className="text-4xl font-black text-gray-900 mb-4">Acquire BizShares</h2>
-          <p className="text-gray-500 text-lg mb-10 max-w-xl mx-auto">Join the primary issuance before the May 30th closing. Pay via crypto, ChainRails cross-chain, or direct bank transfer.</p>
-          <div className="flex justify-center gap-4 flex-wrap">
-            <Link href="/bizswap/app" className="flex items-center gap-2 px-8 py-4 bg-[#81D7B4] hover:bg-[#6bc9a6] text-white font-bold rounded-lg transition-all shadow-md text-sm">
-              Access BizSwap Market <HiOutlineArrowRight className="w-4 h-4" />
-            </Link>
-            <a href="#mechanics" className="px-8 py-4 border border-gray-200 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-50 transition-all">
-              Read Full Prospectus
-            </a>
-          </div>
-          <p className="text-xs text-gray-400 mt-8 max-w-lg mx-auto leading-relaxed">
-            <HiOutlineShieldCheck className="inline w-3 h-3 mr-1" />
-            BizShares are yield-bearing on-chain instruments issued by the Bitsave Protocol. Participation constitutes agreement to the instrument terms. Past performance does not guarantee future results.
+        {/* BOTTOM CTA */}
+        <section className="py-32 bg-[#81D7B4] text-[#0F1825] text-center px-6">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">Your money should be working.</h2>
+          <p className="text-[#1A2538] text-xl mb-10 max-w-2xl mx-auto font-medium">
+            Pick an instrument. Swap in minutes. Start earning real-world yield today.
           </p>
-        </div>
-      </section>
+          <Link href="/bizswap/app" className="inline-flex px-10 py-5 bg-[#0F1825] hover:bg-[#1A2538] text-[#F9F9FB] font-black rounded-xl text-xl transition-all shadow-2xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1">
+            Access Swap Market
+          </Link>
+        </section>
+      </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-gray-100 py-10 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <Image src="/bitsavelogo.png" alt="BitSave" width={90} height={28} className="object-contain opacity-60" />
-            <span className="text-gray-300">|</span>
-            <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">BizSwap</span>
+      <footer className="border-t border-[#2C3E5D] py-12 bg-[#0A0F17]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
+            <Image src="/bitsavelogo.png" alt="BizMarket" width={100} height={32} className="object-contain" />
+            <span className="text-[#7B8B9A] font-light">|</span>
+            <span className="text-[#F9F9FB] font-bold tracking-widest text-xs uppercase">BizSwap</span>
           </div>
-          <p className="text-xs text-gray-400">© 2026 Bitsave Protocol · BZSHR-2026-Q2 · All rights reserved.</p>
-          <div className="flex gap-6 text-xs text-gray-400 font-medium">
-            <a href="#mechanics" className="hover:text-gray-700">Instrument Terms</a>
-            <a href="#schedule" className="hover:text-gray-700">Payout Schedule</a>
-            <Link href="/dashboard" className="hover:text-gray-700">Dashboard</Link>
+          <p className="text-[#7B8B9A] text-sm">© 2026 BizMarket Protocol. All rights reserved.</p>
+          <div className="flex gap-6 text-sm font-medium">
+            <Link href="/bizswap/dashboard" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Dashboard</Link>
+            <Link href="/bizswap/app" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Market</Link>
           </div>
         </div>
       </footer>
-
     </div>
   );
 }

@@ -11,6 +11,8 @@ import {
 } from 'react-icons/hi2';
 import { Bot } from 'lucide-react';
 import { marked } from 'marked';
+import confetti from 'canvas-confetti';
+import Link from 'next/link';
 
 const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
@@ -88,6 +90,7 @@ export default function SavvyBotPage() {
   const [quizLoading, setQuizLoading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
+  const [shareType, setShareType] = useState<'quiz' | 'challenge'>('quiz');
 
   // Challenge state
   const [currentChallenge, setCurrentChallenge] = useState<ChallengeData | null>(null);
@@ -255,6 +258,24 @@ export default function SavvyBotPage() {
 
   const submitQuiz = () => {
     setQuizSubmitted(true);
+    
+    // Calculate score immediately
+    const score = currentQuiz?.questions.reduce((s, q, i) => {
+      return s + (quizAnswers[i] === q.correct ? 1 : 0);
+    }, 0) || 0;
+
+    if (score >= (currentQuiz?.questions.length || 0) / 2) {
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      setShareType('quiz');
+      // Set the share URL manually so it exists before the modal pops
+      const url = new URL(window.location.origin);
+      url.pathname = '/share-score';
+      url.searchParams.set('score', score.toString());
+      url.searchParams.set('total', (currentQuiz?.questions.length || 0).toString());
+      url.searchParams.set('title', currentQuiz?.title || 'Quiz');
+      setShareUrl(url.toString());
+      setTimeout(() => setShowShareModal(true), 1000);
+    }
   };
 
   const getScore = () => {
@@ -278,6 +299,7 @@ export default function SavvyBotPage() {
     
     const finalUrl = url.toString();
     setShareUrl(finalUrl);
+    setShareType('quiz');
     
     // Copy to clipboard
     navigator.clipboard.writeText(finalUrl).catch(() => {});
@@ -331,6 +353,16 @@ export default function SavvyBotPage() {
     const updated = [...acceptedChallenges, currentChallenge];
     setAcceptedChallenges(updated);
     localStorage.setItem('savvy_bot_challenges', JSON.stringify(updated));
+    
+    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+    
+    setShareType('challenge');
+    const url = new URL(window.location.origin);
+    url.pathname = '/share-challenge';
+    url.searchParams.set('title', currentChallenge.title);
+    url.searchParams.set('goal', currentChallenge.goal);
+    setShareUrl(url.toString());
+    setTimeout(() => setShowShareModal(true), 1000);
   };
 
   const TABS: { key: TabType; label: string; icon: React.ReactNode }[] = [
@@ -340,7 +372,7 @@ export default function SavvyBotPage() {
   ];
 
   return (
-    <div className={`${exo.variable} font-sans flex flex-col h-[calc(100vh-180px)] md:h-[calc(100vh-140px)] max-w-4xl mx-auto`}>
+    <div className={`${exo.variable} font-sans flex flex-col h-[calc(100dvh-130px)] md:h-[calc(100dvh-160px)] mt-2 md:mt-0 mb-6 md:mb-0 max-w-4xl mx-auto`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
@@ -348,32 +380,34 @@ export default function SavvyBotPage() {
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-gray-900 tracking-tight">Savvy Bot</h1>
+            {/* Removed Savvy Bot h1 per user request */}
             <p className="text-xs text-[#81D7B4] font-bold uppercase tracking-wider">Your Personal Finance Assistant</p>
           </div>
         </div>
-        {activeTab === 'chat' && messages.length > 0 && (
-          <button onClick={clearHistory} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-200 rounded-xl text-sm font-bold transition-all">
-            <HiOutlineTrash className="w-4 h-4" /> Clear
-          </button>
-        )}
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl mb-4">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
-              activeTab === tab.key
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {tab.icon} {tab.label}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="flex flex-1 gap-1 p-1 bg-gray-100 rounded-2xl">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === tab.key
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+        {activeTab === 'chat' && messages.length > 0 && (
+          <button onClick={clearHistory} className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 rounded-xl text-sm font-bold transition-all shadow-sm">
+            <HiOutlineTrash className="w-4 h-4" />
           </button>
-        ))}
+        )}
       </div>
 
       {/* ===== CHAT TAB ===== */}
@@ -472,7 +506,7 @@ export default function SavvyBotPage() {
 
       {/* ===== QUIZZES TAB ===== */}
       {activeTab === 'quizzes' && (
-        <div className="flex-1 overflow-y-auto rounded-[2rem] bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-4 sm:p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto rounded-[2rem] bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-4 sm:p-6 my-2 md:my-0 pb-10 md:pb-6 custom-scrollbar">
           {quizLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center">
@@ -566,8 +600,8 @@ export default function SavvyBotPage() {
             </div>
           ) : (
             /* Quiz Topic Selection */
-            <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6">
+            <div className="flex flex-col items-center justify-center min-h-full text-center px-4 py-6 md:py-0">
+              <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 shrink-0">
                 <HiOutlineAcademicCap className="w-10 h-10 text-[#81D7B4]" />
               </div>
               <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Test Your Knowledge</h2>
@@ -595,7 +629,7 @@ export default function SavvyBotPage() {
 
       {/* ===== CHALLENGES TAB ===== */}
       {activeTab === 'challenges' && (
-        <div className="flex-1 overflow-y-auto rounded-[2rem] bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-4 sm:p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto rounded-[2rem] bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-4 sm:p-6 my-2 md:my-0 pb-10 md:pb-6 custom-scrollbar">
           {challengeLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center">
@@ -737,9 +771,13 @@ export default function SavvyBotPage() {
                 <HiOutlineCheckCircle className="w-6 h-6" />
               </div>
               
-              <h3 className="text-xl font-black text-center text-gray-900 mb-2">Score Copied!</h3>
+              <h3 className="text-xl font-black text-center text-gray-900 mb-2">
+                {shareType === 'quiz' ? 'Score Copied!' : 'Challenge Accepted!'}
+              </h3>
               <p className="text-gray-500 text-sm text-center mb-6 font-medium">
-                The link to your interactive scorecard has been copied to your clipboard. Anyone with the link can view your score.
+                {shareType === 'quiz' 
+                  ? 'The link to your interactive scorecard has been copied to your clipboard. Share it with friends!'
+                  : 'You have committed to a new savings challenge. Share it to stay accountable!'}
               </p>
               
               <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-center justify-between mb-6">
@@ -754,18 +792,34 @@ export default function SavvyBotPage() {
                 </button>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3">
                 <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Check out my score: `)}&url=${encodeURIComponent(shareUrl)}`}
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    shareType === 'quiz' 
+                    ? `I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Check out my score: ` 
+                    : `I just accepted the "${currentChallenge?.title}" savings challenge on @BitsaveProtocol! My goal: ${currentChallenge?.goal}. Follow my journey: `
+                  )}&url=${encodeURIComponent(shareUrl)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-black text-white font-bold rounded-xl text-sm transition-all shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:-translate-y-0.5"
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-black text-white font-bold rounded-xl text-sm transition-all shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:-translate-y-0.5"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                   Share on X
                 </a>
+                
+                <Link
+                  href={`/dashboard/social?post=${encodeURIComponent(
+                    shareType === 'quiz' 
+                    ? `I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Check out my score: ${shareUrl}` 
+                    : `I just accepted the "${currentChallenge?.title}" savings challenge on @BitsaveProtocol! My goal: ${currentChallenge?.goal}. Follow my journey: ${shareUrl}`
+                  )}`}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:-translate-y-0.5"
+                >
+                  <HiOutlineUsers className="w-5 h-5" />
+                  Share to Forum
+                </Link>
               </div>
             </motion.div>
           </div>

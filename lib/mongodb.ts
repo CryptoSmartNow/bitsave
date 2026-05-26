@@ -139,6 +139,38 @@ export async function getLeaderboardCollection(): Promise<Collection | null> {
   }
 }
 
+export async function getBusinessesCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('businesses');
+  } catch (error) {
+    console.error('Failed to get businesses collection:', error);
+    return null;
+  }
+}
+
+export async function getPushSubscriptionsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('push_subscriptions');
+  } catch (error) {
+    console.error('Failed to get push subscriptions collection:', error);
+    return null;
+  }
+}
+
 export async function getUpdatesCollection(): Promise<Collection | null> {
   if (!MONGODB_ENABLED) {
     console.warn('MongoDB is not enabled');
@@ -183,6 +215,22 @@ export async function getCommentsCollection(): Promise<Collection | null> {
     return db.collection('market_comments');
   } catch (error) {
     console.error('Failed to get market_comments collection:', error);
+    return null;
+  }
+}
+
+export async function getBizSwapCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('bizswap_certificates');
+  } catch (error) {
+    console.error('Failed to get bizswap_certificates collection:', error);
     return null;
   }
 }

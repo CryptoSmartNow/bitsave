@@ -15,6 +15,7 @@ import { formatTimestamp } from '@/utils/dateUtils';
 import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlineChartPie, HiOutlineUsers, HiOutlineCheckCircle, HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 import SharePlanModal from '@/components/SharePlanModal';
+import { TableShimmer } from '@/components/ShimmerLoading';
 
 // Helper function to ensure image URLs are properly formatted for Next.js Image
 const ensureImageUrl = (url: string | undefined): string => {
@@ -34,7 +35,8 @@ const ensureImageUrl = (url: string | undefined): string => {
 const exo = Exo({
   subsets: ['latin'],
   display: 'swap',
-})
+  variable: '--font-space-grotesk'
+});
 
 // Define types for our plan data
 interface Plan {
@@ -146,7 +148,7 @@ export default function PlansPage() {
   useEffect(() => {
     const loadNetworkLogos = async () => {
       try {
-        const logos = await fetchMultipleNetworkLogos(['ethereum', 'base', 'celo', 'lisk', 'avalanche', 'solana', 'bsc', 'hedera']);
+        const logos = await fetchMultipleNetworkLogos(['ethereum', 'base', 'celo', 'lisk', 'avalanche', 'solana', 'bsc']);
         setNetworkLogos(logos);
       } catch (error) {
         console.error('Error fetching network logos:', error);
@@ -248,7 +250,7 @@ export default function PlansPage() {
   // Fetch GoodDollar price
   const fetchGoodDollarPrice = async () => {
     try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd');
+      const response = await fetch('/api/prices?ids=gooddollar');
       const data = await response.json();
       return data.gooddollar.usd;
     } catch (error) {
@@ -323,15 +325,15 @@ export default function PlansPage() {
   const totalPages = Math.ceil(filteredActivityData.length / itemsPerPage);
 
   return (
-    <div className={`${exo.className} pb-20`}>
+    <div className={`${exo.variable} font-sans pb-20`}>
       {/* Network Detection Component */}
       <NetworkDetection />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 relative z-10 space-y-10">
+      <div className="w-full px-0 py-4 sm:px-4 sm:py-6 md:p-8 relative z-10 space-y-10">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-medium text-gray-900 mb-1">Savings Plans</h1>
+            <h1 className="text-3xl font-medium text-gray-900 mb-1">Your Vaults</h1>
             <p className="text-gray-500 text-sm">Track goals, top up balances, and monitor your yield.</p>
           </div>
           <Link href="/dashboard/create-savings">
@@ -341,28 +343,26 @@ export default function PlansPage() {
           </Link>
         </div>
 
-        <div className="flex overflow-x-auto gap-4 md:grid md:grid-cols-3 hide-scrollbar snap-x snap-mandatory">
-          {/* Active Plans Card */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 min-w-[240px] md:min-w-0 snap-center flex flex-col justify-between">
-            <p className="text-gray-500 text-sm font-medium mb-4">Active Plans</p>
-            <p className="text-4xl font-normal text-gray-900">{stats.activeCount}</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-8">
+          <div className="bg-white rounded-[1.5rem] border border-gray-100 p-4 shadow-sm flex flex-col justify-between">
+            <p className="text-gray-500 text-xs font-medium mb-3">Active Plans</p>
+            <p className="text-3xl font-bold text-black">{stats.activeCount}</p>
           </div>
 
           {/* Total Value Card */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 min-w-[240px] md:min-w-0 snap-center flex flex-col justify-between">
-            <p className="text-gray-500 text-sm font-medium mb-4">Total Value</p>
-            <p className="text-4xl font-normal text-gray-900 flex items-start">
-              <span className="text-xl text-gray-400 mr-1 mt-1">$</span>
-              {parseFloat(stats.totalLocked).toLocaleString()}
+          <div className="bg-white rounded-[1.5rem] border border-gray-100 p-4 shadow-sm flex flex-col justify-between">
+            <p className="text-gray-500 text-xs font-medium mb-3">Total Value</p>
+            <p className="text-3xl font-bold text-black flex items-baseline gap-1">
+              {parseFloat(stats.totalLocked).toLocaleString()} <span className="text-xs text-[#81D7B4]">USD</span>
             </p>
           </div>
 
           {/* Rewards Earned Card */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 min-w-[240px] md:min-w-0 snap-center flex flex-col justify-between">
-            <p className="text-gray-500 text-sm font-medium mb-4">Rewards Earned</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-4xl font-normal text-gray-900">{stats.rewards}</p>
-              <span className="text-sm font-medium text-gray-500">BTS</span>
+          <div className="bg-white rounded-[1.5rem] border border-gray-100 p-4 shadow-sm flex flex-col justify-between col-span-2 md:col-span-1">
+            <p className="text-gray-500 text-xs font-medium mb-3">Rewards Earned</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-3xl font-bold text-black">{stats.rewards}</p>
+              <span className="text-xs font-bold text-[#81D7B4]">$BTS</span>
             </div>
           </div>
         </div>
@@ -384,7 +384,7 @@ export default function PlansPage() {
                 const amount = parseFloat(plan.currentAmount);
                 const safeAmount = !isNaN(amount) ? amount : 0;
                 let usdVal = safeAmount;
-                if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                if (plan.isEth || plan.tokenName === 'ETH') usdVal = safeAmount * (ethPrice || 3500);
                 if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * 0.0001086;
                 const reward = (usdVal * 0.005 * 1000).toFixed(0);
 
@@ -419,13 +419,8 @@ export default function PlansPage() {
                           </span>
                         </div>
                       </div>
-                      {/* Mobile Top Up / Completion Tag */}
+                      {/* Mobile Completion Tag */}
                       <div className="md:hidden flex items-center">
-                        {!isCompleted && (
-                          <button onClick={() => openTopUpModal(plan)} className="px-3 py-1.5 bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-lg transition-colors shadow-sm text-xs font-bold" title="Top Up">
-                            Top Up
-                          </button>
-                        )}
                         {isCompleted && (
                           <span className="bg-[#81D7B4] text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md shadow-sm">100%</span>
                         )}
@@ -460,20 +455,16 @@ export default function PlansPage() {
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-3 w-full md:w-auto justify-end pt-4 md:pt-0 border-t md:border-none border-gray-50">
-                      {/* Desktop Top Up / Completion Tag */}
-                      <div className="hidden md:flex items-center mr-2">
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-4 md:pt-0 border-t md:border-none border-gray-50">
+                      {isCompleted && (
+                        <span className="hidden md:flex bg-[#81D7B4] text-white text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm items-center justify-center mr-2">100%</span>
+                      )}
+                      <div className="flex gap-2 w-full md:w-auto">
                         {!isCompleted && (
-                          <button onClick={() => openTopUpModal(plan)} className="px-4 py-2 bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm text-sm font-bold" title="Top Up">
+                          <button onClick={() => openTopUpModal(plan)} className="flex-1 md:flex-none px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm text-center whitespace-nowrap">
                             Top Up
                           </button>
                         )}
-                        {isCompleted && (
-                          <span className="bg-[#81D7B4] text-white text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm">100%</span>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2 w-full md:w-auto">
                         <button onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })} className="flex-1 md:flex-none px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold text-[#81D7B4] bg-white border border-gray-100 hover:border-[#81D7B4] rounded-xl transition-colors shadow-sm text-center">Details</button>
                         <button onClick={() => {
                           const maturityTimestamp = Number(plan.maturityTime || 0);
@@ -515,7 +506,7 @@ export default function PlansPage() {
                     const amount = parseFloat(plan.currentAmount);
                     const safeAmount = !isNaN(amount) ? amount : 0;
                     let usdVal = safeAmount;
-                    if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                    if (plan.isEth || plan.tokenName === 'ETH') usdVal = safeAmount * (ethPrice || 3500);
                     if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * 0.0001086;
                     const reward = (usdVal * 0.005 * 1000).toFixed(0);
 
@@ -619,10 +610,8 @@ export default function PlansPage() {
 
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 {isLoadingActivity ? (
-                  <div className="p-16 text-center">
-                    <div className="animate-spin h-10 w-10 border-t-2 border-b-2 border-[#81D7B4] rounded-full mx-auto mb-6"></div>
-                    <p className="text-[#0f172a] font-bold text-[15px] mb-1">Syncing with blockchain...</p>
-                    <p className="text-[#64748b] text-[13px] font-medium">Fetching your activity history</p>
+                  <div className="p-4 sm:p-6 w-full">
+                    <TableShimmer />
                   </div>
                 ) : filteredActivityData.length > 0 ? (
                   <>

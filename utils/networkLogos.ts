@@ -40,7 +40,7 @@ const NETWORK_ID_MAP: { [key: string]: string } = {
 
 // Fallback logo URLs for common networks (can be updated with actual logos)
 const FALLBACK_LOGOS: { [key: string]: string } = {
-  'base': '/base.png',
+  'base': '/base-square-logo.svg',
   'celo': '/celo.png',
   'lisk': '/lisk-logo.png',
   'avalanche': '/avalanche-logo.svg', // Using local avalanche logo
@@ -48,7 +48,8 @@ const FALLBACK_LOGOS: { [key: string]: string } = {
   'polygon': '/polygon.png',
   'arbitrum': '/arbitrum.png',
   'optimism': '/optimism.png',
-  'binance-smart-chain': '/bnb.png',
+  'binance-smart-chain': '/bsc.png',
+  'bsc': '/bsc.png',
   'solana': '/solana.png'
 };
 
@@ -73,87 +74,19 @@ function ensureValidUrl(url: string): string {
  * @returns Promise<NetworkLogoData> - Object containing network logo data
  */
 export async function fetchNetworkLogo(networkName: string): Promise<NetworkLogoData[string]> {
-  try {
-    // Normalize network name
-    const normalizedName = networkName.toLowerCase().replace(/\s+/g, '-');
-    const coingeckoId = NETWORK_ID_MAP[normalizedName] || normalizedName;
-    
-    // Try to fetch from CoinGecko asset platforms endpoint
-    const response = await fetch(`https://api.coingecko.com/api/v3/asset_platforms`);
-    
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
-    }
-    
-    const assetPlatforms = await response.json();
-    
-    // Find the matching network
-    const platform = assetPlatforms.find((platform: any) => 
-      platform.id === coingeckoId || 
-      platform.name.toLowerCase() === normalizedName ||
-      platform.shortname?.toLowerCase() === normalizedName
-    );
-    
-    if (platform && platform.image) {
-      const logoUrl = ensureValidUrl(platform.image.small || platform.image.thumb || platform.image.large);
-      console.log(`Found CoinGecko logo for ${networkName}: ${logoUrl}`);
-      return {
-        id: platform.id,
-        name: platform.name,
-        logoUrl: logoUrl,
-        fallbackUrl: FALLBACK_LOGOS[normalizedName],
-        small: platform.image.small,
-        large: platform.image.large,
-        thumb: platform.image.thumb
-      };
-    }
-    
-    // If not found in asset platforms, try to fetch the native coin data
-    if (platform && platform.native_coin_id) {
-      const coinResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${platform.native_coin_id}`);
-      
-      if (coinResponse.ok) {
-        const coinData = await coinResponse.json();
-        if (coinData.image) {
-          return {
-            id: platform.id,
-            name: platform.name,
-            logoUrl: coinData.image.small || coinData.image.thumb,
-            fallbackUrl: FALLBACK_LOGOS[normalizedName],
-            small: coinData.image.small,
-            large: coinData.image.large,
-            thumb: coinData.image.thumb
-          };
-        }
-      }
-    }
-    
-    // Return fallback if CoinGecko data is not available
-    const fallbackUrl = FALLBACK_LOGOS[normalizedName] || '/default-network.png';
-    console.log(`Using fallback for ${networkName}: ${fallbackUrl}`);
-    const safeFallbackUrl = ensureValidUrl(fallbackUrl);
-    return {
-      id: coingeckoId,
-      name: networkName,
-      logoUrl: safeFallbackUrl,
-      fallbackUrl: FALLBACK_LOGOS[normalizedName]
-    };
-    
-  } catch (error) {
-    console.error('Error fetching network logo from CoinGecko:', error);
-    
-    // Return fallback logo on error
-    const fallbackId = networkName.toLowerCase().replace(/\s+/g, '-');
-    const fallbackUrl = FALLBACK_LOGOS[fallbackId] || '/default-network.png';
-    console.log(`Error fallback for ${networkName}: ${fallbackUrl}`);
-    const safeFallbackUrl = ensureValidUrl(fallbackUrl);
-    return {
-      id: fallbackId,
-      name: networkName,
-      logoUrl: safeFallbackUrl,
-      fallbackUrl: FALLBACK_LOGOS[fallbackId]
-    };
-  }
+  // Normalize network name
+  const normalizedName = networkName.toLowerCase().replace(/\s+/g, '-');
+  const coingeckoId = NETWORK_ID_MAP[normalizedName] || normalizedName;
+  
+  // Return fallback logo directly to prevent CoinGecko API errors
+  const fallbackUrl = FALLBACK_LOGOS[normalizedName] || '/default-network.png';
+  const safeFallbackUrl = ensureValidUrl(fallbackUrl);
+  return {
+    id: coingeckoId,
+    name: networkName,
+    logoUrl: safeFallbackUrl,
+    fallbackUrl: FALLBACK_LOGOS[normalizedName]
+  };
 }
 
 /**
@@ -162,73 +95,23 @@ export async function fetchNetworkLogo(networkName: string): Promise<NetworkLogo
  * @returns Promise<NetworkLogoData> - Object with network names as keys and logo data as values
  */
 export async function fetchMultipleNetworkLogos(networkNames: string[]): Promise<NetworkLogoData> {
-  try {
-    // Fetch all asset platforms once for efficiency
-    const response = await fetch('https://api.coingecko.com/api/v3/asset_platforms');
+  const result: NetworkLogoData = {};
+  
+  networkNames.forEach(networkName => {
+    const normalizedName = networkName.toLowerCase().replace(/\s+/g, '-');
+    const coingeckoId = NETWORK_ID_MAP[normalizedName] || normalizedName;
+    const fallbackUrl = FALLBACK_LOGOS[normalizedName] || '/default-network.png';
+    const safeFallbackUrl = ensureValidUrl(fallbackUrl);
     
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
-    }
-    
-    const assetPlatforms = await response.json();
-    
-    const result: NetworkLogoData = {};
-    
-    networkNames.forEach(networkName => {
-      const normalizedName = networkName.toLowerCase().replace(/\s+/g, '-');
-      const coingeckoId = NETWORK_ID_MAP[normalizedName] || normalizedName;
-      
-      const platform = assetPlatforms.find((platform: any) => 
-        platform.id === coingeckoId || 
-        platform.name.toLowerCase() === normalizedName ||
-        platform.shortname?.toLowerCase() === normalizedName
-      );
-      
-      if (platform && platform.image) {
-        const logoUrl = ensureValidUrl(platform.image.small || platform.image.thumb || platform.image.large);
-        console.log(`Batch found CoinGecko logo for ${networkName}: ${logoUrl}`);
-        result[normalizedName] = {
-          id: platform.id,
-          name: platform.name,
-          logoUrl: logoUrl,
-          fallbackUrl: FALLBACK_LOGOS[normalizedName],
-          small: platform.image.small,
-          large: platform.image.large,
-          thumb: platform.image.thumb
-        };
-      } else {
-        const fallbackUrl = FALLBACK_LOGOS[normalizedName] || '/default-network.png';
-        console.log(`Batch fallback for ${networkName}: ${fallbackUrl}`);
-        result[normalizedName] = {
-          id: coingeckoId,
-          name: networkName,
-          logoUrl: fallbackUrl,
-          fallbackUrl: FALLBACK_LOGOS[normalizedName]
-        };
-      }
-    });
-    
-    return result;
-    
-  } catch (error) {
-    console.error('Error fetching multiple network logos:', error);
-    
-    // Return fallback logos on error
-    const result: NetworkLogoData = {};
-    networkNames.forEach(networkName => {
-      const normalizedName = networkName.toLowerCase().replace(/\s+/g, '-');
-      const fallbackUrl = FALLBACK_LOGOS[normalizedName] || '/default-network.png';
-      console.log(`Batch error fallback for ${networkName}: ${fallbackUrl}`);
-      const safeFallbackUrl = ensureValidUrl(fallbackUrl);
-      result[normalizedName] = {
-        id: normalizedName,
-        name: networkName,
-        logoUrl: safeFallbackUrl,
-        fallbackUrl: FALLBACK_LOGOS[normalizedName]
-      };
-    });
-    return result;
-  }
+    result[normalizedName] = {
+      id: coingeckoId,
+      name: networkName,
+      logoUrl: safeFallbackUrl,
+      fallbackUrl: FALLBACK_LOGOS[normalizedName]
+    };
+  });
+  
+  return result;
 }
 
 /**

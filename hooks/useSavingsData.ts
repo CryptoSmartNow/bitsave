@@ -45,7 +45,6 @@ const BASE_CONTRACT_MIGRATION_DATE = new Date('2026-02-05T00:00:00Z').getTime() 
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
-const HEDERA_CONTRACT_ADDRESS = "0x2f33f1f07f6e56c11fd48a4f3596d9dadfe67409";
 const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 
 // Network chain IDs
@@ -53,7 +52,6 @@ const BASE_CHAIN_ID = BigInt(8453);
 const CELO_CHAIN_ID = BigInt(42220);
 const LISK_CHAIN_ID = BigInt(1135);
 const BSC_CHAIN_ID = BigInt(56);
-const HEDERA_CHAIN_ID = BigInt(296);
 const AVALANCHE_CHAIN_ID = BigInt(43114);
 
 // Token mapping for Celo network
@@ -62,11 +60,6 @@ const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: str
   "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3": { name: "USDGLO", decimals: 18, logo: "/usdglo.png" },
   "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdclogo.png" },
   "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" }
-};
-
-// Token mapping for Hedera network
-const HEDERA_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
-  [HEDERA_CONTRACT_ADDRESS]: { name: "HBAR", decimals: 18, logo: "/hedera-logo.svg" }
 };
 
 const AVALANCHE_USDC_E = "0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664";
@@ -89,7 +82,6 @@ interface UseSavingsDataReturn {
   isCeloNetwork: boolean;
   isLiskNetwork: boolean;
   isBSCNetwork: boolean;
-  isHederaNetwork: boolean;
   isAvalancheNetwork: boolean;
   isSolanaNetwork: boolean;
   isCorrectNetwork: boolean;
@@ -186,7 +178,6 @@ export function useSavingsData(): UseSavingsDataReturn {
   const [isCeloNetwork, setIsCeloNetwork] = useState(false);
   const [isLiskNetwork, setIsLiskNetwork] = useState(false);
   const [isBSCNetwork, setIsBSCNetwork] = useState(false);
-  const [isHederaNetwork, setIsHederaNetwork] = useState(false);
   const [isAvalancheNetwork, setIsAvalancheNetwork] = useState(false);
   const [isSolanaNetwork, setIsSolanaNetwork] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
@@ -203,14 +194,12 @@ export function useSavingsData(): UseSavingsDataReturn {
       setCurrentNetwork('lisk');
     } else if (isBSCNetwork) {
       setCurrentNetwork('bsc');
-    } else if (isHederaNetwork) {
-      setCurrentNetwork('hedera');
     } else if (isAvalancheNetwork) {
       setCurrentNetwork('avalanche');
     } else {
       setCurrentNetwork(null);
     }
-  }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isHederaNetwork, isAvalancheNetwork, isSolanaNetwork]);
+  }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork, isSolanaNetwork]);
 
   // Ref to track if component is mounted
   const isMountedRef = useRef(true);
@@ -234,7 +223,6 @@ export function useSavingsData(): UseSavingsDataReturn {
       setIsCeloNetwork(false);
       setIsLiskNetwork(false);
       setIsBSCNetwork(false);
-      setIsHederaNetwork(false);
       setIsAvalancheNetwork(false);
       setIsSolanaNetwork(false);
       setIsCorrectNetwork(false);
@@ -247,7 +235,6 @@ export function useSavingsData(): UseSavingsDataReturn {
       setIsCeloNetwork(false);
       setIsLiskNetwork(false);
       setIsBSCNetwork(false);
-      setIsHederaNetwork(false);
       setIsAvalancheNetwork(false);
       setIsCorrectNetwork(true);
       return;
@@ -260,7 +247,6 @@ export function useSavingsData(): UseSavingsDataReturn {
     const isCelo = chainIdBigInt === CELO_CHAIN_ID;
     const isLisk = chainIdBigInt === LISK_CHAIN_ID;
     const isBSC = chainIdBigInt === BSC_CHAIN_ID;
-    const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
     const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
     setIsSolanaNetwork(false);
@@ -268,11 +254,10 @@ export function useSavingsData(): UseSavingsDataReturn {
     setIsCeloNetwork(isCelo);
     setIsLiskNetwork(isLisk);
     setIsBSCNetwork(isBSC);
-    setIsHederaNetwork(isHedera);
     setIsAvalancheNetwork(isAvalanche);
 
     // Check if user is on one of the supported EVM networks
-    const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche || isHedera;
+    const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche;
     setIsCorrectNetwork(isSupported);
   }, [chainId, solanaAddress]);
 
@@ -323,12 +308,6 @@ export function useSavingsData(): UseSavingsDataReturn {
       name: 'BSC'
     },
     {
-      chainId: HEDERA_CHAIN_ID,
-      rpcUrl: 'https://testnet.hashio.io/api',
-      contractAddress: HEDERA_CONTRACT_ADDRESS,
-      name: 'Hedera'
-    },
-    {
       chainId: AVALANCHE_CHAIN_ID,
       rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
       contractAddress: AVALANCHE_CONTRACT_ADDRESS,
@@ -336,12 +315,10 @@ export function useSavingsData(): UseSavingsDataReturn {
     }
   ];
 
-  // Fetch ETH price from CoinGecko
+  // Fetch ETH price from CoinGecko via internal API
   const fetchEthPrice = useCallback(async (): Promise<number> => {
     try {
-      const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-      );
+      const response = await axios.get("/api/prices?ids=ethereum");
       return response.data?.ethereum?.usd || 3500;
     } catch (error) {
       if (DEBUG) console.warn("Using fallback ETH price (API Error)");
@@ -349,12 +326,10 @@ export function useSavingsData(): UseSavingsDataReturn {
     }
   }, []);
 
-  // Fetch GoodDollar price from CoinGecko
+  // Fetch GoodDollar price from CoinGecko via internal API
   const fetchGoodDollarPrice = useCallback(async (): Promise<number> => {
     try {
-      const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd"
-      );
+      const response = await axios.get("/api/prices?ids=gooddollar");
       return response.data?.gooddollar?.usd || 0.0001086;
     } catch (error) {
       if (DEBUG) console.warn("Using fallback GoodDollar price (API Error)");
@@ -503,270 +478,28 @@ export function useSavingsData(): UseSavingsDataReturn {
 
       setEthPrice(currentEthPrice || 3500);
 
-      // Process all networks in parallel
-      const networkPromises = NETWORKS_CONFIG.map(async (network) => {
-        try {
-          const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-          const contract = new ethers.Contract(network.contractAddress, BitSaveABI, provider);
-
-          // Get user's child contract address with timeout
-          let userChildContractAddress;
-          try {
-            // Must pass { from: address } because the contract uses msg.sender and we are using a read-only provider
-            const contractPromise = contract.getUserChildContractAddress({ from: address });
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Contract call timeout')), 10000)
-            );
-            userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
-
-            if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) {
-              return null;
-            }
-          } catch (err) {
-            // console.warn(`Error checking child contract on ${network.name}:`, err);
-            return null;
-          }
-
-          // Initialize child contract
-          const childContract = new ethers.Contract(
-            userChildContractAddress,
-            childContractABI,
-            provider
-          );
-
-          // Fetch savings names
-          const savingsNamesPromise = childContract.getSavingsNames();
-          const savingsTimeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Savings names timeout')), 5000)
-          );
-
-          let savingsNamesArray: string[] = [];
-          try {
-            const savingsNamesObj: any = await Promise.race([savingsNamesPromise, savingsTimeoutPromise]);
-            // Handle both tuple return (struct) and array return
-            if (savingsNamesObj?.savingsNames && Array.isArray(savingsNamesObj.savingsNames)) {
-              savingsNamesArray = savingsNamesObj.savingsNames;
-            } else if (Array.isArray(savingsNamesObj)) {
-              // Check if the first element is an array (Tuple wrapper: [[name1, name2]])
-              if (Array.isArray(savingsNamesObj[0])) {
-                savingsNamesArray = savingsNamesObj[0];
-              } else {
-                // Assume it's the direct array: [name1, name2]
-                savingsNamesArray = savingsNamesObj;
-              }
-            } else if (savingsNamesObj?.savingsNames) {
-              savingsNamesArray = savingsNamesObj.savingsNames;
-            }
-          } catch (err) {
-            console.warn(`Error fetching savings names on ${network.name}:`, err);
-            return null;
-          }
-
-          if (!savingsNamesArray || savingsNamesArray.length === 0) return null;
-
-          const processedPlanNames = new Set();
-          const validSavingNames = savingsNamesArray.filter((savingName: string) =>
-            savingName && typeof savingName === "string" && savingName !== "" && !processedPlanNames.has(savingName)
-          );
-
-          // Process savings in batches
-          const BATCH_SIZE = 5; // Increased batch size
-          const networkPlans = [];
-          const networkCompletedPlans = [];
-          let networkDeposits = 0;
-          let networkTotalUsdValue = 0;
-          let networkRewards = 0;
-
-          for (let i = 0; i < validSavingNames.length; i += BATCH_SIZE) {
-            const batch = validSavingNames.slice(i, i + BATCH_SIZE);
-            const batchPromises = batch.map(async (savingName: string) => {
-              try {
-                processedPlanNames.add(savingName);
-                const savingDataPromise = childContract.getSaving(savingName);
-                const timeoutPromise = new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error(`Timeout for ${savingName}`)), 5000)
-                );
-                const savingData: any = await Promise.race([savingDataPromise, timeoutPromise]);
-                return { savingName, savingData };
-              } catch (err) {
-                console.warn(`Failed to fetch data for "${savingName}" on ${network.name}:`, err);
-                return null;
-              }
-            });
-
-            const batchResults = await Promise.allSettled(batchPromises);
-
-            for (const result of batchResults) {
-              if (result.status === 'fulfilled' && result.value) {
-                const { savingName, savingData } = result.value;
-
-                if (!savingData || !savingData.isValid) continue;
-
-                // Determine token properties
-                const tokenId = savingData.tokenId || ethers.ZeroAddress;
-                const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
-
-                let tokenName = "USDC";
-                let decimals = 6;
-                let tokenLogo = '/usdclogo.png';
-
-                // Token mapping logic adapted for each chain
-                if (isEth) {
-                  tokenName = "ETH";
-                  decimals = 18;
-                  tokenLogo = '/eth.png';
-                } else if (network.chainId === CELO_CHAIN_ID) {
-                  const tokenInfo = CELO_TOKEN_MAP[(tokenId as string).toLowerCase()];
-                  if (tokenInfo) {
-                    tokenName = tokenInfo.name;
-                    decimals = tokenInfo.decimals;
-                    tokenLogo = tokenInfo.logo;
-                  } else {
-                    tokenName = 'USDGLO';
-                    decimals = 6;
-                    tokenLogo = '/usdglo.png';
-                  }
-                } else if (network.chainId === BASE_CHAIN_ID) {
-                  if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
-                    tokenName = "USDC";
-                    decimals = 6;
-                    tokenLogo = '/usdclogo.png';
-                  } else if (tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
-                    tokenName = "USDGLO";
-                    decimals = 18;
-                    tokenLogo = '/usdglo.png';
-                  } else if (tokenId.toLowerCase() === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
-                    tokenName = "cNGN";
-                    decimals = 6;
-                    tokenLogo = '/cngn.png';
-                  }
-                } else if (network.chainId === LISK_CHAIN_ID) {
-                  if (tokenId.toLowerCase() === "0xf242275d3a6527d877f2c927a82d9b057609cc71") {
-                    tokenName = "USDC";
-                    decimals = 6;
-                    tokenLogo = '/usdclogo.png';
-                  } else if (tokenId.toLowerCase() === "0x999e3a32ef3f9eabf133186512b5f29fadb8a816") {
-                    tokenName = "cNGN";
-                    decimals = 6;
-                    tokenLogo = '/cngn.png';
-                  }
-                } else if (network.chainId === HEDERA_CHAIN_ID) {
-                  const tokenInfo = HEDERA_TOKEN_MAP[(tokenId as string).toLowerCase()];
-                  if (tokenInfo) {
-                    tokenName = tokenInfo.name;
-                    decimals = tokenInfo.decimals;
-                    tokenLogo = tokenInfo.logo;
-                  } else {
-                    tokenName = 'HBAR';
-                    decimals = 18;
-                    tokenLogo = '/hedera-logo.svg';
-                  }
-                } else if (network.chainId === AVALANCHE_CHAIN_ID) {
-                  if (tokenId.toLowerCase() === AVALANCHE_USDC_E) {
-                    tokenName = 'USDC';
-                    decimals = 6;
-                    tokenLogo = '/usdclogo.png';
-                  }
-                }
-
-                // Format amounts
-                let amountFormatted = "0";
-                try {
-                  if (savingData.amount) {
-                    amountFormatted = ethers.formatUnits(savingData.amount, decimals);
-                  }
-                } catch (e) {
-                  amountFormatted = "0";
-                }
-
-                // Progress calculation
-                const now = Math.floor(Date.now() / 1000);
-                const startTime = savingData.startTime ? Number(savingData.startTime) : now;
-                const maturityTime = savingData.maturityTime ? Number(savingData.maturityTime) : startTime + (30 * 24 * 60 * 60);
-
-                let progress = 0;
-                if (maturityTime <= startTime || now >= maturityTime) {
-                  progress = 100;
-                } else {
-                  progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
-                }
-
-                const isCompleted = savingData.isCompleted || progress >= 100;
-
-                // Calculate USD value
-                const amountVal = parseFloat(amountFormatted);
-                let price = 1;
-                if (tokenName === "ETH" || tokenName === "HBAR") price = currentEthPrice || 3500;
-                if (tokenName === "Gooddollar") price = goodDollarPrice || 0.0001086;
-
-                const usdValue = amountVal * price;
-                // Calculate rewards based on USD value (5 BTS per $1 saved)
-                networkRewards += usdValue * 5;
-
-                networkTotalUsdValue += usdValue;
-
-                const plan = {
-                  id: savingName,
-                  name: savingName,
-                  amount: amountFormatted,
-                  currentAmount: amountFormatted, // Add alias for dashboard compatibility
-                  startTime: startTime, // Add startTime
-                  maturityTime: maturityTime, // Add maturityTime
-                  isEth: isEth, // Add isEth
-                  tokenName,
-                  tokenLogo,
-                  progress,
-                  status: isCompleted ? 'Completed' : 'Active',
-                  timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / (24 * 60 * 60))} days`,
-                  penalty: (savingData.penaltyPercentage ?? savingData[5] ?? 0).toString(),
-                  penaltyPercentage: Number(savingData.penaltyPercentage ?? savingData[5] ?? 0), // Add penaltyPercentage
-                  network: network.name, // Add network name to plan
-                  chainId: network.chainId, // Add chainId to plan
-                  contractAddress: network.contractAddress // Store the actual contract address used
-                };
-
-                if (isCompleted) {
-                  networkCompletedPlans.push(plan);
-                } else {
-                  networkPlans.push(plan);
-                }
-                networkDeposits++;
-              }
-            }
-          }
-
-          return {
-            plans: networkPlans,
-            completedPlans: networkCompletedPlans,
-            deposits: networkDeposits,
-            totalUsdValue: networkTotalUsdValue,
-            rewards: networkRewards
-          };
-
-        } catch (error) {
-          console.warn(`Error processing network ${network.name}:`, error);
-          return null;
-        }
-      });
-
-      const results = await Promise.allSettled(networkPromises);
-
-      // Aggregate results
       let aggregatedPlans: any[] = [];
       let aggregatedCompletedPlans: any[] = [];
       let aggregatedDeposits = 0;
       let aggregatedTotalUsdValue = 0;
       let aggregatedRewards = 0;
 
-      results.forEach(result => {
-        if (result.status === 'fulfilled' && result.value) {
-          aggregatedPlans = [...aggregatedPlans, ...result.value.plans];
-          aggregatedCompletedPlans = [...aggregatedCompletedPlans, ...result.value.completedPlans];
-          aggregatedDeposits += result.value.deposits;
-          aggregatedTotalUsdValue += result.value.totalUsdValue;
-          aggregatedRewards += (result.value as any).rewards || 0;
+      // Fetch from our new Redis-backed API route for EVM chains
+      try {
+        const res = await fetch(`/api/savings-data?address=${address}`);
+        if (res.ok) {
+          const data = await res.json();
+          aggregatedPlans = data.currentPlans || [];
+          aggregatedCompletedPlans = data.completedPlans || [];
+          aggregatedDeposits = data.deposits || 0;
+          aggregatedTotalUsdValue = parseFloat(data.totalLocked) || 0;
+          aggregatedRewards = parseFloat(data.rewards) || 0;
+        } else {
+          console.warn("Failed to fetch EVM savings data from API:", await res.text());
         }
-      });
+      } catch (err) {
+        console.warn("Error fetching EVM savings data from API:", err);
+      }
 
       // Fetch shared plans for the current user's Savvy Name
       try {
@@ -826,8 +559,6 @@ export function useSavingsData(): UseSavingsDataReturn {
                   } else if (tokenId.toLowerCase() === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
                     tokenName = "cNGN"; decimals = 6; tokenLogo = '/cngn.png';
                   }
-                } else if (netConfig.chainId === HEDERA_CHAIN_ID) {
-                  tokenName = 'HBAR'; decimals = 18; tokenLogo = '/hedera-logo.svg';
                 } else if (netConfig.chainId === LISK_CHAIN_ID) {
                   tokenName = 'USDC'; decimals = 6; tokenLogo = '/usdclogo.png';
                 } else if (netConfig.chainId === AVALANCHE_CHAIN_ID) {
@@ -941,7 +672,7 @@ export function useSavingsData(): UseSavingsDataReturn {
       return null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, fetchEthPrice, fetchGoodDollarPrice, getUserSavings, solanaAddress, wagmiAddress]);
+  }, [isConnected, address, fetchEthPrice, fetchGoodDollarPrice, solanaAddress, wagmiAddress]);
 
   // Main fetch function with caching logic
   const fetchSavingsData = useCallback(async (forceRefresh = false) => {
@@ -1025,7 +756,6 @@ export function useSavingsData(): UseSavingsDataReturn {
       const isCelo = chainIdBigInt === CELO_CHAIN_ID;
       const isLisk = chainIdBigInt === LISK_CHAIN_ID;
       const isBSC = chainIdBigInt === BSC_CHAIN_ID;
-      const isHedera = chainIdBigInt === HEDERA_CHAIN_ID;
       const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
       // Also check local storage for manually selected network overrides
@@ -1038,11 +768,10 @@ export function useSavingsData(): UseSavingsDataReturn {
       setIsCeloNetwork(isSolana ? false : isCelo);
       setIsLiskNetwork(isSolana ? false : isLisk);
       setIsBSCNetwork(isSolana ? false : isBSC);
-      setIsHederaNetwork(isSolana ? false : isHedera);
       setIsAvalancheNetwork(isSolana ? false : isAvalanche);
 
       // Check if user is on one of the supported EVM networks or solana
-      const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche || isHedera || isSolana;
+      const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche || isSolana;
       setIsCorrectNetwork(isSupported);
     } else {
       // If no chainId, check if we're explicitly on Solana
@@ -1077,7 +806,6 @@ export function useSavingsData(): UseSavingsDataReturn {
     isCeloNetwork,
     isLiskNetwork,
     isBSCNetwork,
-    isHederaNetwork,
     isAvalancheNetwork,
     isSolanaNetwork,
     isCorrectNetwork,

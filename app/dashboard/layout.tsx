@@ -16,6 +16,8 @@ import SavvyBotWidget from '@/components/SavvyBotWidget';
 import { FiMenu as FiMenuIcon, FiX as FiXIcon } from 'react-icons/fi';
 import LanguageSelector from '@/components/LanguageSelector';
 import NetworkDetection from '@/components/NetworkDetection';
+import { PageShimmer } from '@/components/ShimmerLoading';
+import { syncPendingTransactions } from '@/utils/transactionSync';
 
 // Removed custom network connection UI in favor of RainbowKit modal-only
 
@@ -34,8 +36,7 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     main: true,
-    community: false,
-    preferences: false
+    community: false
   });
   const { ready, authenticated, user } = usePrivy();
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
@@ -57,6 +58,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     setMounted(true);
+    // Sync any pending transactions when the layout mounts
+    syncPendingTransactions();
   }, []);
 
   useEffect(() => {
@@ -136,7 +139,7 @@ export default function DashboardLayout({
                   {expandedSections.main && (
                     <div className="mt-1 space-y-1.5 ml-2 pl-2 border-l-2 border-gray-100">
                       <Link href="/dashboard" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard')
-                        ? 'bg-[#F8FAF9] text-black font-bold border border-[#81D7B4]/20 shadow-sm'
+                        ? 'bg-[#81D7B4] text-white font-bold border border-[#81D7B4] shadow-[0_4px_12px_rgba(129,215,180,0.3)]'
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
@@ -239,25 +242,22 @@ export default function DashboardLayout({
                   )}
                 </div>
                 
-                {/* Preferences Dropdown */}
-                <div className="mb-2">
-                  <button onClick={() => toggleSection('preferences')} className="w-full flex items-center justify-between px-3 pt-4 pb-1 bg-transparent hover:bg-gray-50 rounded-lg group transition-colors">
-                    <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 uppercase tracking-widest transition-colors">Preferences</span>
-                    {expandedSections.preferences ? <HiOutlineChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" /> : <HiOutlineChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
-                  </button>
-                  {expandedSections.preferences && (
-                    <div className="mt-1 space-y-1.5 ml-2 pl-2 border-l-2 border-gray-100">
-                      <Link href="/dashboard/settings" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/settings')
-                        ? 'bg-[#81D7B4] text-white font-bold border border-[#81D7B4] shadow-[0_4px_12px_rgba(129,215,180,0.3)]'
-                        : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
-                        }`}>
-                        <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/settings') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineCog className="w-5 h-5 flex-shrink-0" />
-                        </div>
-                        <span>Settings</span>
-                      </Link>
-                    </div>
-                  )}
+                {/* Settings Section */}
+                <div className="mb-2 mt-4">
+                  <div className="px-3 pb-1">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Settings</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Link href="/dashboard/settings" onClick={handleMobileNavClick} className={`group flex items-center gap-3.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${isActive('/dashboard/settings')
+                      ? 'bg-[#81D7B4] text-white font-bold border border-[#81D7B4] shadow-[0_4px_12px_rgba(129,215,180,0.3)]'
+                      : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
+                      }`}>
+                      <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/settings') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
+                        <HiOutlineCog className="w-5 h-5 flex-shrink-0" />
+                      </div>
+                      <span>Settings</span>
+                    </Link>
+                  </div>
                 </div>
               </nav>
 
@@ -269,10 +269,9 @@ export default function DashboardLayout({
                   className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-white border border-gray-200 text-gray-600 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-50 shadow-sm"
                 >
                   {isDisconnecting ? (
-                    <svg className="animate-spin w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <div className="w-5 h-5 flex-shrink-0 relative overflow-hidden rounded-full">
+                       <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                    </div>
                   ) : (
                     <HiOutlineArrowRightOnRectangle className="w-5 h-5 flex-shrink-0" />
                   )}
@@ -300,25 +299,19 @@ export default function DashboardLayout({
         </div>
 
       {/* Mobile Language Selector: Fixed top-right (left of menu) - Root Level */}
-      {mounted && (
-        <div className="md:hidden fixed top-4 right-[72px] z-30 w-[100px]">
-          <LanguageSelector />
-        </div>
-      )}
+      <div className="md:hidden fixed top-4 right-[72px] z-30 w-[100px]">
+        <LanguageSelector />
+      </div>
 
 
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ease-in-out md:ml-[260px] ml-0 overflow-x-hidden relative min-h-screen bg-[#F8FAF9]`}>
 
-        {mounted && (
-          <>
-            {/* Desktop Language Selector: Absolute top-right */}
-            <div className="hidden md:block absolute top-6 right-8 z-30 w-[140px]">
-              <LanguageSelector />
-            </div>
-          </>
-        )}
+        {/* Desktop Language Selector: Absolute top-right */}
+        <div className="hidden md:block absolute top-6 right-8 z-30 w-[140px]">
+          <LanguageSelector />
+        </div>
 
         {mounted ? (
           <>
@@ -342,8 +335,12 @@ export default function DashboardLayout({
                 };
                 const title = pageTitles[pathname];
                 if (!title) return null;
-                // Exclude displaying the title on dashboard home since we already have "Good morning, User"
                 if (pathname === '/dashboard') return null;
+                if (pathname === '/dashboard/plans') return null;
+                if (pathname === '/dashboard/settings') return null;
+                if (pathname === '/dashboard/savvy-bot') return null;
+                if (pathname === '/dashboard/group-savings') return null;
+                if (pathname === '/dashboard/ramp') return null;
                 return (
                   <div className="mb-8 pl-1">
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h1>
@@ -381,8 +378,8 @@ export default function DashboardLayout({
             )}
           </>
         ) : (
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full shadow-lg"></div>
+          <div className="flex items-center justify-center min-h-screen w-full px-4 sm:px-6 lg:px-8 bg-[#F7FCFA]">
+            <PageShimmer className="max-w-7xl mx-auto pt-10" />
           </div>
         )}
       </div>

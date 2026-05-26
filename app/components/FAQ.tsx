@@ -40,7 +40,7 @@ export default function FAQ() {
   };
 
   return (
-    <section id="faq" className="py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white overflow-hidden">
+    <section id="faq" className="section-lazy py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-[#81D7B4]/5 rounded-full blur-[100px]" />
@@ -66,9 +66,9 @@ export default function FAQ() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 leading-tight"
+            className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight"
           >
-            Common <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#5fb392]">Questions</span>
+            Common <span className="text-gradient-animated">Questions</span>
           </motion.h2>
         </div>
 
@@ -91,12 +91,12 @@ export default function FAQ() {
                   <span className={`text-xl md:text-2xl font-bold transition-colors duration-300 ${openId === item.id ? 'text-[#81D7B4]' : 'text-gray-300 group-hover:text-gray-400'}`}>
                     {item.id}
                   </span>
-                  <h3 className={`text-2xl md:text-3xl font-bold transition-colors duration-300 ${openId === item.id ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>
+                  <h3 className={`font-display text-2xl md:text-3xl font-bold transition-colors duration-300 ${openId === item.id ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>
                     {item.question}
                   </h3>
                 </div>
-                <div className={`mt-1 ml-4 p-2 rounded-full transition-colors duration-300 ${openId === item.id ? 'bg-[#81D7B4] text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'}`}>
-                  {openId === item.id ? <FiMinus className="w-6 h-6" /> : <FiPlus className="w-6 h-6" />}
+                <div className={`mt-1 ml-4 p-2 rounded-full transition-all duration-300 ${openId === item.id ? 'bg-gradient-to-br from-[#81D7B4] to-[#5fb392] text-white shadow-lg shadow-[#81D7B4]/20 rotate-0' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 rotate-0'}`}>
+                  {openId === item.id ? <FiMinus className="w-6 h-6" /> : <FiPlus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />}
                 </div>
               </button>
 
@@ -131,14 +131,14 @@ export default function FAQ() {
         >
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Still have questions?</h3>
+              <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Still have questions?</h3>
               <p className="text-gray-500 text-base">We're here to help you with your savings journey.</p>
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button 
                 onClick={handleEmailClick}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-900 rounded-full hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors font-medium shadow-sm hover:shadow-md cursor-pointer"
+                className="flex items-center justify-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-white border border-gray-200 text-gray-900 rounded-full hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors font-medium shadow-sm hover:shadow-md cursor-pointer text-sm sm:text-base w-full sm:w-auto"
               >
                 <FiMail className="w-5 h-5" />
                 <span>Email Support</span>
@@ -148,7 +148,7 @@ export default function FAQ() {
                 href="https://t.me/+YimKRR7wAkVmZGRk" 
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-6 py-3 bg-[#81D7B4] text-white rounded-full hover:bg-[#6bcb9f] transition-colors font-medium shadow-lg shadow-[#81D7B4]/20"
+                className="flex items-center justify-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-[#81D7B4] text-white rounded-full hover:bg-[#6bcb9f] transition-colors font-medium shadow-lg shadow-[#81D7B4]/20 text-sm sm:text-base w-full sm:w-auto"
               >
                 <FaTelegramPlane className="w-5 h-5" />
                 <span>Join Telegram</span>

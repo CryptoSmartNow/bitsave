@@ -1,8 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { usePrivy, useWallets, WalletWithMetadata } from '@privy-io/react-auth';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useNetworkSync } from '@/hooks/useNetworkSync';
 import { Exo } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageShimmer } from '@/components/ShimmerLoading';
 import {
   HiOutlineCheck,
   HiOutlineGlobeAlt,
@@ -21,6 +25,9 @@ import NetworkDetection from '@/components/NetworkDetection';
 import ENSLinking from '@/components/ENSLinking';
 import { useENSData } from '@/hooks/useENSData';
 import LanguageSelector from '@/components/LanguageSelector';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
+import { getTweetButtonProps } from '@/utils/tweetUtils';
 
 // Initialize Space Grotesk font
 const exo = Exo({
@@ -30,8 +37,30 @@ const exo = Exo({
 });
 
 export default function Settings() {
-  const { address } = useAccount();
-  const { ensName, getDisplayName, hasENS } = useENSData();
+  const { address: wagmiAddress } = useAccount();
+  const { user } = usePrivy();
+  const { publicKey } = useWallet();
+  const { currentNetworkName: currentNetwork } = useNetworkSync();
+  
+  const solanaWalletAdapterAddress = publicKey?.toBase58();
+  const { wallets } = useWallets();
+  const privySolanaWallet = wallets?.find((w: any) => {
+    if (w.chainType === 'solana') return true;
+    if (['phantom', 'solflare', 'backpack'].includes(w.walletClientType)) return true;
+    if (w.chainId && String(w.chainId).startsWith('solana')) return true;
+    if (w.address && !w.address.startsWith('0x') && w.address.length >= 32 && w.address.length <= 44) return true;
+    return false;
+  });
+  const privyLinkedSolanaAddress = (user as any)?.linkedAccounts?.find(
+    (account: any) => (account.type === 'wallet' && account.chainType === 'solana') || account.chainId === 'solana:mainnet'
+  )?.address;
+  const solanaAddress = solanaWalletAdapterAddress || privySolanaWallet?.address || privyLinkedSolanaAddress;
+  const evmAddress = wagmiAddress || user?.wallet?.address;
+  
+  // Directly prioritize solana address if it exists, to avoid hydration race conditions with currentNetwork
+  const address = solanaAddress || evmAddress;
+
+  const { ensName, getDisplayName, hasENS } = useENSData(address);
   const [mounted, setMounted] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'Profile' | 'Language' | 'Appearance' | 'Notifications'>('Profile');
   const tabs = ['Profile', 'Language', 'Appearance', 'Notifications'] as const;
@@ -53,6 +82,103 @@ export default function Settings() {
   const [savvyNameInput, setSavvyNameInput] = useState('');
   const [currentSavvyName, setCurrentSavvyName] = useState('');
   const [isSavingSavvyName, setIsSavingSavvyName] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  
+  // Dynamic window size for confetti
+  const { width, height } = useWindowSize();
+
+  // Notification Toggles state
+  const [isMarketingEnabled, setIsMarketingEnabled] = useState(false);
+  const [isPushEnabled, setIsPushEnabled] = useState(false);
+
+  // Helper to convert base64 to Uint8Array for VAPID key
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  // Initialize push notification state
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.pushManager.getSubscription().then(subscription => {
+          setIsPushEnabled(!!subscription);
+        });
+      });
+    }
+  }, []);
+
+  const handlePushToggle = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toast.error('Push notifications are not supported in your browser.');
+      return;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+
+      if (isPushEnabled) {
+        // Unsubscribe
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await subscription.unsubscribe();
+          await fetch('/api/push/unsubscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: subscription.endpoint }),
+          });
+        }
+        setIsPushEnabled(false);
+        toast.success('Push notifications disabled.');
+      } else {
+        // Subscribe
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          toast.error('Permission denied for push notifications.');
+          return;
+        }
+
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidPublicKey) {
+          toast.error('VAPID public key not configured.');
+          return;
+        }
+
+        const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+        
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey
+        });
+
+        const res = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            subscription,
+            walletAddress: address
+          }),
+        });
+
+        if (res.ok) {
+          setIsPushEnabled(true);
+          toast.success('Push notifications enabled!');
+        } else {
+          toast.error('Failed to save push subscription.');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling push notifications:', error);
+      toast.error('An error occurred while toggling push notifications.');
+    }
+  };
 
   // Component mount effect
   useEffect(() => {
@@ -98,6 +224,13 @@ export default function Settings() {
       if (response.ok && data.success) {
         toast.success('Savvy Name updated successfully!');
         setCurrentSavvyName(data.savvyName);
+        setShowConfetti(true);
+        setTimeout(() => {
+          setShowShareModal(true);
+        }, 1200); // Pop modal shortly after confetti begins
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 6000); // Stop generating new confetti after 6 seconds
       } else {
         toast.error(data.error || 'Failed to update Savvy Name');
       }
@@ -391,11 +524,7 @@ export default function Settings() {
   };
 
   if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
-      </div>
-    );
+    return <PageShimmer />;
   }
 
   return (
@@ -403,14 +532,8 @@ export default function Settings() {
       <NetworkDetection />
             
       <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-        {/* Header Section */}
-        <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-black text-[#0f172a] tracking-tight mb-2">Settings</h1>
-            <p className="text-[#64748b] font-medium text-[15px]">Manage your account preferences and configurations.</p>
-        </div>
-
         {/* Minimal Pill Tabs */}
-        <div className="flex overflow-x-auto hide-scrollbar mb-8 p-1.5 bg-white border border-gray-100 rounded-[1.2rem] w-fit shadow-sm">
+        <div className="flex overflow-x-auto hide-scrollbar mb-8 p-1.5 bg-white border border-gray-100 rounded-[1.2rem] w-full sm:w-fit max-w-full shadow-sm">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -450,7 +573,10 @@ export default function Settings() {
 
                   {/* ENS */}
                   <div className="-mx-10 px-10">
-                     <ENSLinking />
+                     <ENSLinking 
+                       walletAddress={address}
+                       isSolanaNetwork={currentNetwork === 'solana' || (address !== undefined && !address.startsWith('0x') && address.length >= 32)}
+                     />
                   </div>
                </div>
 
@@ -625,20 +751,26 @@ export default function Settings() {
                            <p className="font-bold text-[#0f172a] text-[15px]">Marketing Announcements</p>
                            <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Receive news and promotional offers</p>
                         </div>
-                        <div className="relative cursor-pointer">
-                           <div className="w-12 h-6 bg-[#81D7B4] rounded-full shadow-inner transition-colors">
-                              <div className="w-5 h-5 bg-white rounded-full shadow-md transform translate-x-6 translate-y-0.5 transition-transform"></div>
+                        <div 
+                           className="relative cursor-pointer"
+                           onClick={() => setIsMarketingEnabled(!isMarketingEnabled)}
+                        >
+                           <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${isMarketingEnabled ? 'bg-[#81D7B4]' : 'bg-gray-200'}`}>
+                              <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform translate-y-0.5 ${isMarketingEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
                            </div>
                         </div>
                      </div>
-                     <div className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-gray-100 shadow-sm opacity-60">
+                     <div className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-gray-100 shadow-sm">
                         <div>
                            <p className="font-bold text-[#0f172a] text-[15px]">Push Notifications</p>
                            <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Receive alerts in your browser</p>
                         </div>
-                        <div className="relative cursor-not-allowed">
-                           <div className="w-12 h-6 bg-gray-200 rounded-full shadow-inner transition-colors">
-                              <div className="w-5 h-5 bg-white rounded-full shadow-md transform translate-x-0.5 translate-y-0.5 transition-transform"></div>
+                        <div 
+                           className="relative cursor-pointer"
+                           onClick={handlePushToggle}
+                        >
+                           <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 ${isPushEnabled ? 'bg-[#299532]' : 'bg-gray-200'}`}>
+                             <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isPushEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                            </div>
                         </div>
                      </div>
@@ -721,6 +853,58 @@ export default function Settings() {
           >
             <HiOutlineCheck className="w-5 h-5 text-[#81D7B4]" /> Address copied!
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <div className="fixed inset-0 z-[60] pointer-events-none">
+          <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.15} />
+        </div>
+      )}
+
+      {/* Savvy Name Success Share Modal */}
+      <AnimatePresence>
+        {showShareModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-[2rem] p-8 max-w-[400px] w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-gray-100 relative overflow-hidden"
+            >
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
+              
+              <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 border border-[#81D7B4]/20">
+                <span className="text-3xl">🎉</span>
+              </div>
+              
+              <h3 className="text-[24px] font-black text-[#0f172a] mb-2 tracking-tight">Identity Secured!</h3>
+              <p className="text-[#64748b] text-[15px] font-medium mb-6">
+                You successfully claimed <span className="font-bold text-[#81D7B4]">{currentSavvyName}</span>. Share the good news with your network!
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <a
+                  href={getTweetButtonProps('savvy-name', { savvyName: currentSavvyName }).href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  Share on X
+                </a>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="w-full bg-white border border-gray-200 text-[#0f172a] py-3.5 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

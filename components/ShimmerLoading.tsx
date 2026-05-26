@@ -67,3 +67,52 @@ export const ShimmerList: React.FC<{ count?: number }> = ({ count = 3 }) => {
         </div>
     );
 };
+
+export const PageShimmer: React.FC<{ className?: string }> = ({ className = '' }) => {
+    return (
+        <div className={`w-full max-w-7xl mx-auto space-y-8 animate-pulse ${className}`}>
+            {/* Header / Stats row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="h-32 bg-gray-200/60 rounded-2xl relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/40">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    </div>
+                ))}
+            </div>
+            
+            {/* Main content area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="h-64 bg-gray-200/60 rounded-3xl relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/40">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    </div>
+                    <div className="h-48 bg-gray-200/60 rounded-3xl relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/40">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    </div>
+                </div>
+                <div className="space-y-6">
+                    <div className="h-96 bg-gray-200/60 rounded-3xl relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/40">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export const TableShimmer: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
+    return (
+        <div className="w-full space-y-4 animate-pulse">
+            {/* Header */}
+            <div className="h-10 bg-gray-200/60 rounded-xl w-full relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/40">
+                 <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            </div>
+            {/* Rows */}
+            {Array.from({ length: rows }).map((_, i) => (
+                <div key={i} className="h-16 bg-gray-200/40 rounded-xl w-full relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/40">
+                     <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                </div>
+            ))}
+        </div>
+    );
+};

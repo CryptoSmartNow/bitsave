@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBlogCategoriesCollection, BlogCategory, generateSlug } from '@/lib/blogDatabase';
+import { getCache, setCache, clearCache } from '@/lib/redis';
 
 // GET - Fetch all blog categories
 export async function GET() {
   try {
+    const cacheKey = 'api:blog:categories:all';
+    const cachedResponse = await getCache<any>(cacheKey);
+    if (cachedResponse) {
+      return NextResponse.json(cachedResponse);
+    }
+
     const collection = await getBlogCategoriesCollection();
     
     if (!collection) {
@@ -38,13 +45,18 @@ export async function GET() {
       await collection.insertMany(categoriesToInsert);
       const seededCategories = await collection.find({}).sort({ name: 1 }).toArray();
       
-      return NextResponse.json({
+      const responseData = {
         categories: seededCategories,
         message: 'Default categories created'
-      });
+      };
+      
+      await setCache(cacheKey, responseData, 600); // cache for 10 minutes
+      return NextResponse.json(responseData);
     }
 
-    return NextResponse.json({ categories });
+    const responseData = { categories };
+    await setCache(cacheKey, responseData, 600);
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching blog categories:', error);
     return NextResponse.json(
@@ -102,6 +114,8 @@ export async function POST(request: NextRequest) {
 
     const result = await collection.insertOne(newCategory);
     const createdCategory = await collection.findOne({ _id: result.insertedId });
+
+    await clearCache('api:blog:categories:all');
 
     return NextResponse.json({
       message: 'Blog category created successfully',

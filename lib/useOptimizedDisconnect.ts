@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { trackWalletDisconnect } from './interactionTracker';
+import toast from 'react-hot-toast';
 
 /**
  * Optimized disconnect hook that provides immediate UI feedback
@@ -18,13 +19,20 @@ export function useOptimizedDisconnect() {
   const { disconnect: wagmiDisconnect, isPending } = useDisconnect({
     mutation: {
       onSuccess: () => {
-        // Immediate redirect on successful disconnect
-        router.push('/');
+        toast.success('Disconnected successfully', {
+          style: {
+            borderRadius: '16px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+        // Graceful redirect to logged-out screen
+        router.push('/goodbye');
       },
       onError: (error) => {
         console.error('Disconnect error:', error);
         // Still redirect even on error to prevent stuck state
-        router.push('/');
+        router.push('/goodbye');
       }
     }
   });

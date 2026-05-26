@@ -65,7 +65,7 @@ const config = createConfig({
   chains,
   ssr: true,
   transports: {
-    [base.id]: http(),
+    [base.id]: http(process.env.NEXT_PUBLIC_RPC_URL),
     [celo.id]: http(),
     [avalanche.id]: http(),
     [lisk.id]: http(),
@@ -92,7 +92,7 @@ function InnerProviders({ children }: { children: ReactNode }) {
   // Force dark theme for BizFi pages
   const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
 
-  const solanaNetwork = clusterApiUrl('devnet');
+  const solanaNetwork = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl('devnet');
   const wallets = useMemo(() => [
     new PhantomWalletAdapter(),
     new SolflareWalletAdapter(),
