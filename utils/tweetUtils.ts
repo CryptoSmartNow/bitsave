@@ -2,7 +2,7 @@
  * Tweet utility functions for handling social sharing with appropriate images
  */
 
-export type TransactionType = 'first-time-saving' | 'subsequent-saving' | 'top-up' | 'withdrawal';
+export type TransactionType = 'first-time-saving' | 'subsequent-saving' | 'top-up' | 'withdrawal' | 'savvy-name';
 
 export interface TweetConfig {
   text: string;
@@ -38,12 +38,13 @@ export function generateTweetConfig(
   options: {
     currency?: string;
     planName?: string;
+    savvyName?: string;
     amount?: string;
     referralLink?: string;
     isCompleted?: boolean;
   } = {}
 ): TweetConfig {
-  const { currency = 'crypto', planName, amount, referralLink = 'https://bitsave.io', isCompleted = false } = options;
+  const { currency = 'crypto', planName, savvyName, amount, referralLink = 'https://bitsave.io', isCompleted = false } = options;
   
   let text = '';
   
@@ -66,6 +67,10 @@ export function generateTweetConfig(
       } else {
         text = `Successfully withdrew from my savings plan${planName ? ` "${planName}"` : ''} on @bitsaveprotocol. Sometimes you need access to your funds - that's the beauty of flexible savings! 💰\n\nYou should be doing #SaveFi → ${referralLink}`;
       }
+      break;
+      
+    case 'savvy-name':
+      text = `I just claimed my web3 identity with @bitsaveprotocol! My new Savvy Name is ${savvyName}. Build wealth with me #SaveFi → ${referralLink}`;
       break;
       
     default:
@@ -105,6 +110,7 @@ export function getTweetButtonProps(
   options: {
     currency?: string;
     planName?: string;
+    savvyName?: string;
     amount?: string;
     referralLink?: string;
     isCompleted?: boolean;

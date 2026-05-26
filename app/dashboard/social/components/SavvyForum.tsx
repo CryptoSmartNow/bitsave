@@ -160,6 +160,21 @@ export default function SavvyForum() {
 
   useEffect(() => { fetchPosts(true); }, [fetchPosts]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const postText = params.get('post');
+      if (postText) {
+        setNewContent(postText);
+        setNewTitle('My Bitsave Journey');
+        setNewTags(['general']);
+        setShowCreateForm(true);
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []);
+
   const handleCreatePost = async () => {
     if (!newTitle.trim() || !newContent.trim()) { toast.error('Title and content are required'); return; }
     if (!address) { toast.error('Please connect your wallet'); return; }

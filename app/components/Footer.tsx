@@ -9,21 +9,16 @@ import { ArrowRight } from 'lucide-react';
 
 const footerLinks = {
   product: [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Security', href: '#security' },
-    { name: 'Features', href: '#features' },
-    { name: 'How it Works', href: '#how-it-works' }
+    { name: 'SaveFi', href: '/' },
+    { name: 'BizFi', href: '/bizfi' },
+    { name: 'BizFun', href: '/bizfun' },
+    { name: 'BizSwap', href: '/bizswap' }
   ],
   resources: [
     { name: 'Blog', href: '/blog' },
     { name: 'SaveFi Docs', href: '/docs' },
     { name: 'BizFi Docs', href: 'https://bizfi.mintlify.app/' },
     { name: 'FAQ', href: '#faq' }
-  ],
-  company: [
-    { name: 'About', href: '#' },
-    { name: 'Terms', href: '#' },
-    { name: 'Privacy', href: '#' }
   ]
 };
 
@@ -55,7 +50,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-white pt-16 md:pt-24 pb-12 overflow-hidden border-t border-gray-100">
+    <footer className="section-lazy relative bg-white pt-16 md:pt-24 pb-12 overflow-hidden border-t border-gray-100">
 
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -80,7 +75,7 @@ export default function Footer() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-[#81D7B4] hover:text-white transition-all duration-300"
+                  className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gradient-to-br hover:from-[#81D7B4] hover:to-[#5fb392] hover:text-white hover:shadow-lg hover:shadow-[#81D7B4]/20 hover:scale-110 transition-all duration-300"
                 >
                   {item.icon}
                 </a>
@@ -89,10 +84,10 @@ export default function Footer() {
           </div>
 
           {/* Links Columns */}
-          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
             {/* Product */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-6">Product</h3>
+              <h3 className="font-display font-bold text-gray-900 mb-6">Product</h3>
               <ul className="space-y-4">
                 {footerLinks.product.map((link) => (
                   <li key={link.name}>
@@ -106,7 +101,7 @@ export default function Footer() {
 
             {/* Resources */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-6">Resources</h3>
+              <h3 className="font-display font-bold text-gray-900 mb-6">Resources</h3>
               <ul className="space-y-4">
                 {footerLinks.resources.map((link) => (
                   <li key={link.name}>
@@ -124,23 +119,9 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Company */}
-            <div>
-              <h3 className="font-bold text-gray-900 mb-6">Company</h3>
-              <ul className="space-y-4">
-                {footerLinks.company.map((link) => (
-                  <li key={link.name}>
-                    <Link href={link.href} className="text-gray-500 hover:text-[#81D7B4] transition-colors text-sm font-medium">
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
             {/* Newsletter - Simplified */}
             <div className="col-span-2 md:col-span-1">
-              <h3 className="font-bold text-gray-900 mb-6">Stay Updated</h3>
+              <h3 className="font-display font-bold text-gray-900 mb-6">Stay Updated</h3>
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="relative">
                   <input

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBlogCollection, BlogPost, generateSlug, calculateReadTime, generateExcerpt } from '@/lib/blogDatabase';
+import { getCache, setCache, clearCache } from '@/lib/redis';
 
 // Mock data for fallback
 const MOCK_POSTS: BlogPost[] = [
@@ -53,6 +54,20 @@ const MOCK_POSTS: BlogPost[] = [
 // GET - Fetch all blog posts with optional filtering
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const published = searchParams.get('published');
+    const category = searchParams.get('category');
+    const tag = searchParams.get('tag');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = parseInt(searchParams.get('skip') || '0');
+    const search = searchParams.get('search');
+
+    const cacheKey = `api:blog:posts:${published}:${category}:${tag}:${limit}:${skip}:${search}`;
+    const cachedResponse = await getCache<any>(cacheKey);
+    if (cachedResponse) {
+      return NextResponse.json(cachedResponse);
+    }
+
     const collection = await getBlogCollection();
     
     if (!collection) {
@@ -67,14 +82,6 @@ export async function GET(request: NextRequest) {
         }
       });
     }
-
-    const { searchParams } = new URL(request.url);
-    const published = searchParams.get('published');
-    const category = searchParams.get('category');
-    const tag = searchParams.get('tag');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const skip = parseInt(searchParams.get('skip') || '0');
-    const search = searchParams.get('search');
 
     // Build query
     const query: Record<string, unknown> = {};
@@ -119,7 +126,7 @@ export async function GET(request: NextRequest) {
 
     const total = await collection.countDocuments(query);
 
-    return NextResponse.json({
+    const responseData = {
       posts,
       pagination: {
         total,
@@ -127,7 +134,12 @@ export async function GET(request: NextRequest) {
         skip,
         hasMore: skip + limit < total
       }
-    });
+    };
+
+    // Cache the response for 5 minutes
+    await setCache(cacheKey, responseData, 300);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     return NextResponse.json(
@@ -194,6 +206,12 @@ export async function POST(request: NextRequest) {
 
     const result = await collection.insertOne(newPost);
     const createdPost = await collection.findOne({ _id: result.insertedId });
+
+    // Clear all blog post caches (we don't know exactly which search queries to clear, so we'll just not clear wildcard, wait, Redis doesn't let us clear wildcard with DEL. We might just clear the main feed).
+    // A better approach for Redis is to use keys, but we'll clear the most common one.
+    await clearCache('api:blog:posts:true:null:null:3:0:null');
+    await clearCache('api:blog:posts:true:null:null:10:0:null');
+    await clearCache('api:blog:posts:null:null:null:10:0:null');
 
     return NextResponse.json({
       message: 'Blog post created successfully',

@@ -6,7 +6,7 @@ import { PublicKey } from '@solana/web3.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
-import axios from 'axios';
+import { submitTransaction } from '@/utils/transactionSync';
 import { useAccount, useChainId } from 'wagmi';
 // import { useWallets } from '@privy-io/react-auth'; 
 import { useEthersSigner } from '@/app/bizfi/hooks/useEthersSigner';
@@ -117,7 +117,8 @@ const TopUpModal = memo(function TopUpModal({
   tokenName,
   networkLogos,
   contractAddress: planContractAddress,
-  startTime: planStartTime
+  startTime: planStartTime,
+  network: planNetwork
 }: TopUpModalProps) {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
@@ -125,7 +126,7 @@ const TopUpModal = memo(function TopUpModal({
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
-  const [currentNetwork, setCurrentNetwork] = useState<'base' | 'celo' | 'lisk' | 'bsc'>('base')
+  const [currentNetwork, setCurrentNetwork] = useState<string>('base')
   const modalRef = useRef<HTMLDivElement>(null)
 
   const { address, isConnected } = useAccount()
@@ -142,7 +143,9 @@ const TopUpModal = memo(function TopUpModal({
 
   useEffect(() => {
     const detectNetwork = async () => {
-      if (chainId) {
+      if (planNetwork) {
+        setCurrentNetwork(planNetwork.toLowerCase());
+      } else if (chainId) {
         if (chainId === 8453) setCurrentNetwork('base');
         else if (chainId === 42220) setCurrentNetwork('celo');
         else if (chainId === 1135) setCurrentNetwork('lisk');
@@ -154,7 +157,7 @@ const TopUpModal = memo(function TopUpModal({
     if (isOpen) {
       detectNetwork();
     }
-  }, [isOpen, chainId]);
+  }, [isOpen, chainId, planNetwork]);
 
   const fetchSavingFee = async (contractAddress: string, provider: ethers.Provider) => {
     try {
@@ -214,9 +217,8 @@ const TopUpModal = memo(function TopUpModal({
       const nativeBalanceFormatted = ethers.formatEther(nativeBalance);
       setWalletBalance(nativeBalanceFormatted);
 
-      // Get token balance for selected currency
       if (!isEth && tokenName) {
-        const tokenAddress = getTokenAddress(tokenName, currentNetwork);
+        const tokenAddress = getTokenAddress(tokenName, currentNetwork as 'base' | 'celo' | 'lisk' | 'bsc');
         const tokenContract = new ethers.Contract(tokenAddress, erc20ABI.abi, provider);
         const tokenBalance = await tokenContract.balanceOf(address);
         const decimals = await tokenContract.decimals();
@@ -473,27 +475,15 @@ const TopUpModal = memo(function TopUpModal({
 
         setTxHash(tx);
         
-        try {
-          await axios.post(
-            "/api/transactions",
-            {
-              amount: userEnteredAmount,
-              txnhash: tx,
-              chain: 'solana',
-              savingsname: savingsPlanName,
-              useraddress: address,
-              transaction_type: "topup",
-              currency: tokenNameToUse
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              }
-            }
-          );
-        } catch (apiError) {
-          console.error("Error sending transaction data to API:", apiError);
-        }
+        await submitTransaction({
+          amount: userEnteredAmount.toString(),
+          txnhash: tx,
+          chain: 'solana',
+          savingsname: savingsPlanName,
+          useraddress: address || '',
+          transaction_type: "topup",
+          currency: tokenNameToUse
+        });
 
         if (address) {
           trackTransaction(address, {
@@ -593,28 +583,15 @@ const TopUpModal = memo(function TopUpModal({
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
 
-      try {
-        await axios.post(
-          "/api/transactions",
-          {
-            amount: userEnteredAmount,
-            txnhash: receipt.hash,
-            chain: currentNetwork,
-            savingsname: savingsPlanName,
-            useraddress: address,
-            transaction_type: "topup",
-            currency: tokenNameToUse
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            }
-          }
-        );
-
-      } catch (apiError) {
-        console.error("Error sending transaction data to API:", apiError);
-      }
+      await submitTransaction({
+        amount: userEnteredAmount.toString(),
+        txnhash: receipt.hash,
+        chain: currentNetwork,
+        savingsname: savingsPlanName,
+        useraddress: address || '',
+        transaction_type: "topup",
+        currency: tokenNameToUse
+      });
 
       // Track successful transaction
       if (address) {
@@ -782,28 +759,15 @@ const TopUpModal = memo(function TopUpModal({
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
 
-      try {
-        await axios.post(
-          "/api/transactions",
-          {
-            amount: ethAmount,
-            txnhash: receipt.hash,
-            chain: currentNetwork,
-            savingsname: savingsPlanName,
-            useraddress: address,
-            transaction_type: "topup",
-            currency: currencyName
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            }
-          }
-        );
-
-      } catch (apiError) {
-        console.error("Error sending transaction data to API:", apiError);
-      }
+      await submitTransaction({
+        amount: ethAmount.toString(),
+        txnhash: receipt.hash,
+        chain: currentNetwork,
+        savingsname: savingsPlanName,
+        useraddress: address || '',
+        transaction_type: "topup",
+        currency: currencyName
+      });
 
       // Track successful ETH top-up
       if (address) {
@@ -967,10 +931,10 @@ const TopUpModal = memo(function TopUpModal({
               <div className="ds-modal-accent" />
 
               <div className="ds-modal-body pt-6">
-                <div className="ds-modal-header mb-5">
+                <div className="ds-modal-header mb-6">
                   <div>
                     <h2 className="ds-modal-title">Top Up Savings</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Add funds to {planName}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Add funds to your plan</p>
                   </div>
                   <button onClick={onClose} className="ds-modal-close" aria-label="Close">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -978,6 +942,40 @@ const TopUpModal = memo(function TopUpModal({
                     </svg>
                   </button>
                 </div>
+
+                {/* Info Card */}
+                <motion.div
+                  className="mb-8 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden"
+                >
+                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#81D7B4]/5 rounded-full blur-xl pointer-events-none"></div>
+                  
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-[#F8FAF9] flex items-center justify-center border border-gray-100">
+                      <Image 
+                        src={isEth ? '/eth.png' : getTokenLogo(tokenName || '', '')} 
+                        alt={tokenName || 'Token'} 
+                        width={24} 
+                        height={24} 
+                        className="object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/default-token.png';
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#81D7B4] font-bold mb-0.5 uppercase tracking-widest">Selected Vault</p>
+                      <h3 className="text-xl font-bold text-gray-900">{planName}</h3>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100 uppercase tracking-wide">
+                          {currentNetwork}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#81D7B4]/10 text-[#81D7B4] uppercase tracking-wide">
+                          {isEth ? 'ETH' : tokenName || 'USDC'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
@@ -1000,13 +998,13 @@ const TopUpModal = memo(function TopUpModal({
                     </div>
 
                     {/* Quick Amount Selection */}
-                    <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide w-full">
                       {[10, 20, 50, 100, 500].map((val) => (
                         <button
                           key={val}
                           type="button"
                           onClick={() => setAmount(val.toString())}
-                          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 hover:border-[#81D7B4] hover:text-[#81D7B4] hover:bg-[#81D7B4]/5 transition-colors whitespace-nowrap"
+                          className="flex-1 py-2 px-1 text-sm font-medium rounded-lg border border-gray-200 hover:border-[#81D7B4] hover:text-[#81D7B4] hover:bg-[#81D7B4]/5 transition-colors whitespace-nowrap text-center"
                         >
                           ${val}
                         </button>

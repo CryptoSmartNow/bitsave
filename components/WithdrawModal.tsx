@@ -15,6 +15,7 @@ import { getTweetButtonProps } from '@/utils/tweetUtils';
 import { useBitsaveSolana } from '@/hooks/useBitsaveSolana';
 import { PublicKey } from '@solana/web3.js';
 import axios from 'axios';
+import { submitTransaction } from '@/utils/transactionSync';
 
 // Contract addresses
 // Base network - dual contract support
@@ -242,23 +243,15 @@ const WithdrawModal = memo(function WithdrawModal({
 
       setTxHash(tx);
 
-      // Track the withdrawal
-      try {
-        await axios.post(
-          "/api/transactions",
-          {
-            amount: 0, // In Solana, amount withdrawn is total amount minus penalty, but we may not have the exact value instantly.
-            txnhash: tx,
-            chain: 'solana',
-            savingsname: nameOfSavings,
-            useraddress: 'solana-user', // Add address if possible
-            transaction_type: "withdrawal",
-            currency: tokenNameToUse
-          }
-        );
-      } catch (apiError) {
-        console.warn('API tracking failed, but withdrawal succeeded:', apiError);
-      }
+      await submitTransaction({
+        amount: "0", // In Solana, amount withdrawn is total amount minus penalty, but we may not have the exact value instantly.
+        txnhash: tx,
+        chain: 'solana',
+        savingsname: nameOfSavings,
+        useraddress: 'solana-user', // Add address if possible
+        transaction_type: "withdrawal",
+        currency: tokenNameToUse
+      });
 
       setSuccess(true);
       setIsLoading(false);
@@ -297,28 +290,15 @@ const WithdrawModal = memo(function WithdrawModal({
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
 
-      try {
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json"
-        };
-
-        await fetch("/api/transactions", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            amount: parseFloat(amount),
-            txnhash: receipt.hash,
-            chain: currentNetwork,
-            savingsname: nameOfSavings,
-            useraddress: userAddress,
-            transaction_type: "withdrawal",
-            currency: currentTokenName
-          })
-        });
-
-      } catch (apiError) {
-        console.error("Error sending transaction data to API:", apiError);
-      }
+      await submitTransaction({
+        amount: parseFloat(amount).toString(),
+        txnhash: receipt.hash,
+        chain: currentNetwork,
+        savingsname: nameOfSavings,
+        useraddress: userAddress,
+        transaction_type: "withdrawal",
+        currency: currentTokenName
+      });
 
       // Track successful ETH withdrawal
       if (address) {
@@ -376,10 +356,19 @@ const WithdrawModal = memo(function WithdrawModal({
       const childContract = new ethers.Contract(userChildContractAddress, childContractABI, signer);
       const savingData = await childContract.getSaving(nameOfSavings);
 
-      // Determine decimals based on token name
+      // Determine decimals based on network and token name
       let decimals = 6; // Default to 6 (USDC, cNGN)
-      if (currentTokenName === 'USDGLO' || currentTokenName === 'cUSD' || currentTokenName === 'Gooddollar' || currentTokenName === '$G') {
-        decimals = 18;
+      
+      if (currentNetwork === 'bsc') {
+        decimals = 18; // BSC USDC and USDT are 18 decimals
+      } else if (currentNetwork === 'celo') {
+        if (currentTokenName === 'cUSD' || currentTokenName === 'USDGLO' || currentTokenName === 'Gooddollar' || currentTokenName === '$G') {
+          decimals = 18;
+        }
+      } else if (currentNetwork === 'base') {
+        if (currentTokenName === 'USDGLO') {
+          decimals = 18;
+        }
       }
 
       const amount = ethers.formatUnits(savingData.amount, decimals);
@@ -393,28 +382,15 @@ const WithdrawModal = memo(function WithdrawModal({
       const receipt = await tx.wait();
       setTxHash(receipt.hash);
 
-      try {
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json"
-        };
-
-        await fetch("/api/transactions", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            amount: parseFloat(amount),
-            txnhash: receipt.hash,
-            chain: currentNetwork,
-            savingsname: nameOfSavings,
-            useraddress: userAddress,
-            transaction_type: "withdrawal",
-            currency: currentTokenName
-          })
-        });
-
-      } catch (apiError) {
-        console.error("Error sending transaction data to API:", apiError);
-      }
+      await submitTransaction({
+        amount: parseFloat(amount).toString(),
+        txnhash: receipt.hash,
+        chain: currentNetwork,
+        savingsname: nameOfSavings,
+        useraddress: userAddress,
+        transaction_type: "withdrawal",
+        currency: currentTokenName
+      });
 
       setSuccess(true);
       setShowTransactionModal(true);
@@ -512,11 +488,35 @@ const WithdrawModal = memo(function WithdrawModal({
 
                 {/* Info Card */}
                 <motion.div
-                  className="mb-8 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-5 border border-gray-200/60"
+                  className="mb-8 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-4">
+                  {/* Decorative background element */}
+                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#81D7B4]/5 rounded-full blur-xl pointer-events-none"></div>
+                  
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-[#F8FAF9] flex items-center justify-center border border-gray-100">
+                      <Image 
+                        src={isEth ? '/eth.png' : (currentTokenName === 'USDC' ? '/usdclogo.png' : `/${currentTokenName.toLowerCase().replace('$', '')}.png`)} 
+                        alt={currentTokenName} 
+                        width={24} 
+                        height={24} 
+                        className="object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/default-token.png';
+                        }}
+                      />
+                    </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{planName}</h3>
+                      <p className="text-[10px] text-[#81D7B4] font-bold mb-0.5 uppercase tracking-widest">Selected Vault</p>
+                      <h3 className="text-xl font-bold text-gray-900">{planName}</h3>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100 uppercase tracking-wide">
+                          {currentNetwork}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#81D7B4]/10 text-[#81D7B4] uppercase tracking-wide">
+                          {currentTokenName}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

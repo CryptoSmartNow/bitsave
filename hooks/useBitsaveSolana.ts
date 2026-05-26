@@ -357,31 +357,45 @@ export function useBitsaveSolana() {
       const ownerOffset = 8;
       
       // Fetch savings owned by user directly AND by their vault PDA in parallel
-      // @ts-ignore
-      const [userOwnedSavings, vaultOwnedSavings] = await Promise.all([
-        // @ts-ignore
-        program.account.saving.all([
-          { memcmp: { offset: ownerOffset, bytes: wallet.publicKey.toBase58() } }
-        ]),
-        // @ts-ignore
-        program.account.saving.all([
-          { memcmp: { offset: ownerOffset, bytes: userVaultPDA.toBase58() } }
-        ])
+      // We do NOT use dataSize filters because Saving accounts have dynamic sizes.
+      const [userOwnedAccounts, vaultOwnedAccounts] = await Promise.all([
+        program.provider.connection.getProgramAccounts(program.programId, {
+          filters: [
+            { memcmp: { offset: ownerOffset, bytes: wallet.publicKey.toBase58() } }
+          ],
+          encoding: 'base64'
+        }),
+        program.provider.connection.getProgramAccounts(program.programId, {
+          filters: [
+            { memcmp: { offset: ownerOffset, bytes: userVaultPDA.toBase58() } }
+          ],
+          encoding: 'base64'
+        })
       ]);
       
       // Combine and deduplicate by public key
       const seenKeys = new Set<string>();
       const allUserSavings = [];
       
-      for (const saving of [...userOwnedSavings, ...vaultOwnedSavings]) {
-        const key = saving.publicKey.toBase58();
+      for (const accountInfo of [...userOwnedAccounts, ...vaultOwnedAccounts]) {
+        const key = accountInfo.pubkey.toBase58();
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
-          allUserSavings.push(saving);
+          try {
+            const decodedAccount = program.coder.accounts.decode('saving', accountInfo.account.data);
+            allUserSavings.push({
+              publicKey: accountInfo.pubkey,
+              account: decodedAccount
+            });
+          } catch (decodeErr) {
+            // Silently ignore decoding errors. The memcmp filter will also match UserVault 
+            // accounts (since they also have an owner at offset 8), which will intentionally
+            // fail to decode as 'Saving'. We just skip them without throwing or logging.
+          }
         }
       }
       
-      console.log(`Found ${allUserSavings.length} savings for user (${userOwnedSavings.length} direct, ${vaultOwnedSavings.length} via vault)`);
+      console.log(`Found ${allUserSavings.length} savings for user (${userOwnedAccounts.length} direct, ${vaultOwnedAccounts.length} via vault)`);
       
       return allUserSavings;
     } catch (e) {

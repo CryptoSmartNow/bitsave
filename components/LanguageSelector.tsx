@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Globe, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -399,16 +399,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={toggleDropdown}
-            disabled={!isLoaded || isDetectingLocation}
             className={`w-full ${theme.buttonBg} backdrop-blur-xl border ${theme.buttonBorder} rounded-xl px-3 py-2 text-left shadow-lg ${theme.buttonHover} hover:shadow-xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden`}
           >
             {/* Gradient Overlays */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 via-transparent to-transparent pointer-events-none"></div>
             
             <div className="relative flex items-center space-x-2">
-              <div className={`w-6 h-6 ${theme.iconBg} rounded-lg flex items-center justify-center border ${theme.iconBorder}`}>
-                <Globe className={`w-3.5 h-3.5 ${theme.iconColor}`} />
-              </div>
               <div className="flex items-center space-x-2">
                 <span className="text-base">{selectedLang.flag}</span>
                 <span className={`font-medium ${theme.textPrimary} text-sm hidden sm:inline-block`}>{selectedLang.name}</span>
@@ -418,21 +414,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
             
             <ChevronDown className={`w-4 h-4 ${theme.textSecondary} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           </motion.button>
-
-
         </div>
-
-        {/* Loading indicator */}
-        {(!isLoaded || isDetectingLocation) && (
-          <div className={`absolute inset-0 ${theme.loaderBg} backdrop-blur-xl rounded-xl flex items-center justify-center border ${theme.loaderBorder}`}>
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#81D7B4]"></div>
-              {isDetectingLocation && (
-                <span className={`text-xs ${theme.textSecondary}`}>Detecting...</span>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Portal Dropdown Menu */}

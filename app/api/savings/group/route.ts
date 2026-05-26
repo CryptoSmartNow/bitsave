@@ -17,13 +17,15 @@ export async function POST(request: Request) {
 
         // Resolve Savvy Names to wallet addresses
         const members = [{ wallet: creatorWallet.toLowerCase(), role: 'creator', joinedAt: new Date(), contributed: 0 }];
+        const existingWallets = new Set([creatorWallet.toLowerCase()]);
 
         if (invitedSavvyNames && Array.isArray(invitedSavvyNames)) {
             const usersCollection = db.collection('users');
             for (const savvyName of invitedSavvyNames) {
                 const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${savvyName}$`, 'i') } });
-                if (user) {
+                if (user && !existingWallets.has(user.walletAddress.toLowerCase())) {
                     members.push({ wallet: user.walletAddress, role: 'member', joinedAt: new Date(), contributed: 0 });
+                    existingWallets.add(user.walletAddress.toLowerCase());
                 }
             }
         }
@@ -93,7 +95,7 @@ export async function PUT(request: Request) {
         const db = client.db('bitsave');
 
         const body = await request.json();
-        const { groupId, walletAddress, amount, action } = body;
+        const { groupId, walletAddress, amount, action, invitedSavvyNames } = body;
 
         if (!groupId || !walletAddress) {
             return NextResponse.json({ error: 'Group ID and wallet address are required' }, { status: 400 });
@@ -124,6 +126,32 @@ export async function PUT(request: Request) {
                 { $pull: { members: { wallet: walletAddress.toLowerCase() } } as any, $set: { updatedAt: new Date() } }
             );
             return NextResponse.json({ success: true, message: 'Left the group' });
+        }
+
+        if (action === 'invite' && invitedSavvyNames && Array.isArray(invitedSavvyNames)) {
+            const usersCollection = db.collection('users');
+            const newMembers = [];
+            const existingWallets = new Set(group.members.map((m: any) => m.wallet.toLowerCase()));
+
+            for (const savvyName of invitedSavvyNames) {
+                const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${savvyName}$`, 'i') } });
+                if (user && !existingWallets.has(user.walletAddress.toLowerCase())) {
+                    newMembers.push({ wallet: user.walletAddress, role: 'member', joinedAt: new Date(), contributed: 0 });
+                    existingWallets.add(user.walletAddress.toLowerCase());
+                }
+            }
+
+            if (newMembers.length > 0) {
+                await collection.updateOne(
+                    { _id: new ObjectId(groupId) },
+                    { 
+                        $push: { members: { $each: newMembers } } as any,
+                        $addToSet: { invitedSavvyNames: { $each: invitedSavvyNames } } as any,
+                        $set: { updatedAt: new Date() } 
+                    }
+                );
+            }
+            return NextResponse.json({ success: true, message: 'Members invited successfully' });
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

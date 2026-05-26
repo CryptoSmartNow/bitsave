@@ -270,7 +270,7 @@ export const fetchSavingFee = async (provider: any, contractAddress: string) => 
 // Fetch Celo Price Helper
 export const fetchCeloPrice = async () => {
     try {
-        const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=celo&vs_currencies=usd');
+        const { data } = await axios.get('/api/prices?ids=celo');
         return data.celo.usd;
     } catch (error) {
         console.error('Error fetching CELO price:', error);
@@ -330,7 +330,7 @@ export const switchToNetwork = async (networkName: string) => {
 // Fetch GoodDollar price from Coingecko
 export const fetchGoodDollarPrice = async () => {
     try {
-        const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd');
+        const { data } = await axios.get('/api/prices?ids=gooddollar');
         return data.gooddollar.usd;
     } catch (error) {
         console.error(error);

@@ -9,13 +9,18 @@ import toast from 'react-hot-toast'
 import Image from 'next/image'
 import ENSErrorModal from './ENSErrorModal'
 import { HiOutlineGlobeAlt, HiOutlineCheck, HiOutlineAtSymbol } from 'react-icons/hi2'
+import { useNetworkSync } from '@/hooks/useNetworkSync'
 
 interface ENSLinkingProps {
   onENSLinked?: (ensName: string) => void
+  walletAddress?: string
+  isSolanaNetwork?: boolean
 }
 
-export default function ENSLinking({ onENSLinked }: ENSLinkingProps) {
-  const { address } = useAccount()
+export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork }: ENSLinkingProps) {
+  const { address: wagmiAddress } = useAccount()
+  const { currentNetworkName } = useNetworkSync()
+  const address = walletAddress || wagmiAddress
   const { ensName, avatar, isLoading, error, refreshENSData, hasENS } = useENSData()
   const [isLinking, setIsLinking] = useState(false)
   const [showProfileCard, setShowProfileCard] = useState(false)
@@ -128,6 +133,39 @@ export default function ENSLinking({ onENSLinked }: ENSLinkingProps) {
         </div>
       </div>
     )
+  }
+
+  const isSolanaAddress = address && !address.startsWith('0x') && address.length >= 32;
+
+  if (currentNetworkName?.toLowerCase() === 'solana' || isSolanaAddress || isSolanaNetwork) {
+    return (
+       <div className="flex flex-col items-center justify-center p-8 bg-[#f8faf9] rounded-2xl border border-gray-100">
+           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100 text-[#0f172a] mb-3">
+             <HiOutlineGlobeAlt className="w-6 h-6" />
+           </div>
+           <p className="text-[#0f172a] font-bold text-[15px] mb-1">ENS is EVM Only</p>
+           <p className="text-[#64748b] text-[13px] font-medium text-center">Please connect to an EVM compatible chain to link your ENS domain.</p>
+       </div>
+    );
+  }
+
+  if (isSolanaNetwork) {
+    return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#81D7B4]/20 shadow-[0_20px_40px_-15px_rgba(129,215,180,0.2)] relative overflow-hidden group hover:shadow-[0_30px_60px_-12px_rgba(129,215,180,0.3)] transition-all duration-500"
+    >
+      <div className="relative z-10 text-center">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <HiOutlineGlobeAlt className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">ENS is not available on Solana</h3>
+        <p className="text-gray-500 mb-6">Please connect to an EVM compatible chain to use ENS domains.</p>
+      </div>
+    </motion.div>
+    );
   }
 
   return (

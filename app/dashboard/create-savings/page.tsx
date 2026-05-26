@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { useWallet } from '@solana/wallet-adapter-react';
 import axios from 'axios';
+import { submitTransaction } from '@/utils/transactionSync';
 import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interactionTracker';
 import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
@@ -111,7 +112,7 @@ export default function CreateSavingsPage() {
   const penalties = useMemo(() => ['10%', '20%', '30%'], []);
 
   const chains = useMemo(() => [
-    { id: 'base', name: 'Base', logo: networkLogos['base']?.logoUrl || '/base.png', color: 'bg-[#81D7B4]/10', textColor: 'text-[#81D7B4]' },
+    { id: 'base', name: 'Base', logo: networkLogos['base']?.logoUrl || '/base.svg', color: 'bg-[#81D7B4]/10', textColor: 'text-[#81D7B4]' },
     { id: 'celo', name: 'Celo', logo: networkLogos['celo']?.logoUrl || '/celo.png', color: 'bg-green-100', textColor: 'text-green-600', active: true },
     { id: 'lisk', name: 'Lisk', logo: networkLogos['lisk']?.logoUrl || '/lisk-logo.png', color: 'bg-purple-100', textColor: 'text-purple-600', active: true },
     { id: 'avalanche', name: 'Avalanche', logo: networkLogos['avalanche']?.logoUrl || '/avalanche-logo.svg', color: 'bg-red-100', textColor: 'text-red-600', active: true },
@@ -367,10 +368,10 @@ export default function CreateSavingsPage() {
 
       // Record transaction
       try {
-        await axios.post('/api/transactions', {
-          amount: parseFloat(amount), txnhash: receiptHash, chain, savingsname: name,
-          useraddress: address, transaction_type: 'deposit', currency
-        }, { headers: { 'accept': 'application/json', 'Content-Type': 'application/json' } });
+        await submitTransaction({
+          amount: parseFloat(amount).toString(), txnhash: receiptHash, chain, savingsname: name,
+          useraddress: address || '', transaction_type: 'deposit', currency
+        });
       } catch (apiError) { console.error('Failed to record transaction:', apiError); }
 
       if (address) {

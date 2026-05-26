@@ -87,38 +87,17 @@ export function useENSData(overrideAddress?: string) {
         return
       }
 
-      // Use Wagmi's built-in ENS resolution functionality
-      // This is the proper way to resolve ENS data using the Ethereum ecosystem
-      const { createPublicClient, http } = await import('viem')
-      const { mainnet } = await import('viem/chains')
-      const { normalize } = await import('viem/ens')
+      // Use api.ensideas.com for highly reliable, free client-side ENS resolution
+      const response = await fetch(`https://api.ensideas.com/ens/resolve/${walletAddress}`);
       
-      const client = createPublicClient({
-        chain: mainnet,
-        transport: http()
-      })
-      
-      // Get ENS name from address (reverse resolution)
-      let ensName: string | null = null
-      try {
-        ensName = await client.getEnsName({
-          address: walletAddress as `0x${string}`
-        })
-      } catch (error) {
-        console.log('No ENS name found for address:', walletAddress)
+      if (!response.ok) {
+        throw new Error('Failed to resolve ENS data');
       }
       
-      // Get avatar if ENS name exists
-      let avatar: string | null = null
-      if (ensName) {
-        try {
-          avatar = await client.getEnsAvatar({
-            name: normalize(ensName)
-          })
-        } catch (error) {
-          console.log('No avatar found for ENS name:', ensName)
-        }
-      }
+      const data = await response.json();
+      
+      const ensName = data.name || null;
+      const avatar = data.avatar || null;
       
       const resolvedData = { ensName, avatar }
       
@@ -189,39 +168,14 @@ export function useENSData(overrideAddress?: string) {
 // Standalone function to resolve ENS data for any ENS name
 export async function resolveENSData(ensName: string) {
   try {
-    const { createPublicClient, http } = await import('viem')
-    const { mainnet } = await import('viem/chains')
-    const { normalize } = await import('viem/ens')
+    const response = await fetch(`https://api.ensideas.com/ens/resolve/${ensName}`);
     
-    const client = createPublicClient({
-      chain: mainnet,
-      transport: http()
-    })
-    
-    // Get address from ENS name (forward resolution)
-    let address: string | null = null
-    try {
-      address = await client.getEnsAddress({
-        name: normalize(ensName)
-      })
-    } catch (error) {
-      console.log('ENS name not found:', ensName)
-      return { address: null, avatar: null }
+    if (!response.ok) {
+      return { address: null, avatar: null };
     }
     
-    // Get avatar if address exists
-    let avatar: string | null = null
-    if (address) {
-      try {
-        avatar = await client.getEnsAvatar({
-          name: normalize(ensName)
-        })
-      } catch (error) {
-        console.log('No avatar found for ENS name:', ensName)
-      }
-    }
-    
-    return { address, avatar }
+    const data = await response.json();
+    return { address: data.address || null, avatar: data.avatar || null };
   } catch (error) {
     console.error('Error resolving ENS data:', error)
     throw error

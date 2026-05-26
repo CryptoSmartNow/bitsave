@@ -80,7 +80,7 @@ export default function BlogSection() {
   }
 
   return (
-    <section id="blog" className="py-16 md:py-24 lg:py-32 bg-white relative overflow-hidden">
+    <section id="blog" className="section-lazy py-16 md:py-24 lg:py-32 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8">
@@ -94,7 +94,7 @@ export default function BlogSection() {
               <span className="w-2 h-2 rounded-full bg-[#81D7B4]"></span>
               <span className="text-sm font-bold text-[#81D7B4] tracking-wide uppercase">Our Blog</span>
             </div>
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 tracking-tight leading-none">
+            <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-none">
               Latest Insights
             </h2>
           </motion.div>
@@ -118,7 +118,8 @@ export default function BlogSection() {
         {/* Blog Posts */}
         {posts.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {/* Grid / Carousel on Mobile */}
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 -mx-4 px-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 mb-16 md:pb-0 md:mx-0 md:px-0 md:overflow-visible md:snap-none">
               {posts.map((post, index) => (
                 <motion.article 
                   key={post.slug || index} 
@@ -126,7 +127,7 @@ export default function BlogSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.15 }}
-                  className="group flex flex-col h-full bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:border-[#81D7B4]/30 hover:shadow-2xl hover:shadow-[#81D7B4]/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+                  className="group flex flex-col h-full bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:border-[#81D7B4]/30 hover:shadow-2xl hover:shadow-[#81D7B4]/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden snap-center shrink-0 min-w-[280px] max-w-[340px] md:min-w-0 md:max-w-none md:shrink md:snap-align-none"
                 >
                   <Link href={`/blog/${post.slug}`} className="flex flex-col h-full">
                     {/* Featured Image */}
@@ -166,7 +167,7 @@ export default function BlogSection() {
                         <span>{post.readTime} min read</span>
                       </div>
                       
-                      <h3 className="text-2xl font-bold text-gray-900 group-hover:text-[#81D7B4] transition-colors leading-tight line-clamp-2">
+                      <h3 className="font-display text-2xl font-bold text-gray-900 group-hover:text-[#5fb392] transition-colors leading-tight line-clamp-2">
                         {post.title}
                       </h3>
                       

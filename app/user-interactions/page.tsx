@@ -35,7 +35,7 @@ export default function DashboardOverview() {
         const [statsRes, interactionsRes, pricesRes] = await Promise.all([
           fetch('/api/user-interactions/stats'),
           fetch('/api/user-interactions?limit=20'),
-          fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,binancecoin,celo,usd-coin,tether,celo-dollar&vs_currencies=usd')
+          fetch('/api/prices?ids=ethereum,binancecoin,celo,usd-coin,tether,celo-dollar')
             .catch(() => ({ json: async () => ({}) })) // Fallback on fail
         ]);
 

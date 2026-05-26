@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from 'next'
-import { Exo } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
-// Configure Exo font with all weights
-const exo = Exo({
+// Inter: excellent readability at all sizes, modern body font
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-exo',
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-inter',
+})
+
+// Plus Jakarta Sans: geometric display font for headings — premium, modern feel
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-display',
 })
 
 import { Providers } from './providers';
@@ -72,8 +80,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${exo.variable}`} suppressHydrationWarning>
-      <body className={`${exo.className}`}>
+    <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                window.console.log = function() {};
+                window.console.info = function() {};
+                window.console.warn = function() {};
+                window.console.error = function() {};
+                window.console.debug = function() {};
+              }
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.className}`}>
         <Providers>
           <ReferralTracker key="referral-tracker" />
           <InstallPWA key="install-pwa" />

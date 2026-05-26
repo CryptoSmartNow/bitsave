@@ -23,7 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { handleContractError } from '../../lib/contractErrorHandler';
 // Custom hook for savings data with caching
 import { useSavingsData } from '../../hooks/useSavingsData';
-import { ShimmerList } from '../../components/ShimmerLoading';
+import { ShimmerList, PageShimmer } from '../../components/ShimmerLoading';
 // Network synchronization hook for automatic wallet-UI sync
 import { useNetworkSync } from '../../hooks/useNetworkSync';
 // Cache initialization utility
@@ -32,8 +32,9 @@ import { initializeSavingsCache } from '../../utils/savingsCache';
 import { useENSData } from '../../hooks/useENSData';
 // Date utility functions for formatting timestamps
 import { formatTimestamp } from '../../utils/dateUtils';
-import { HiOutlineArrowRight, HiOutlineCheckCircle, HiOutlineArrowDown, HiOutlineBell, HiOutlineChevronDown, HiOutlineCheck, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlinePlus, HiOutlineXMark, HiOutlineEye, HiOutlineBanknotes, HiOutlineGift } from 'react-icons/hi2';
+import { HiOutlineArrowRight, HiOutlineCheckCircle, HiOutlineArrowDown, HiOutlineBell, HiOutlineChevronDown, HiOutlineCheck, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlinePlus, HiOutlineXMark, HiOutlineEye, HiOutlineBanknotes, HiOutlineGift, HiOutlineArrowDownTray } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '../../utils/networkLogos';
+import { toast } from 'react-hot-toast';
 
 
 const ensureImageUrl = (url: string | undefined): string => {
@@ -62,9 +63,9 @@ export default function Dashboard() {
 
   // Wallet connection hooks from wagmi
   const { address: wagmiAddress, isConnected } = useAccount();
-  const { publicKey } = useWallet();
+  const { publicKey, connected: isSolanaConnected, disconnect: disconnectSolana } = useWallet();
   const solanaWalletAdapterAddress = publicKey?.toBase58();
-  const { user } = usePrivy();
+  const { user, logout } = usePrivy();
   const { wallets } = useWallets();
   // Detect Solana wallet from all sources:
   // 1. Wallet adapter (useWallet) — works for Phantom, Solflare, MetaMask Solana, etc.
@@ -155,6 +156,9 @@ export default function Dashboard() {
   const [showNetworkModal, setShowNetworkModal] = useState(false); // Network modal visibility (for mobile)
   const [isMobile, setIsMobile] = useState(false); // Detect mobile device
 
+  // PWA Install state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
 
   // Platform updates state - stores announcements and news
   const [updates, setUpdates] = useState<Array<{
@@ -337,7 +341,7 @@ export default function Dashboard() {
   const fetchGoodDollarPrice = async () => {
     try {
       // Request current USD price for GoodDollar token
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=gooddollar&vs_currencies=usd');
+      const response = await fetch('/api/prices?ids=gooddollar');
       const data = await response.json();
       const price = data.gooddollar?.usd; // Extract USD price from response
       if (price && price > 0) {
@@ -457,6 +461,43 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Handle PWA installation
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstallable(false);
+    } else {
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      toast('App is already installed or your browser does not support installation.', {
+        icon: 'ℹ️',
+        style: {
+          borderRadius: '16px',
+          background: '#333',
+          color: '#fff',
+        },
+      });
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
+
   // Function to get signer
 
 
@@ -488,7 +529,7 @@ export default function Dashboard() {
 
   // Network options with dynamic logos (CoinGecko first, then local fallback)
   const networkOptions = useMemo(() => [
-    { name: 'Base', desc: 'Ethereum L2', icon: networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.png', isActive: isBaseNetwork },
+    { name: 'Base', desc: 'Ethereum L2', icon: networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base-square-logo.svg', isActive: isBaseNetwork },
     { name: 'Celo', desc: 'Mobile-First', icon: networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png', isActive: isCeloNetwork },
     { name: 'Lisk', desc: 'Ethereum L2', icon: networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png', isActive: isLiskNetwork },
     { name: 'Binance Smart Chain', desc: 'EVM Mainnet', icon: networkLogos['bsc']?.logoUrl || networkLogos['bsc']?.fallbackUrl || '/bsc.png', isActive: isBSCNetwork },
@@ -589,7 +630,7 @@ export default function Dashboard() {
     return (
       <div className={`${exo.variable} font-sans px-0 py-4 sm:px-4 sm:py-6 md:p-8 bg-[#F7FCFA] text-gray-800 relative min-h-screen pb-8 overflow-x-hidden`}>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+          <PageShimmer className="pt-10" />
         </div>
       </div>
     );
@@ -603,7 +644,18 @@ export default function Dashboard() {
       <TopUpModal isOpen={topUpModal.isOpen} onClose={closeTopUpModal} planName={topUpModal.planName} planId={topUpModal.planId} isEth={topUpModal.isEth} tokenName={topUpModal.tokenName} networkLogos={networkLogos} contractAddress={topUpModal.contractAddress} network={topUpModal.network} startTime={topUpModal.startTime} />
       <WithdrawModal isOpen={withdrawModal.isOpen} onClose={closeWithdrawModal} planName={withdrawModal.planName} isEth={withdrawModal.isEth} penaltyPercentage={withdrawModal.penaltyPercentage} tokenName={withdrawModal.tokenName} isCompleted={withdrawModal.isCompleted} networkLogos={networkLogos} contractAddress={withdrawModal.contractAddress} network={withdrawModal.network} startTime={withdrawModal.startTime} />
       <PlanDetailsModal isOpen={planDetailsModal.isOpen} onClose={() => setPlanDetailsModal({ ...planDetailsModal, isOpen: false })} plan={planDetailsModal.plan} isEth={planDetailsModal.isEth} tokenName={planDetailsModal.tokenName} goodDollarPrice={0.0001086} networkLogos={networkLogos} />
-      <NetworkSelectionModal isOpen={showNetworkModal} onClose={() => setShowNetworkModal(false)} networks={networkOptions} onSelectNetwork={async (network) => { await handleNetworkSelect(network); setShowNetworkModal(false); }} isNetworkSwitching={hookNetworkSwitching} isLoadingLogos={isLoadingLogos} />
+      <NetworkSelectionModal 
+        isOpen={showNetworkModal} 
+        onClose={() => setShowNetworkModal(false)} 
+        networks={networkOptions} 
+        onSelectNetwork={async (network) => { await handleNetworkSelect(network); setShowNetworkModal(false); }} 
+        isNetworkSwitching={hookNetworkSwitching} 
+        isLoadingLogos={isLoadingLogos} 
+        isEVMConnected={isConnected}
+        isSolanaConnected={isSolanaConnected}
+        disconnectEVM={logout}
+        disconnectSolana={disconnectSolana}
+      />
 
       {/* Update Modal */}
       {showUpdateModal && selectedUpdate && (
@@ -624,39 +676,43 @@ export default function Dashboard() {
 
       {/* Header View */}
       <div className="max-w-[1400px] w-full mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-gray-100">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-2 font-display">
               {(() => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; })()}
             </h1>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-gray-500 font-medium break-all">
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-gray-500 font-medium text-sm">
                 {isSolanaNetwork && solanaAddress 
                   ? `${solanaAddress.slice(0, 6)}...${solanaAddress.slice(-4)}` 
                   : (displayName && displayName !== 'Not connected' && displayName !== 'User' 
                       ? displayName 
-                      : (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'User'))}
+                      : (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : (isSolanaNetwork && solanaAddress ? `${solanaAddress.slice(0, 6)}...${solanaAddress.slice(-4)}` : 'User')))}
               </span>
-              {hasENS && ensName && !isSolanaNetwork && <span className="inline-flex items-center bg-[#81D7B4]/10 text-[#81D7B4] px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap">⟠ ENS: {ensName}</span>}
+              {hasENS && ensName ? (
+                <span className="inline-flex items-center bg-[#81D7B4]/10 text-[#81D7B4] px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap">
+                  ⟠ ENS: {ensName}
+                </span>
+              ) : null}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="bg-white border border-gray-100 p-1.5 rounded-2xl flex items-center shadow-sm">
-              <button onClick={() => setActiveMode('savefi')} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'savefi' ? 'bg-[#81D7B4] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}>SaveFi</button>
-              <button onClick={() => { setActiveMode('bizfi'); setTimeout(() => router.push('/bizfi/dashboard'), 300); }} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'bizfi' ? 'bg-[#81D7B4] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}>BizFi</button>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="bg-gray-50 border border-gray-100 p-1.5 rounded-2xl flex items-center shadow-inner">
+              <button onClick={() => setActiveMode('savefi')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'savefi' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>SaveFi</button>
+              <button onClick={() => { setActiveMode('bizfi'); setTimeout(() => router.push('/bizfi/dashboard'), 300); }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'bizfi' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>BizFi</button>
             </div>
             <div className="relative">
-              <button id="notification-button" onClick={() => setShowNotifications(!showNotifications)} className="p-3 bg-white rounded-2xl border border-gray-100 hover:border-[#81D7B4]/50 shadow-sm relative group transition-all">
-                <HiOutlineBell className="w-5 h-5 text-gray-500 group-hover:text-[#81D7B4] transition-colors" />
-                {newUpdatesCount > 0 && <span className="absolute tops-2 right-2 w-2.5 h-2.5 bg-[#81D7B4] rounded-full border-2 border-white"></span>}
+              <button id="notification-button" onClick={() => setShowNotifications(!showNotifications)} className="p-3.5 bg-white rounded-2xl border border-gray-200 hover:border-[#81D7B4]/50 shadow-sm relative group transition-all">
+                <HiOutlineBell className="w-5 h-5 text-gray-600 group-hover:text-[#81D7B4] transition-colors" />
+                {newUpdatesCount > 0 && <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-[#81D7B4] rounded-full border-2 border-white"></span>}
               </button>
               {showNotifications && (
-                <div id="notification-dropdown" className="absolute right-0 mt-3 w-[calc(100vw-2rem)] md:w-80 max-w-sm bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] border border-gray-100 z-50 overflow-hidden">
+                <div id="notification-dropdown" className="fixed left-4 right-4 top-24 md:absolute md:top-auto md:left-auto md:right-0 md:mt-3 md:w-80 max-w-sm bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] border border-gray-100 z-50 overflow-hidden mx-auto md:mx-0">
                   <div className="p-5 border-b border-gray-50 flex justify-between bg-white">
                     <h3 className="font-bold text-gray-900">Updates</h3>
                   </div>
-                  <div className="max-h-80 overflow-y-auto p-2">
+                  <div className="max-h-[60vh] md:max-h-80 overflow-y-auto p-2 custom-scrollbar">
                     {updates.length > 0 ? updates.map(update => (
                       <button key={update.id} onClick={() => openUpdateModal(update)} className="w-full text-left p-4 hover:bg-[#81D7B4]/5 rounded-2xl transition-all mb-1 border border-transparent hover:border-[#81D7B4]/20 group">
                         <div className="flex justify-between items-start">
@@ -698,7 +754,7 @@ export default function Dashboard() {
 
                     <div className="relative z-20">
                       <button id="network-button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNetworkModal(true); }} disabled={hookNetworkSwitching} className="flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-xl border border-[#81D7B4]/30 transition-all shadow-sm">
-                        <Image priority src={ensureImageUrl(isSolanaNetwork ? (networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png') : isBaseNetwork ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg') : isCeloNetwork ? (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png') : isLiskNetwork ? (networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png') : isAvalancheNetwork ? (networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png') : (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base.svg'))} alt={currentNetworkName || 'Network'} width={18} height={18} className="w-4.5 h-4.5 object-contain" />
+                        <Image priority src={ensureImageUrl(isSolanaNetwork ? (networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png') : isBaseNetwork ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base-square-logo.svg') : isCeloNetwork ? (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png') : isLiskNetwork ? (networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png') : isAvalancheNetwork ? (networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png') : (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base-square-logo.svg'))} alt={currentNetworkName || 'Network'} width={18} height={18} className="w-4.5 h-4.5 object-contain" />
                         <span className="text-sm font-bold text-black hidden sm:inline">{currentNetworkName || 'Network'}</span>
                         <div className={`w-2 h-2 rounded-full shadow-sm ml-1 ${isNetworkSynced ? 'bg-[#81D7B4]' : 'bg-orange-400 animate-pulse'}`}></div>
                         {!isMobile && <HiOutlineChevronDown className="w-4 h-4 text-gray-400 ml-1" />}
@@ -721,18 +777,21 @@ export default function Dashboard() {
                   </div>
 
                   <div className="relative z-10 flex items-baseline gap-3 mb-12">
-                    <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-black">${parseFloat(savingsData?.totalLocked || "0").toFixed(2)}</h2>
+                    <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-black font-display">${parseFloat(savingsData?.totalLocked || "0").toFixed(2)}</h2>
                     <span className="text-xl font-bold text-gray-400">USD</span>
                   </div>
 
                   {/* Buttons with flex-nowrap to prevent wrapping on mobile, overflow-visible allows shadows to breathe */}
-                  <div className="relative z-10 pt-8 pb-4 border-t border-[#81D7B4]/10 flex gap-2 sm:gap-4 flex-nowrap">
+                  <div className="relative z-10 pt-8 pb-4 border-t border-[#81D7B4]/10 flex flex-wrap gap-2 sm:gap-4 flex-nowrap">
                     <Link href="/dashboard/create-savings" className="flex-1 sm:flex-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-8 py-3.5 bg-[#81D7B4] hover:bg-opacity-90 text-white text-[13px] sm:text-sm font-bold rounded-2xl transition-all shadow-[0_4px_15px_rgba(129,215,180,0.3)] transform hover:-translate-y-0.5">
                       <HiOutlinePlus className="w-4 h-4 sm:w-5 sm:h-5 font-bold" /> New Plan
                     </Link>
                     <Link href="/dashboard/plans" className="flex-1 sm:flex-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-8 py-3.5 bg-white/80 hover:bg-white backdrop-blur-sm text-[#81D7B4] border border-[#81D7B4]/20 text-[13px] sm:text-sm font-bold rounded-2xl transition-all shadow-sm hover:shadow-[0_4px_15px_rgba(129,215,180,0.1)]">
                       <HiOutlineClipboardDocumentList className="w-4 h-4 sm:w-5 sm:h-5" /> View Plans
                     </Link>
+                    <button onClick={handleInstallClick} className="md:hidden flex-1 sm:flex-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-8 py-3.5 bg-[#81D7B4] hover:bg-opacity-90 text-white text-[13px] sm:text-sm font-bold rounded-2xl transition-all shadow-sm transform hover:-translate-y-0.5">
+                      <HiOutlineArrowDownTray className="w-4 h-4 sm:w-5 sm:h-5" /> Install App
+                    </button>
                   </div>
                 </div>
 
@@ -757,7 +816,7 @@ export default function Dashboard() {
                   <div className="relative mt-auto z-10">
                     <div className="flex items-baseline gap-2">
                       {/* Fallback to '0' if rewards not properly loaded yet */}
-                      <span className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tighter text-black">{savingsData?.rewards || "0"}</span>
+                      <span className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tighter text-black font-display">{savingsData?.rewards || "0"}</span>
                       <span className="text-lg font-bold text-[#81D7B4]">$BTS</span>
                     </div>
                   </div>
@@ -785,7 +844,7 @@ export default function Dashboard() {
                     const amount = parseFloat(plan.currentAmount);
                     const safeAmount = !isNaN(amount) ? amount : 0;
                     let usdVal = safeAmount;
-                    if (plan.isEth || plan.tokenName === 'ETH' || plan.tokenName === 'HBAR') usdVal = safeAmount * (ethPrice || 3500);
+                    if (plan.isEth || plan.tokenName === 'ETH') usdVal = safeAmount * (ethPrice || 3500);
                     if (plan.tokenName === 'Gooddollar') usdVal = safeAmount * 0.0001086;
                     const reward = (usdVal * 0.005 * 1000).toFixed(0);
 
@@ -815,13 +874,8 @@ export default function Dashboard() {
                               </span>
                             </div>
                           </div>
-                          {/* Mobile Top Up / Completion Tag */}
+                          {/* Mobile Completion Tag */}
                           <div className="md:hidden flex items-center">
-                            {!isCompleted && (
-                              <button onClick={() => openTopUpModal(plan)} className="px-3 py-1.5 bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-lg transition-colors shadow-sm text-xs font-bold" title="Top Up">
-                                Top Up
-                              </button>
-                            )}
                             {isCompleted && (
                               <span className="bg-[#81D7B4] text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md shadow-sm">100%</span>
                             )}
@@ -856,20 +910,16 @@ export default function Dashboard() {
                         </div>
 
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-3 w-full md:w-auto justify-end pt-4 md:pt-0 border-t md:border-none border-gray-50">
-                          {/* Desktop Top Up / Completion Tag */}
-                          <div className="hidden md:flex items-center mr-2">
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-4 md:pt-0 border-t md:border-none border-gray-50">
+                          {isCompleted && (
+                            <span className="hidden md:flex bg-[#81D7B4] text-white text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm items-center justify-center mr-2">100%</span>
+                          )}
+                          <div className="flex gap-2 w-full md:w-auto">
                             {!isCompleted && (
-                              <button onClick={() => openTopUpModal(plan)} className="px-4 py-2 bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm text-sm font-bold" title="Top Up">
+                              <button onClick={() => openTopUpModal(plan)} className="flex-1 md:flex-none px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold bg-[#81D7B4]/10 text-[#81D7B4] hover:bg-[#81D7B4] hover:text-white rounded-xl transition-colors shadow-sm text-center whitespace-nowrap">
                                 Top Up
                               </button>
                             )}
-                            {isCompleted && (
-                              <span className="bg-[#81D7B4] text-white text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm">100%</span>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2 w-full md:w-auto">
                             <button onClick={() => setPlanDetailsModal({ isOpen: true, plan, isEth: plan.isEth, tokenName: plan.tokenName || '' })} className="flex-1 md:flex-none px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold text-[#81D7B4] bg-white border border-gray-100 hover:border-[#81D7B4] rounded-xl transition-colors shadow-sm text-center">Details</button>
                             <button onClick={() => {
                               const maturityTimestamp = Number(plan.maturityTime || 0);

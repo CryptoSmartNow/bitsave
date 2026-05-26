@@ -76,7 +76,7 @@ export function useBizFi() {
     // Create dedicated public clients
     const basePublicClient = useMemo(() => createPublicClient({
         chain: base,
-        transport: http(),
+        transport: http(process.env.NEXT_PUBLIC_RPC_URL),
     }), []);
 
     const celoPublicClient = useMemo(() => createPublicClient({

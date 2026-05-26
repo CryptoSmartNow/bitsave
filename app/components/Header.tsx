@@ -40,9 +40,9 @@ const Header = memo(function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100 py-4'
-          : 'bg-transparent py-6'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+          ? 'bg-white/70 backdrop-blur-2xl backdrop-saturate-[180%] border-b border-gray-100/50 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
+          : 'bg-transparent py-5'
           }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex justify-between items-center">
@@ -66,7 +66,7 @@ const Header = memo(function Header() {
               <Link
                 key={link.name}
                 href={link.href}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-gray-50 whitespace-nowrap"
+                className="nav-underline px-4 py-2 text-sm font-semibold text-gray-600 hover:text-[#5fb392] transition-colors rounded-full hover:bg-gray-50/80 whitespace-nowrap tracking-wide"
               >
                 {link.name}
               </Link>
@@ -75,15 +75,15 @@ const Header = memo(function Header() {
             {/* Docs Dropdown */}
             <div className="relative group">
               <button
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#81D7B4] transition-colors rounded-full hover:bg-gray-50 flex items-center gap-1 whitespace-nowrap"
+                className="nav-underline px-4 py-2 text-sm font-semibold text-gray-600 hover:text-[#5fb392] transition-colors rounded-full hover:bg-gray-50/80 flex items-center gap-1 whitespace-nowrap tracking-wide"
               >
                 Docs
               </button>
               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-[150px]">
-                <div className="bg-white rounded-xl shadow-xl shadow-gray-200/50 border border-gray-100 p-2 flex flex-col gap-1">
+                <div className="glass-card bg-white/90 rounded-xl shadow-xl shadow-gray-200/30 p-2 flex flex-col gap-1">
                   <Link
                     href="/docs"
-                    className="flex justify-between items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
+                    className="flex justify-between items-center px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-[#5fb392] hover:bg-[#81D7B4]/8 rounded-lg transition-all"
                   >
                     SaveFi
                   </Link>
@@ -91,7 +91,7 @@ const Header = memo(function Header() {
                     href="https://bizfi.mintlify.app/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex justify-between items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
+                    className="flex justify-between items-center px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-[#5fb392] hover:bg-[#81D7B4]/8 rounded-lg transition-all"
                   >
                     BizFi
                     <FiArrowUpRight className="w-3 h-3" />
@@ -107,7 +107,7 @@ const Header = memo(function Header() {
             <Link
               href="/dashboard"
               prefetch={false}
-              className="bg-[#81D7B4] hover:bg-[#6BC5A0] text-white px-6 py-2.5 rounded-full font-semibold transition-all duration-300 shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/40 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+              className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#5fb392] text-white px-6 py-2.5 rounded-full font-bold transition-all duration-300 shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/40 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shimmer-btn tracking-wide"
             >
               Launch App
             </Link>
@@ -135,7 +135,7 @@ const Header = memo(function Header() {
             initial={{ opacity: 0, y: '-100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '-100%' }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed inset-0 z-40 bg-white xl:hidden flex flex-col pt-24 px-6 pb-8 overflow-y-auto"
           >
             <div className="flex flex-col space-y-2 mt-4">
@@ -144,11 +144,11 @@ const Header = memo(function Header() {
                   key={link.name}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 + idx * 0.05 }}
+                  transition={{ delay: 0.08 + idx * 0.06, type: "spring", damping: 20 }}
                 >
                   <Link
                     href={link.href}
-                    className="block py-4 text-2xl font-bold text-gray-900 border-b border-gray-100 hover:text-[#81D7B4] transition-colors"
+                    className="block py-4 text-2xl font-bold text-gray-900 border-b border-gray-100 hover:text-[#81D7B4] transition-colors font-display"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.name}
@@ -159,10 +159,10 @@ const Header = memo(function Header() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + navLinks.length * 0.05 }}
+                transition={{ delay: 0.08 + navLinks.length * 0.06, type: "spring", damping: 20 }}
                 className="py-4 border-b border-gray-100"
               >
-                <div className="text-xl font-bold text-gray-400 mb-3 flex items-center justify-between">
+                <div className="text-xl font-bold text-gray-400 mb-3 flex items-center justify-between font-display">
                   Documentation
                 </div>
                 <div className="flex flex-col space-y-3 pl-4">
@@ -190,14 +190,14 @@ const Header = memo(function Header() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.5, type: "spring", damping: 20 }}
               className="mt-auto pt-8 flex flex-col gap-4"
             >
               <Link
                 href="/dashboard"
                 prefetch={false}
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full bg-[#81D7B4] text-white text-center text-lg font-bold py-4 rounded-2xl shadow-xl shadow-[#81D7B4]/20"
+                className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white text-center text-lg font-bold py-4 rounded-2xl shadow-xl shadow-[#81D7B4]/20 font-display"
               >
                 Launch App
               </Link>

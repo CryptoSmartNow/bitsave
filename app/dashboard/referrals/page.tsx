@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import { useReferrals } from '@/lib/useReferrals';
+import { PageShimmer } from '@/components/ShimmerLoading';
 import { useAccount } from 'wagmi';
 import { useSavingsData } from '../../../hooks/useSavingsData';
 import Link from 'next/link';
@@ -61,8 +62,8 @@ export default function ReferralsPage() {
 
   if (isLoading) {
     return (
-      <div className={`min-h-screen bg-[#F7FCFA] ${exo.className} flex items-center justify-center`}>
-        <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
+      <div className={`min-h-screen bg-[#F7FCFA] ${exo.className} flex items-center justify-center w-full px-4 sm:px-6 lg:px-8`}>
+        <PageShimmer className="pt-10" />
       </div>
     );
   }

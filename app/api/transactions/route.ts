@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransactionsCollection, getLeaderboardCollection } from '@/lib/mongodb';
+import { getCache, setCache, clearCache } from '@/lib/redis';
+import { sendPushNotification } from '@/lib/push';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +24,13 @@ export async function GET(request: NextRequest) {
     let query = {};
     if (address) {
       query = { useraddress: { $regex: new RegExp(`^${address}$`, 'i') } };
+      
+      // Check Redis Cache
+      const cacheKey = `transactions:${address.toLowerCase()}`;
+      const cachedTransactions = await getCache<any[]>(cacheKey);
+      if (cachedTransactions) {
+        return NextResponse.json({ transactions: cachedTransactions });
+      }
     }
 
     // Query local MongoDB
@@ -31,18 +40,26 @@ export async function GET(request: NextRequest) {
       .toArray();
     
     // Format response
+    const formattedTransactions = transactions.map((tx: any) => ({
+      id: tx.id || tx._id.toString(),
+      transaction_type: tx.transaction_type || 'unknown',
+      amount: tx.amount || '0',
+      currency: tx.currency || 'ETH',
+      created_at: tx.created_at || new Date().toISOString(),
+      savingsname: tx.savingsname || 'Unknown Savings',
+      txnhash: tx.txnhash || '0x0',
+      chain: tx.chain || 'base',
+      useraddress: tx.useraddress
+    }));
+
+    // Save to Cache with 15 mins TTL if address is present
+    if (address) {
+      const cacheKey = `transactions:${address.toLowerCase()}`;
+      await setCache(cacheKey, formattedTransactions, 900); // 15 mins
+    }
+
     return NextResponse.json({
-      transactions: transactions.map((tx: any) => ({
-        id: tx.id || tx._id.toString(),
-        transaction_type: tx.transaction_type || 'unknown',
-        amount: tx.amount || '0',
-        currency: tx.currency || 'ETH',
-        created_at: tx.created_at || new Date().toISOString(),
-        savingsname: tx.savingsname || 'Unknown Savings',
-        txnhash: tx.txnhash || '0x0',
-        chain: tx.chain || 'base',
-        useraddress: tx.useraddress
-      }))
+      transactions: formattedTransactions
     });
     
   } catch (error) {
@@ -97,7 +114,15 @@ export async function POST(request: NextRequest) {
       // Add any other fields needed
     };
 
-    const result = await collection.insertOne(newTransaction);
+    // Use updateOne with upsert to prevent duplicates if the transaction is retried
+    const result = await collection.updateOne(
+      { txnhash: txnhash },
+      { $setOnInsert: newTransaction },
+      { upsert: true }
+    );
+
+    // Invalidate Redis Cache
+    await clearCache(`transactions:${useraddress.toLowerCase()}`);
 
     // Update Leaderboard
     try {
@@ -132,11 +157,32 @@ export async function POST(request: NextRequest) {
       // We don't fail the transaction if leaderboard update fails
     }
 
+    // Send Push Notification
+    try {
+      let title = 'Transaction Successful';
+      let body = `Your ${transaction_type} of ${amount} ${currency} on ${chain} was successful.`;
+      
+      if (transaction_type === 'deposit') {
+        title = 'Savings Created';
+        body = `Successfully locked ${amount} ${currency} into ${savingsname || 'your new saving plan'}.`;
+      } else if (transaction_type === 'topup') {
+        title = 'Savings Topped Up';
+        body = `Successfully added ${amount} ${currency} to ${savingsname || 'your saving plan'}.`;
+      } else if (transaction_type === 'withdraw' || transaction_type === 'withdrawal') {
+        title = 'Withdrawal Successful';
+        body = `Successfully withdrew ${amount} ${currency} from ${savingsname || 'your saving plan'}.`;
+      }
+
+      await sendPushNotification(useraddress, { title, body, url: '/dashboard' });
+    } catch (pushErr) {
+      console.error('Failed to send push notification:', pushErr);
+    }
+
     return NextResponse.json({
       success: true,
       transaction: {
         ...newTransaction,
-        id: result.insertedId.toString()
+        id: result.upsertedId ? result.upsertedId.toString() : txnhash
       }
     });
 
@@ -192,6 +238,13 @@ export async function PUT(request: NextRequest) {
     updateData.updated_at = new Date().toISOString();
 
     const result = await collection.updateOne(query, { $set: updateData });
+
+    // Invalidate Cache
+    if (oldTx && oldTx.useraddress) {
+      await clearCache(`transactions:${oldTx.useraddress.toLowerCase()}`);
+    } else if (useraddress) {
+      await clearCache(`transactions:${useraddress.toLowerCase()}`);
+    }
 
     if (result.matchedCount === 0) {
       // Fallback search by string id if ObjectId failed
@@ -278,7 +331,15 @@ export async function DELETE(request: NextRequest) {
       query = { id: id };
     }
 
+    // Fetch tx to invalidate cache
+    const txToDelete = await collection.findOne(query);
+
     const result = await collection.deleteOne(query);
+
+    // Invalidate Cache
+    if (txToDelete && txToDelete.useraddress) {
+      await clearCache(`transactions:${txToDelete.useraddress.toLowerCase()}`);
+    }
 
     if (result.deletedCount === 0) {
       // Fallback: try finding by id string if ObjectId failed or wasn't found
