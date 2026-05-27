@@ -62,7 +62,8 @@ export default function BizSwapAppPage() {
   useEffect(() => { setMounted(true); }, []);
 
   const inst = INSTRUMENTS[selectedInst];
-  const inputAmount = parseFloat(amountStr) || 0;
+  const sharesCount = parseInt(amountStr) || 0;
+  const inputAmount = sharesCount * inst.min;
   
   // Calculate Fee
   const feeAmount = inst.feePercent > 0 ? (inputAmount * inst.feePercent) / 100 : 0;
@@ -193,22 +194,28 @@ export default function BizSwapAppPage() {
               {/* Input Amount */}
               <div className="space-y-3">
                 <div className="flex justify-between items-end">
-                  <label className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider">Investment Amount (USD)</label>
-                  <span className="text-xs text-[#9BA8B5]">Min: ${inst.min}</span>
+                  <label className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider">Select No of BizShares</label>
+                  <span className="text-xs text-[#9BA8B5]">1 Share = ${inst.min}</span>
                 </div>
                 <div className="relative">
                   <input
                     type="number"
-                    min={inst.min}
+                    min="1"
+                    step="1"
                     value={amountStr}
                     onChange={(e) => setAmountStr(e.target.value)}
-                    placeholder={`e.g. ${inst.min}`}
+                    placeholder="e.g. 1"
                     className="w-full bg-[#1A2538] border border-[#2C3E5D] rounded-xl px-5 py-4 text-2xl font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[#9BA8B5] font-bold">
-                    USDC
+                    Shares
                   </div>
                 </div>
+                {sharesCount > 0 && (
+                  <div className="mt-2 text-sm text-[#81D7B4] font-bold">
+                    Equivalent Amount: ${inputAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                  </div>
+                )}
               </div>
 
               {/* Order Summary & Fee Calculation */}
@@ -231,7 +238,7 @@ export default function BizSwapAppPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs text-[#7B8B9A] pt-1">
                   <span>BizShares you receive:</span>
-                  <span className="font-bold text-[#F9F9FB]">${inputAmount.toFixed(2)} worth</span>
+                  <span className="font-bold text-[#F9F9FB]">{sharesCount} Share{sharesCount !== 1 ? 's' : ''}</span>
                 </div>
               </div>
 

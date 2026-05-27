@@ -124,7 +124,7 @@ export default function Dashboard() {
 
   // UI state management
   const [activeTab, setActiveTab] = useState('current'); // Toggle between current/completed savings
-  const [activeMode, setActiveMode] = useState<'savefi' | 'bizfi'>('savefi'); // Toggle between SaveFi and BizFi
+  const [activeMode, setActiveMode] = useState<'savefi' | 'bizswap'>('savefi'); // Toggle between SaveFi and BizSwap
 
   // Modal state for top-up operations
   const [topUpModal, setTopUpModal] = useState({
@@ -700,7 +700,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="bg-gray-50 border border-gray-100 p-1.5 rounded-2xl flex items-center shadow-inner">
               <button onClick={() => setActiveMode('savefi')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'savefi' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>SaveFi</button>
-              <button onClick={() => { setActiveMode('bizfi'); setTimeout(() => router.push('/bizfi/dashboard'), 300); }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'bizfi' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>BizFi</button>
+              <button onClick={() => { setActiveMode('bizswap'); setTimeout(() => router.push('/bizswap'), 300); }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMode === 'bizswap' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>BizSwap</button>
             </div>
             <div className="relative">
               <button id="notification-button" onClick={() => setShowNotifications(!showNotifications)} className="p-3.5 bg-white rounded-2xl border border-gray-200 hover:border-[#81D7B4]/50 shadow-sm relative group transition-all">

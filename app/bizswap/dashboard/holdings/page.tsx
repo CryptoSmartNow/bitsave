@@ -120,7 +120,10 @@ export default function HoldingsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">BizYield</p>
-            <h3 className="text-xl font-black text-[#F9F9FB]">${byTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
+            <h3 className="text-xl font-black text-[#F9F9FB]">
+              ${byTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}
+              <span className="text-sm font-normal text-[#7B8B9A] ml-2">({Math.floor(byTotal / 10)} Shares)</span>
+            </h3>
           </div>
         </div>
         <div className="bg-[#1A2538] border border-[#2C3E5D] p-5 rounded-2xl flex items-center gap-4">
@@ -129,7 +132,10 @@ export default function HoldingsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">BizCredit</p>
-            <h3 className="text-xl font-black text-[#F9F9FB]">${bcTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
+            <h3 className="text-xl font-black text-[#F9F9FB]">
+              ${bcTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}
+              <span className="text-sm font-normal text-[#7B8B9A] ml-2">({Math.floor(bcTotal / 100)} Shares)</span>
+            </h3>
           </div>
         </div>
         <div className="bg-[#1A2538] border border-[#2C3E5D] p-5 rounded-2xl flex items-center gap-4">
@@ -138,7 +144,10 @@ export default function HoldingsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">BizBond</p>
-            <h3 className="text-xl font-black text-[#F9F9FB]">${bbTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
+            <h3 className="text-xl font-black text-[#F9F9FB]">
+              ${bbTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}
+              <span className="text-sm font-normal text-[#7B8B9A] ml-2">({Math.floor(bbTotal / 1000)} Shares)</span>
+            </h3>
           </div>
         </div>
       </div>
