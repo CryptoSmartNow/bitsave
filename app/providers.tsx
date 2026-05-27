@@ -21,7 +21,11 @@ import {
   TrustWalletAdapter,
   LedgerWalletAdapter,
   TrezorWalletAdapter,
-  BitgetWalletAdapter
+  BitgetWalletAdapter,
+  MathWalletAdapter,
+  TokenPocketWalletAdapter,
+  Coin98WalletAdapter,
+  SafePalWalletAdapter
 } from '@solana/wallet-adapter-wallets';
 
 // Define the project ID for WalletConnect (used by Privy if configured, or internally)
@@ -101,6 +105,10 @@ function InnerProviders({ children }: { children: ReactNode }) {
     new LedgerWalletAdapter(),
     new TrezorWalletAdapter(),
     new BitgetWalletAdapter(),
+    new MathWalletAdapter(),
+    new TokenPocketWalletAdapter(),
+    new Coin98WalletAdapter(),
+    new SafePalWalletAdapter(),
   ], []);
 
   return (

@@ -80,7 +80,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
           
           {/* Mobile Only Quick Links */}
           <div className="md:hidden mt-2 space-y-1">
-            <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7B8B9A] hover:bg-[#1C2538]/50 hover:text-[#F9F9FB] transition-colors">
+            <Link href="/bizswap/dashboard/settings" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7B8B9A] hover:bg-[#1C2538]/50 hover:text-[#F9F9FB] transition-colors">
               <HiOutlineCog8Tooth className="w-5 h-5 text-[#7B8B9A]" />
               Settings
             </Link>
@@ -139,7 +139,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
               <HiOutlineBell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full text-[#0A0F17] text-[9px] font-bold flex items-center justify-center">3</span>
             </Link>
-            <Link href="/dashboard/settings" className="hidden md:flex w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
+            <Link href="/bizswap/dashboard/settings" className="hidden md:flex w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
               <HiOutlineCog8Tooth className="w-5 h-5" />
             </Link>
           </div>

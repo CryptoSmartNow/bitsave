@@ -71,16 +71,13 @@ export default function BizSwapLandingPage() {
         {/* SECTION 1 - HERO */}
         <section className="relative pt-40 pb-20 lg:pt-48 lg:pb-32 overflow-hidden px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <motion.div initial="hidden" animate="visible" variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A2538] border border-[#2C3E5D] mb-8">
-              <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
-              <span className="text-xs font-bold text-[#81D7B4] tracking-widest uppercase">Solana MVP Live</span>
-            </motion.div>
+
             <motion.h1 initial="hidden" animate="visible" variants={fadeUp} className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-[1.1]">
               Your RWA <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0]">Yield Aggregator</span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" variants={fadeUp} className="text-[#9BA8B5] text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
-              Earn yield in stablecoins from real world businesses, private credit, and government treasuries. Weekly, monthly or quarterly payouts directly to your wallet.
+              Earn yield in stablecoins from real world businesses, private credit, and government treasuries, weekly, monthly or quarterly payouts directly to your wallet.
             </motion.p>
             <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/bizswap/app" className="w-full sm:w-auto px-8 py-4 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] font-black rounded-xl text-lg transition-all shadow-[0_0_30px_rgba(129,215,180,0.2)] hover:shadow-[0_0_40px_rgba(129,215,180,0.4)] hover:-translate-y-1">
@@ -113,7 +110,7 @@ export default function BizSwapLandingPage() {
                   </div>
                 </div>
               </motion.div>
-              
+
               <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="relative">
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#81D7B4]/20 to-transparent blur-3xl rounded-full" />
                 <div className="relative bg-[#1A2538] border border-[#2C3E5D] rounded-3xl p-8 shadow-2xl">
@@ -159,10 +156,10 @@ export default function BizSwapLandingPage() {
               </p>
             </div>
 
-            <motion.div 
-              initial="hidden" 
-              whileInView="visible" 
-              viewport={{ once: true }} 
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
               variants={staggerContainer}
               className="grid md:grid-cols-3 gap-6"
             >
@@ -176,7 +173,7 @@ export default function BizSwapLandingPage() {
                 </div>
                 <h3 className="text-2xl font-black mb-2">BizYield</h3>
                 <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by real business revenue sharing agreements.</p>
-                
+
                 <ul className="space-y-4 mb-8">
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
                     <span className="text-[#7B8B9A]">Payouts</span>
@@ -200,11 +197,11 @@ export default function BizSwapLandingPage() {
                   <div className="w-14 h-14 bg-[#F5A623]/10 rounded-2xl flex items-center justify-center">
                     <HiOutlineCurrencyDollar className="w-7 h-7 text-[#F5A623]" />
                   </div>
-                  <span className="px-3 py-1 bg-[#F5A623]/10 text-[#F5A623] text-xs font-black tracking-widest uppercase rounded-full">Med Risk</span>
+                  <span className="px-3 py-1 bg-[#F5A623]/10 text-[#F5A623] text-xs font-black tracking-widest uppercase rounded-full">Mid Risk</span>
                 </div>
                 <h3 className="text-2xl font-black mb-2">BizCredit</h3>
                 <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by BizMarket's vetted SME credit pools.</p>
-                
+
                 <ul className="space-y-4 mb-8">
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
                     <span className="text-[#7B8B9A]">Payouts</span>
@@ -212,7 +209,7 @@ export default function BizSwapLandingPage() {
                   </li>
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
                     <span className="text-[#7B8B9A]">Return</span>
-                    <span className="font-bold text-[#F9F9FB]">16% Annualised</span>
+                    <span className="font-bold text-[#F9F9FB]">4% Quarterly</span>
                   </li>
                   <li className="flex justify-between items-center text-sm">
                     <span className="text-[#7B8B9A]">Min. Buy-in</span>
@@ -231,7 +228,7 @@ export default function BizSwapLandingPage() {
                 </div>
                 <h3 className="text-2xl font-black mb-2">BizBond</h3>
                 <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by government treasury bills & sovereign instruments.</p>
-                
+
                 <ul className="space-y-4 mb-8">
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
                     <span className="text-[#7B8B9A]">Payouts</span>
@@ -239,7 +236,7 @@ export default function BizSwapLandingPage() {
                   </li>
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
                     <span className="text-[#7B8B9A]">Return</span>
-                    <span className="font-bold text-[#F9F9FB]">10% Fixed</span>
+                    <span className="font-bold text-[#F9F9FB]">110% Annually</span>
                   </li>
                   <li className="flex justify-between items-center text-sm">
                     <span className="text-[#7B8B9A]">Min. Buy-in</span>
@@ -261,7 +258,7 @@ export default function BizSwapLandingPage() {
 
             <div className="grid md:grid-cols-3 gap-12 relative">
               <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-[#2C3E5D] via-[#81D7B4]/30 to-[#2C3E5D]" />
-              
+
               {[
                 { step: '01', title: 'Connect', desc: 'Connect your wallet. Select an instrument that matches your risk appetite and investment size.', icon: HiOutlineWallet },
                 { step: '02', title: 'Swap', desc: 'Swap your stablecoins directly into your chosen BizShares instrument. Your funds go to work immediately.', icon: HiOutlineArrowsRightLeft },
@@ -289,7 +286,7 @@ export default function BizSwapLandingPage() {
                   Start Earning Now <HiOutlineArrowRight />
                 </Link>
               </div>
-              
+
               <div className="lg:col-span-7 grid sm:grid-cols-2 gap-6">
                 {[
                   { title: 'Stablecoin Yield Only', desc: 'Every payment arrives in your chosen local stablecoin or USDC. No volatile token emissions.' },

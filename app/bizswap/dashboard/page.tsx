@@ -208,7 +208,9 @@ export default function BizSwapStandaloneDashboard() {
                           </div>
                         </td>
                         <td className="px-5 py-4 font-medium text-[#F9F9FB]">
-                          {h.instrument === 'BizCredit' ? `${Math.floor(h.investmentAmount / 100)} Units` : '1 Certificate'}
+                          {h.instrument === 'BizYield' ? `${Math.floor(h.investmentAmount / 10)} Shares` : 
+                           h.instrument === 'BizCredit' ? `${Math.floor(h.investmentAmount / 100)} Shares` : 
+                           h.instrument === 'BizBond' ? `${Math.floor(h.investmentAmount / 1000)} Shares` : '1 Share'}
                         </td>
                         <td className="px-5 py-4 font-bold text-[#F9F9FB]">${h.investmentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                         <td className="px-5 py-4">
@@ -383,7 +385,13 @@ export default function BizSwapStandaloneDashboard() {
                       </div>
                       <div className="text-right">
                          <p className="text-[9px] text-[#4B5A75] uppercase tracking-widest">Value</p>
-                         <p className="text-sm font-bold text-[#F9F9FB]">${h.investmentAmount}</p>
+                         <p className="text-sm font-bold text-[#F9F9FB]">
+                           ${h.investmentAmount} <span className="text-xs font-normal text-[#7B8B9A]">
+                             ({h.instrument === 'BizYield' ? Math.floor(h.investmentAmount / 10) : 
+                               h.instrument === 'BizCredit' ? Math.floor(h.investmentAmount / 100) : 
+                               h.instrument === 'BizBond' ? Math.floor(h.investmentAmount / 1000) : 1} Shares)
+                           </span>
+                         </p>
                       </div>
                     </div>
                   </div>
