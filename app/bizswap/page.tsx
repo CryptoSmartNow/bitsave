@@ -236,7 +236,7 @@ export default function BizSwapLandingPage() {
                   </li>
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
                     <span className="text-[#7B8B9A]">Return</span>
-                    <span className="font-bold text-[#F9F9FB]">110% Annually</span>
+                    <span className="font-bold text-[#F9F9FB]">10% Annually</span>
                   </li>
                   <li className="flex justify-between items-center text-sm">
                     <span className="text-[#7B8B9A]">Min. Buy-in</span>
