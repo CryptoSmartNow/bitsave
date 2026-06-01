@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import * as htmlToImage from 'html-to-image';
+import QRCode from 'react-qr-code';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { 
   HiOutlineBriefcase, 
@@ -16,9 +18,11 @@ import {
   HiOutlineChartBar,
   HiOutlineShieldCheck,
   HiOutlineCurrencyDollar,
-  HiOutlineInformationCircle
+  HiOutlineInformationCircle,
+  HiOutlineXMark
 } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
+import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 
 interface Holding {
   _id: string;
@@ -38,31 +42,104 @@ export default function BizSwapStandaloneDashboard() {
   const { publicKey, connected } = useWallet();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCert, setSelectedCert] = useState<Holding | null>(null);
+  const certificateRef = useRef<HTMLDivElement>(null);
+
+  const program = useBizSwapProgram();
 
   useEffect(() => {
-    if (connected && publicKey) {
+    if (connected && publicKey && program) {
       fetchHoldings(publicKey.toBase58());
-    } else {
+    } else if (!connected) {
       setHoldings([]);
       setLoading(false);
     }
-  }, [connected, publicKey]);
+  }, [connected, publicKey, program]);
 
   const fetchHoldings = async (wallet: string) => {
+    if (!program) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/bizswap/holdings?wallet=${wallet}`);
-      const data = await res.json();
-      if (res.ok) {
-        setHoldings(data.data);
-      } else {
-        toast.error('Failed to load holdings');
-      }
+      // Fetch all Certificate Records matching the user's wallet
+      const certificates = await (program as any).account.certificateRecord.all([
+        {
+          memcmp: {
+            offset: 8, // Skip anchor discriminator
+            bytes: wallet,
+          }
+        }
+      ]);
+
+      const formattedHoldings: Holding[] = certificates.map(({ account, publicKey: pubkey }: any) => {
+        // Map on-chain data to UI format
+        let instrumentName = 'Unknown';
+        if (account.instrumentType.bizYield !== undefined) instrumentName = 'BizYield';
+        if (account.instrumentType.bizCredit !== undefined) instrumentName = 'BizCredit';
+        if (account.instrumentType.bizBond !== undefined) instrumentName = 'BizBond';
+
+        let statusText = 'Unknown';
+        if (account.status.vesting) statusText = `Vesting — ${new Date(account.vestEndTimestamp.toNumber() * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        if (account.status.active) statusText = 'Active';
+        if (account.status.redeemed) statusText = 'Redeemed';
+
+        return {
+          _id: pubkey.toBase58(),
+          instrument: instrumentName,
+          investmentAmount: account.amountUsdCents.toNumber() / 100, // convert back to dollars
+          entitlement: `${account.entitlementBps.toNumber() / 100}%`,
+          status: statusText,
+          nextPayment: new Date(account.yieldStartTimestamp.toNumber() * 1000).toISOString(),
+          mintAddress: account.mint.toBase58(),
+          serialNumber: account.serialNumber.toString(),
+          apr: instrumentName === 'BizCredit' ? '16% Annualised' : instrumentName === 'BizBond' ? '10% Fixed' : 'Variable',
+          payoutFrequency: instrumentName === 'BizCredit' ? 'Weekly' : instrumentName === 'BizBond' ? 'Quarterly' : 'Monthly',
+          purchaseDate: new Date(account.purchaseTimestamp.toNumber() * 1000).toISOString()
+        };
+      });
+      
+      setHoldings(formattedHoldings);
     } catch (e) {
       console.error(e);
       toast.error('Network error loading holdings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const downloadCertificate = async () => {
+    if (!certificateRef.current || !selectedCert) return;
+    
+    try {
+      const toastId = toast.loading('Generating certificate image...', { id: 'download-cert' });
+      
+      // Temporarily hide the close and download buttons for the snapshot
+      const closeBtn = document.getElementById('cert-close-btn');
+      const actionBtns = document.getElementById('cert-action-btns');
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (actionBtns) actionBtns.style.display = 'none';
+
+      // Use html-to-image to take a high quality snapshot
+      const dataUrl = await htmlToImage.toPng(certificateRef.current, {
+        backgroundColor: '#0F1825',
+        pixelRatio: 2, // High resolution
+        style: {
+          margin: '0',
+        }
+      });
+      
+      // Restore buttons
+      if (closeBtn) closeBtn.style.display = 'block';
+      if (actionBtns) actionBtns.style.display = 'flex';
+
+      const link = document.createElement('a');
+      link.download = `BizMarket-Certificate-${selectedCert.serialNumber}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast.success('Certificate downloaded successfully!', { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download certificate', { id: 'download-cert' });
     }
   };
 
@@ -357,7 +434,11 @@ export default function BizSwapStandaloneDashboard() {
                 <div className="text-center text-[#7B8B9A] py-8">No certificates yet.</div>
               ) : (
                 holdings.map(h => (
-                  <div key={h._id} className={`rounded-xl border p-4 bg-gradient-to-b ${getInstrumentColorClass(h.instrument, 'gradientFrom')} to-transparent ${getInstrumentColorClass(h.instrument, 'border')} relative overflow-hidden group hover:border-opacity-100 transition-all`}>
+                  <div 
+                    key={h._id} 
+                    onClick={() => setSelectedCert(h)}
+                    className={`rounded-xl border p-4 bg-gradient-to-b ${getInstrumentColorClass(h.instrument, 'gradientFrom')} to-transparent ${getInstrumentColorClass(h.instrument, 'border')} relative overflow-hidden group hover:border-opacity-100 transition-all cursor-pointer hover:shadow-lg`}
+                  >
                     
                     <div className="flex justify-between items-start mb-6">
                       <div>
@@ -408,6 +489,118 @@ export default function BizSwapStandaloneDashboard() {
 
         </div>
       </div>
+
+      {/* CERTIFICATE MODAL */}
+      {selectedCert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedCert(null)}>
+          <div 
+            className="relative w-full max-w-3xl bg-[#0F1825] border-2 border-[#81D7B4] rounded-xl shadow-[0_0_50px_rgba(129,215,180,0.15)] p-2 animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              ref={certificateRef}
+              className="border border-[#81D7B4]/40 p-8 md:p-12 rounded-lg relative overflow-hidden flex flex-col items-center text-center"
+            >
+              
+              {/* Background watermark/logo */}
+              <div className="absolute inset-0 opacity-[0.03] flex items-center justify-center pointer-events-none">
+                <HiOutlineShieldCheck className="w-96 h-96" />
+              </div>
+
+              {/* Close Button */}
+              <button 
+                id="cert-close-btn"
+                onClick={() => setSelectedCert(null)}
+                className="absolute top-4 right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-10 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D]"
+              >
+                <HiOutlineXMark className="w-5 h-5" />
+              </button>
+
+              <h1 className="text-3xl md:text-5xl font-serif text-[#81D7B4] mb-2 font-black tracking-widest uppercase z-10 mt-6" style={{ fontFamily: 'Georgia, serif' }}>
+                Certificate of Ownership
+              </h1>
+              <p className="text-sm md:text-base text-[#7B8B9A] tracking-widest uppercase mb-10 z-10">
+                Official Digital Record • BizMarket Protocol
+              </p>
+
+              <div className="space-y-6 max-w-xl mx-auto z-10 w-full">
+                <p className="text-lg md:text-xl text-[#F9F9FB] leading-relaxed font-light">
+                  This certifies that the wallet address <br/>
+                  <span className="font-mono text-[#81D7B4] font-bold text-sm md:text-base bg-[#81D7B4]/10 px-3 py-1.5 rounded mt-3 inline-block border border-[#81D7B4]/20 break-all">
+                    {publicKey?.toBase58()}
+                  </span>
+                </p>
+
+                <p className="text-lg md:text-xl text-[#F9F9FB] leading-relaxed font-light">
+                  is the registered owner of
+                </p>
+
+                <div className="bg-[#1A2538] border border-[#2C3E5D] rounded-xl p-6 shadow-inner relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-[#81D7B4]"></div>
+                  <h2 className="text-3xl md:text-4xl font-black text-[#F9F9FB] mb-1">
+                    {selectedCert.instrument === 'BizYield' ? Math.floor(selectedCert.investmentAmount / 10) : 
+                     selectedCert.instrument === 'BizCredit' ? Math.floor(selectedCert.investmentAmount / 100) : 
+                     selectedCert.instrument === 'BizBond' ? Math.floor(selectedCert.investmentAmount / 1000) : 1} Units
+                  </h2>
+                  <p className="text-[#81D7B4] font-bold uppercase tracking-widest text-sm">
+                    {selectedCert.instrument}
+                  </p>
+                  <p className="text-xs text-[#7B8B9A] mt-2">Valued at ${selectedCert.investmentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                </div>
+
+                <p className="text-sm text-[#7B8B9A] leading-relaxed max-w-lg mx-auto">
+                  Entitled to <span className="text-[#F9F9FB] font-bold">{selectedCert.entitlement}</span> yield paid <span className="text-[#F9F9FB] font-bold">{selectedCert.payoutFrequency.toLowerCase()}</span>. 
+                  This digital certificate is irrefutably recorded and secured on the Solana blockchain.
+                </p>
+              </div>
+
+              <div className="w-full flex justify-between items-end mt-16 border-t border-[#81D7B4]/20 pt-8 z-10">
+                <div className="text-left w-1/3">
+                  <p className="font-mono text-[10px] md:text-xs text-[#7B8B9A] mb-1 uppercase tracking-wider">Certificate No.</p>
+                  <p className="font-bold text-[#F9F9FB] text-xs md:text-base">#BY-{selectedCert.serialNumber}</p>
+                </div>
+                
+                <div className="text-center w-1/3">
+                  <div className="w-24 md:w-32 border-b border-[#81D7B4] mx-auto mb-2 opacity-50"></div>
+                  <p className="text-xl md:text-3xl text-[#81D7B4] font-bold italic" style={{ fontFamily: 'Georgia, serif' }}>BizMarket</p>
+                  <p className="text-[8px] md:text-[10px] text-[#7B8B9A] uppercase tracking-widest mt-1">Authorized Issuer</p>
+                </div>
+
+                <div className="text-right w-1/3 flex flex-col items-end">
+                  <div className="bg-white p-1.5 rounded-lg shadow-sm mb-3">
+                    <QRCode 
+                      value={`https://explorer.solana.com/address/${selectedCert.mintAddress}?cluster=devnet`} 
+                      size={64} 
+                    />
+                  </div>
+                  <p className="font-mono text-[10px] md:text-xs text-[#7B8B9A] mb-1 uppercase tracking-wider">Issue Date</p>
+                  <p className="font-bold text-[#F9F9FB] text-xs md:text-base">{formatDate(selectedCert.purchaseDate)}</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div id="cert-action-btns" className="mt-8 z-10 flex flex-col sm:flex-row items-center gap-4">
+                <button 
+                  onClick={downloadCertificate}
+                  className="text-xs font-bold text-[#0F1825] bg-[#81D7B4] hover:bg-[#6BC4A0] transition-colors px-6 py-2.5 rounded-full shadow-lg flex items-center gap-2"
+                >
+                  <HiOutlineArrowDownTray className="w-4 h-4" />
+                  Download Certificate
+                </button>
+                <a 
+                  href={`https://explorer.solana.com/address/${selectedCert.mintAddress}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[#81D7B4] hover:text-[#0F1825] transition-colors border border-[#81D7B4]/50 px-6 py-2.5 rounded-full hover:bg-[#81D7B4] inline-block shadow-lg"
+                >
+                  Verify on Solana Explorer →
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

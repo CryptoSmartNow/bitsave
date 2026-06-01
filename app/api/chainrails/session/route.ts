@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 import { Chainrails, crapi } from '@chainrails/sdk';
 
-const CHAINRAILS_API_KEY = process.env.CHAINRAILS_API_KEY;
+const DEFAULT_API_KEY = process.env.CHAINRAILS_API_KEY;
+const BIZSWAP_API_KEY = process.env.BIZSWAP_CHAINRAILS_API_KEY;
 
 export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const source = searchParams.get('source');
+        
+        const CHAINRAILS_API_KEY = source === 'bizswap' ? BIZSWAP_API_KEY : DEFAULT_API_KEY;
+
         if (!CHAINRAILS_API_KEY) {
-            return NextResponse.json({ error: 'ChainRails is not configured' }, { status: 503 });
+            return NextResponse.json({ error: 'ChainRails is not configured for this source' }, { status: 503 });
         }
 
-        const { searchParams } = new URL(request.url);
         const recipient = searchParams.get('recipient') || '';
         let amount = searchParams.get('amount') || '0';
         const destinationChain = searchParams.get('chain') || 'BASE';
@@ -26,8 +31,11 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Recipient wallet address is required' }, { status: 400 });
         }
 
+        // Ensure you are using your ChainRails Sandbox API Key, not the Production one!
+        const env = 'sandbox' as any;
         Chainrails.config({
             api_key: CHAINRAILS_API_KEY,
+            env: env,
         });
 
         const session = await crapi.auth.getSessionToken({

@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import { HiOutlineArrowLeft, HiOutlineInformationCircle, HiOutlineShieldCheck, HiOutlineChartBar, HiOutlineCurrencyDollar } from 'react-icons/hi2';
 import { PaymentModal } from '@chainrails/react';
 import '@solana/wallet-adapter-react-ui/styles.css';
+import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
+import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
 
 const INSTRUMENTS = {
   bizyield: {
@@ -59,7 +61,36 @@ export default function BizSwapAppPage() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Solana State
+  const program = useBizSwapProgram();
+  const [remainingCap, setRemainingCap] = useState<number | null>(null);
+  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
+
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    async function fetchInstrument() {
+      if (!program) return;
+      
+      let instrumentId = 0;
+      if (selectedInst === 'bizcredit') instrumentId = 1;
+      if (selectedInst === 'bizbond') instrumentId = 2;
+
+      const pda = getInstrumentConfigPda(instrumentId);
+      try {
+        const config = await (program as any).account.instrumentConfig.fetch(pda);
+        const supply = config.currentSupply.toNumber();
+        const cap = config.supplyCap.toNumber();
+        setCurrentSupply(supply);
+        setRemainingCap(cap - supply);
+      } catch (e) {
+        console.error("Failed to fetch instrument config:", e);
+        // Could be uninitialized
+        setRemainingCap(null);
+      }
+    }
+    fetchInstrument();
+  }, [program, selectedInst]);
 
   const inst = INSTRUMENTS[selectedInst];
   const sharesCount = parseInt(amountStr) || 0;
@@ -83,11 +114,12 @@ export default function BizSwapAppPage() {
     try {
       // 1. Get ChainRails session
       const params = new URLSearchParams({
-        recipient: publicKey.toBase58(),
+        recipient: '0x6D193f8B8C2505e5818e7Fab5f876Da336A3dB4c', // Platform Treasury Wallet
         amount: totalCharged.toFixed(2),
-        chain: 'BASE', // Assuming ChainRails is paying in USDC on Base for now, or Solana if supported
+        chain: 'BASE_TESTNET',
         token: 'USDC',
-        mode: 'buy'
+        mode: 'buy',
+        source: 'bizswap'
       });
       const res = await fetch(`/api/chainrails/session?${params}`);
       const data = await res.json();
@@ -243,6 +275,7 @@ export default function BizSwapAppPage() {
               </div>
 
               {/* Action Button */}
+              {/* Action Button */}
               {!connected ? (
                 <WalletMultiButton style={{ width: '100%', justifyContent: 'center', backgroundColor: '#2C3E5D', borderRadius: '0.75rem', height: '56px', fontSize: '16px', fontWeight: 'bold' }} />
               ) : (
@@ -288,7 +321,9 @@ export default function BizSwapAppPage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#9BA8B5] text-sm">Supply Cap</span>
-                <span className="font-bold text-[#F9F9FB]">1,000 Units Cycle</span>
+                <span className="font-bold text-[#F9F9FB]">
+                  {remainingCap !== null ? `${remainingCap} Units Remaining` : '1,000 Units Cycle'}
+                </span>
               </div>
             </div>
 
