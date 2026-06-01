@@ -114,7 +114,7 @@ export default function BizSwapAppPage() {
     try {
       // 1. Get ChainRails session
       const params = new URLSearchParams({
-        recipient: '0x6D193f8B8C2505e5818e7Fab5f876Da336A3dB4c', // Platform Treasury Wallet
+        recipient: '0x6bd6109FB3Bf59F67c86caB3bC09adB8B77485B7', // Platform Treasury Wallet
         amount: totalCharged.toFixed(2),
         chain: 'BASE_TESTNET',
         token: 'USDC',
