@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import { Activity01Icon, Tick01Icon, AtIcon } from "hugeicons-react";
 import { useState, useEffect, Fragment } from 'react'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
@@ -8,7 +9,6 @@ import { useENSData } from '@/hooks/useENSData'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import ENSErrorModal from './ENSErrorModal'
-import { HiOutlineGlobeAlt, HiOutlineCheck, HiOutlineAtSymbol } from 'react-icons/hi2'
 import { useNetworkSync } from '@/hooks/useNetworkSync'
 
 interface ENSLinkingProps {
@@ -141,7 +141,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
     return (
        <div className="flex flex-col items-center justify-center p-8 bg-[#f8faf9] rounded-2xl border border-gray-100">
            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100 text-[#0f172a] mb-3">
-             <HiOutlineGlobeAlt className="w-6 h-6" />
+             <Activity01Icon className="w-6 h-6" />
            </div>
            <p className="text-[#0f172a] font-bold text-[15px] mb-1">ENS is EVM Only</p>
            <p className="text-[#64748b] text-[13px] font-medium text-center">Please connect to an EVM compatible chain to link your ENS domain.</p>
@@ -159,7 +159,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
     >
       <div className="relative z-10 text-center">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <HiOutlineGlobeAlt className="w-8 h-8 text-gray-400" />
+          <Activity01Icon className="w-8 h-8 text-gray-400" />
         </div>
         <h3 className="text-lg font-semibold text-gray-800 mb-2">ENS is not available on Solana</h3>
         <p className="text-gray-500 mb-6">Please connect to an EVM compatible chain to use ENS domains.</p>
@@ -183,7 +183,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
       <div className="relative z-10">
         <div className="flex items-center mb-6 sm:mb-8">
           <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-            <HiOutlineGlobeAlt className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            <Activity01Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
           <div>
             <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">ENS Domain</h2>
@@ -203,7 +203,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
             <div className="ens-profile-container">
               <div className="ens-profile-header">
                 <div className="ens-profile-success-icon">
-                  <HiOutlineCheck className="w-5 h-5 text-white" />
+                  <Tick01Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="ens-profile-title">ENS Domain Linked</h3>
@@ -264,7 +264,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
             {!isLinking && (
               <div className="text-center py-6">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <HiOutlineAtSymbol className="w-8 h-8 text-gray-400" />
+                  <AtIcon className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">No ENS Domain Linked</h3>
                 <p className="text-gray-600 text-sm mb-6">Connect your .eth domain to personalize your identity</p>

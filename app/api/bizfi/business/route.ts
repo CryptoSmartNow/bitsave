@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
     console.error(`[Business API Error] ${timestamp} | Context: Save Record`);
     console.error(`[Business API Error] Payload Summary: Owner=${body?.owner}, Name=${body?.businessName}`);
     console.error(`[Business API Error] Details:`, e);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
   }
 }
 
@@ -182,7 +182,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(businesses);
   } catch (e) {
     console.error("Failed to fetch businesses", e);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
   }
 }
 
@@ -218,6 +218,6 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (e: any) {
     console.error("Failed to update business", e);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
   }
 }

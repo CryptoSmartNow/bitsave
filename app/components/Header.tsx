@@ -1,9 +1,10 @@
-'use client'
+'use client';
+
+import { Menu01Icon, Cancel01Icon, ArrowUpRight01Icon } from "hugeicons-react";
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import LanguageSelector from '@/components/LanguageSelector';
-import { FiMenu, FiX, FiArrowUpRight } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
@@ -94,7 +95,7 @@ const Header = memo(function Header() {
                     className="flex justify-between items-center px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-[#5fb392] hover:bg-[#81D7B4]/8 rounded-lg transition-all"
                   >
                     BizFi
-                    <FiArrowUpRight className="w-3 h-3" />
+                    <ArrowUpRight01Icon className="w-3 h-3" />
                   </a>
                 </div>
               </div>
@@ -120,9 +121,9 @@ const Header = memo(function Header() {
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
-              <FiX className="w-7 h-7" />
+              <Cancel01Icon className="w-7 h-7" />
             ) : (
-              <FiMenu className="w-7 h-7" />
+              <Menu01Icon className="w-7 h-7" />
             )}
           </button>
         </div>
@@ -181,7 +182,7 @@ const Header = memo(function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     BizFi Docs
-                    <FiArrowUpRight className="w-4 h-4" />
+                    <ArrowUpRight01Icon className="w-4 h-4" />
                   </a>
                 </div>
               </motion.div>

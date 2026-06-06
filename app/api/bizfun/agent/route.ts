@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     } catch (error) {
         console.error('Agent API GET Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         
         // 1. Resolve Session ID
         if (collection && walletAddress) {
-            // Check if wallet already has a session
+            // Tick if wallet already has a session
             const walletSession = await collection.findOne({ walletAddress });
             if (walletSession) {
                 sessionId = walletSession.sessionId;
@@ -205,6 +205,6 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         console.error('Agent API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }

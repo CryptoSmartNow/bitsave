@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         const privateKey = process.env.REFERRAL_SIGNER_PRIVATE_KEY;
         if (!privateKey) {
             console.error("REFERRAL_SIGNER_PRIVATE_KEY is not set");
-            return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+            return NextResponse.json({ error: "CloudServer configuration error" }, { status: 500 });
         }
 
         // Initialize provider and signer based on network

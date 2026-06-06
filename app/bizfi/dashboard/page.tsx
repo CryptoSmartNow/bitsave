@@ -1,28 +1,14 @@
-"use client";
+'use client';
+
+import { Activity01Icon, Award01Icon, UserMultipleIcon, Tick01Icon, Logout01Icon, WhatsappIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Link from 'next/link';
 import { useEffect, useState } from "react";
 // Coinbase OnchainKit wallet components removed as we use Privy
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 import { useAccount, useDisconnect } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
-import {
-    HiOutlineRocketLaunch,
-    HiOutlineFire,
-    HiOutlineBeaker,
-    HiOutlineTrophy,
-    HiOutlineUsers,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineClipboardDocumentCheck,
-    HiOutlineCheckCircle,
-    HiOutlineClipboard,
-    HiOutlineArrowRightOnRectangle,
-    HiOutlineArrowRight,
-    HiOutlineWallet,
-    HiOutlinePlay
-} from "react-icons/hi2";
-import { FaWhatsapp } from "react-icons/fa";
 import { Exo } from "next/font/google";
 import WizardForm from "./components/WizardForm";
 import WalletDetailsModal from "./components/WalletDetailsModal";
@@ -131,7 +117,7 @@ export default function BizFiDashboardPage() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data) {
-                        // Check both root and formData for referralCode
+                        // Tick both root and formData for referralCode
                         const savedCode = data.referralCode || (data.formData && data.formData.referralCode);
                         if (savedCode) {
                             setReferralCode(savedCode);
@@ -242,7 +228,7 @@ export default function BizFiDashboardPage() {
                             className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 font-bold rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 active:scale-95 whitespace-nowrap"
                             style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
                         >
-                            <HiOutlineChatBubbleLeftRight className="w-4 h-4" />
+                            <Activity01Icon className="w-4 h-4" />
                             <span className="text-xs sm:text-sm">
                                 <span className="sm:hidden">Book</span>
                                 <span className="hidden sm:inline">Book Consultancy</span>
@@ -254,7 +240,7 @@ export default function BizFiDashboardPage() {
                                     onClick={() => setShowWalletModal(true)}
                                     className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all bg-gray-900/40 border border-gray-800 hover:border-white/50 group active:scale-95 flex items-center gap-2 shadow-inner min-w-fit"
                                 >
-                                    <HiOutlineWallet className="w-4 h-4 text-white" />
+                                    <Activity01Icon className="w-4 h-4 text-white" />
                                     <span className="text-xs font-bold text-gray-300">{address.slice(0, 4)}...{address.slice(-4)}</span>
                                 </button>
                                 <button
@@ -262,7 +248,7 @@ export default function BizFiDashboardPage() {
                                     className="px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all bg-transparent border-none text-gray-400 hover:text-red-400 active:scale-95 flex items-center gap-1.5 sm:gap-2 min-w-fit"
                                     title="Logout"
                                 >
-                                    <HiOutlineArrowRightOnRectangle className="w-4 h-4 font-bold" />
+                                    <Logout01Icon className="w-4 h-4 font-bold" />
                                     <span className="hidden sm:inline text-xs font-bold">Logout</span>
                                 </button>
                             </div>
@@ -277,7 +263,7 @@ export default function BizFiDashboardPage() {
                     className="mb-8 text-center"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(44, 62, 93, 0.5) 0%, rgba(129, 215, 180, 0.1) 100%)', borderColor: 'rgba(129, 215, 180, 0.3)' }}>
-                        <HiOutlineCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4]" />
+                        <Tick01Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4]" />
                         <p className="text-xs sm:text-base md:text-lg leading-relaxed whitespace-nowrap" style={{ color: '#7B8B9A' }}>
                             <span className="text-[#81D7B4] font-bold">{(1000 + businessCount).toLocaleString()}</span> Real World Businesses have listed Onchain
                         </p>
@@ -288,11 +274,11 @@ export default function BizFiDashboardPage() {
                     <div className="flex flex-col items-center justify-center py-20 px-4">
                         <div className="backdrop-blur-sm rounded-2xl border p-8 max-w-lg w-full text-center" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
                             <div className="p-4 rounded-full inline-block mb-4" style={{ backgroundColor: 'rgba(129, 215, 180, 0.1)' }}>
-                                <HiOutlineRocketLaunch className="w-10 h-10 text-[#81D7B4]" />
+                                <Activity01Icon className="w-10 h-10 text-[#81D7B4]" />
                             </div>
                             <h2 className="text-2xl font-bold mb-4" style={{ color: '#F9F9FB' }}>Login to BizFi</h2>
                             <p className="mb-8" style={{ color: '#7B8B9A' }}>
-                                Log in with your Email, X (Twitter), or connect a wallet to list your business and access the dashboard features.
+                                Log in with your Email, Cancel (Twitter), or connect a wallet to list your business and access the dashboard features.
                             </p>
                             <div className="flex justify-center w-full">
                                 <BizFiAuthButton className="w-full" />
@@ -318,10 +304,10 @@ export default function BizFiDashboardPage() {
                             <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-gray-800 p-4 sm:p-8">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>
-                                        <HiOutlineClipboardDocumentCheck className="w-6 h-6 text-[#81D7B4]" />
+                                        <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>List Your Business</h2>
+                                        <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>ListView Your Business</h2>
                                         <p className="text-sm" style={{ color: '#7B8B9A' }}>Fill the form to bring your business onchain</p>
                                     </div>
                                 </div>
@@ -379,7 +365,7 @@ export default function BizFiDashboardPage() {
                                             className="text-[#81D7B4] hover:underline font-semibold inline-flex items-center gap-1 group"
                                         >
                                             Head to your referrals page to get one
-                                            <HiOutlineArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                            <Activity01Icon className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                         </Link>
                                     </p>
                                     <div className="flex gap-2">
@@ -399,7 +385,7 @@ export default function BizFiDashboardPage() {
                                         )}
                                         {!validatingReferral && isReferralValid && (
                                             <div className="flex items-center gap-1 text-sm font-bold px-3" style={{ color: '#81D7B4' }}>
-                                                <HiOutlineCheckCircle className="w-5 h-5" />
+                                                <Tick01Icon className="w-5 h-5" />
                                                 <span>-${selectedTier.price - selectedTier.referralPrice}</span>
                                             </div>
                                         )}
@@ -427,18 +413,18 @@ export default function BizFiDashboardPage() {
                         {/* Sidebar / Info */}
                         <div className="space-y-6">
                             <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
-                                <h3 className="text-lg font-bold mb-4" style={{ color: '#F9F9FB' }}>Why List on BizFi?</h3>
+                                <h3 className="text-lg font-bold mb-4" style={{ color: '#F9F9FB' }}>Why ListView on BizFi?</h3>
                                 <ul className="space-y-3">
                                     <li className="flex gap-3">
-                                        <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
+                                        <div className="mt-1"><Tick01Icon className="w-5 h-5 text-[#81D7B4]" /></div>
                                         <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global investors from the web3 space.</p>
                                     </li>
                                     <li className="flex gap-3">
-                                        <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
+                                        <div className="mt-1"><Tick01Icon className="w-5 h-5 text-[#81D7B4]" /></div>
                                         <p className="text-sm" style={{ color: '#7B8B9A' }}>Tokenize equity or revenue streams easily.</p>
                                     </li>
                                     <li className="flex gap-3">
-                                        <div className="mt-1"><HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4]" /></div>
+                                        <div className="mt-1"><Tick01Icon className="w-5 h-5 text-[#81D7B4]" /></div>
                                         <p className="text-sm" style={{ color: '#7B8B9A' }}>Automated compliance and investor management.</p>
                                     </li>
                                 </ul>
@@ -477,7 +463,7 @@ export default function BizFiDashboardPage() {
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 w-full py-2.5 font-bold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 mt-3"
                                     >
-                                        <FaWhatsapp className="w-5 h-5" />
+                                        <WhatsappIcon className="w-5 h-5" />
                                         WhatsApp
                                     </a>
                                 </div>
@@ -603,7 +589,7 @@ export default function BizFiDashboardPage() {
                                             </p>
                                             <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-[#81D7B4]">
                                                 <span>Get Help Now</span>
-                                                <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                <Activity01Icon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                             </div>
                                         </div>
                                     </div>

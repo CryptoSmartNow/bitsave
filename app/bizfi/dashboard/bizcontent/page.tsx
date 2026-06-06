@@ -1,16 +1,9 @@
-"use client";
+'use client';
+
+import { Activity01Icon, ViewIcon, PlusSignIcon, Cancel01Icon } from "hugeicons-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import Link from "next/link";
-import {
-    HiOutlineVideoCamera,
-    HiOutlinePlay,
-    HiOutlineEye,
-    HiOutlineClock,
-    HiOutlinePlus,
-    HiOutlineFunnel,
-    HiOutlineXMark
-} from "react-icons/hi2";
+import Link from 'next/link';
 import { Exo } from "next/font/google";
 import "../../bizfi-colors.css";
 
@@ -124,7 +117,7 @@ function VideoPlayerModal({ videoId, isOpen, onClose }: { videoId: string | null
                     onClick={onClose}
                     className="absolute top-4 right-4 z-[110] p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10 group"
                 >
-                    <HiOutlineXMark className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                    <Cancel01Icon className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 </button>
                 <iframe
                     className="w-full h-full"
@@ -179,7 +172,7 @@ export default function BizContentPage() {
 
                     {/* Category Filter */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                        <HiOutlineFunnel className="w-5 h-5 text-gray-400 hidden sm:block" />
+                        <Activity01Icon className="w-5 h-5 text-gray-400 hidden sm:block" />
                         <div className="flex gap-2 overflow-x-auto pb-2 w-full sm:w-auto scrollbar-hide">
                             {CATEGORIES.map((category) => (
                                 <button
@@ -218,7 +211,7 @@ export default function BizContentPage() {
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-[2px]">
                                     <div className="w-16 h-16 rounded-full bg-[#81D7B4] flex items-center justify-center shadow-[0_0_30px_rgba(129,215,180,0.5)] transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                        <HiOutlinePlay className="w-8 h-8 text-gray-900 ml-1" />
+                                        <Activity01Icon className="w-8 h-8 text-gray-900 ml-1" />
                                     </div>
                                 </div>
                                 <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/80 backdrop-blur-sm rounded-lg text-[10px] font-black border border-white/10 uppercase tracking-widest text-white">
@@ -239,11 +232,11 @@ export default function BizContentPage() {
                                 </h3>
                                 <div className="mt-auto flex items-center justify-between text-[11px] font-medium text-gray-400">
                                     <div className="flex items-center gap-1.5">
-                                        <HiOutlineEye className="w-4 h-4 text-[#81D7B4]" />
+                                        <ViewIcon className="w-4 h-4 text-[#81D7B4]" />
                                         <span>{item.views.toLocaleString()} views</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <HiOutlineClock className="w-4 h-4" />
+                                        <Activity01Icon className="w-4 h-4" />
                                         <span>{item.uploadDate}</span>
                                     </div>
                                 </div>
@@ -256,7 +249,7 @@ export default function BizContentPage() {
                 {filteredContent.length === 0 && (
                     <div className="text-center py-24 bg-gray-900/20 rounded-[3rem] border border-dashed border-gray-800 mt-8">
                         <div className="w-20 h-20 rounded-full bg-gray-800/50 flex items-center justify-center mx-auto mb-6 text-gray-600">
-                            <HiOutlineVideoCamera className="w-10 h-10" />
+                            <Activity01Icon className="w-10 h-10" />
                         </div>
                         <h3 className="text-2xl font-bold text-gray-400 mb-2">No content found</h3>
                         <p className="text-gray-500">Try selecting a different category from the filters above.</p>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaRobot } from 'react-icons/fa6';
+import { Activity01Icon } from "hugeicons-react";
 
 interface NLPInputBlockProps {
     nlpText: string;
@@ -31,7 +31,7 @@ export default function NLPInputBlock({
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                            <FaRobot className="w-5 h-5" />
+                            <Activity01Icon className="w-5 h-5" />
                         </div>
                         <h3 className="text-xl font-black text-[#0f172a] tracking-tight">AI Assistant</h3>
                     </div>

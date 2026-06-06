@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Share2, Copy, Check, Linkedin } from 'lucide-react';
+import { Share01Icon, Copy01Icon, Tick01Icon, Linkedin01Icon } from "hugeicons-react";
 
 interface ShareButtonsProps {
   url: string;
@@ -10,7 +10,7 @@ interface ShareButtonsProps {
   className?: string;
 }
 
-// X (formerly Twitter) icon component
+// Cancel (formerly Twitter) icon component
 const XIcon = ({ className = '' }: { className?: string }) => (
   <svg
     className={className}
@@ -80,7 +80,7 @@ export default function ShareButtons({
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
       <span className="text-sm font-medium text-gray-700 flex items-center">
-        <Share2 className="w-4 h-4 mr-2" />
+        <Share01Icon className="w-4 h-4 mr-2" />
         Share:
       </span>
       
@@ -92,23 +92,23 @@ export default function ShareButtons({
           title="Copy link"
         >
           {copied ? (
-            <Check className="w-4 h-4 text-green-600" />
+            <Tick01Icon className="w-4 h-4 text-green-600" />
           ) : (
-            <Copy className="w-4 h-4 group-hover:text-gray-900" />
+            <Copy01Icon className="w-4 h-4 group-hover:text-gray-900" />
           )}
           <span className="ml-2 text-sm">
             {copied ? 'Copied!' : 'Copy'}
           </span>
         </button>
 
-        {/* X (Twitter) Button - Greyed Out */}
+        {/* Cancel (Twitter) Button - Greyed Out */}
         <button
           onClick={shareOnX}
           className="flex items-center px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-600 hover:text-gray-700 rounded-lg transition-colors opacity-60 hover:opacity-80"
-          title="Share on X"
+          title="Share on Cancel"
         >
           <XIcon className="w-4 h-4" />
-          <span className="ml-2 text-sm">X</span>
+          <span className="ml-2 text-sm">Cancel</span>
         </button>
 
         {/* LinkedIn Button - Greyed Out */}
@@ -117,7 +117,7 @@ export default function ShareButtons({
           className="flex items-center px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-600 hover:text-gray-700 rounded-lg transition-colors opacity-60 hover:opacity-80"
           title="Share on LinkedIn"
         >
-          <Linkedin className="w-4 h-4" />
+          <Linkedin01Icon className="w-4 h-4" />
           <span className="ml-2 text-sm">LinkedIn</span>
         </button>
 
@@ -128,7 +128,7 @@ export default function ShareButtons({
             className="flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors md:hidden"
             title="Share"
           >
-            <Share2 className="w-4 h-4" />
+            <Share01Icon className="w-4 h-4" />
             <span className="ml-2 text-sm">Share</span>
           </button>
         )}

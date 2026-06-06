@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
+import { Logout01Icon } from "hugeicons-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount, useDisconnect } from "wagmi";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { HiOutlineArrowLeftOnRectangle } from "react-icons/hi2";
 import { useState, useEffect } from "react";
 
 /**
@@ -61,7 +61,7 @@ export function BizFiAuthButton({ className }: { className?: string }) {
                     className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors text-sm font-medium"
                     title="Disconnect Wallet"
                 >
-                    <HiOutlineArrowLeftOnRectangle className="w-5 h-5" />
+                    <Logout01Icon className="w-5 h-5" />
                 </button>
             </div>
         );

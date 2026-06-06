@@ -1,4 +1,4 @@
-import { HiOutlineInbox } from "react-icons/hi2";
+import {  Activity01Icon , InboxIcon } from 'hugeicons-react';
 
 interface EmptyStateProps {
     title?: string;
@@ -11,7 +11,7 @@ interface EmptyStateProps {
 export default function EmptyState({
     title = "No Data Available",
     description = "There is no information to display at this time.",
-    icon: Icon = HiOutlineInbox,
+    icon: Icon = InboxIcon,
     actionLabel,
     onAction
 }: EmptyStateProps) {

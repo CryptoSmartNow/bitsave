@@ -1,23 +1,12 @@
-'use client'
+'use client';
 
+import { Award01Icon, Medal01Icon, CrownIcon, UserMultipleIcon, SparklesIcon, Target01Icon, GiftIcon, CalculatorIcon, ArrowUpRight01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
-import { 
-  Trophy, 
-  Medal, 
-  Award, 
-  Crown, 
-  Users, 
-  Sparkles,
-  Target,
-  Gift,
-  Calculator,
-  ArrowUpRight
-} from 'lucide-react';
 
 // Initialize the Exo font
 const exo = Exo({ 
@@ -26,7 +15,7 @@ const exo = Exo({
   variable: '--font-exo'
 })
 
-// Helper to ensure safe image URLs for Next.js Image
+// Helper to ensure safe image URLs for Next.js AiImage
 const ensureImageUrl = (url?: string): string => {
   if (!url) return '/default-network.png';
   if (url.startsWith('//')) return `https:${url}`;
@@ -65,7 +54,7 @@ export default function LeaderboardPage() {
     // Get current user's wallet address using ethers
     const getUserWalletAddress = async () => {
       try {
-        // Check if window.ethereum is available (MetaMask or other wallet)
+        // Tick if window.ethereum is available (MetaMask or other wallet)
         if (typeof window !== 'undefined' && window.ethereum) {
           // Request account access if needed
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
@@ -179,7 +168,7 @@ export default function LeaderboardPage() {
               className="flex items-center gap-3 mb-2"
             >
               <div className="p-2.5 bg-[#81D7B4]/10 rounded-xl">
-                <Trophy className="w-6 h-6 text-[#81D7B4]" />
+                <Award01Icon className="w-6 h-6 text-[#81D7B4]" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Leaderboard</h1>
             </motion.div>
@@ -237,7 +226,7 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="w-full bg-gradient-to-t from-gray-100 to-white rounded-t-2xl border-x border-t border-gray-200 h-28 sm:h-40 flex items-end justify-center pb-4 shadow-sm relative overflow-hidden group-hover:shadow-md transition-shadow">
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50/50"></div>
-                      <Medal className="w-8 h-8 text-gray-300 opacity-20 absolute top-4" />
+                      <Medal01Icon className="w-8 h-8 text-gray-300 opacity-20 absolute top-4" />
                       <span className="text-2xl sm:text-4xl font-bold text-gray-300/50">2</span>
                     </div>
                   </div>
@@ -247,7 +236,7 @@ export default function LeaderboardPage() {
                 {leaderboardData[0] && (
                   <div className="flex flex-col items-center z-10 group cursor-pointer" onClick={() => openUserDetails(leaderboardData[0])}>
                     <div className="relative mb-3 transition-transform group-hover:-translate-y-2 duration-300">
-                      <Crown className="w-8 h-8 text-yellow-400 absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce drop-shadow-sm" />
+                      <CrownIcon className="w-8 h-8 text-yellow-400 absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce drop-shadow-sm" />
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border-4 border-yellow-100 p-1 shadow-xl ring-4 ring-yellow-50/50">
                         <div className="w-full h-full rounded-full bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center text-yellow-600 font-bold text-2xl sm:text-3xl">
                           {leaderboardData[0].useraddress.slice(0, 2)}
@@ -265,7 +254,7 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="w-full bg-gradient-to-t from-yellow-50/50 to-white rounded-t-2xl border-x border-t border-yellow-200 h-36 sm:h-52 flex items-end justify-center pb-4 shadow-lg shadow-yellow-100/50 relative overflow-hidden group-hover:shadow-xl transition-shadow">
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-yellow-50/30"></div>
-                      <Trophy className="w-10 h-10 text-yellow-300 opacity-30 absolute top-6" />
+                      <Award01Icon className="w-10 h-10 text-yellow-300 opacity-30 absolute top-6" />
                       <span className="text-3xl sm:text-5xl font-bold text-yellow-400/30">1</span>
                     </div>
                   </div>
@@ -292,7 +281,7 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="w-full bg-gradient-to-t from-orange-50/30 to-white rounded-t-2xl border-x border-t border-orange-100 h-20 sm:h-32 flex items-end justify-center pb-4 shadow-sm relative overflow-hidden group-hover:shadow-md transition-shadow">
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-orange-50/20"></div>
-                      <Award className="w-8 h-8 text-orange-300 opacity-20 absolute top-4" />
+                      <Award01Icon className="w-8 h-8 text-orange-300 opacity-20 absolute top-4" />
                       <span className="text-2xl sm:text-4xl font-bold text-orange-300/50">3</span>
                     </div>
                   </div>
@@ -300,7 +289,7 @@ export default function LeaderboardPage() {
               </motion.div>
             )}
 
-            {/* List View */}
+            {/* ListView View */}
             <motion.div 
               variants={cardVariants}
               initial="hidden"
@@ -327,7 +316,7 @@ export default function LeaderboardPage() {
               ) : leaderboardData.length === 0 ? (
                 <div className="p-16 text-center">
                   <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-10 h-10 text-gray-300" />
+                    <UserMultipleIcon className="w-10 h-10 text-gray-300" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-1">No Data Available</h3>
                   <p className="text-gray-500">Be the first to join the leaderboard!</p>
@@ -366,7 +355,7 @@ export default function LeaderboardPage() {
                           index === 1 ? 'bg-gray-100 text-gray-600' :
                           index === 2 ? 'bg-orange-50 text-orange-600' : 'bg-[#81D7B4]/10 text-[#81D7B4]'
                         }`}>
-                          <Users className="w-5 h-5" />
+                          <UserMultipleIcon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold text-gray-900 text-sm group-hover:text-[#2D5A4A] transition-colors flex items-center gap-2">
@@ -423,7 +412,7 @@ export default function LeaderboardPage() {
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#81D7B4]/20 to-transparent rounded-bl-full -mr-10 -mt-10"></div>
               
               <h3 className="font-bold text-gray-900 mb-6 relative z-10 flex items-center gap-2">
-                <Target className="w-5 h-5 text-[#81D7B4]" />
+                <Target01Icon className="w-5 h-5 text-[#81D7B4]" />
                 Your Performance
               </h3>
               
@@ -435,7 +424,7 @@ export default function LeaderboardPage() {
                       <span className="font-bold text-3xl text-[#2D5A4A]">#{currentUserPosition.rank}</span>
                     </div>
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#81D7B4] shadow-sm">
-                      <Trophy className="w-6 h-6" />
+                      <Award01Icon className="w-6 h-6" />
                     </div>
                   </div>
                   
@@ -464,7 +453,7 @@ export default function LeaderboardPage() {
               ) : (
                 <div className="text-center py-8 relative z-10">
                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                    <Target className="w-8 h-8 text-gray-400" />
+                    <Target01Icon className="w-8 h-8 text-gray-400" />
                   </div>
                   <p className="text-gray-900 font-bold mb-1">Not Ranked Yet</p>
                   <p className="text-sm text-gray-500 mb-6 max-w-[200px] mx-auto">Start saving at least $10 to join the leaderboard and earn rewards.</p>
@@ -488,7 +477,7 @@ export default function LeaderboardPage() {
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-[#81D7B4]/10 rounded-xl shrink-0 text-[#81D7B4]">
-                    <Calculator className="w-6 h-6" />
+                    <CalculatorIcon className="w-6 h-6" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm mb-1">How Scoring Works</h4>
@@ -507,7 +496,7 @@ export default function LeaderboardPage() {
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-orange-100 rounded-xl shrink-0 text-orange-500">
-                    <Gift className="w-6 h-6" />
+                    <GiftIcon className="w-6 h-6" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm mb-1">Weekly Rewards</h4>
@@ -559,7 +548,7 @@ export default function LeaderboardPage() {
                     selectedUser.rank === 2 ? 'bg-gray-100 text-gray-600' :
                     selectedUser.rank === 3 ? 'bg-orange-50 text-orange-600' : 'bg-[#81D7B4]/10 text-[#81D7B4]'
                   }`}>
-                    <Users className="w-10 h-10" />
+                    <UserMultipleIcon className="w-10 h-10" />
                   </div>
                   
                   <div className="flex items-center gap-2 mb-2">
@@ -615,7 +604,7 @@ export default function LeaderboardPage() {
                   className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
                 >
                   View on Explorer
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight01Icon className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>

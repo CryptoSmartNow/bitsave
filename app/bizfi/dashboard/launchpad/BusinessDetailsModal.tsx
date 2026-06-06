@@ -1,18 +1,9 @@
-"use client";
+'use client';
+
+import { Cancel01Icon, Activity01Icon, Dollar01Icon, UserMultipleIcon, Building04Icon, Briefcase01Icon, BulbIcon, GlobeIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-    HiOutlineXMark,
-    HiOutlineDocumentText,
-    HiOutlineBuildingOffice2,
-    HiOutlineCurrencyDollar,
-    HiOutlineUsers,
-    HiOutlineGlobeAlt,
-    HiOutlineBriefcase,
-    HiOutlineLightBulb,
-    HiOutlineClipboardDocumentCheck
-} from "react-icons/hi2";
 
 interface BusinessDetailsModalProps {
     isOpen: boolean;
@@ -26,7 +17,7 @@ const SECTIONS = [
     {
         id: 'overview',
         label: 'Identity & Overview',
-        icon: HiOutlineBuildingOffice2,
+        icon: Building04Icon,
         fields: [
             // Core
             'businessName', 'startupName', 'registeredBusinessName', 'entRegisteredName',
@@ -43,7 +34,7 @@ const SECTIONS = [
     {
         id: 'financials',
         label: 'Financials & Funding',
-        icon: HiOutlineCurrencyDollar,
+        icon: Dollar01Icon,
         fields: [
             // Revenue/Expenses
             'monthlyRevenue', 'revenueCurrency', 'monthlyExpenses', 'expensesCurrency',
@@ -60,7 +51,7 @@ const SECTIONS = [
     {
         id: 'products',
         label: 'Products & Operations',
-        icon: HiOutlineBriefcase,
+        icon: Briefcase01Icon,
         fields: [
             'mainProducts', 'revenueChannels', 'salesChannels', 'revenueModel',
             'customersPerMonth', 'customerBaseSize', 'earlyUsers', 'repeatCustomers', 'returningCustomersPercent',
@@ -71,7 +62,7 @@ const SECTIONS = [
     {
         id: 'vision',
         label: 'Strategy & Vision',
-        icon: HiOutlineLightBulb,
+        icon: BulbIcon,
         fields: [
             // Problem/Solution
             'problemSolving', 'solutionWork', 'validation',
@@ -85,7 +76,7 @@ const SECTIONS = [
     {
         id: 'team',
         label: 'Team & Management',
-        icon: HiOutlineUsers,
+        icon: UserMultipleIcon,
         fields: [
             'name', 'email', 'phone', 'ownerName', 'businessEmail', 'businessPhone',
             'teamSize', 'entTeamSize',
@@ -96,7 +87,7 @@ const SECTIONS = [
     {
         id: 'socials',
         label: 'Online Presence & Links',
-        icon: HiOutlineGlobeAlt,
+        icon: GlobeIcon,
         fields: [
             'website', 'twitter', 'linkedin', 'instagram', 'facebook', 'telegram', 'discord',
             'whitepaperUrl', 'pitchDeckUrl', 'mvpLink', 'googleBusinessLink',
@@ -229,7 +220,7 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                     <div className="flex items-center justify-between px-4 md:px-8 py-5 border-b border-gray-800 bg-[#0A1016]">
                         <div className="flex items-center gap-4 overflow-hidden">
                             <div className="p-2.5 rounded-xl bg-[#81D7B4]/10 text-[#81D7B4] flex-shrink-0">
-                                <HiOutlineDocumentText className="w-6 h-6" />
+                                <Activity01Icon className="w-6 h-6" />
                             </div>
                             <div className="min-w-0">
                                 <h2 className="text-xl md:text-2xl font-bold text-white truncate">
@@ -249,7 +240,7 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                                 onClick={onClose}
                                 className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
                             >
-                                <HiOutlineXMark className="w-6 h-6" />
+                                <Cancel01Icon className="w-6 h-6" />
                             </button>
                         </div>
                     </div>
@@ -266,7 +257,7 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                                 return undefined;
                             };
 
-                            // Check if any fields in this section have data
+                            // Tick if any fields in this section have data
                             const hasData = section.fields.some(field => {
                                 const val = getValue(data, field);
                                 return val && String(val).trim() !== '';
@@ -323,7 +314,7 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                                 rel="noopener noreferrer"
                                 className="w-full md:w-auto bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-[#81D7B4] px-8 py-3 rounded-xl text-sm font-bold transition-all border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 flex items-center justify-center gap-2"
                             >
-                                <HiOutlineClipboardDocumentCheck className="w-5 h-5" />
+                                <Activity01Icon className="w-5 h-5" />
                                 View Attestation
                             </a>
                         )}

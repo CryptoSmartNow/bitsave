@@ -1,8 +1,8 @@
 'use client';
 
+import { Activity01Icon, BarChartIcon, PieChartIcon, ArrowUpRight01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
-import { 
-  LineChart, 
+import { LineChart, 
   Line, 
   XAxis, 
   YAxis, 
@@ -17,9 +17,8 @@ import {
   Cell,
   AreaChart,
   Area
-} from 'recharts';
+ } from 'recharts';
 import { UserInteraction } from '@/lib/interactionTracker';
-import { Activity, BarChart3, PieChart as PieIcon, TrendingUp } from 'lucide-react';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 export default function AnalyticsPage() {
@@ -103,7 +102,7 @@ export default function AnalyticsPage() {
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#81D7B4]" />
+            <ArrowUpRight01Icon className="w-5 h-5 text-[#81D7B4]" />
             Activity Timeline
           </h3>
         </div>
@@ -139,7 +138,7 @@ export default function AnalyticsPage() {
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <PieIcon className="w-5 h-5 text-[#81D7B4]" />
+              <PieChart className="w-5 h-5 text-[#81D7B4]" />
               Action Distribution
             </h3>
           </div>
@@ -173,7 +172,7 @@ export default function AnalyticsPage() {
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#81D7B4]" />
+              <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
               Hourly Activity (UTC)
             </h3>
           </div>

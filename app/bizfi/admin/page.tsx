@@ -1,10 +1,10 @@
 'use client';
 
+import { Building04Icon, Search01Icon, FilterIcon, ArrowUpRight01Icon, Clock01Icon, TickDouble01Icon, Alert01Icon, MoreVerticalIcon, Download01Icon, TextIcon, DatabaseIcon } from "hugeicons-react";
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import {
-  AreaChart,
+import { AreaChart,
   Area,
   XAxis,
   YAxis,
@@ -16,20 +16,7 @@ import {
   Cell,
   PieChart,
   Pie
-} from 'recharts';
-import {
-  Building2,
-  Search,
-  Filter,
-  ArrowUpRight,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  MoreVertical,
-  Download,
-  FileText,
-  Import
-} from 'lucide-react';
+ } from 'recharts';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import LoanAgreementEditor from './components/LoanAgreementEditor';
@@ -190,7 +177,7 @@ export default function BizFiAdminPage() {
   if (error) {
     return (
       <div className="p-6 bg-red-900/10 border border-red-900/30 rounded-2xl text-red-200 flex items-center gap-3">
-        <AlertCircle className="w-6 h-6" />
+        <Alert01Icon className="w-6 h-6" />
         {error}
       </div>
     );
@@ -251,7 +238,7 @@ export default function BizFiAdminPage() {
     >
       {error && (
         <div className="p-6 bg-red-900/10 border border-red-900/30 rounded-2xl text-red-200 flex items-center gap-3">
-          <AlertCircle className="w-6 h-6" />
+          <Alert01Icon className="w-6 h-6" />
           {error}
         </div>
       )}
@@ -277,7 +264,7 @@ export default function BizFiAdminPage() {
             onClick={handleExport}
             className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-5 py-2.5 bg-[#1A2538] hover:bg-[#253247] text-[#F9F9FB] rounded-xl text-sm font-medium transition-all border border-[#7B8B9A]/20 active:scale-95"
           >
-            <Download className="w-4 h-4" />
+            <Download01Icon className="w-4 h-4" />
             Export Report
           </button>
           <button
@@ -298,11 +285,11 @@ export default function BizFiAdminPage() {
             <h3 className="text-3xl font-bold text-[#F9F9FB] tracking-tight">{metrics?.totalBusinesses || 0}</h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
-            <Building2 className="w-5 h-5" />
+            <Building04Icon className="w-5 h-5" />
           </div>
           <div className="relative z-10 mt-4 flex items-center gap-2 text-xs">
             <span className="text-green-400 flex items-center gap-0.5 font-bold bg-green-400/10 px-1.5 py-0.5 rounded">
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowUpRight01Icon className="w-3 h-3" />
               12%
             </span>
             <span className="text-[#7B8B9A] font-medium whitespace-nowrap">vs last month</span>
@@ -317,7 +304,7 @@ export default function BizFiAdminPage() {
             </h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
-            <CheckCircle2 className="w-5 h-5" />
+            <TickDouble01Icon className="w-5 h-5" />
           </div>
           <div className="relative z-10 mt-4 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse"></span>
@@ -333,7 +320,7 @@ export default function BizFiAdminPage() {
             </h3>
           </div>
           <div className="absolute top-5 right-5 w-10 h-10 rounded-xl bg-[#81D7B4]/5 border border-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-all">
-            <Clock className="w-5 h-5" />
+            <Clock01Icon className="w-5 h-5" />
           </div>
           <div className="relative z-10 mt-4 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
@@ -462,7 +449,7 @@ export default function BizFiAdminPage() {
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
             {/* Search Bar */}
             <div className="relative flex-1 sm:w-72">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A]" />
+              <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A]" />
               <input
                 type="text"
                 placeholder="Search by business or owner name..."
@@ -484,7 +471,7 @@ export default function BizFiAdminPage() {
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
               </select>
-              <Filter className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
+              <FilterIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
             </div>
           </div>
         </div>
@@ -508,7 +495,7 @@ export default function BizFiAdminPage() {
                 <tr>
                   <td colSpan={7} className="px-6 py-16 text-center text-[#9BA8B5]">
                     <div className="flex flex-col items-center gap-4 opacity-50">
-                      <Search className="w-8 h-8 opacity-40" />
+                      <Search01Icon className="w-8 h-8 opacity-40" />
                       <p className="text-sm font-medium">No businesses found matching your criteria</p>
                     </div>
                   </td>
@@ -573,7 +560,7 @@ export default function BizFiAdminPage() {
                           <option value="rejected">Rejected</option>
                         </select>
                         <button className="p-2 rounded-lg hover:bg-[#1A2538] text-[#7B8B9A] group-hover/action:text-[#81D7B4] group-hover/action:bg-[#81D7B4]/10 transition-all">
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVerticalIcon className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -589,7 +576,7 @@ export default function BizFiAdminPage() {
           {filteredBusinesses.length === 0 ? (
             <div className="px-6 py-12 text-center text-[#9BA8B5]">
               <div className="flex flex-col items-center gap-3">
-                <Search className="w-8 h-8 opacity-20" />
+                <Search01Icon className="w-8 h-8 opacity-20" />
                 <p>No businesses found</p>
               </div>
             </div>

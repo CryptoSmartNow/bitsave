@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ViewIcon } from "hugeicons-react";
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { Eye } from 'lucide-react';
 
 interface ViewCounterProps {
   postId: string;
@@ -75,7 +75,7 @@ export default function ViewCounter({
   return (
     <div className={`flex items-center space-x-2 text-gray-600 ${className}`}>
       {showIcon && (
-        <Eye className="w-4 h-4 text-blue-500" style={{ color: 'var(--primary)' }} />
+        <ViewIcon className="w-4 h-4 text-blue-500" style={{ color: 'var(--primary)' }} />
       )}
       <span className="text-sm font-medium text-gray-700">
         {formatNumber(analytics.viewCount)} {analytics.viewCount === 1 ? 'view' : 'views'}

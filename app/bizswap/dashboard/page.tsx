@@ -1,24 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon } from "hugeicons-react";
+import * as htmlToImage from 'html-to-image';
+import QRCode from 'react-qr-code';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  HiOutlineBriefcase, 
-  HiOutlineArrowTrendingUp, 
-  HiOutlineClock, 
-  HiOutlineCalendar,
-  HiOutlineChevronDown,
-  HiOutlineArrowUpRight,
-  HiOutlineArrowDownTray,
-  HiOutlineBell,
-  HiOutlineCheckCircle,
-  HiOutlineMegaphone,
-  HiOutlineChartBar,
-  HiOutlineShieldCheck,
-  HiOutlineCurrencyDollar,
-  HiOutlineInformationCircle
-} from 'react-icons/hi2';
+import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
+import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
+import { CertificateCard } from '@/components/CertificateCard';
 
 interface Holding {
   _id: string;
@@ -35,18 +25,34 @@ interface Holding {
 }
 
 export default function BizSwapStandaloneDashboard() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
+  
+  const connected = ready && (authenticated || isSolanaConnected);
+  
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  
+  const walletAddress = isSolanaConnected 
+    ? publicKey?.toBase58() 
+    : (privySolanaWallet?.address || user?.wallet?.address);
+
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCert, setSelectedCert] = useState<Holding | null>(null);
+  const certificateRef = useRef<HTMLDivElement>(null);
+
+  const program = useBizSwapProgram();
 
   useEffect(() => {
-    if (connected && publicKey) {
-      fetchHoldings(publicKey.toBase58());
-    } else {
+    if (connected && walletAddress) {
+      fetchHoldings(walletAddress);
+    } else if (!connected && ready) {
       setHoldings([]);
       setLoading(false);
     }
-  }, [connected, publicKey]);
+  }, [connected, walletAddress, ready]);
 
   const fetchHoldings = async (wallet: string) => {
     setLoading(true);
@@ -66,6 +72,43 @@ export default function BizSwapStandaloneDashboard() {
     }
   };
 
+  const downloadCertificate = async () => {
+    if (!certificateRef.current || !selectedCert) return;
+    
+    try {
+      const toastId = toast.loading('Generating certificate image...', { id: 'download-cert' });
+      
+      // Temporarily hide the close and download buttons for the snapshot
+      const closeBtn = document.getElementById('cert-close-btn');
+      const actionBtns = document.getElementById('cert-action-btns');
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (actionBtns) actionBtns.style.display = 'none';
+
+      // Use html-to-image to take a high quality snapshot
+      const dataUrl = await htmlToImage.toPng(certificateRef.current, {
+        backgroundColor: '#0F1825',
+        pixelRatio: 2, // High resolution
+        style: {
+          margin: '0',
+        }
+      });
+      
+      // Restore buttons
+      if (closeBtn) closeBtn.style.display = 'block';
+      if (actionBtns) actionBtns.style.display = 'flex';
+
+      const link = document.createElement('a');
+      link.download = `BizMarket-Certificate-${selectedCert.serialNumber}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast.success('Certificate downloaded successfully!', { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download certificate', { id: 'download-cert' });
+    }
+  };
+
   const totalValue = holdings.reduce((sum, h) => sum + h.investmentAmount, 0);
 
   // Compute real figures based on holdings
@@ -81,13 +124,21 @@ export default function BizSwapStandaloneDashboard() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getInstrumentIcon = (name: string) => {
-    switch(name) {
-      case 'BizYield': return <HiOutlineChartBar className="w-5 h-5 text-[#FF6B6B]" />;
-      case 'BizCredit': return <HiOutlineCurrencyDollar className="w-5 h-5 text-[#3B82F6]" />;
-      case 'BizBond': return <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4]" />;
-      default: return <HiOutlineBriefcase className="w-5 h-5 text-[#7B8B9A]" />;
-    }
+  const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5") => {
+    let initials = 'BZ';
+    let colorClass = 'text-[#7B8B9A]';
+    if (name === 'BizYield') { initials = 'BY'; colorClass = 'text-[#FF6B6B]'; }
+    if (name === 'BizCredit') { initials = 'BC'; colorClass = 'text-[#3B82F6]'; }
+    if (name === 'BizBond') { initials = 'BB'; colorClass = 'text-[#81D7B4]'; }
+
+    return (
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${sizeClass} ${colorClass}`}>
+        <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1"/>
+        <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="9" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
+          {initials}
+        </text>
+      </svg>
+    );
   };
 
   const getInstrumentColorClass = (name: string, type: 'bg' | 'border' | 'text' | 'gradientFrom') => {
@@ -102,7 +153,7 @@ export default function BizSwapStandaloneDashboard() {
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <HiOutlineChartBar className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
         <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet in the top right to view your portfolio.</p>
       </div>
@@ -123,7 +174,7 @@ export default function BizSwapStandaloneDashboard() {
             </p>
           </div>
           <div className="w-12 h-12 rounded-full bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20">
-            <HiOutlineBriefcase className="w-6 h-6 text-[#81D7B4]" />
+            <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
           </div>
         </div>
 
@@ -134,7 +185,7 @@ export default function BizSwapStandaloneDashboard() {
             <p className="text-xs text-[#4B5A75] mt-1 font-medium">Since you joined</p>
           </div>
           <div className="w-12 h-12 rounded-full bg-[#059669]/10 flex items-center justify-center border border-[#059669]/20">
-            <HiOutlineArrowTrendingUp className="w-6 h-6 text-[#059669]" />
+            <Activity01Icon className="w-6 h-6 text-[#059669]" />
           </div>
         </div>
 
@@ -145,7 +196,7 @@ export default function BizSwapStandaloneDashboard() {
             <p className="text-xs text-[#4B5A75] mt-1 font-medium">Across all instruments</p>
           </div>
           <div className="w-12 h-12 rounded-full bg-[#F5A623]/10 flex items-center justify-center border border-[#F5A623]/20">
-            <HiOutlineClock className="w-6 h-6 text-[#F5A623]" />
+            <Activity01Icon className="w-6 h-6 text-[#F5A623]" />
           </div>
         </div>
 
@@ -158,7 +209,7 @@ export default function BizSwapStandaloneDashboard() {
             </p>
           </div>
           <div className="w-12 h-12 rounded-full bg-[#3B82F6]/10 flex items-center justify-center border border-[#3B82F6]/20">
-            <HiOutlineCalendar className="w-6 h-6 text-[#3B82F6]" />
+            <Calendar01Icon className="w-6 h-6 text-[#3B82F6]" />
           </div>
         </div>
       </div>
@@ -230,7 +281,7 @@ export default function BizSwapStandaloneDashboard() {
                         </td>
                         <td className="px-5 py-4">
                           <button className="w-8 h-8 rounded-lg bg-[#1C2538] hover:bg-[#2C3E5D] flex items-center justify-center text-[#7B8B9A] transition-colors border border-[#2C3E5D]">
-                            <HiOutlineChevronDown className="w-4 h-4" />
+                            <ArrowDown01Icon className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
@@ -253,7 +304,7 @@ export default function BizSwapStandaloneDashboard() {
                   Apr 1, 2026 - May 20, 2026
                 </div>
                 <button className="flex items-center gap-2 text-xs font-bold text-[#F9F9FB] hover:text-[#81D7B4] border border-[#1C2538] bg-[#0A0F17] px-3 py-1.5 rounded-lg transition-colors">
-                  <HiOutlineArrowDownTray className="w-4 h-4" />
+                  <Download01Icon className="w-4 h-4" />
                   Export CSV
                 </button>
               </div>
@@ -349,7 +400,7 @@ export default function BizSwapStandaloneDashboard() {
           <div className="bg-[#121A27] border border-[#1C2538] rounded-2xl overflow-hidden flex flex-col">
             <div className="p-5 border-b border-[#1C2538] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
               <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB]">My Certificates</h3>
-              <button className="text-xs font-bold text-[#81D7B4] hover:underline">View all →</button>
+              <a href="/bizswap/dashboard/certificates" className="text-xs font-bold text-[#81D7B4] hover:underline">View all →</a>
             </div>
             
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
@@ -357,42 +408,21 @@ export default function BizSwapStandaloneDashboard() {
                 <div className="text-center text-[#7B8B9A] py-8">No certificates yet.</div>
               ) : (
                 holdings.map(h => (
-                  <div key={h._id} className={`rounded-xl border p-4 bg-gradient-to-b ${getInstrumentColorClass(h.instrument, 'gradientFrom')} to-transparent ${getInstrumentColorClass(h.instrument, 'border')} relative overflow-hidden group hover:border-opacity-100 transition-all`}>
+                  <div 
+                    key={h._id} 
+                    onClick={() => setSelectedCert(h)}
+                    className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden cursor-pointer group border border-[#1C2538] bg-[#0A0D10] flex justify-center items-center"
+                  >
+                    <div className="w-[1100px] flex-shrink-0 origin-center pointer-events-none scale-[0.28] sm:scale-[0.35]">
+                      <CertificateCard holding={{ ...h, wallet: walletAddress }} />
+                    </div>
+                    <div className="absolute inset-0 z-10 bg-black/0 group-hover:bg-white/5 transition-colors" />
                     
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${getInstrumentColorClass(h.instrument, 'text')}`}>{h.instrument}</p>
-                        <p className="text-xs text-[#F9F9FB] font-bold mt-1 tracking-widest">
-                          {h.instrument === 'BizYield' ? 'SHARD' : h.instrument === 'BizCredit' ? 'PRIVATE CREDIT' : 'TREASURY BACKED'}
-                        </p>
-                      </div>
-                      <div className={`p-2 rounded-lg ${getInstrumentColorClass(h.instrument, 'bg')}`}>
-                        {getInstrumentIcon(h.instrument)}
-                      </div>
-                    </div>
-
-                    <div className="text-center py-4 border-y border-[#1C2538] my-4">
-                      <p className="font-mono text-xs text-[#7B8B9A]">#BY-{h.serialNumber}</p>
-                      <span className={`inline-block mt-2 px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/20 text-[#059669]' : 'bg-[#3B82F6]/20 text-[#3B82F6]'}`}>
-                        {h.status.split('—')[0]}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[9px] text-[#4B5A75] uppercase tracking-widest">Purchased</p>
-                        <p className="text-xs font-bold text-[#F9F9FB]">{formatDate(h.purchaseDate)}</p>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[9px] text-[#4B5A75] uppercase tracking-widest">Value</p>
-                         <p className="text-sm font-bold text-[#F9F9FB]">
-                           ${h.investmentAmount} <span className="text-xs font-normal text-[#7B8B9A]">
-                             ({h.instrument === 'BizYield' ? Math.floor(h.investmentAmount / 10) : 
-                               h.instrument === 'BizCredit' ? Math.floor(h.investmentAmount / 100) : 
-                               h.instrument === 'BizBond' ? Math.floor(h.investmentAmount / 1000) : 1} Shares)
-                           </span>
-                         </p>
-                      </div>
+                    {/* Badge Overlay */}
+                    <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                       <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/90 text-white shadow-lg' : 'bg-[#3B82F6]/90 text-white shadow-lg'}`}>
+                         {h.status.split('—')[0]}
+                       </span>
                     </div>
                   </div>
                 ))
@@ -401,13 +431,56 @@ export default function BizSwapStandaloneDashboard() {
             
             {holdings.length > 0 && (
               <div className="p-4 text-center border-t border-[#1C2538] bg-[#0A0F17] mt-auto">
-                <button className="text-xs font-bold text-[#81D7B4] hover:underline">View all certificates →</button>
+                <a href="/bizswap/dashboard/certificates" className="text-xs font-bold text-[#81D7B4] hover:underline">View all certificates →</a>
               </div>
             )}
           </div>
 
         </div>
       </div>
+
+      {/* CERTIFICATE MODAL */}
+      {selectedCert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={() => setSelectedCert(null)}>
+          <div 
+            className="relative w-full max-w-[1100px] my-8 animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button 
+              id="cert-close-btn"
+              onClick={() => setSelectedCert(null)}
+              className="absolute -top-4 -right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-50 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D] shadow-lg"
+            >
+              <Cancel01Icon className="w-5 h-5" />
+            </button>
+
+            <div ref={certificateRef} className="bg-[#0F1825] rounded-xl">
+              <CertificateCard holding={{ ...selectedCert, wallet: walletAddress }} />
+            </div>
+
+            {/* Action Buttons */}
+            <div id="cert-action-btns" className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+              <button 
+                onClick={downloadCertificate}
+                className="text-xs font-bold text-[#0F1825] bg-[#81D7B4] hover:bg-[#6BC4A0] transition-colors px-6 py-2.5 rounded-full shadow-lg flex items-center gap-2"
+              >
+                <Download01Icon className="w-4 h-4" />
+                Download Certificate
+              </button>
+              <a 
+                href={`https://explorer.solana.com/address/${selectedCert.mintAddress}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#81D7B4] hover:text-[#0F1825] transition-colors border border-[#81D7B4]/50 px-6 py-2.5 rounded-full hover:bg-[#81D7B4] inline-block shadow-lg bg-[#0F1825]"
+              >
+                Verify on Solana Explorer →
+              </a>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

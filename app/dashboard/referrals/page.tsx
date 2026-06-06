@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import { Activity01Icon, Tick01Icon, UserMultipleIcon, BarChartIcon, Dollar01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
@@ -8,16 +9,6 @@ import { PageShimmer } from '@/components/ShimmerLoading';
 import { useAccount } from 'wagmi';
 import { useSavingsData } from '../../../hooks/useSavingsData';
 import Link from 'next/link';
-import {
-  HiOutlineLockClosed,
-  HiOutlineClipboardDocument,
-  HiOutlineCheck,
-  HiOutlineCursorArrowRays,
-  HiOutlineUserGroup,
-  HiOutlineChartBar,
-  HiOutlineCurrencyDollar,
-  HiOutlineShare
-} from 'react-icons/hi2';
 
 const exo = Exo({
   subsets: ['latin'],
@@ -52,7 +43,7 @@ export default function ReferralsPage() {
     await refreshReferralData();
   };
 
-  // Logic: Check if user has at least $5 in savings
+  // Logic: Tick if user has at least $5 in savings
   const totalSavings = parseFloat(savingsData?.totalLocked || '0');
   const isLocked = totalSavings < 5;
   // If we have referral data, we are loaded regardless of referralsLoading flag
@@ -100,7 +91,7 @@ export default function ReferralsPage() {
             className="max-w-lg mx-auto bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
           >
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <HiOutlineLockClosed className="w-10 h-10 text-gray-400" />
+              <Activity01Icon className="w-10 h-10 text-gray-400" />
             </div>
 
             <h2 className="text-2xl font-bold text-gray-900 mb-3">Unlock Your Referral Dashboard</h2>
@@ -137,7 +128,7 @@ export default function ReferralsPage() {
           <p className="text-gray-500">Manage your referrals and track your rewards</p>
         </div>
 
-        {/* Generate Code / Link Section */}
+        {/* Generate CodeIcon / Link Section */}
         {!referralData ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -145,7 +136,7 @@ export default function ReferralsPage() {
             className="bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-sm"
           >
             <div className="w-16 h-16 bg-[#81D7B4]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <HiOutlineShare className="w-8 h-8 text-[#81D7B4]" />
+              <Activity01Icon className="w-8 h-8 text-[#81D7B4]" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">Generate Your Referral Link</h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -183,7 +174,7 @@ export default function ReferralsPage() {
                           : 'bg-white border-[#81D7B4] text-[#81D7B4] hover:bg-[#81D7B4]/5'
                         }`}
                     >
-                      {copied ? <HiOutlineCheck className="w-5 h-5" /> : <HiOutlineClipboardDocument className="w-5 h-5" />}
+                      {copied ? <Tick01Icon className="w-5 h-5" /> : <Activity01Icon className="w-5 h-5" />}
                       {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
@@ -196,7 +187,7 @@ export default function ReferralsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-blue-50 rounded-lg text-blue-500">
-                    <HiOutlineCursorArrowRays className="w-5 h-5" />
+                    <Activity01Icon className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-500">Total Clicks</span>
                 </div>
@@ -206,7 +197,7 @@ export default function ReferralsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-purple-50 rounded-lg text-purple-500">
-                    <HiOutlineUserGroup className="w-5 h-5" />
+                    <UserMultipleIcon className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-500">Plans Created</span>
                 </div>
@@ -216,7 +207,7 @@ export default function ReferralsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-green-50 rounded-lg text-green-500">
-                    <HiOutlineChartBar className="w-5 h-5" />
+                    <BarChartIcon className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-500">Conversion Rate</span>
                 </div>
@@ -226,7 +217,7 @@ export default function ReferralsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-[#81D7B4]/10 rounded-lg text-[#81D7B4]">
-                    <HiOutlineCurrencyDollar className="w-5 h-5" />
+                    <Dollar01Icon className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-medium text-gray-500">Total Rewards</span>
                 </div>
@@ -247,7 +238,7 @@ export default function ReferralsPage() {
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${visit.converted ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
                           }`}>
-                          {visit.converted ? <HiOutlineCheck className="w-5 h-5" /> : <HiOutlineCursorArrowRays className="w-5 h-5" />}
+                          {visit.converted ? <Tick01Icon className="w-5 h-5" /> : <Activity01Icon className="w-5 h-5" />}
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">

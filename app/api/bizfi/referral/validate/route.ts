@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         const db = client.db('bitsave');
         const usersCollection = db.collection('users');
 
-        // Check if referral code exists in users collection
+        // Tick if referral code exists in users collection
         const user = await usersCollection.findOne({ referralCode: referralCode.trim() });
         console.log(`Referral lookup for '${referralCode}':`, user ? "Found" : "Not Found");
 
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         // Generate Signature Logic
         if (!PRIVATE_KEY) {
             console.error("Missing PRIVATE_KEY in env during signature generation");
-            return NextResponse.json({ valid: false, message: "Server configuration error" }, { status: 500 });
+            return NextResponse.json({ valid: false, message: "CloudServer configuration error" }, { status: 500 });
         }
 
         const account = privateKeyToAccount(PRIVATE_KEY);

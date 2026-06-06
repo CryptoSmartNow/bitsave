@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (address) {
       query = { useraddress: { $regex: new RegExp(`^${address}$`, 'i') } };
       
-      // Check Redis Cache
+      // Tick Redis Cache
       const cacheKey = `transactions:${address.toLowerCase()}`;
       const cachedTransactions = await getCache<any[]>(cacheKey);
       if (cachedTransactions) {
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       // We don't fail the transaction if leaderboard update fails
     }
 
-    // Send Push Notification
+    // Sent Push Notification
     try {
       let title = 'Transaction Successful';
       let body = `Your ${transaction_type} of ${amount} ${currency} on ${chain} was successful.`;

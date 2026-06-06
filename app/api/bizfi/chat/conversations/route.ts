@@ -82,6 +82,6 @@ export async function GET() {
         return NextResponse.json(result);
     } catch (e) {
         console.error("Error fetching conversations:", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }

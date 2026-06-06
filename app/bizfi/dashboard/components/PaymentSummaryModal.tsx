@@ -1,16 +1,7 @@
-"use client";
+'use client';
+
+import { Cancel01Icon, Tick01Icon, Activity01Icon, Shield01Icon, RefreshIcon, Alert02Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    HiOutlineXMark,
-    HiOutlineCheckCircle,
-    HiOutlineReceiptPercent,
-    HiOutlineShieldCheck,
-    HiOutlineBuildingOffice2,
-    HiOutlineTag,
-    HiOutlineArrowPath,
-    HiOutlineGift,
-    HiOutlineExclamationTriangle
-} from "react-icons/hi2";
 
 interface PaymentSummaryModalProps {
     isOpen: boolean;
@@ -118,7 +109,7 @@ export default function PaymentSummaryModal({
                             onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
                             onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
                         >
-                            <HiOutlineXMark className="w-6 h-6" />
+                            <Cancel01Icon className="w-6 h-6" />
                         </button>
 
                         <div className="flex items-center gap-3 mb-2">
@@ -126,7 +117,7 @@ export default function PaymentSummaryModal({
                                 className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                                 style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}
                             >
-                                <HiOutlineReceiptPercent className="w-6 h-6 text-[#81D7B4]" />
+                                <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-[#F9F9FB]">Payment Summary</h2>
@@ -150,7 +141,7 @@ export default function PaymentSummaryModal({
                                     className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                                     style={{ backgroundColor: 'rgba(129, 215, 180, 0.1)' }}
                                 >
-                                    <HiOutlineBuildingOffice2 className="w-5 h-5 text-[#81D7B4]" />
+                                    <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: '#7B8B9A' }}>
@@ -173,7 +164,7 @@ export default function PaymentSummaryModal({
                                     border: '1px solid rgba(129, 215, 180, 0.3)'
                                 }}
                             >
-                                <HiOutlineTag className="w-4 h-4 text-[#81D7B4]" />
+                                <Activity01Icon className="w-4 h-4 text-[#81D7B4]" />
                                 <span className="text-sm font-bold text-[#81D7B4] capitalize">{tier.name}</span>
                             </div>
                         </div>
@@ -192,7 +183,7 @@ export default function PaymentSummaryModal({
                                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}
                                     >
-                                        <HiOutlineGift className="w-4 h-4 text-[#81D7B4]" />
+                                        <Activity01Icon className="w-4 h-4 text-[#81D7B4]" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-[#81D7B4]">Discount Applied!</p>
@@ -207,7 +198,7 @@ export default function PaymentSummaryModal({
                                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style={{ backgroundColor: 'rgba(251, 191, 36, 0.15)' }}
                                     >
-                                        <HiOutlineExclamationTriangle className="w-4 h-4 text-amber-400" />
+                                        <Alert02Icon className="w-4 h-4 text-amber-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-amber-400">No Discount Applied</p>
@@ -274,7 +265,7 @@ export default function PaymentSummaryModal({
                             className="flex items-start gap-3 p-3 rounded-xl"
                             style={{ backgroundColor: 'rgba(44, 62, 93, 0.25)' }}
                         >
-                            <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4] flex-shrink-0 mt-0.5" />
+                            <Shield01Icon className="w-5 h-5 text-[#81D7B4] flex-shrink-0 mt-0.5" />
                             <p className="text-xs leading-relaxed" style={{ color: '#9BA8B5' }}>
                                 Your payment is secured on the {networkName} blockchain. By proceeding,
                                 you authorize the transfer of {currency} from your connected wallet.
@@ -329,12 +320,12 @@ export default function PaymentSummaryModal({
                         >
                             {isLoading ? (
                                 <>
-                                    <HiOutlineArrowPath className="w-5 h-5 animate-spin" />
+                                    <RefreshIcon className="w-5 h-5 animate-spin" />
                                     <span>Processing</span>
                                 </>
                             ) : (
                                 <>
-                                    <HiOutlineCheckCircle className="w-5 h-5" />
+                                    <Tick01Icon className="w-5 h-5" />
                                     <span>Pay {isCelo ? '' : '$'}{formatPrice(finalPrice)} {isCelo ? 'G$' : ''}</span>
                                 </>
                             )}

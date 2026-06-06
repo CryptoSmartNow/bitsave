@@ -151,7 +151,7 @@ export default function USDGLOPage() {
         {/* API Info */}
         <div className="bg-white rounded-lg shadow-sm mb-6" style={{ border: '1px solid #81D7B4' }}>
           <div className="px-6 py-4 border-b" style={{ borderColor: '#81D7B4', background: 'linear-gradient(135deg, #81D7B4/5, #81D7B4/10)' }}>
-            <h2 className="text-lg font-medium" style={{ color: '#81D7B4' }}>Transaction And Currency List</h2>
+            <h2 className="text-lg font-medium" style={{ color: '#81D7B4' }}>Transaction And Currency ListView</h2>
           </div>
           <div className="px-6 py-4">
             <div className="space-y-3">

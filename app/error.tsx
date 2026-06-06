@@ -1,10 +1,10 @@
 'use client';
 
+import { Activity01Icon, RefreshIcon } from "hugeicons-react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Exo } from 'next/font/google';
-import { HiOutlineArrowRight, HiOutlineArrowPath } from 'react-icons/hi2';
 
 const exo = Exo({
   subsets: ['latin'],
@@ -70,7 +70,7 @@ export default function Error({
              }}>
           <Image 
             src="/error_500.png" 
-            alt="Server Error Illustration" 
+            alt="CloudServer Error Illustration" 
             fill 
             className="object-contain mix-blend-multiply opacity-90 rounded-3xl"
             priority
@@ -97,7 +97,7 @@ export default function Error({
             onClick={() => reset()}
             className="group w-full flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-4 bg-[#81D7B4] hover:bg-opacity-90 text-white font-bold rounded-2xl transition-all duration-200 shadow-[0_8px_20px_rgba(129,215,180,0.25)] hover:-translate-y-0.5"
           >
-            <HiOutlineArrowPath className="w-5 h-5 group-hover:-rotate-180 transition-transform duration-500" />
+            <RefreshIcon className="w-5 h-5 group-hover:-rotate-180 transition-transform duration-500" />
             Try Again
           </button>
           <Link
@@ -105,14 +105,14 @@ export default function Error({
             className="group w-full flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-4 bg-white text-gray-700 font-bold rounded-2xl border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:-translate-y-0.5"
           >
             Home
-            <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Activity01Icon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         <div className="inline-flex flex-col items-center gap-2">
           <span className="text-sm font-medium text-gray-400">Still not working?</span>
           <a href="https://t.me/bitsave_protocol" target="_blank" rel="noopener noreferrer" className="text-[#81D7B4] font-bold text-sm hover:underline inline-flex items-center gap-1">
-            Report on Telegram <HiOutlineArrowRight className="w-3.5 h-3.5" />
+            Report on Telegram <Activity01Icon className="w-3.5 h-3.5" />
           </a>
         </div>
 

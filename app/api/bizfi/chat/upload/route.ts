@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal CloudServer Error' },
       { status: 500 }
     );
   }

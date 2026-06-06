@@ -1,16 +1,8 @@
 'use client';
 
+import { UserMultipleIcon, Activity01Icon, Alert02Icon, FlashIcon, Clock01Icon, Coins01Icon, Cancel01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Users,
-  Activity,
-  AlertTriangle,
-  Zap,
-  Clock,
-  Coins,
-  X
-} from 'lucide-react';
 import { UserInteraction } from '@/lib/interactionTracker';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 import { AnimatePresence } from 'framer-motion';
@@ -108,18 +100,18 @@ export default function DashboardOverview() {
       value: getTotalSavedDisplay(),
       change: 'View Breakdown',
       changeType: 'neutral',
-      icon: Coins,
+      icon: Coins01Icon,
       color: 'text-[#81D7B4]',
       bg: 'bg-[#81D7B4]/10',
       onClick: () => setIsTVSModalOpen(true),
       isAction: true
     },
     {
-      name: 'Total Users',
+      name: 'Total UserMultiple',
       value: dashboardStats.uniqueUsers,
       change: '+12%',
       changeType: 'increase',
-      icon: Users,
+      icon: UserMultipleIcon,
       color: 'text-[#81D7B4]',
       bg: 'bg-[#81D7B4]/10'
     },
@@ -128,7 +120,7 @@ export default function DashboardOverview() {
       value: dashboardStats.activeToday,
       change: '+5%',
       changeType: 'increase',
-      icon: Zap,
+      icon: FlashIcon,
       color: 'text-[#81D7B4]',
       bg: 'bg-[#81D7B4]/10'
     },
@@ -137,7 +129,7 @@ export default function DashboardOverview() {
       value: `${dashboardStats.errorRate.toFixed(1)}%`,
       change: '-2%',
       changeType: 'decrease',
-      icon: AlertTriangle,
+      icon: Alert02Icon,
       color: 'text-[#81D7B4]',
       bg: 'bg-[#81D7B4]/10'
     },
@@ -146,7 +138,7 @@ export default function DashboardOverview() {
       value: dashboardStats.totalInteractions,
       change: '+24%',
       changeType: 'increase',
-      icon: Activity,
+      icon: Activity01Icon,
       color: 'text-[#81D7B4]',
       bg: 'bg-[#81D7B4]/10'
     }
@@ -201,7 +193,7 @@ export default function DashboardOverview() {
                   }}
                   className="w-full px-3 py-1.5 bg-[#81D7B4]/10 text-[#81D7B4] rounded-lg text-sm font-medium hover:bg-[#81D7B4]/20 transition-colors flex items-center justify-center gap-2"
                 >
-                  <Coins className="w-4 h-4" />
+                  <Coins01Icon className="w-4 h-4" />
                   {stat.change}
                 </button>
               ) : (
@@ -269,7 +261,7 @@ export default function DashboardOverview() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                        <Clock01Icon className="w-3 h-3" />
                         {new Date(interaction.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </td>
@@ -341,7 +333,7 @@ export default function DashboardOverview() {
               <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-[#81D7B4]/10 rounded-lg">
-                    <Coins className="w-6 h-6 text-[#81D7B4]" />
+                    <Coins01Icon className="w-6 h-6 text-[#81D7B4]" />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-slate-900">Total Value Saved</h2>
@@ -352,7 +344,7 @@ export default function DashboardOverview() {
                   onClick={() => setIsTVSModalOpen(false)}
                   className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-slate-400" />
+                  <Cancel01Icon className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
@@ -360,7 +352,7 @@ export default function DashboardOverview() {
                 {Object.keys(tvsBreakdown).length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Coins className="w-8 h-8 text-slate-400" />
+                      <Coins01Icon className="w-8 h-8 text-slate-400" />
                     </div>
                     <h3 className="text-lg font-medium text-slate-900">No Savings Data Yet</h3>
                     <p className="text-slate-500 mt-2">Start tracking savings to see the breakdown here.</p>

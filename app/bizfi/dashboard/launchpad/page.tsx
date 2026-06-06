@@ -1,24 +1,9 @@
-"use client";
+'use client';
+
+import { Tick01Icon, Activity01Icon, Dollar01Icon, Calendar01Icon, BarChartIcon, UserMultipleIcon, PlusSignIcon, ArrowDown01Icon, Building04Icon, TextIcon, Clock01Icon, Cancel01Icon, RocketIcon, Folder01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import {
-    HiOutlineCheckCircle,
-    HiOutlineClock,
-    HiOutlineXCircle,
-    HiOutlineDocumentText,
-    HiOutlineBuildingOffice2,
-    HiOutlineCurrencyDollar,
-    HiOutlineCalendar,
-    HiOutlineTag,
-    HiOutlineChartBar,
-    HiOutlineUsers,
-    HiOutlineRocketLaunch,
-    HiOutlineFire,
-    HiOutlinePlus,
-    HiOutlineChevronDown,
-    HiOutlineFolder
-} from "react-icons/hi2";
 import "../../bizfi-colors.css";
 import BusinessDetailsModal from "./BusinessDetailsModal";
 import KYCStatus from "./components/KYCStatus";
@@ -78,21 +63,21 @@ export default function LaunchPadPage() {
         const normalizedStatus = status?.toLowerCase() || 'submitted';
         switch (normalizedStatus) {
             case "draft":
-                return { icon: HiOutlineDocumentText, color: "text-gray-400", bg: "bg-gray-800/30", label: "Draft" };
+                return { icon: TextIcon, color: "text-gray-400", bg: "bg-gray-800/30", label: "Draft" };
             case "pending":
             case "inactive":
-                return { icon: HiOutlineClock, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Pending" };
+                return { icon: Clock01Icon, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Pending" };
             case "submitted":
             case "registered":
-                return { icon: HiOutlineCheckCircle, color: "text-blue-400", bg: "bg-blue-500/10", label: "Submitted" };
+                return { icon: Tick01Icon, color: "text-blue-400", bg: "bg-blue-500/10", label: "Submitted" };
             case "under_review":
-                return { icon: HiOutlineClock, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Under Review" };
+                return { icon: Clock01Icon, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Under Review" };
             case "approved":
-                return { icon: HiOutlineCheckCircle, color: "text-[#81D7B4]", bg: "bg-[#81D7B4]/10", label: "Approved" };
+                return { icon: Tick01Icon, color: "text-[#81D7B4]", bg: "bg-[#81D7B4]/10", label: "Approved" };
             case "rejected":
-                return { icon: HiOutlineXCircle, color: "text-red-400", bg: "bg-red-500/10", label: "Rejected" };
+                return { icon: Cancel01Icon, color: "text-red-400", bg: "bg-red-500/10", label: "Rejected" };
             default:
-                return { icon: HiOutlineClock, color: "text-gray-400", bg: "bg-gray-800", label: status };
+                return { icon: Clock01Icon, color: "text-gray-400", bg: "bg-gray-800", label: status };
         }
     };
 
@@ -138,28 +123,28 @@ export default function LaunchPadPage() {
             label: "Total Listings",
             value: totalListings,
             change: "+1", // Example static change
-            icon: HiOutlineBuildingOffice2,
+            icon: Building04Icon,
             isStatus: false
         },
         {
             label: "Total Revenue",
             value: `$${totalRevenue.toLocaleString()}`,
             change: "0%", // Example static change
-            icon: HiOutlineCurrencyDollar,
+            icon: Dollar01Icon,
             isStatus: false
         },
         {
             label: "Capital Raised",
             value: `$${capitalRaised.toLocaleString()}`,
             change: "0%", // Example static change
-            icon: HiOutlineRocketLaunch,
+            icon: RocketIcon,
             isStatus: false
         },
         {
             label: "Approved Listings",
             value: approvedListings,
             change: "Pending", // Status text
-            icon: HiOutlineCheckCircle,
+            icon: Tick01Icon,
             isStatus: true
         }
     ];
@@ -191,12 +176,12 @@ export default function LaunchPadPage() {
                                 className="w-full flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white hover:bg-gray-800 transition-colors sm:min-w-[200px] justify-between"
                             >
                                 <div className="flex items-center gap-2 truncate">
-                                    <HiOutlineFolder className="w-5 h-5 text-[#81D7B4] shrink-0" />
+                                    <Activity01Icon className="w-5 h-5 text-[#81D7B4] shrink-0" />
                                     <span className="truncate max-w-[140px] whitespace-nowrap">
                                         {activeProject ? activeProject.businessName : "Select Project"}
                                     </span>
                                 </div>
-                                <HiOutlineChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
+                                <ArrowDown01Icon className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             <AnimatePresence>
@@ -224,7 +209,7 @@ export default function LaunchPadPage() {
                                                     <div className={`w-2 h-2 rounded-full ${activeProject === business ? "bg-[#81D7B4]" : "bg-gray-600"}`} />
                                                     <span className="truncate">{business.businessName}</span>
                                                     {activeProject === business && (
-                                                        <HiOutlineCheckCircle className="w-4 h-4 ml-auto" />
+                                                        <Tick01Icon className="w-4 h-4 ml-auto" />
                                                     )}
                                                 </button>
                                             ))}
@@ -241,7 +226,7 @@ export default function LaunchPadPage() {
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-[#81D7B4] text-[#0B1221] rounded-xl font-bold hover:bg-[#6bcb9f] transition-colors whitespace-nowrap"
                         onClick={() => window.location.href = '/bizfi/dashboard/create-savings'}
                     >
-                        <HiOutlinePlus className="w-5 h-5" />
+                        <PlusSignIcon className="w-5 h-5" />
                         New Project
                     </motion.button>
                 </div>
@@ -280,7 +265,7 @@ export default function LaunchPadPage() {
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2 overflow-hidden">
-                        <HiOutlineRocketLaunch className="w-6 h-6 text-[#81D7B4] shrink-0" />
+                        <Activity01Icon className="w-6 h-6 text-[#81D7B4] shrink-0" />
                         <span className="truncate">
                             {activeProject ? `Project Status: ${activeProject.businessName}` : "Project Status"}
                         </span>
@@ -298,7 +283,7 @@ export default function LaunchPadPage() {
                         <EmptyState 
                             title="No Project Selected"
                             description="Select a project from the dropdown above or create a new one to view details."
-                            icon={HiOutlineFolder}
+                            icon={Folder01Icon}
                             actionLabel="Create New Project"
                             onAction={() => window.location.href = '/bizfi/dashboard/create-savings'}
                         />
@@ -348,10 +333,10 @@ export default function LaunchPadPage() {
                 )}
             </div>
 
-            {/* Applications List */}
+            {/* Applications ListView */}
             <div className="space-y-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <HiOutlineChartBar className="w-6 h-6 text-[#81D7B4]" />
+                    <BarChartIcon className="w-6 h-6 text-[#81D7B4]" />
                     All Applications
                 </h2>
 
@@ -366,7 +351,7 @@ export default function LaunchPadPage() {
                         className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-3xl border border-dashed border-gray-700 bg-gray-900/30"
                     >
                         <div className="p-4 rounded-full bg-gray-800/50 mb-4">
-                            <HiOutlineBuildingOffice2 className="w-8 h-8 text-gray-400" />
+                            <Activity01Icon className="w-8 h-8 text-gray-400" />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">No Applications Yet</h3>
                         <p className="text-gray-400 max-w-md mb-6">
@@ -398,14 +383,14 @@ export default function LaunchPadPage() {
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-800 text-[#81D7B4] border border-gray-700 group-hover:border-[#81D7B4]/30 group-hover:text-[#81D7B4] transition-colors">
-                                                <HiOutlineBuildingOffice2 className="w-6 h-6" />
+                                                <Activity01Icon className="w-6 h-6" />
                                             </div>
                                             <div>
                                                 <h3 className="text-lg font-bold text-white group-hover:text-[#81D7B4] transition-colors">
                                                     {business.businessName || 'Unnamed Business'}
                                                 </h3>
                                                 <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                                    <HiOutlineCalendar className="w-3.5 h-3.5" />
+                                                    <Calendar01Icon className="w-3.5 h-3.5" />
                                                     <span>
                                                         {business.createdAt
                                                             ? new Date(business.createdAt).toLocaleDateString()
@@ -424,13 +409,13 @@ export default function LaunchPadPage() {
                                     <div className="grid grid-cols-2 gap-4 mb-6">
                                         <div className="p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
                                             <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                                <HiOutlineTag className="w-3 h-3" /> Tier
+                                                <Activity01Icon className="w-3 h-3" /> Tier
                                             </p>
                                             <p className="text-sm font-semibold text-gray-200 truncate">{tierLabel}</p>
                                         </div>
                                         <div className="p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
                                             <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                                <HiOutlineCurrencyDollar className="w-3 h-3" /> Monthly Revenue
+                                                <Dollar01Icon className="w-3 h-3" /> Monthly Revenue
                                             </p>
                                             <p className="text-sm font-semibold text-gray-200">{revenue}</p>
                                         </div>
@@ -445,7 +430,7 @@ export default function LaunchPadPage() {
                                             onClick={() => handleViewDetails(business)}
                                             className="flex items-center gap-2 text-sm font-semibold text-[#81D7B4] hover:text-[#6BC4A0] transition-colors"
                                         >
-                                            <HiOutlineDocumentText className="w-4 h-4" />
+                                            <Activity01Icon className="w-4 h-4" />
                                             View Full Details
                                         </button>
                                     </div>

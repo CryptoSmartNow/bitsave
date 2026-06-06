@@ -1,17 +1,8 @@
-"use client";
+'use client';
+
+import { Activity01Icon, ArrowDown01Icon, Tick01Icon, TelegramIcon, TwitterIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import {
-    HiOutlineQuestionMarkCircle,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineEnvelope,
-    HiOutlineChevronDown,
-    HiOutlineCheckCircle,
-    HiOutlineVideoCamera,
-    HiOutlineBookOpen
-} from "react-icons/hi2";
-import { FaTelegramPlane } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
 import { Exo } from "next/font/google";
 import "../../bizfi-colors.css";
 
@@ -114,17 +105,17 @@ export default function SupportPage() {
                     {/* Quick Help Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6 hover:border-[#81D7B4]/30 transition-all cursor-pointer">
-                            <HiOutlineVideoCamera className="w-8 h-8 text-[#81D7B4] mb-3" />
+                            <Activity01Icon className="w-8 h-8 text-[#81D7B4] mb-3" />
                             <h3 className="font-bold text-white mb-2">Video Tutorials</h3>
                             <p className="text-sm text-gray-400">Step-by-step guides</p>
                         </div>
                         <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6 hover:border-[#81D7B4]/30 transition-all cursor-pointer">
-                            <HiOutlineBookOpen className="w-8 h-8 text-[#81D7B4] mb-3" />
+                            <Activity01Icon className="w-8 h-8 text-[#81D7B4] mb-3" />
                             <h3 className="font-bold text-white mb-2">Documentation</h3>
                             <p className="text-sm text-gray-400">Detailed guides</p>
                         </div>
                         <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6 hover:border-[#81D7B4]/30 transition-all cursor-pointer">
-                            <HiOutlineChatBubbleLeftRight className="w-8 h-8 text-[#81D7B4] mb-3" />
+                            <Activity01Icon className="w-8 h-8 text-[#81D7B4] mb-3" />
                             <h3 className="font-bold text-white mb-2">Live Chat</h3>
                             <p className="text-sm text-gray-400">Chat with support</p>
                         </div>
@@ -152,7 +143,7 @@ export default function SupportPage() {
                                                         className="w-full p-4 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
                                                     >
                                                         <span className="font-medium text-white text-left">{item.q}</span>
-                                                        <HiOutlineChevronDown
+                                                        <ArrowDown01Icon
                                                             className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'transform rotate-180' : ''
                                                                 }`}
                                                         />
@@ -187,7 +178,7 @@ export default function SupportPage() {
                     <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6 sticky top-8">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-[#81D7B4]/10 rounded-xl">
-                                <HiOutlineEnvelope className="w-6 h-6 text-[#81D7B4]" />
+                                <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">Contact Us</h2>
@@ -250,8 +241,8 @@ export default function SupportPage() {
                                 type="submit"
                                 className="w-full py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-lg hover:bg-[#6BC4A0] transition-all flex items-center justify-center gap-2"
                             >
-                                <HiOutlineCheckCircle className="w-5 h-5" />
-                                Send Message
+                                <Tick01Icon className="w-5 h-5" />
+                                Sent Message
                             </button>
                         </form>
 
@@ -268,7 +259,7 @@ export default function SupportPage() {
                                     rel="noopener noreferrer"
                                     className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-[#81D7B4] hover:bg-gray-700 transition-all"
                                 >
-                                    <FaXTwitter className="w-5 h-5" />
+                                    <TwitterIcon className="w-5 h-5" />
                                 </a>
                                 <a 
                                     href="https://t.me/+YimKRR7wAkVmZGRk" 
@@ -276,7 +267,7 @@ export default function SupportPage() {
                                     rel="noopener noreferrer"
                                     className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-[#81D7B4] hover:bg-gray-700 transition-all"
                                 >
-                                    <FaTelegramPlane className="w-5 h-5" />
+                                    <TelegramIcon className="w-5 h-5" />
                                 </a>
                             </div>
                         </div>

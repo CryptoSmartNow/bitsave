@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         const db = client.db('bitsave');
         const collection = db.collection('users');
 
-        // Check if savvy name is already taken (case-insensitive)
+        // Tick if savvy name is already taken (case-insensitive)
         const existingName = await collection.findOne({
             savvyName: { $regex: new RegExp(`^${finalSavvyName}$`, 'i') }
         });
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'This Savvy Name is already taken' }, { status: 409 });
         }
 
-        // Check if user already has a savvy name (Optional: decide if they can change it. Let's allow changing it for now)
+        // Tick if user already has a savvy name (Optional: decide if they can change it. Let's allow changing it for now)
         // Store it as provided (preserves casing)
         await collection.updateOne(
             { walletAddress: walletAddress.toLowerCase() },

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
+import { Tick01Icon } from "hugeicons-react";
 import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from "wagmi";
 import { formatUnits } from "viem";
 import { PREDICTION_MARKET_FACTORY_ABI, ERC20_ABI } from "@/lib/web3/abi";
-import { HiOutlineCheck } from "react-icons/hi2";
 
 interface MarketProposalProps {
     data: {
@@ -41,7 +41,7 @@ export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => 
     const { writeContractAsync: writeApprove, isPending: isApproving } = useWriteContract();
     const { writeContractAsync: writeCreate, isPending: isCreating } = useWriteContract();
 
-    // Check Chain Mismatch
+    // Tick Chain Mismatch
     const isWrongChain = currentChainId !== data.chainId;
 
     // Wait for Creation
@@ -54,7 +54,7 @@ export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => 
         hash: approveTxHash,
     });
 
-    // Check Allowance
+    // Tick Allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
         address: data.contracts.usdc,
         abi: ERC20_ABI,
@@ -230,7 +230,7 @@ export const MarketProposalCard = ({ data, onSuccess }: MarketProposalProps) => 
                 {step === 'done' && (
                     <div className="flex-1 bg-green-500/20 text-green-400 border border-green-500/50 py-2 rounded-lg font-bold text-center">
                         <div className="flex items-center justify-center gap-2">
-                            <HiOutlineCheck className="w-5 h-5" />
+                            <Tick01Icon className="w-5 h-5" />
                             <span>Created!</span>
                         </div>
                         {createTxHash && (

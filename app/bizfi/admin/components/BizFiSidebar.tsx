@@ -1,22 +1,9 @@
 'use client';
 
+import { DashboardSquare01Icon, UserMultipleIcon, Message02Icon, ArrowUpRight01Icon, Settings01Icon, Logout01Icon, Shield01Icon, TextIcon, Activity01Icon, DatabaseIcon, UserIcon, Cancel01Icon } from "hugeicons-react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/adminAuth';
-import {
-  LayoutDashboard,
-  Users,
-  MessageSquare,
-  TrendingUp,
-  Settings,
-  LogOut,
-  Shield,
-  FileText,
-  Activity,
-  Database,
-  User,
-  X
-} from 'lucide-react';
 
 interface BizFiSidebarProps {
   isOpen?: boolean;
@@ -28,13 +15,13 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
   const pathname = usePathname();
 
   const navigation = [
-    { name: 'Dashboard', href: '/bizfi/admin', icon: LayoutDashboard },
-    { name: 'Businesses', href: '/bizfi/admin/businesses', icon: Users },
-    { name: 'Chat', href: '/bizfi/admin/chat', icon: MessageSquare },
-    { name: 'Analytics', href: '/bizfi/admin/analytics', icon: TrendingUp },
-    { name: 'Reports', href: '/bizfi/admin/reports', icon: FileText },
-    { name: 'Audit Logs', href: '/bizfi/admin/audit', icon: Activity },
-    { name: 'Settings', href: '/bizfi/admin/settings', icon: Settings },
+    { name: 'Dashboard', href: '/bizfi/admin', icon: DashboardSquare01Icon },
+    { name: 'Businesses', href: '/bizfi/admin/businesses', icon: UserMultipleIcon },
+    { name: 'Chat', href: '/bizfi/admin/chat', icon: Message02Icon },
+    { name: 'Analytics', href: '/bizfi/admin/analytics', icon: ArrowUpRight01Icon },
+    { name: 'Reports', href: '/bizfi/admin/reports', icon: TextIcon },
+    { name: 'Audit Logs', href: '/bizfi/admin/audit', icon: Activity01Icon },
+    { name: 'Settings', href: '/bizfi/admin/settings', icon: Settings01Icon },
   ];
 
   return (
@@ -53,7 +40,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
           <div className="flex items-center justify-between mb-10">
             <Link href="/bizfi" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-xl bg-[#81D7B4] flex items-center justify-center text-[#0F1825] shadow-lg shadow-[#81D7B4]/20 group-hover:scale-105 transition-transform">
-                <Shield className="w-6 h-6" />
+                <Shield01Icon className="w-6 h-6" />
               </div>
               <div>
                 <span className="block text-lg font-bold text-[#F9F9FB] group-hover:text-[#81D7B4] transition-colors">
@@ -67,7 +54,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
               onClick={onClose}
               className="md:hidden p-2 text-[#9BA8B5] hover:text-[#F9F9FB] hover:bg-[#0F1825] rounded-lg transition-colors"
             >
-              <X className="w-5 h-5" />
+              <Cancel01Icon className="w-5 h-5" />
             </button>
           </div>
 
@@ -96,7 +83,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
             <div className="pt-4 border-t border-[#7B8B9A]/20">
               <div className="flex items-center gap-3 px-3 mb-4 py-2 bg-[#0F1825]/30 rounded-xl border border-[#7B8B9A]/5">
                 <div className="w-9 h-9 rounded-full bg-[#81D7B4]/20 flex items-center justify-center text-[#81D7B4] shrink-0">
-                  <User className="w-5 h-5" />
+                  <UserIcon className="w-5 h-5" />
                 </div>
                 <div className="overflow-hidden">
                   <p className="text-sm font-bold text-[#F9F9FB] truncate">{user?.username || 'Admin User'}</p>
@@ -107,7 +94,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
                 onClick={logout}
                 className="w-full flex items-center gap-3 px-4 py-2 text-[#9BA8B5] hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-colors group text-sm"
               >
-                <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <Logout01Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 <span className="font-medium">Sign Out</span>
               </button>
             </div>

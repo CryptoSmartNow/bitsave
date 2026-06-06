@@ -1,19 +1,10 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Activity01Icon, Dollar01Icon, Shield01Icon, BarChartIcon, Wallet01Icon, ArrowLeftRightIcon } from "hugeicons-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-  HiOutlineArrowRight,
-  HiOutlineCurrencyDollar,
-  HiOutlineShieldCheck,
-  HiOutlineChartBar,
-  HiOutlineArrowsRightLeft,
-  HiOutlineBuildingLibrary,
-  HiOutlineCheckBadge,
-  HiOutlineWallet
-} from 'react-icons/hi2';
 
 export default function BizSwapLandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -58,10 +49,11 @@ export default function BizSwapLandingPage() {
             <a href="#instruments" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Instruments</a>
             <a href="#how-it-works" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">How it Works</a>
             <a href="#why" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Why Us</a>
+            <a href="https://bizfi.mintlify.app/" target="_blank" rel="noopener noreferrer" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Docs</a>
           </div>
           <Link href="/bizswap/app" className="group relative inline-flex items-center justify-center px-6 py-2.5 font-bold text-[#0F1825] bg-[#81D7B4] rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(129,215,180,0.3)]">
             <span className="relative flex items-center gap-2">
-              Launch App <HiOutlineArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              Launch App <Activity01Icon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </span>
           </Link>
         </div>
@@ -101,11 +93,11 @@ export default function BizSwapLandingPage() {
                 </p>
                 <div className="flex items-center gap-4 text-[#F9F9FB]">
                   <div className="flex items-center gap-2">
-                    <HiOutlineCheckBadge className="w-6 h-6 text-[#81D7B4]" />
+                    <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                     <span className="font-bold">100% On-Chain</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <HiOutlineCheckBadge className="w-6 h-6 text-[#81D7B4]" />
+                    <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                     <span className="font-bold">Stablecoin Payouts</span>
                   </div>
                 </div>
@@ -117,21 +109,21 @@ export default function BizSwapLandingPage() {
                   <div className="flex justify-between items-center border-b border-[#2C3E5D] pb-6 mb-6">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-[#2C3E5D] rounded-full flex items-center justify-center">
-                        <HiOutlineCurrencyDollar className="w-6 h-6 text-[#81D7B4]" />
+                        <Dollar01Icon className="w-6 h-6 text-[#81D7B4]" />
                       </div>
                       <div>
                         <p className="text-sm text-[#9BA8B5]">You supply</p>
                         <p className="font-bold text-xl">1,000 USDC</p>
                       </div>
                     </div>
-                    <HiOutlineArrowsRightLeft className="w-6 h-6 text-[#7B8B9A]" />
+                    <Activity01Icon className="w-6 h-6 text-[#7B8B9A]" />
                     <div className="flex items-center gap-3 text-right">
                       <div>
                         <p className="text-sm text-[#9BA8B5]">You receive</p>
                         <p className="font-bold text-xl text-[#81D7B4]">BizBond</p>
                       </div>
                       <div className="w-12 h-12 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-full flex items-center justify-center">
-                        <HiOutlineShieldCheck className="w-6 h-6 text-[#81D7B4]" />
+                        <Shield01Icon className="w-6 h-6 text-[#81D7B4]" />
                       </div>
                     </div>
                   </div>
@@ -167,12 +159,12 @@ export default function BizSwapLandingPage() {
               <motion.div variants={fadeUp} className="group bg-[#1A2538] border border-[#2C3E5D] hover:border-[#81D7B4]/50 rounded-3xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(129,215,180,0.15)]">
                 <div className="mb-6 flex justify-between items-start">
                   <div className="w-14 h-14 bg-[#FF6B6B]/10 rounded-2xl flex items-center justify-center">
-                    <HiOutlineChartBar className="w-7 h-7 text-[#FF6B6B]" />
+                    <BarChartIcon className="w-7 h-7 text-[#FF6B6B]" />
                   </div>
                   <span className="px-3 py-1 bg-[#FF6B6B]/10 text-[#FF6B6B] text-xs font-black tracking-widest uppercase rounded-full">High Risk</span>
                 </div>
                 <h3 className="text-2xl font-black mb-2">BizYield</h3>
-                <p className="text-[#9BA8B5] text-sm mb-6 h-10">Backed by real business revenue sharing agreements.</p>
+                <p className="text-[#9BA8B5] text-sm mb-6 h-10">Pays monthly for up to 24 months from a businesses revenue.</p>
 
                 <ul className="space-y-4 mb-8">
                   <li className="flex justify-between items-center text-sm border-b border-[#2C3E5D] pb-3">
@@ -195,7 +187,7 @@ export default function BizSwapLandingPage() {
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#81D7B4] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="mb-6 flex justify-between items-start">
                   <div className="w-14 h-14 bg-[#F5A623]/10 rounded-2xl flex items-center justify-center">
-                    <HiOutlineCurrencyDollar className="w-7 h-7 text-[#F5A623]" />
+                    <Dollar01Icon className="w-7 h-7 text-[#F5A623]" />
                   </div>
                   <span className="px-3 py-1 bg-[#F5A623]/10 text-[#F5A623] text-xs font-black tracking-widest uppercase rounded-full">Mid Risk</span>
                 </div>
@@ -222,7 +214,7 @@ export default function BizSwapLandingPage() {
               <motion.div variants={fadeUp} className="group bg-[#1A2538] border border-[#2C3E5D] hover:border-[#81D7B4]/50 rounded-3xl p-8 transition-all hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(129,215,180,0.15)]">
                 <div className="mb-6 flex justify-between items-start">
                   <div className="w-14 h-14 bg-[#81D7B4]/10 rounded-2xl flex items-center justify-center">
-                    <HiOutlineBuildingLibrary className="w-7 h-7 text-[#81D7B4]" />
+                    <Activity01Icon className="w-7 h-7 text-[#81D7B4]" />
                   </div>
                   <span className="px-3 py-1 bg-[#81D7B4]/10 text-[#81D7B4] text-xs font-black tracking-widest uppercase rounded-full">Low Risk</span>
                 </div>
@@ -260,9 +252,9 @@ export default function BizSwapLandingPage() {
               <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-[#2C3E5D] via-[#81D7B4]/30 to-[#2C3E5D]" />
 
               {[
-                { step: '01', title: 'Connect', desc: 'Connect your wallet. Select an instrument that matches your risk appetite and investment size.', icon: HiOutlineWallet },
-                { step: '02', title: 'Swap', desc: 'Swap your stablecoins directly into your chosen BizShares instrument. Your funds go to work immediately.', icon: HiOutlineArrowsRightLeft },
-                { step: '03', title: 'Earn', desc: 'Receive yield payments directly to your wallet on schedule, weekly, monthly, or quarterly in stablecoins.', icon: HiOutlineCurrencyDollar }
+                { step: '01', title: 'Connect', desc: 'Connect your wallet. Select an instrument that matches your risk appetite and investment size.', icon: Wallet01Icon },
+                { step: '02', title: 'Swap', desc: 'Swap your stablecoins directly into your chosen BizShares instrument. Your funds go to work immediately.', icon: ArrowLeftRightIcon },
+                { step: '03', title: 'Earn', desc: 'Receive yield payments directly to your wallet on schedule, weekly, monthly, or quarterly in stablecoins.', icon: Dollar01Icon }
               ].map((item, i) => (
                 <div key={i} className="relative z-10 text-center">
                   <div className="w-24 h-24 mx-auto bg-[#0F1825] border-2 border-[#2C3E5D] rounded-full flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
@@ -283,7 +275,7 @@ export default function BizSwapLandingPage() {
               <div className="lg:col-span-5">
                 <h2 className="text-4xl md:text-5xl font-black mb-8 leading-tight">Built on Transparency & Real Assets.</h2>
                 <Link href="/bizswap/app" className="inline-flex items-center gap-2 px-8 py-4 bg-[#1A2538] hover:bg-[#2C3E5D] border border-[#2C3E5D] hover:border-[#81D7B4]/50 text-[#F9F9FB] font-bold rounded-xl text-lg transition-all">
-                  Start Earning Now <HiOutlineArrowRight />
+                  Start Earning Now <Activity01Icon />
                 </Link>
               </div>
 
@@ -296,7 +288,7 @@ export default function BizSwapLandingPage() {
                 ].map((item, i) => (
                   <div key={i} className="bg-[#0A0F17] border border-[#2C3E5D] rounded-2xl p-6">
                     <div className="w-10 h-10 bg-[#81D7B4]/10 rounded-lg flex items-center justify-center mb-4">
-                      <HiOutlineCheckBadge className="w-6 h-6 text-[#81D7B4]" />
+                      <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                     </div>
                     <h4 className="font-bold text-lg mb-2">{item.title}</h4>
                     <p className="text-[#7B8B9A] text-sm leading-relaxed">{item.desc}</p>
@@ -331,6 +323,7 @@ export default function BizSwapLandingPage() {
           <div className="flex gap-6 text-sm font-medium">
             <Link href="/bizswap/dashboard" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Dashboard</Link>
             <Link href="/bizswap/app" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Market</Link>
+            <a href="https://bizfi.mintlify.app/" target="_blank" rel="noopener noreferrer" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Docs</a>
           </div>
         </div>
       </footer>

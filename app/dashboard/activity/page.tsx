@@ -1,23 +1,10 @@
 'use client';
 
+import { Activity01Icon, Calendar01Icon, HashtagIcon, UserAdd01Icon, Award01Icon, Dollar01Icon, Tick01Icon } from "hugeicons-react";
 import { useState, ReactNode, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Exo } from 'next/font/google';
-import {
-  HiOutlineEnvelope,
-  HiOutlineCalendar,
-  HiOutlineFire,
-  HiOutlineMegaphone,
-  HiOutlineHashtag,
-  HiOutlineUserPlus,
-  HiOutlineArrowRight,
-  HiOutlineTrophy,
-  HiOutlineStar,
-  HiOutlineCurrencyDollar,
-  HiOutlineLockClosed,
-  HiOutlineCheckCircle
-} from 'react-icons/hi2';
 
 const exo = Exo({ 
   subsets: ['latin'],
@@ -69,8 +56,8 @@ export default function ActivityPage() {
     },
     {
       id: 'connect_x',
-      title: 'Connect X (Twitter)',
-      description: 'Link your X account to unlock social quests.',
+      title: 'Connect Cancel (Twitter)',
+      description: 'Link your Cancel account to unlock social quests.',
       points: 1,
       isCompleted: false,
       href: '/dashboard/settings',
@@ -102,7 +89,7 @@ export default function ActivityPage() {
     },
     {
       id: 'tweet_about_bitsave',
-      title: 'Shoutout on X',
+      title: 'Shoutout on Cancel',
       description: 'Tell your friends about BitSave.',
       points: 5,
       isCompleted: false,
@@ -148,16 +135,16 @@ export default function ActivityPage() {
 
   const TaskIcon = ({ icon }: { icon: string }) => {
     const icons: { [key: string]: ReactNode } = {
-      twitter: <HiOutlineHashtag className="w-6 h-6" />,
-      farcaster: <HiOutlineMegaphone className="w-6 h-6" />,
-      email: <HiOutlineEnvelope className="w-6 h-6" />,
-      tweet: <HiOutlineHashtag className="w-6 h-6" />,
-      cast: <HiOutlineMegaphone className="w-6 h-6" />,
-      referral: <HiOutlineUserPlus className="w-6 h-6" />,
-      streak: <HiOutlineFire className="w-6 h-6" />,
-      calendar: <HiOutlineCalendar className="w-6 h-6" />,
+      twitter: <HashtagIcon className="w-6 h-6" />,
+      farcaster: <Activity01Icon className="w-6 h-6" />,
+      email: <Activity01Icon className="w-6 h-6" />,
+      tweet: <HashtagIcon className="w-6 h-6" />,
+      cast: <Activity01Icon className="w-6 h-6" />,
+      referral: <UserAdd01Icon className="w-6 h-6" />,
+      streak: <Activity01Icon className="w-6 h-6" />,
+      calendar: <Calendar01Icon className="w-6 h-6" />,
     };
-    return icons[icon] || <HiOutlineMegaphone className="w-6 h-6" />
+    return icons[icon] || <Activity01Icon className="w-6 h-6" />
   }
 
   const filteredTasks = activeTab === 'all' 
@@ -211,7 +198,7 @@ export default function ActivityPage() {
                   </div>
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center text-white shadow-lg shadow-[#81D7B4]/30 flex-shrink-0">
-                  <HiOutlineTrophy className="w-6 h-6" />
+                  <Award01Icon className="w-6 h-6" />
                 </div>
               </div>
 
@@ -250,7 +237,7 @@ export default function ActivityPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <HiOutlineStar className="w-5 h-5 text-yellow-500" />
+                  <Activity01Icon className="w-5 h-5 text-yellow-500" />
                   Top Earners
                 </h3>
                 {MOCK_LEADERBOARD.length > 0 && (
@@ -333,7 +320,7 @@ export default function ActivityPage() {
 
                         {task.isCompleted && (
                           <div className="absolute top-4 right-4 text-[#81D7B4]">
-                            <HiOutlineCheckCircle className="w-6 h-6" />
+                            <Tick01Icon className="w-6 h-6" />
                           </div>
                         )}
                         
@@ -354,7 +341,7 @@ export default function ActivityPage() {
 
                         <div className="flex items-center justify-between mt-auto">
                           <div className="flex items-center gap-2">
-                            <HiOutlineCurrencyDollar className={`w-4 h-4 ${task.isCompleted ? 'text-gray-400' : 'text-yellow-500'}`} />
+                            <Dollar01Icon className={`w-4 h-4 ${task.isCompleted ? 'text-gray-400' : 'text-yellow-500'}`} />
                             <span className={`font-bold ${task.isCompleted ? 'text-gray-400' : 'text-gray-900'}`}>
                               {task.points} $BTS
                             </span>
@@ -363,7 +350,7 @@ export default function ActivityPage() {
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                             task.isCompleted ? 'bg-gray-100 text-gray-400' : 'bg-gray-50 text-gray-400 group-hover:bg-[#81D7B4] group-hover:text-white'
                           }`}>
-                            <HiOutlineArrowRight className="w-4 h-4" />
+                            <Activity01Icon className="w-4 h-4" />
                           </div>
                         </div>
                       </div>
@@ -381,7 +368,7 @@ export default function ActivityPage() {
               
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-4 border border-[#81D7B4]/20">
-                  <HiOutlineLockClosed className="w-8 h-8 text-[#81D7B4]" />
+                  <Activity01Icon className="w-8 h-8 text-[#81D7B4]" />
                 </div>
                 <h3 className="text-xl font-bold mb-2 text-gray-900">More Quests Coming Soon</h3>
                 <p className="text-gray-500 max-w-md mx-auto mb-6">

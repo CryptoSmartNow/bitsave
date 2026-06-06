@@ -1,7 +1,7 @@
+import { Cancel01Icon, Tick01Icon, Delete02Icon, Edit02Icon, PaintBoardIcon } from "hugeicons-react";
 import { useState, useRef } from 'react';
 import CanvasDraw from 'react-canvas-draw';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiX, HiCheck, HiOutlineTrash, HiOutlinePencil, HiOutlineColorSwatch } from 'react-icons/hi';
 
 interface ChatDoodleProps {
     isOpen: boolean;
@@ -42,11 +42,11 @@ export default function ChatDoodle({ isOpen, onClose, onSend }: ChatDoodleProps)
                         {/* Header */}
                         <div className="p-4 border-b border-[#7B8B9A]/20 flex items-center justify-between">
                             <h3 className="font-bold text-[#F9F9FB] flex items-center gap-2">
-                                <HiOutlinePencil className="w-5 h-5 text-[#81D7B4]" />
+                                <Edit02Icon className="w-5 h-5 text-[#81D7B4]" />
                                 Signature
                             </h3>
                             <button onClick={onClose} className="text-[#9BA8B5] hover:text-[#F9F9FB]">
-                                <HiX className="w-6 h-6" />
+                                <Cancel01Icon className="w-6 h-6" />
                             </button>
                         </div>
 
@@ -99,15 +99,15 @@ export default function ChatDoodle({ isOpen, onClose, onSend }: ChatDoodleProps)
                                     onClick={handleClear}
                                     className="px-4 py-2 rounded-xl text-[#9BA8B5] hover:bg-[#7B8B9A]/10 hover:text-[#EF4444] transition-colors flex items-center gap-2 text-sm font-medium"
                                 >
-                                    <HiOutlineTrash className="w-4 h-4" />
+                                    <Delete02Icon className="w-4 h-4" />
                                     Clear
                                 </button>
                                 <button
                                     onClick={handleSend}
                                     className="px-6 py-2 bg-[#81D7B4] text-[#0F1825] rounded-xl font-bold hover:bg-[#6BC4A0] transition-colors flex items-center gap-2 shadow-lg shadow-[#81D7B4]/20"
                                 >
-                                    <HiCheck className="w-5 h-5" />
-                                    Send Signature
+                                    <Tick01Icon className="w-5 h-5" />
+                                    Sent Signature
                                 </button>
                             </div>
                         </div>

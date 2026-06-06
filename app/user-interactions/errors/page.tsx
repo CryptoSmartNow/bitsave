@@ -1,25 +1,9 @@
 'use client';
 
+import { Alert01Icon, Shield01Icon, GlobeIcon, Wallet01Icon, FlashIcon, Tick01Icon, CloudServerIcon, Cancel01Icon, Search01Icon, FilterIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowLeft01Icon, ArrowRight01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  AlertTriangle, 
-  Shield, 
-  Globe, 
-  Wallet, 
-  Zap, 
-  CheckCircle, 
-  Server, 
-  AlertCircle,
-  XCircle,
-  Search,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
 import { UserInteraction } from '@/lib/interactionTracker';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 
@@ -31,7 +15,7 @@ const categorizeError = (error: string): string => {
   if (lowerError.includes('wallet') || lowerError.includes('metamask') || lowerError.includes('provider')) return 'Wallet';
   if (lowerError.includes('contract') || lowerError.includes('revert') || lowerError.includes('execution')) return 'Smart Contract';
   if (lowerError.includes('validation') || lowerError.includes('invalid')) return 'Validation';
-  if (lowerError.includes('api') || lowerError.includes('server') || lowerError.includes('500')) return 'API/Server';
+  if (lowerError.includes('api') || lowerError.includes('server') || lowerError.includes('500')) return 'API/CloudServerIcon';
   return 'Unknown';
 };
 
@@ -94,13 +78,13 @@ export default function ErrorAnalyticsPage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Smart Contract': return <Shield className="w-5 h-5" />;
-      case 'Network': return <Globe className="w-5 h-5" />;
-      case 'Wallet': return <Wallet className="w-5 h-5" />;
-      case 'Gas/Fee': return <Zap className="w-5 h-5" />;
-      case 'Validation': return <CheckCircle className="w-5 h-5" />;
-      case 'API/Server': return <Server className="w-5 h-5" />;
-      default: return <AlertCircle className="w-5 h-5" />;
+      case 'Smart Contract': return <Shield01Icon className="w-5 h-5" />;
+      case 'Network': return <GlobeIcon className="w-5 h-5" />;
+      case 'Wallet': return <Wallet01Icon className="w-5 h-5" />;
+      case 'Gas/Fee': return <FlashIcon className="w-5 h-5" />;
+      case 'Validation': return <Tick01Icon className="w-5 h-5" />;
+      case 'API/CloudServerIcon': return <CloudServerIcon className="w-5 h-5" />;
+      default: return <Alert01Icon className="w-5 h-5" />;
     }
   };
 
@@ -142,7 +126,7 @@ export default function ErrorAnalyticsPage() {
         {/* Controls */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input 
               type="text"
               placeholder="Search by error message or wallet address..."
@@ -152,7 +136,7 @@ export default function ErrorAnalyticsPage() {
             />
           </div>
           <div className="flex items-center gap-2 w-full md:w-auto">
-            <Filter className="w-4 h-4 text-gray-500" />
+            <FilterIcon className="w-4 h-4 text-gray-500" />
             <select 
               className="bg-gray-50 border border-gray-200 text-slate-700 text-sm rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-red-500"
               value={filter}
@@ -166,11 +150,11 @@ export default function ErrorAnalyticsPage() {
           </div>
         </div>
 
-        {/* Error List */}
+        {/* Error ListView */}
         <div className="divide-y divide-gray-100">
           {filteredErrors.length === 0 ? (
             <div className="p-12 text-center">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+              <Tick01Icon className="w-12 h-12 text-green-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-slate-900">No Errors Found</h3>
               <p className="text-slate-500">Great job! The system is running smoothly.</p>
             </div>
@@ -189,7 +173,7 @@ export default function ErrorAnalyticsPage() {
                     >
                       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                         <div className={`p-2 rounded-full ${isCritical ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
-                          <AlertTriangle className="w-5 h-5" />
+                          <Alert01Icon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -208,7 +192,7 @@ export default function ErrorAnalyticsPage() {
                         </div>
                       </div>
                       <div className="ml-4">
-                        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                        {isExpanded ? <ArrowUp01Icon className="w-5 h-5 text-gray-400" /> : <ArrowDown01Icon className="w-5 h-5 text-gray-400" />}
                       </div>
                     </div>
                     
@@ -279,7 +263,7 @@ export default function ErrorAnalyticsPage() {
                     disabled={currentPage === 1}
                     className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ArrowLeft01Icon className="w-4 h-4" />
                   </button>
                   <span className="text-sm font-medium text-slate-700 min-w-[100px] text-center">
                     Page {currentPage} of {totalPages}
@@ -289,7 +273,7 @@ export default function ErrorAnalyticsPage() {
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ArrowRight01Icon className="w-4 h-4" />
                   </button>
                 </div>
               </div>

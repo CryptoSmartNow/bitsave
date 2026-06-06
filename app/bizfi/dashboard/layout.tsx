@@ -1,23 +1,9 @@
-"use client";
+'use client';
+
+import { Activity01Icon, Home01Icon, BarChartIcon, SparklesIcon, BotIcon, Building04Icon, RocketIcon, Video01Icon, Message02Icon, InformationCircleIcon } from "hugeicons-react";
 import { useState } from "react";
-import Link from "next/link";
+import Link from 'next/link';
 import { usePathname } from "next/navigation";
-import {
-    HiOutlineRocketLaunch,
-    HiOutlineHome,
-    HiOutlineVideoCamera,
-    HiOutlineCommandLine,
-    HiOutlineChatBubbleBottomCenterText,
-    HiOutlineQuestionMarkCircle,
-    HiOutlineEllipsisVertical,
-    HiOutlineBars3,
-    HiOutlineChevronLeft,
-    HiOutlineChevronRight,
-    HiOutlineBuildingStorefront,
-    HiOutlineChartBar,
-    HiOutlineSparkles
-} from "react-icons/hi2";
-import { Bot } from "lucide-react";
 import { Exo } from "next/font/google";
 import { AnimatePresence, motion } from "framer-motion";
 import "../bizfi-colors.css";
@@ -39,13 +25,13 @@ export default function BizFiDashboardLayout({
     const pathname = usePathname();
 
     const menuItems = [
-        { href: "/bizfi/dashboard", label: "Biz Dashboard", icon: HiOutlineChartBar },
-        { href: "/bizfi/dashboard/launchpad", label: "LaunchPad", icon: HiOutlineRocketLaunch },
-        { href: "/bizfi/dashboard/bizcontent", label: "BizContent", icon: HiOutlineVideoCamera },
-        { href: "/bizfi/dashboard/terminal", label: "BizMarket", icon: HiOutlineBuildingStorefront },
-        { href: "/bizfi/dashboard/chat", label: "Chat", icon: HiOutlineChatBubbleBottomCenterText },
-        { href: "/bizfi/dashboard/ai", label: "BizFi AI", icon: Bot as any },
-        { href: "/bizfi/dashboard/support", label: "Support and FAQs", icon: HiOutlineQuestionMarkCircle },
+        { href: "/bizfi/dashboard", label: "Biz Dashboard", icon: BarChartIcon },
+        { href: "/bizfi/dashboard/launchpad", label: "LaunchPad", icon: RocketIcon },
+        { href: "/bizfi/dashboard/bizcontent", label: "BizContent", icon: Video01Icon },
+        { href: "/bizfi/dashboard/terminal", label: "BizMarket", icon: Building04Icon },
+        { href: "/bizfi/dashboard/chat", label: "Chat", icon: Message02Icon },
+        { href: "/bizfi/dashboard/ai", label: "BizFi AI", icon: BotIcon as any },
+        { href: "/bizfi/dashboard/support", label: "Support and FAQs", icon: InformationCircleIcon },
     ];
 
     const isActive = (href: string) => pathname === href;
@@ -75,7 +61,7 @@ export default function BizFiDashboardLayout({
                 <div className="p-6 border-b border-gray-800 flex items-center justify-between">
                     <Link href="/bizfi" className={`flex items-center gap-3 ${isCollapsed ? 'justify-center w-full' : ''}`}>
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#81D7B4]">
-                            <HiOutlineRocketLaunch className="w-6 h-6 text-[#0F1825]" />
+                            <Activity01Icon className="w-6 h-6 text-[#0F1825]" />
                         </div>
                         {!isCollapsed && <span className="text-xl font-bold text-[#F9F9FB]">BizFi</span>}
                     </Link>
@@ -85,9 +71,9 @@ export default function BizFiDashboardLayout({
                         className="hidden lg:block p-1 rounded-lg transition-colors text-[#7B8B9A] hover:bg-gray-800 hover:text-white"
                     >
                         {isCollapsed ? (
-                            <HiOutlineChevronRight className="w-5 h-5" />
+                            <Activity01Icon className="w-5 h-5" />
                         ) : (
-                            <HiOutlineChevronLeft className="w-5 h-5" />
+                            <Activity01Icon className="w-5 h-5" />
                         )}
                     </button>
                 </div>
@@ -122,7 +108,7 @@ export default function BizFiDashboardLayout({
                             }`}
                         title={isCollapsed ? "More" : undefined}
                     >
-                        <HiOutlineEllipsisVertical className="w-5 h-5 flex-shrink-0" />
+                        <Activity01Icon className="w-5 h-5 flex-shrink-0" />
                         {!isCollapsed && <span className="font-medium">More</span>}
                     </button>
                 </nav>
@@ -156,7 +142,7 @@ export default function BizFiDashboardLayout({
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                    <HiOutlineBars3 className="w-6 h-6" />
+                                    <Activity01Icon className="w-6 h-6" />
                                 </button>
                             </div>
                         </div>

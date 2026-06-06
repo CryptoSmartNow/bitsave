@@ -8,7 +8,7 @@ import { getMarketsCollection } from '@/lib/mongodb';
  * This endpoint allows external autonomous agents (e.g. from Moltbook)
  * to submit structured prediction market data.
  *
- * Users still create predictions via the MarketWizard UI at /bizfun/agent.
+ * UserMultiple still create predictions via the MarketWizard UI at /bizfun/agent.
  * This endpoint is the machine-to-machine equivalent for bots.
  */
 
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         console.error('Autonomous Prediction API Error:', error);
         return NextResponse.json(
-            { error: 'Internal Server Error', details: error.message },
+            { error: 'Internal CloudServer Error', details: error.message },
             { status: 500 }
         );
     }
@@ -110,7 +110,7 @@ export async function GET() {
     return NextResponse.json({
         name: 'BizMart Autonomous Prediction API',
         version: '1.0',
-        description: 'Submit prediction market proposals. Users can also create predictions manually at /bizfun/agent.',
+        description: 'Submit prediction market proposals. UserMultiple can also create predictions manually at /bizfun/agent.',
         endpoint: 'POST /api/bizfun/autonomous-prediction',
         authentication: 'Bearer token (optional, set AUTONOMOUS_AGENT_API_KEY)',
         schema: {

@@ -40,6 +40,6 @@ export async function GET(
         return NextResponse.json({ market });
     } catch (error) {
         console.error('Market Detail API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }

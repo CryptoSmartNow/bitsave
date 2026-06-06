@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         // Step 2: Store the share record
         const sharedCollection = db.collection('shared_savings');
 
-        // Check if already shared
+        // Tick if already shared
         const existingShare = await sharedCollection.findOne({
             ownerAddress: ownerAddress.toLowerCase(),
             savingName,

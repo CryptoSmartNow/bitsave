@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
+import { Activity01Icon, Tick01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { HiOutlineArrowRight, HiOutlineArrowLeft, HiCheck } from "react-icons/hi2";
 import { MarketProposalCard } from "@/components/MarketProposalCard";
 
 const STEPS = [
@@ -27,7 +27,7 @@ const STEPS = [
     {
         id: 'description',
         title: "Explain it in a few sentences",
-        subtitle: "Pretend you’re explaining it to someone on X scrolling fast.",
+        subtitle: "Pretend you’re explaining it to someone on Cancel scrolling fast.",
         type: 'textarea',
         placeholder: "We are building..."
     },
@@ -36,7 +36,7 @@ const STEPS = [
         title: "What value are you providing?",
         subtitle: "And who is your target audience?",
         type: 'textarea',
-        placeholder: "Providing X to Y audience..."
+        placeholder: "Providing Cancel to Y audience..."
     },
     {
         id: 'stage',
@@ -195,7 +195,7 @@ export const MarketWizard = ({ walletAddress, onSuccess }: { walletAddress?: str
                         disabled={currentStepIndex === 0 || !!proposalData}
                         className="p-2 rounded-full hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-white"
                     >
-                        <HiOutlineArrowLeft className="w-5 h-5" />
+                        <Activity01Icon className="w-5 h-5" />
                     </button>
                     <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                         <motion.div
@@ -265,7 +265,7 @@ export const MarketWizard = ({ walletAddress, onSuccess }: { walletAddress?: str
                                                         }`}
                                                 >
                                                     <span className="font-medium text-lg">{opt}</span>
-                                                    {isSelected && <HiCheck className="w-5 h-5 text-[#81D7B4]" />}
+                                                    {isSelected && <Tick01Icon className="w-5 h-5 text-[#81D7B4]" />}
                                                 </button>
                                             );
                                         })}
@@ -344,7 +344,7 @@ export const MarketWizard = ({ walletAddress, onSuccess }: { walletAddress?: str
                             ) : step.id === 'review' ? (
                                 "Deploy Prediction Market"
                             ) : (
-                                <>Next <HiOutlineArrowRight className="w-4 h-4" /></>
+                                <>Next <Activity01Icon className="w-4 h-4" /></>
                             )}
                         </button>
                     </div>

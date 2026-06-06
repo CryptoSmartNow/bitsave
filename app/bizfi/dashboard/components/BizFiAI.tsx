@@ -1,14 +1,8 @@
 'use client';
+
+import { SentIcon, Delete02Icon, Activity01Icon, SparklesIcon, BarChartIcon, UserMultipleIcon, Dollar01Icon, Shield01Icon, BotIcon } from "hugeicons-react";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  HiOutlinePaperAirplane, HiOutlineTrash, HiOutlineChatBubbleLeftRight,
-  HiOutlineCalculator, HiOutlineBriefcase, HiOutlineSparkles,
-  HiOutlineBuildingStorefront, HiOutlineChartBar, HiOutlineDocumentText,
-  HiOutlineUserGroup, HiOutlineCurrencyDollar, HiOutlineLightBulb,
-  HiOutlineRocketLaunch, HiOutlineShieldCheck
-} from 'react-icons/hi2';
-import { Bot } from 'lucide-react';
 import { marked } from 'marked';
 
 interface Message {
@@ -21,33 +15,33 @@ interface Message {
 type BizFiMode = 'chat' | 'valuation' | 'advisor';
 
 const CHAT_PROMPTS = [
-  { icon: <HiOutlineBuildingStorefront className="w-4 h-4" />, label: 'How to List', prompt: 'How do I list my business on BizMarket?' },
-  { icon: <HiOutlineChartBar className="w-4 h-4" />, label: 'Best BizShares', prompt: 'Give me the best equity BizShares projecting 10% annual growth' },
-  { icon: <HiOutlineShieldCheck className="w-4 h-4" />, label: 'Verification', prompt: 'How does business verification and attestation work on BizFi?' },
-  { icon: <HiOutlineCurrencyDollar className="w-4 h-4" />, label: 'Token Pricing', prompt: 'How should I price my BizShare tokens?' },
-  { icon: <HiOutlineUserGroup className="w-4 h-4" />, label: 'For Investors', prompt: 'How do I evaluate a business listing before buying BizShares?' },
-  { icon: <HiOutlineDocumentText className="w-4 h-4" />, label: 'KYC Process', prompt: 'What documents do I need for KYC/KYB on BizMarket?' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'How to ListView', prompt: 'How do I list my business on BizMarket?' },
+  { icon: <BarChartIcon className="w-4 h-4" />, label: 'Best BizShares', prompt: 'Give me the best equity BizShares projecting 10% annual growth' },
+  { icon: <Shield01Icon className="w-4 h-4" />, label: 'Verification', prompt: 'How does business verification and attestation work on BizFi?' },
+  { icon: <Dollar01Icon className="w-4 h-4" />, label: 'Token Pricing', prompt: 'How should I price my BizShare tokens?' },
+  { icon: <UserMultipleIcon className="w-4 h-4" />, label: 'For Investors', prompt: 'How do I evaluate a business listing before buying BizShares?' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'KYC Process', prompt: 'What documents do I need for KYC/KYB on BizMarket?' },
 ];
 
 const VALUATION_PROMPTS = [
-  { icon: <HiOutlineCalculator className="w-4 h-4" />, label: 'Start Valuation', prompt: 'I want to estimate my business valuation. Let\'s begin.' },
-  { icon: <HiOutlineBuildingStorefront className="w-4 h-4" />, label: 'Startup', prompt: 'Help me value my early-stage startup for BizMarket listing' },
-  { icon: <HiOutlineChartBar className="w-4 h-4" />, label: 'Established Biz', prompt: 'Help me value my established business with existing revenue' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Start Valuation', prompt: 'I want to estimate my business valuation. Let\'s begin.' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Startup', prompt: 'Help me value my early-stage startup for BizMarket listing' },
+  { icon: <BarChartIcon className="w-4 h-4" />, label: 'Established Biz', prompt: 'Help me value my established business with existing revenue' },
 ];
 
 const ADVISOR_PROMPTS = [
-  { icon: <HiOutlineRocketLaunch className="w-4 h-4" />, label: 'Generate Pitch', prompt: 'Generate a BizMarket listing pitch for my business' },
-  { icon: <HiOutlineLightBulb className="w-4 h-4" />, label: 'Growth Strategy', prompt: 'What growth strategies would you recommend for a small business in Nigeria?' },
-  { icon: <HiOutlineSparkles className="w-4 h-4" />, label: 'Tokenization Plan', prompt: 'Help me create a tokenization strategy for my business' },
-  { icon: <HiOutlineBriefcase className="w-4 h-4" />, label: 'Funding Plan', prompt: 'Help me create a fundraising plan using BizShares' },
-  { icon: <HiOutlineDocumentText className="w-4 h-4" />, label: 'Business Plan', prompt: 'Help me outline a business plan for my BizMarket listing' },
-  { icon: <HiOutlineChartBar className="w-4 h-4" />, label: 'Financial Model', prompt: 'Help me create financial projections for my business' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Generate Pitch', prompt: 'Generate a BizMarket listing pitch for my business' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Growth Strategy', prompt: 'What growth strategies would you recommend for a small business in Nigeria?' },
+  { icon: <SparklesIcon className="w-4 h-4" />, label: 'Tokenization Plan', prompt: 'Help me create a tokenization strategy for my business' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Funding Plan', prompt: 'Help me create a fundraising plan using BizShares' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Business Plan', prompt: 'Help me outline a business plan for my BizMarket listing' },
+  { icon: <BarChartIcon className="w-4 h-4" />, label: 'Financial Model', prompt: 'Help me create financial projections for my business' },
 ];
 
 const MODES: { key: BizFiMode; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: 'chat', label: 'Chat', icon: <HiOutlineChatBubbleLeftRight className="w-4 h-4" />, color: '#81D7B4' },
-  { key: 'valuation', label: 'Valuation', icon: <HiOutlineCalculator className="w-4 h-4" />, color: '#81D7B4' },
-  { key: 'advisor', label: 'Advisor', icon: <HiOutlineBriefcase className="w-4 h-4" />, color: '#81D7B4' },
+  { key: 'chat', label: 'Chat', icon: <Activity01Icon className="w-4 h-4" />, color: '#81D7B4' },
+  { key: 'valuation', label: 'Valuation', icon: <Activity01Icon className="w-4 h-4" />, color: '#81D7B4' },
+  { key: 'advisor', label: 'Advisor', icon: <Activity01Icon className="w-4 h-4" />, color: '#81D7B4' },
 ];
 
 export default function BizFiAI() {
@@ -165,11 +159,11 @@ export default function BizFiAI() {
   const getModeInfo = () => {
     switch (mode) {
       case 'valuation':
-        return { title: 'Valuation Estimator', subtitle: 'Get an AI-powered estimate of your business value', icon: <HiOutlineCalculator className="w-10 h-10 text-[#81D7B4]" /> };
+        return { title: 'Valuation Estimator', subtitle: 'Get an AI-powered estimate of your business value', icon: <Activity01Icon className="w-10 h-10 text-[#81D7B4]" /> };
       case 'advisor':
-        return { title: 'Business Advisor', subtitle: 'Get strategic advice, pitch generation, and growth plans', icon: <HiOutlineBriefcase className="w-10 h-10 text-[#81D7B4]" /> };
+        return { title: 'Business Advisor', subtitle: 'Get strategic advice, pitch generation, and growth plans', icon: <Activity01Icon className="w-10 h-10 text-[#81D7B4]" /> };
       default:
-        return { title: 'Ask me anything!', subtitle: 'I can help with BizShares, tokenization, verification, and more', icon: <Bot className="w-10 h-10 text-[#81D7B4]" /> };
+        return { title: 'Ask me anything!', subtitle: 'I can help with BizShares, tokenization, verification, and more', icon: <BotIcon className="w-10 h-10 text-[#81D7B4]" /> };
     }
   };
 
@@ -182,7 +176,7 @@ export default function BizFiAI() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0F1825] to-[#1A2538] flex items-center justify-center shadow-lg shadow-[#1A2538]/20 border border-[#81D7B4]/20">
-            <Bot className="w-6 h-6 text-[#81D7B4]" />
+            <BotIcon className="w-6 h-6 text-[#81D7B4]" />
           </div>
           <div>
             <h1 className="text-xl font-black text-[#F9F9FB] tracking-tight">BizFi AI</h1>
@@ -191,7 +185,7 @@ export default function BizFiAI() {
         </div>
         {currentMessages.length > 0 && (
           <button onClick={clearHistory} className="flex items-center gap-2 px-4 py-2 bg-[#1A2538] border border-[#7B8B9A]/30 text-[#7B8B9A] hover:text-red-400 hover:border-red-400/50 rounded-xl text-sm font-bold transition-all">
-            <HiOutlineTrash className="w-4 h-4" /> Clear
+            <Delete02Icon className="w-4 h-4" /> Clear
           </button>
         )}
       </div>
@@ -296,7 +290,7 @@ export default function BizFiAI() {
             disabled={!input.trim() || isLoading}
             className="w-10 h-10 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-sm"
           >
-            <HiOutlinePaperAirplane className="w-5 h-5" />
+            <SentIcon className="w-5 h-5" />
           </button>
         </div>
         <p className="text-[10px] text-[#7B8B9A] text-center mt-2 font-medium">

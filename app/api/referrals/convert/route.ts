@@ -42,11 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check if this user has created savings before (only new users should count as referrals)
+    // Tick if this user has created savings before (only new users should count as referrals)
     try {
       const transactionsCollection = await getTransactionsCollection();
       if (transactionsCollection) {
-        // Check local transactions
+        // Tick local transactions
         const existingTx = await transactionsCollection.findOne({ 
           useraddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') } 
         });
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       // Continue with referral conversion if check fails
     }
     
-    // Check if this user was already converted through this referral
+    // Tick if this user was already converted through this referral
     const existingConversion = await referralVisitsCollection.findOne({
       referralCode,
       visitorWalletAddress: newUserWalletAddress,

@@ -1,20 +1,11 @@
 'use client';
 
+import { Alert02Icon, Activity01Icon, UserMultipleIcon, DatabaseIcon, Shield01Icon, Menu01Icon, Cancel01Icon, Logout01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/adminAuth';
-import { 
-  AlertTriangle, 
-  Activity, 
-  Users, 
-  Database,
-  Shield, 
-  Menu,
-  X,
-  LogOut
-} from 'lucide-react';
 
 export type SidebarState = 'closed' | 'collapsed' | 'open';
 
@@ -34,25 +25,25 @@ interface UserInteractionsSidebarProps {
 const defaultNavigationItems: NavigationItem[] = [
   {
     name: 'Dashboard',
-    icon: Activity,
+    icon: Activity01Icon,
     href: '/user-interactions',
     description: 'User activity tracking & metrics'
   },
   {
     name: 'Error Analysis',
-    icon: AlertTriangle,
+    icon: Alert02Icon,
     href: '/user-interactions/error-analysis',
     description: 'System error monitoring & analysis'
   },
   {
     name: 'User Interaction',
-    icon: Users,
+    icon: UserMultipleIcon,
     href: '/user-interactions/interactions',
     description: 'User interaction analytics & insights'
   },
   {
     name: 'Contract Data',
-    icon: Database,
+    icon: DatabaseIcon,
     href: '/user-interactions/contract-data',
     description: 'TVL and contract metrics across networks'
   }
@@ -122,7 +113,7 @@ export default function UserInteractionsSidebar({
                   onClick={toggleSidebar}
                   className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
-                  <Menu className="w-5 h-5 text-gray-600" />
+                  <Menu01Icon className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
             ) : (
@@ -146,13 +137,13 @@ export default function UserInteractionsSidebar({
                     onClick={toggleSidebar}
                     className="hidden lg:block p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-600" />
+                    <Cancel01Icon className="w-5 h-5 text-gray-600" />
                   </button>
                   <button
                     onClick={() => setSidebarState('closed')}
                     className="lg:hidden p-2 text-gray-600 hover:text-slate-900 hover:bg-gray-100 rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <Cancel01Icon className="w-5 h-5" />
                   </button>
                 </div>
               </>
@@ -198,13 +189,13 @@ export default function UserInteractionsSidebar({
                 className="w-10 h-10 bg-red-50 hover:bg-red-100 rounded-lg flex items-center justify-center group transition-colors"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5 text-red-400 group-hover:text-red-500" />
+                <Logout01Icon className="w-5 h-5 text-red-400 group-hover:text-red-500" />
               </button>
             ) : (
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center space-x-3 text-gray-400">
                   <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-slate-500" />
+                    <Shield01Icon className="w-4 h-4 text-slate-500" />
                   </div>
                   <div className="text-sm">
                     <div className="font-medium text-slate-700">Secure Access</div>
@@ -216,7 +207,7 @@ export default function UserInteractionsSidebar({
                   className="p-2 hover:bg-red-50 rounded-lg group transition-colors"
                   title="Logout"
                 >
-                  <LogOut className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
+                  <Logout01Icon className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
                 </button>
               </div>
             )}

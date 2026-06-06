@@ -1,11 +1,7 @@
-"use client";
+'use client';
+
+import { Alert02Icon, Shield01Icon, Activity01Icon, BarChartIcon } from "hugeicons-react";
 import { motion } from "framer-motion";
-import { 
-    HiOutlineExclamationTriangle, 
-    HiOutlineShieldCheck,
-    HiOutlineScale,
-    HiOutlineChartBar
-} from "react-icons/hi2";
 import EmptyState from "@/app/components/EmptyState";
 
 export interface Risk {
@@ -24,7 +20,7 @@ export default function RiskAssessment({ risks }: RiskAssessmentProps) {
             <EmptyState 
                 title="Risk Assessment"
                 description="Risk analysis data is not available for this project yet."
-                icon={HiOutlineChartBar}
+                icon={BarChartIcon}
             />
         );
     }
@@ -43,7 +39,7 @@ export default function RiskAssessment({ risks }: RiskAssessmentProps) {
         <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-4 md:p-6 h-full">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <HiOutlineScale className="w-5 h-5 text-[#81D7B4]" />
+                    <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                     Risk Assessment
                 </h3>
                 <div className="flex items-center gap-2">
@@ -78,7 +74,7 @@ export default function RiskAssessment({ risks }: RiskAssessmentProps) {
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-800 flex items-start gap-3">
-                <HiOutlineExclamationTriangle className="w-5 h-5 text-[#81D7B4] shrink-0 mt-0.5" />
+                <Alert02Icon className="w-5 h-5 text-[#81D7B4] shrink-0 mt-0.5" />
                 <p className="text-xs text-gray-400 leading-relaxed">
                     This assessment is based on self-reported data and automated analysis. 
                     Please complete the <span className="text-[#81D7B4] hover:underline cursor-pointer">full audit</span> for certification.

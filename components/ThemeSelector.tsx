@@ -1,14 +1,9 @@
 'use client';
 
+import { Activity01Icon, ArrowDown01Icon, Sun01Icon, Moon01Icon, ComputerSettingsIcon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  HiOutlineSun,
-  HiOutlineMoon,
-  HiOutlineComputerDesktop,
-  HiChevronDown
-} from 'react-icons/hi2';
 
 interface ThemeSelectorProps {
   className?: string;
@@ -50,9 +45,9 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
   }
 
   const themes = [
-    { id: 'light', name: 'Light', icon: HiOutlineSun },
-    { id: 'dark', name: 'Dark', icon: HiOutlineMoon },
-    { id: 'system', name: 'System', icon: HiOutlineComputerDesktop },
+    { id: 'light', name: 'Light', icon: Sun01Icon },
+    { id: 'dark', name: 'Dark', icon: Moon01Icon },
+    { id: 'system', name: 'System', icon: ComputerSettingsIcon },
   ];
 
   const handleThemeChange = (newTheme: string) => {
@@ -146,7 +141,7 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
             {currentTheme.name}
           </span>
         </div>
-        <HiChevronDown
+        <ArrowDown01Icon
           className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} group-hover:text-[#81D7B4]`}
         />
       </button>

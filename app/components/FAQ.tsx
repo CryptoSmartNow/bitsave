@@ -1,9 +1,8 @@
 'use client';
 
+import { PlusSignIcon, MinusSignIcon, Mail01Icon, TelegramIcon } from "hugeicons-react";
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlus, FiMinus, FiMail } from 'react-icons/fi';
-import { FaTelegramPlane } from 'react-icons/fa';
 
 interface FAQItem {
   id: string;
@@ -96,7 +95,7 @@ export default function FAQ() {
                   </h3>
                 </div>
                 <div className={`mt-1 ml-4 p-2 rounded-full transition-all duration-300 ${openId === item.id ? 'bg-gradient-to-br from-[#81D7B4] to-[#5fb392] text-white shadow-lg shadow-[#81D7B4]/20 rotate-0' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 rotate-0'}`}>
-                  {openId === item.id ? <FiMinus className="w-6 h-6" /> : <FiPlus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />}
+                  {openId === item.id ? <MinusSignIcon className="w-6 h-6" /> : <PlusSignIcon className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />}
                 </div>
               </button>
 
@@ -140,7 +139,7 @@ export default function FAQ() {
                 onClick={handleEmailClick}
                 className="flex items-center justify-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-white border border-gray-200 text-gray-900 rounded-full hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors font-medium shadow-sm hover:shadow-md cursor-pointer text-sm sm:text-base w-full sm:w-auto"
               >
-                <FiMail className="w-5 h-5" />
+                <Mail01Icon className="w-5 h-5" />
                 <span>Email Support</span>
               </button>
               
@@ -150,7 +149,7 @@ export default function FAQ() {
                 rel="noreferrer"
                 className="flex items-center justify-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-[#81D7B4] text-white rounded-full hover:bg-[#6bcb9f] transition-colors font-medium shadow-lg shadow-[#81D7B4]/20 text-sm sm:text-base w-full sm:w-auto"
               >
-                <FaTelegramPlane className="w-5 h-5" />
+                <TelegramIcon className="w-5 h-5" />
                 <span>Join Telegram</span>
               </a>
             </div>

@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import { PlusSignIcon, Money01Icon, ViewIcon, Activity01Icon, Dollar01Icon, PieChartIcon, UserMultipleIcon, Tick01Icon, LinkSquare01Icon } from "hugeicons-react";
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
@@ -12,12 +13,11 @@ import NetworkDetection from '@/components/NetworkDetection';
 import { ethers } from 'ethers';
 import { useSavingsData } from '@/hooks/useSavingsData';
 import { formatTimestamp } from '@/utils/dateUtils';
-import { HiOutlinePlus, HiOutlineBanknotes, HiOutlineEye, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlineChartPie, HiOutlineUsers, HiOutlineCheckCircle, HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 import SharePlanModal from '@/components/SharePlanModal';
 import { TableShimmer } from '@/components/ShimmerLoading';
 
-// Helper function to ensure image URLs are properly formatted for Next.js Image
+// Helper function to ensure image URLs are properly formatted for Next.js AiImage
 const ensureImageUrl = (url: string | undefined): string => {
   if (!url) return '/default-network.png'
   // If it's a relative path starting with /, it's fine
@@ -367,7 +367,7 @@ export default function PlansPage() {
           </div>
         </div>
 
-        {/* Plans Grid - Full Width / Vertical List */}
+        {/* Plans Grid - Full Width / Vertical ListView */}
         {isLoading ? (
           <div className="space-y-6">
             {[1, 2, 3].map((i) => (
@@ -487,7 +487,7 @@ export default function PlansPage() {
                   <Link href="/dashboard/create-savings">
                     <div className="relative bg-[#F8FAF9] rounded-[1.5rem] border-2 border-dashed border-gray-200 hover:border-[#81D7B4] hover:bg-[#81D7B4]/5 transition-all duration-300 h-64 flex flex-col items-center justify-center p-8 text-center cursor-pointer group shadow-sm">
                       <div className="bg-white rounded-full p-4 mb-4 shadow-sm group-hover:scale-110 transition-transform text-[#81D7B4]">
-                        <HiOutlinePlus className="w-8 h-8" />
+                        <PlusSignIcon className="w-8 h-8" />
                       </div>
                       <h3 className="text-lg font-bold text-gray-900 mb-2">Create New Plan</h3>
                       <p className="text-gray-500 text-sm max-w-xs">Start a new savings goal and track your progress</p>

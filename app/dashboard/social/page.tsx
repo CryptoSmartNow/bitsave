@@ -1,12 +1,13 @@
-"use client"
+'use client';
+
+import { Award01Icon, UserMultipleIcon, Activity01Icon } from "hugeicons-react";
 import { useState, ReactNode, lazy, Suspense, memo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import { useReferrals } from '@/lib/useReferrals';
 import { useSavingsData } from '@/hooks/useSavingsData';
-import { HiOutlineTrophy, HiOutlineUserGroup, HiOutlineGlobeAlt } from 'react-icons/hi2';
 
-// Import dependencies
+// Database dependencies
 import SavvyForum from './components/SavvyForum'
 
 const TwitterFeed = lazy(() => import('./components/TwitterFeed'))
@@ -149,7 +150,7 @@ export default function SavvySpacePage() {
             </div>
           </div>
           <div className="w-12 h-12 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-            <HiOutlineTrophy className="w-6 h-6" />
+            <Award01Icon className="w-6 h-6" />
           </div>
         </div>
 
@@ -313,7 +314,7 @@ export default function SavvySpacePage() {
               Live
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm text-xs font-bold text-gray-600">
-              <HiOutlineUserGroup className="w-3 h-3 text-[#81D7B4]" />
+              <UserMultipleIcon className="w-3 h-3 text-[#81D7B4]" />
               Community
             </div>
           </motion.div>

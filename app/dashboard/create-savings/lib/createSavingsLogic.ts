@@ -278,7 +278,7 @@ export const fetchCeloPrice = async () => {
     }
 };
 
-// Helper function to ensure image URLs are properly formatted for Next.js Image
+// Helper function to ensure image URLs are properly formatted for Next.js AiImage
 export const ensureImageUrl = (url: string | undefined): string => {
     if (!url) return '/default-network.png';
     if (url.startsWith('/')) return url;

@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BlogPost, BlogCategory } from '@/lib/blogDatabase';
@@ -205,7 +206,7 @@ export default function BlogListingClient() {
             <p className="text-lg text-gray-600 mb-8">
               {searchQuery || selectedCategory
                 ? 'Try adjusting your search or filter criteria.'
-                : 'Check back soon for the latest insights and tips!'}
+                : 'Tick back soon for the latest insights and tips!'}
             </p>
             {(searchQuery || selectedCategory) && (
               <button
@@ -227,7 +228,7 @@ export default function BlogListingClient() {
                 <article key={post._id?.toString()} className="group">
                   <Link href={`/blog/${post.slug}`}>
                     <div className="bg-white/70 backdrop-blur-sm rounded-2xl overflow-hidden border border-[#81D7B4]/10 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      {/* Featured Image */}
+                      {/* Featured AiImage */}
                       {post.featuredImage ? (
                         <div className="h-48 overflow-hidden">
                           <BlogImage

@@ -1,16 +1,9 @@
 'use client';
 
+import { Activity01Icon, FlashIcon, UserMultipleIcon, Alert02Icon, DashboardSquare01Icon, BarChartIcon } from "hugeicons-react";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/adminAuth';
-import { 
-  Activity, 
-  Zap, 
-  Users, 
-  AlertTriangle, 
-  LayoutDashboard, 
-  BarChart3 
-} from 'lucide-react';
 
 export default function UserInteractionsLoginForm() {
   const [password, setPassword] = useState('');
@@ -39,12 +32,12 @@ export default function UserInteractionsLoginForm() {
       {/* Background Ambience & Icons */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Floating Icons with fade effect - Specific to User Interactions */}
-        <Activity className="absolute top-[15%] left-[10%] w-24 h-24 text-[#81D7B4]/10 -rotate-12 blur-sm animate-pulse" />
-        <Users className="absolute top-[25%] right-[15%] w-32 h-32 text-[#81D7B4]/5 rotate-12 blur-[2px]" />
-        <AlertTriangle className="absolute bottom-[20%] left-[20%] w-20 h-20 text-[#81D7B4]/5 rotate-45 blur-sm" />
-        <Zap className="absolute bottom-[25%] right-[10%] w-28 h-28 text-[#81D7B4]/10 -rotate-6 blur-[1px]" />
-        <LayoutDashboard className="absolute top-[45%] left-[5%] w-16 h-16 text-[#81D7B4]/5 rotate-12 blur-sm" />
-        <BarChart3 className="absolute bottom-[10%] left-[50%] w-40 h-40 text-[#81D7B4]/5 -translate-x-1/2 rotate-90 blur-md" />
+        <Activity01Icon className="absolute top-[15%] left-[10%] w-24 h-24 text-[#81D7B4]/10 -rotate-12 blur-sm animate-pulse" />
+        <UserMultipleIcon className="absolute top-[25%] right-[15%] w-32 h-32 text-[#81D7B4]/5 rotate-12 blur-[2px]" />
+        <Alert02Icon className="absolute bottom-[20%] left-[20%] w-20 h-20 text-[#81D7B4]/5 rotate-45 blur-sm" />
+        <FlashIcon className="absolute bottom-[25%] right-[10%] w-28 h-28 text-[#81D7B4]/10 -rotate-6 blur-[1px]" />
+        <DashboardSquare01Icon className="absolute top-[45%] left-[5%] w-16 h-16 text-[#81D7B4]/5 rotate-12 blur-sm" />
+        <BarChartIcon className="absolute bottom-[10%] left-[50%] w-40 h-40 text-[#81D7B4]/5 -translate-x-1/2 rotate-90 blur-md" />
         
         {/* Gradient Orbs */}
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#81D7B4]/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
@@ -54,7 +47,7 @@ export default function UserInteractionsLoginForm() {
       <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border border-[#81D7B4]/20 shadow-2xl max-w-md w-full mx-4 relative z-10">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-[#81D7B4]/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#81D7B4]/20">
-            <Users className="w-8 h-8 text-[#81D7B4]" />
+            <UserMultipleIcon className="w-8 h-8 text-[#81D7B4]" />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">
             User Interactions

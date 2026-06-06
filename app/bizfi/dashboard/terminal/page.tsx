@@ -1,12 +1,8 @@
-"use client";
+'use client';
+
+import { Activity01Icon, BarChartIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import {
-    HiOutlineArrowTrendingUp,
-    HiOutlineArrowTrendingDown,
-    HiOutlineChartBar,
-    HiOutlineClock
-} from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import "../../bizfi-colors.css";
 
@@ -200,9 +196,9 @@ export default function TerminalPage() {
                             <p className="text-xs sm:text-sm" style={{ color: '#7B8B9A' }}>24h Change</p>
                             <p className={`text-base sm:text-lg font-bold flex items-center gap-1 ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                 {priceChange >= 0 ? (
-                                    <HiOutlineArrowTrendingUp className="w-4 sm:w-5 h-4 sm:h-5" />
+                                    <Activity01Icon className="w-4 sm:w-5 h-4 sm:h-5" />
                                 ) : (
-                                    <HiOutlineArrowTrendingDown className="w-4 sm:w-5 h-4 sm:h-5" />
+                                    <Activity01Icon className="w-4 sm:w-5 h-4 sm:h-5" />
                                 )}
                                 {priceChange >= 0 ? '+' : ''}{priceChange}%
                             </p>

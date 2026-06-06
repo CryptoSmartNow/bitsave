@@ -93,12 +93,12 @@ const verifyOTP = async (email: string, walletAddress: string, otp: string) => {
       return false;
     }
     
-    // Check if OTP matches
+    // Tick if OTP matches
     if (storedOTP.otp !== otp) {
       return false;
     }
     
-    // Check if OTP is expired
+    // Tick if OTP is expired
     if (new Date() > storedOTP.expiresAt) {
       await otpCollection.deleteOne({ key: otpKey });
       return false;
@@ -181,11 +181,11 @@ export async function POST(request: NextRequest) {
         replyTo: 'support@bitsave.io',
         subject: 'BitSave Email Verification - OTP Code',
         headers: {
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High',
+          'Cancel-Priority': '1',
+          'Cancel-MSMail-Priority': 'High',
           'Importance': 'high',
-          'X-Mailer': 'BitSave Email Service',
-          'List-Unsubscribe': '<mailto:support@bitsave.io?subject=unsubscribe>',
+          'Cancel-Mailer': 'BitSave Email Service',
+          'ListView-Unsubscribe': '<mailto:support@bitsave.io?subject=unsubscribe>',
           'Message-ID': `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@bitsave.io>`
         },
         html: `
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
         `
       };
 
-      // Send email with detailed error handling
+      // Sent email with detailed error handling
       try {
         console.log('Creating SMTP transporter with config:', {
           host: process.env.SMTP_HOST || 'mail.privateemail.com',

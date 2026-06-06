@@ -1,5 +1,5 @@
+import { Cancel01Icon, Tick01Icon, Activity01Icon, LinkSquare01Icon, RefreshIcon, SentIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiOutlineXMark, HiOutlineCheckCircle, HiOutlineClipboard, HiOutlineArrowTopRightOnSquare, HiOutlineCreditCard, HiOutlineArrowPath, HiOutlinePaperAirplane, HiOutlineArrowLeft, HiOutlineWallet } from "react-icons/hi2";
 import { useState } from "react";
 import { useAccount, useBalance } from "wagmi";
 import { formatUnits } from "viem";
@@ -23,7 +23,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
     const [copied, setCopied] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Send State
+    // Sent State
     const [selectedToken, setSelectedToken] = useState<TokenType>('USDC');
     const [recipient, setRecipient] = useState('');
     const [amount, setAmount] = useState('');
@@ -112,18 +112,18 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                         <div className="flex items-center gap-3">
                             {view === 'send' ? (
                                 <button onClick={resetSendState} className="p-1 -ml-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
-                                    <HiOutlineArrowLeft className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                 </button>
                             ) : (
                                 <div className="w-10 h-10 rounded-full bg-[#81D7B4] p-[2px] flex items-center justify-center">
                                     <div className="w-full h-full rounded-full bg-[#1A2538] flex items-center justify-center">
-                                        <HiOutlineWallet className="w-5 h-5 text-[#81D7B4]" />
+                                        <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                                     </div>
                                 </div>
                             )}
                             <div>
                                 <h3 className="text-lg font-bold text-white leading-tight">
-                                    {view === 'send' ? 'Send Assets' : 'Wallet Details'}
+                                    {view === 'send' ? 'Sent Assets' : 'Wallet Details'}
                                 </h3>
                                 <span className="text-xs text-gray-400 flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-[#81D7B4]"></span>
@@ -135,7 +135,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                             onClick={onClose}
                             className="p-2 rounded-full hover:bg-gray-700/50 text-gray-400 hover:text-white transition-all"
                         >
-                            <HiOutlineXMark className="w-6 h-6" />
+                            <Cancel01Icon className="w-6 h-6" />
                         </button>
                     </div>
 
@@ -158,12 +158,12 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                             >
                                                 {copied ? (
                                                     <>
-                                                        <HiOutlineCheckCircle className="w-4 h-4" />
+                                                        <Tick01Icon className="w-4 h-4" />
                                                         <span>Copied</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <HiOutlineClipboard className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                                        <Activity01Icon className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
                                                         <span>Copy Address</span>
                                                     </>
                                                 )}
@@ -181,7 +181,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                             disabled={isRefreshing}
                                             className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-gray-800 text-[10px] font-medium text-[#81D7B4] hover:text-[#6BC4A0] transition-colors disabled:opacity-50"
                                         >
-                                            <HiOutlineArrowPath className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                            <RefreshIcon className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
                                             <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
                                         </button>
                                     </div>
@@ -276,9 +276,9 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                         className="group flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 text-white font-medium transition-all border border-gray-700/50 hover:border-gray-600 hover:-translate-y-0.5"
                                     >
                                         <div className="p-2 rounded-full bg-[#81D7B4]/10 text-[#81D7B4] group-hover:scale-110 transition-transform">
-                                            <HiOutlinePaperAirplane className="w-4 h-4 -rotate-45 translate-x-0.5" />
+                                            <SentIcon className="w-4 h-4 -rotate-45 translate-x-0.5" />
                                         </div>
-                                        <span className="text-[10px] uppercase font-bold tracking-wider">Send</span>
+                                        <span className="text-[10px] uppercase font-bold tracking-wider">Sent</span>
                                     </button>
 
                                     <a
@@ -288,7 +288,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                         className="group flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 text-white font-medium transition-all border border-gray-700/50 hover:border-gray-600 hover:-translate-y-0.5"
                                     >
                                         <div className="p-2 rounded-full bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
-                                            <HiOutlineArrowTopRightOnSquare className="w-4 h-4" />
+                                            <LinkSquare01Icon className="w-4 h-4" />
                                         </div>
                                         <span className="text-[10px] uppercase font-bold tracking-wider">History</span>
                                     </a>
@@ -302,7 +302,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                         className="group flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 text-white font-medium transition-all border border-gray-700/50 hover:border-gray-600 hover:-translate-y-0.5"
                                     >
                                         <div className="p-2 rounded-full bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-                                            <HiOutlineCreditCard className="w-4 h-4" />
+                                            <Activity01Icon className="w-4 h-4" />
                                         </div>
                                         <span className="text-[10px] uppercase font-bold tracking-wider">Buy</span>
                                     </button>
@@ -322,12 +322,12 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                 </div>
                             </div>
                         ) : (
-                            // Send View
+                            // Sent View
                             <form onSubmit={handleSend} className="space-y-5">
                                 {txHash ? (
                                     <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
                                         <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                                            <HiOutlineCheckCircle className="w-8 h-8 text-green-500" />
+                                            <Tick01Icon className="w-8 h-8 text-green-500" />
                                         </div>
                                         <div>
                                             <h4 className="text-xl font-bold text-white">Sent Successfully!</h4>
@@ -345,7 +345,7 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                             onClick={resetSendState}
                                             className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-bold mt-4"
                                         >
-                                            Send Another
+                                            Sent Another
                                         </button>
                                     </div>
                                 ) : (
@@ -438,13 +438,13 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                                         >
                                             {loading ? (
                                                 <>
-                                                    <HiOutlineArrowPath className="w-5 h-5 animate-spin" />
+                                                    <RefreshIcon className="w-5 h-5 animate-spin" />
                                                     Processing...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <HiOutlinePaperAirplane className="w-4 h-4 -rotate-45 mb-1" />
-                                                    Send {amount ? `${amount} ${selectedToken}` : 'Assets'}
+                                                    <SentIcon className="w-4 h-4 -rotate-45 mb-1" />
+                                                    Sent {amount ? `${amount} ${selectedToken}` : 'Assets'}
                                                 </>
                                             )}
                                         </button>

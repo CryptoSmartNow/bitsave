@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
+import { Activity01Icon, UserMultipleIcon } from "hugeicons-react";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
-import { HiOutlineArrowLeft, HiOutlineGift } from "react-icons/hi2";
 import LanguageSelector from "@/components/LanguageSelector";
 import { Exo } from "next/font/google";
-import Link from "next/link";
+import Link from 'next/link';
 
 const exo = Exo({
     subsets: ['latin'],
@@ -24,7 +24,6 @@ const BizMartLink = () => (
     </span>
 );
 
-import { HiOutlinePresentationChartLine, HiOutlineUsers } from "react-icons/hi2";
 
 const RecentMarkets = ({ walletAddress }: { walletAddress?: string }) => {
     const [markets, setMarkets] = useState<any[]>([]);
@@ -71,7 +70,7 @@ const RecentMarkets = ({ walletAddress }: { walletAddress?: string }) => {
                     onClick={() => setActiveTab('mine')}
                     className={`text-lg font-bold flex items-center gap-2 transition-colors relative pb-1 ${activeTab === 'mine' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                 >
-                    <HiOutlineUsers className={`w-5 h-5 ${activeTab === 'mine' ? 'text-[#81D7B4]' : 'text-gray-500'}`} />
+                    <UserMultipleIcon className={`w-5 h-5 ${activeTab === 'mine' ? 'text-[#81D7B4]' : 'text-gray-500'}`} />
                     My Predictions
                     {activeTab === 'mine' && <div className="absolute bottom-[-17px] left-0 w-full h-0.5 bg-[#81D7B4]"></div>}
                 </button>
@@ -80,7 +79,7 @@ const RecentMarkets = ({ walletAddress }: { walletAddress?: string }) => {
                     onClick={() => setActiveTab('all')}
                     className={`text-lg font-bold flex items-center gap-2 transition-colors relative pb-1 ${activeTab === 'all' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                 >
-                    <HiOutlinePresentationChartLine className={`w-5 h-5 ${activeTab === 'all' ? 'text-[#81D7B4]' : 'text-gray-500'}`} />
+                    <Activity01Icon className={`w-5 h-5 ${activeTab === 'all' ? 'text-[#81D7B4]' : 'text-gray-500'}`} />
                     All Markets
                     {activeTab === 'all' && <div className="absolute bottom-[-17px] left-0 w-full h-0.5 bg-[#81D7B4]"></div>}
                 </button>
@@ -88,7 +87,7 @@ const RecentMarkets = ({ walletAddress }: { walletAddress?: string }) => {
 
             {showEmptyState ? (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
-                    <HiOutlinePresentationChartLine className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <Activity01Icon className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-gray-300 mb-2">No Predictions Yet</h3>
                     <p className="text-gray-500 mb-6">Create your first prediction market above.</p>
                 </div>
@@ -143,7 +142,7 @@ export default function AgentPage() {
                         <Link href="/bizfun" className="flex items-center gap-2 group">
                             <div className="relative">
                                 <div className="w-10 h-10 rounded-xl bg-[#81D7B4]/10 border border-[#81D7B4]/50 flex items-center justify-center text-[#81D7B4] shadow-[0_0_15px_rgba(129,215,180,0.3)] transition-transform group-hover:scale-105">
-                                    <HiOutlineGift className="w-6 h-6" />
+                                    <Activity01Icon className="w-6 h-6" />
                                 </div>
                             </div>
                             <span className="text-xl font-bold tracking-tight text-white font-mono">BizFun</span>
@@ -159,7 +158,7 @@ export default function AgentPage() {
                             href="/bizfun"
                             className="text-sm font-medium text-gray-400 hover:text-[#81D7B4] transition-colors flex items-center gap-2 mr-4"
                         >
-                            <HiOutlineArrowLeft className="w-4 h-4" />
+                            <Activity01Icon className="w-4 h-4" />
                             Go to market
                         </Link>
 

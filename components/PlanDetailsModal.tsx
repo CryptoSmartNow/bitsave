@@ -1,12 +1,6 @@
 import React from 'react';
+import { Cancel01Icon, Calendar01Icon, Alert02Icon, Activity01Icon, BarChartIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    HiOutlineXMark, 
-    HiOutlineCalendar, 
-    HiOutlineExclamationTriangle, 
-    HiOutlineClock,
-    HiOutlineChartBar,
-} from 'react-icons/hi2';
 import Image from 'next/image';
 import { NetworkLogoData } from '@/utils/networkLogos';
 
@@ -104,7 +98,7 @@ const PlanDetailsModal: React.FC<PlanDetailsModalProps> = ({
                             onClick={onClose} 
                             className="w-9 h-9 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 transition-colors"
                         >
-                            <HiOutlineXMark className="w-5 h-5" />
+                            <Cancel01Icon className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -158,24 +152,24 @@ const PlanDetailsModal: React.FC<PlanDetailsModalProps> = ({
                         <div className="grid grid-cols-2 gap-3 mb-4">
                             <div className="p-4 rounded-xl bg-white border border-gray-200 text-center shadow-sm">
                                 <div className="flex items-center justify-center gap-1.5 text-gray-500 text-xs mb-1.5">
-                                    <HiOutlineCalendar className="w-4 h-4" /> Start Date
+                                    <Calendar01Icon className="w-4 h-4" /> Start Date
                                 </div>
                                 <div className="font-medium text-gray-900 text-sm">{formatDate(Number(plan.startTime || 0))}</div>
                             </div>
                             <div className="p-4 rounded-xl bg-white border border-gray-200 text-center shadow-sm">
                                 <div className="flex items-center justify-center gap-1.5 text-gray-500 text-xs mb-1.5">
-                                    <HiOutlineCalendar className="w-4 h-4" /> Maturity
+                                    <Calendar01Icon className="w-4 h-4" /> Maturity
                                 </div>
                                 <div className="font-medium text-gray-900 text-sm">{formatDate(Number(plan.maturityTime || 0))}</div>
                             </div>
                         </div>
 
-                        {/* Detailed Stats List */}
+                        {/* Detailed Stats ListView */}
                         <div className="space-y-3 mt-4">
                             <div className="flex justify-between items-center p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
-                                        <HiOutlineChartBar className="w-4 h-4" />
+                                        <BarChartIcon className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium text-gray-700 text-sm">Est. Rewards</span>
                                 </div>
@@ -185,7 +179,7 @@ const PlanDetailsModal: React.FC<PlanDetailsModalProps> = ({
                             <div className="flex justify-between items-center p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
-                                        <HiOutlineExclamationTriangle className="w-4 h-4" />
+                                        <Alert02Icon className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium text-gray-700 text-sm">Early Penalty Fee</span>
                                 </div>
@@ -195,7 +189,7 @@ const PlanDetailsModal: React.FC<PlanDetailsModalProps> = ({
                             <div className="flex justify-between items-center p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                                        <HiOutlineClock className="w-4 h-4" />
+                                        <Activity01Icon className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium text-gray-700 text-sm">Total Duration</span>
                                 </div>

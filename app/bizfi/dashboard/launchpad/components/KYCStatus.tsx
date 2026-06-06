@@ -1,12 +1,7 @@
-"use client";
+'use client';
+
+import { Tick01Icon, Activity01Icon, Shield01Icon } from "hugeicons-react";
 import { motion } from "framer-motion";
-import { 
-    HiOutlineCheckCircle, 
-    HiOutlineClock, 
-    HiOutlineDocumentText, 
-    HiOutlineShieldCheck,
-    HiOutlineBuildingOffice2
-} from "react-icons/hi2";
 import EmptyState from "@/app/components/EmptyState";
 
 export interface KYCStep {
@@ -27,7 +22,7 @@ export default function KYCStatus({ status, steps }: KYCStatusProps) {
             <EmptyState 
                 title="KYC Verification Status"
                 description="No verification details available for this project."
-                icon={HiOutlineShieldCheck}
+                icon={Shield01Icon}
             />
         );
     }
@@ -41,7 +36,7 @@ export default function KYCStatus({ status, steps }: KYCStatusProps) {
     return (
         <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-4 md:p-6">
             <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4]" />
+                <Shield01Icon className="w-5 h-5 text-[#81D7B4]" />
                 Verification Status
             </h3>
             
@@ -54,7 +49,7 @@ export default function KYCStatus({ status, steps }: KYCStatusProps) {
                         const isCompleted = currentStep > step.id;
                         const isCurrent = currentStep === step.id;
                         // Use default icon if not provided or handle mapping
-                        const Icon = step.icon || HiOutlineShieldCheck;
+                        const Icon = step.icon || Shield01Icon;
                         
                         return (
                             <div key={step.id} className="relative z-10 flex md:flex-col items-center md:text-center gap-4 md:gap-3">

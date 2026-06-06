@@ -28,7 +28,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     twitter: {
       card: 'summary_large_image',
       title: `I scored ${score}/${total} on ${title}`,
-      description: `Can you beat my score? Check out Bitsave Protocol's SaveFi platform.`
+      description: `Can you beat my score? Tick out Bitsave Protocol's SaveFi platform.`
     }
   };
 }

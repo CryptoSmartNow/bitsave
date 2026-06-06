@@ -47,8 +47,8 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-KEY": apiKey,
-        "X-API-SECRET": apiSecret,
+        "Cancel-API-KEY": apiKey,
+        "Cancel-API-SECRET": apiSecret,
       },
       signal,
       body: JSON.stringify({

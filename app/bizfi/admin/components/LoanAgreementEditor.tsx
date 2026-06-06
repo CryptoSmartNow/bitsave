@@ -1,6 +1,6 @@
+import { Cancel01Icon, PrinterIcon, ViewIcon, CheckListIcon } from "hugeicons-react";
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Printer, Eye, Save } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface LoanAgreementEditorProps {
@@ -61,7 +61,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
         <div className="p-5 border-b border-[#7B8B9A]/10 flex items-center justify-between bg-[#1A2538]/50 backdrop-blur-xl z-10">
           <div className="flex items-center gap-4">
             <div className="bg-[#81D7B4]/10 p-2.5 rounded-xl border border-[#81D7B4]/20">
-              <Eye className="w-5 h-5 text-[#81D7B4]" />
+              <ViewIcon className="w-5 h-5 text-[#81D7B4]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-[#F9F9FB] leading-tight">
@@ -98,7 +98,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#0F1825] border border-[#7B8B9A]/10 text-[#9BA8B5] hover:text-[#F9F9FB] hover:border-[#81D7B4]/30 hover:bg-[#1A2538] transition-all"
             >
-              <X className="w-5 h-5" />
+              <Cancel01Icon className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -475,7 +475,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
               onClick={handlePrint}
               className="px-6 py-3 bg-[#1A2538] text-[#F9F9FB] font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-[#253247] transition-all flex items-center gap-2 border border-[#7B8B9A]/20 shadow-lg"
             >
-              <Printer className="w-4 h-4" />
+              <PrinterIcon className="w-4 h-4" />
               Print
             </button>
           )}
@@ -488,9 +488,9 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
             {saving ? (
               <div className="w-4 h-4 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              <Save className="w-4 h-4" />
+              <CheckListIcon className="w-4 h-4" />
             )}
-            Save Agreement
+            CheckList Agreement
           </button>
         </div>
       </motion.div>

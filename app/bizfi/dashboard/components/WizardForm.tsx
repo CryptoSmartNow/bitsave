@@ -1,16 +1,8 @@
-"use client";
+'use client';
+
+import { Tick01Icon, Activity01Icon, Dollar01Icon, Cancel01Icon, LinkSquare01Icon } from "hugeicons-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    HiOutlineCheckCircle,
-    HiOutlineArrowRight,
-    HiOutlineArrowLeft,
-    HiOutlineRocketLaunch,
-    HiOutlineExclamationCircle,
-    HiOutlineCurrencyDollar,
-    HiOutlineXMark,
-    HiOutlineArrowTopRightOnSquare
-} from "react-icons/hi2";
 import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
 import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
@@ -384,7 +376,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         return (
             <div className="flex flex-col items-center justify-center p-8 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 text-center space-y-6">
                 <div className="w-20 h-20 bg-[#81D7B4]/10 rounded-full flex items-center justify-center mb-2">
-                    <HiOutlineCheckCircle className="w-10 h-10 text-[#81D7B4]" />
+                    <Tick01Icon className="w-10 h-10 text-[#81D7B4]" />
                 </div>
 
                 <div>
@@ -408,11 +400,11 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                     {attestationData.easUid}
                                 </code>
                                 <span className="text-[10px] text-gray-500 mt-1 group-hover:text-[#81D7B4] transition-colors flex items-center gap-1">
-                                    View on EAS Scan <HiOutlineArrowTopRightOnSquare className="w-3 h-3" />
+                                    View on EAS Scan <LinkSquare01Icon className="w-3 h-3" />
                                 </span>
                             </div>
                             <div className="p-2 rounded-lg bg-[#81D7B4]/10 group-hover:bg-[#81D7B4]/20 transition-colors">
-                                <HiOutlineArrowTopRightOnSquare className="w-5 h-5 text-[#81D7B4]" />
+                                <LinkSquare01Icon className="w-5 h-5 text-[#81D7B4]" />
                             </div>
                         </a>
                     </div>
@@ -428,7 +420,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                         </svg>
-                        Share to X
+                        Share to Cancel
                     </a>
 
                     <button
@@ -465,7 +457,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                         }`}
                                 >
                                     {index + 1 < currentStep ? (
-                                        <HiOutlineCheckCircle className="w-5 h-5" />
+                                        <Tick01Icon className="w-5 h-5" />
                                     ) : (
                                         step.section
                                     )}
@@ -514,7 +506,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     disabled={isFirstStep}
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1 whitespace-nowrap"
                 >
-                    <HiOutlineArrowLeft className="w-5 h-5" />
+                    <Activity01Icon className="w-5 h-5" />
                     <span>Previous</span>
                 </button>
 
@@ -524,7 +516,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border-2 border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 hover:border-[#81D7B4] backdrop-blur-sm order-3 sm:order-2 whitespace-nowrap"
                         style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
                     >
-                        <HiOutlineCurrencyDollar className="w-5 h-5" />
+                        <Dollar01Icon className="w-5 h-5" />
                         <span>Insufficient Funds? Buy Crypto</span>
                     </button>
                 )}
@@ -562,7 +554,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                             ) : (
                                 <>
                                     Review & Pay {paymentNetwork === 'celo' ? (isReferralValid ? 'Discounted G$' : 'G$ Fees') : `$${isReferralValid ? selectedTier.referralPrice : selectedTier.price}`}
-                                    <HiOutlineRocketLaunch className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                 </>
                             )}
                         </button>
@@ -573,14 +565,14 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                             className="md:hidden flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 w-full whitespace-nowrap"
                             style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
                         >
-                            <HiOutlineCurrencyDollar className="w-4 h-4" />
+                            <Dollar01Icon className="w-4 h-4" />
                             <span>Need Crypto? Buy Instantly</span>
                         </button>
 
                         {error && (
                             <div className="mt-2 p-4 rounded-xl border border-red-500/30 bg-red-500/5 backdrop-blur-sm max-w-md">
                                 <div className="flex items-start gap-3">
-                                    <HiOutlineExclamationCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                    <Activity01Icon className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                                     <div className="flex-1">
                                         <p className="text-sm font-semibold text-red-400 mb-1">Transaction Error</p>
                                         <p className="text-xs text-red-300/80 leading-relaxed break-words">{error}</p>
@@ -595,7 +587,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         className="flex items-center justify-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all order-1 sm:order-3 whitespace-nowrap"
                     >
                         Next
-                        <HiOutlineArrowRight className="w-5 h-5" />
+                        <Activity01Icon className="w-5 h-5" />
                     </button>
                 )}
             </div>
@@ -631,9 +623,9 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                         }}
                                     >
                                         {notificationConfig.type === 'success' ? (
-                                            <HiOutlineCheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-[#81D7B4]" />
+                                            <Tick01Icon className="w-6 h-6 sm:w-8 sm:h-8 text-[#81D7B4]" />
                                         ) : (
-                                            <HiOutlineExclamationCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
+                                            <Activity01Icon className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -675,7 +667,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                         onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
                                         onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
                                     >
-                                        <HiOutlineXMark className="w-5 h-5 sm:w-6 sm:h-6" />
+                                        <Cancel01Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                                     </button>
                                 </div>
                             </div>
@@ -1693,7 +1685,7 @@ function renderGrowthSection(
                     </div>
 
                     <TextAreaField
-                        label="Countries/Cities in Operation (List all you operate in)"
+                        label="Countries/Cities in Operation (ListView all you operate in)"
                         required
                         rows={2}
                         placeholder="e.g., Nigeria (Lagos, Abuja), Kenya (Nairobi)"
@@ -2085,7 +2077,7 @@ function renderEnterpriseSection(
                     </div>
 
                     <TextAreaField
-                        label="Countries/Cities in Operation (List all you operate in)"
+                        label="Countries/Cities in Operation (ListView all you operate in)"
                         required
                         rows={2}
                         placeholder="e.g., Nigeria (Lagos, Abuja), Kenya (Nairobi)"
@@ -2280,7 +2272,7 @@ function renderEnterpriseSection(
 
                     <div>
                         <TextAreaField
-                            label="List any project assets you have"
+                            label="ListView any project assets you have"
                             required
                             rows={4}
                             placeholder="e.g., Land documents, Machinery/equipment lists, Existing buildings or structures, Valuation documents, Film Scripts, Studio etc."

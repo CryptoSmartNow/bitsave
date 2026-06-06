@@ -41,8 +41,8 @@ export async function GET(req: Request) {
       `${baseUrl}/order/${orderId}`,
       {
         headers: {
-          "X-API-KEY": apiKey,
-          "X-API-SECRET": apiSecret,
+          "Cancel-API-KEY": apiKey,
+          "Cancel-API-SECRET": apiSecret,
         },
         signal,
       }

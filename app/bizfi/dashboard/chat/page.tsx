@@ -1,15 +1,9 @@
-"use client";
+'use client';
+
+import { SentIcon, Activity01Icon, Edit02Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
-import {
-    HiOutlinePaperAirplane,
-    HiOutlinePaperClip,
-    HiOutlineFaceSmile,
-    HiOutlineEllipsisVertical,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlinePencil
-} from "react-icons/hi2";
 import { Exo } from "next/font/google";
 import { format } from "date-fns";
 import "../../bizfi-colors.css";
@@ -217,7 +211,7 @@ export default function ChatPage() {
             <div className={`${exo.variable} font-sans h-[calc(100vh-80px)] flex items-center justify-center bg-[#0A0E14] text-white`}>
                 <div className="text-center p-8 bg-[#1A2538]/50 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 max-w-md w-full mx-4 shadow-xl">
                     <div className="w-24 h-24 bg-[#1A2538] rounded-full flex items-center justify-center mb-6 mx-auto border border-[#7B8B9A]/10 shadow-lg shadow-[#81D7B4]/5">
-                        <HiOutlineChatBubbleLeftRight className="w-10 h-10 text-[#81D7B4]" />
+                        <Activity01Icon className="w-10 h-10 text-[#81D7B4]" />
                     </div>
                     <h2 className="text-2xl font-bold mb-3 text-[#F9F9FB] tracking-tight">Connect Wallet</h2>
                     <p className="text-[#9BA8B5] leading-relaxed">Please connect your wallet to access premium support chat and manage your business inquiries.</p>
@@ -274,7 +268,7 @@ export default function ChatPage() {
                         </div>
                     </div>
                     <button className="p-2.5 hover:bg-[#1A2538] rounded-xl transition-colors text-[#9BA8B5] hover:text-[#F9F9FB] border border-transparent hover:border-[#7B8B9A]/10">
-                        <HiOutlineEllipsisVertical className="w-5 h-5" />
+                        <Activity01Icon className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -283,7 +277,7 @@ export default function ChatPage() {
                     {messages.length === 0 ? (
                         <div className="text-center text-[#9BA8B5] mt-10 p-8 bg-[#1A2538]/30 rounded-2xl border border-[#7B8B9A]/10 max-w-md mx-auto backdrop-blur-sm">
                             <div className="w-16 h-16 bg-[#1A2538] rounded-2xl flex items-center justify-center mb-4 mx-auto text-[#81D7B4]">
-                                <HiOutlineChatBubbleLeftRight className="w-8 h-8" />
+                                <Activity01Icon className="w-8 h-8" />
                             </div>
                             <h3 className="text-lg font-bold text-[#F9F9FB] mb-2">Welcome to Support</h3>
                             <p className="text-sm leading-relaxed">No messages yet. Start a conversation with our support team regarding your business application or account!</p>
@@ -341,7 +335,7 @@ export default function ChatPage() {
                                         onClick={() => setShowEmoji(false)}
                                         className="absolute -top-2 -right-2 bg-[#1A2538] rounded-full p-1 text-[#9BA8B5] hover:text-[#F9F9FB] z-10 border border-[#7B8B9A]/20"
                                     >
-                                        <HiOutlineEllipsisVertical className="w-4 h-4 rotate-90" />
+                                        <Activity01Icon className="w-4 h-4 rotate-90" />
                                     </button>
                                     <EmojiPicker
                                         theme={"dark" as any}
@@ -367,20 +361,20 @@ export default function ChatPage() {
                                 disabled={uploading}
                                 className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
-                                <HiOutlinePaperClip className="w-5 h-5" />
+                                <Activity01Icon className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={() => setShowDoodle(true)}
                                 disabled={uploading}
                                 className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
-                                <HiOutlinePencil className="w-5 h-5" />
+                                <Edit02Icon className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={() => setShowEmoji(!showEmoji)}
                                 className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                             >
-                                <HiOutlineFaceSmile className="w-5 h-5" />
+                                <Activity01Icon className="w-5 h-5" />
                             </button>
                         </div>
 
@@ -409,7 +403,7 @@ export default function ChatPage() {
                             {sending || uploading ? (
                                 <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <HiOutlinePaperAirplane className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
+                                <SentIcon className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
                             )}
                         </button>
                     </div>

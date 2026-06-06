@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { BlogCategory } from '@/lib/blogDatabase';
 
@@ -187,7 +188,7 @@ export default function AdminCategoriesPage() {
         </form>
       </div>
 
-      {/* Categories List */}
+      {/* Categories ListView */}
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/10 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Existing Categories</h2>

@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -21,7 +22,7 @@ interface UploadResponse {
 
 export default function ImageUpload({ 
   onChange, 
-  label = "Featured Image"
+  label = "Featured AiImage"
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

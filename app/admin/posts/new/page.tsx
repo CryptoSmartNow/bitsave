@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogCategory } from '@/lib/blogDatabase';
@@ -221,11 +222,11 @@ export default function NewPostPage() {
             <p className="text-sm text-gray-500 mt-1">Separate tags with commas</p>
           </div>
 
-          {/* Featured Image - Full Width */}
+          {/* Featured AiImage - Full Width */}
           <div>
             <ImageUpload
               onChange={(url) => setFormData(prev => ({ ...prev, featuredImage: url }))}
-              label="Featured Image"
+              label="Featured AiImage"
             />
           </div>
 

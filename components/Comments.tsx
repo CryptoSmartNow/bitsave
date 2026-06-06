@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Message01Icon, SentIcon, Wallet01Icon, ArrowDown01Icon } from "hugeicons-react";
 import { useComments } from '@/hooks/useComments';
-import { MessageCircle, Send, Wallet, ChevronDown } from 'lucide-react';
 
 interface CommentsProps {
   postId: string;
@@ -91,7 +91,7 @@ export default function Comments({ postId, className = '' }: CommentsProps) {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <MessageCircle className="w-5 h-5 mr-2 text-[#81D7B4]" />
+            <Message01Icon className="w-5 h-5 mr-2 text-[#81D7B4]" />
             Comments ({pagination.total})
           </h3>
           
@@ -100,7 +100,7 @@ export default function Comments({ postId, className = '' }: CommentsProps) {
               onClick={connectWallet}
               className="flex items-center px-4 py-2 bg-[#81D7B4] text-white rounded-xl hover:bg-[#6bc4a1] transition-colors shadow-sm"
             >
-              <Wallet className="w-4 h-4 mr-2" />
+              <Wallet01Icon className="w-4 h-4 mr-2" />
               Connect Wallet to Comment
             </button>
           )}
@@ -111,7 +111,7 @@ export default function Comments({ postId, className = '' }: CommentsProps) {
           <form onSubmit={handleSubmitComment} className="mb-6">
             <div className="mb-3">
               <div className="flex items-center text-sm text-gray-600 mb-2">
-                <Wallet className="w-4 h-4 mr-1" />
+                <Wallet01Icon className="w-4 h-4 mr-1" />
                 Connected: {formatWalletAddress(walletAddress)}
               </div>
               <textarea
@@ -142,14 +142,14 @@ export default function Comments({ postId, className = '' }: CommentsProps) {
                 disabled={!newComment.trim() || submitting}
                 className="flex items-center px-4 py-2 bg-[#81D7B4] text-white rounded-xl hover:bg-[#6bc4a1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
-                <Send className="w-4 h-4 mr-2" />
+                <SentIcon className="w-4 h-4 mr-2" />
                 {submitting ? 'Posting...' : 'Post Comment'}
               </button>
             </div>
           </form>
         )}
 
-        {/* Comments List */}
+        {/* Comments ListView */}
         <div className="space-y-4">
           {loading && comments.length === 0 ? (
             <div className="text-center py-8">
@@ -158,7 +158,7 @@ export default function Comments({ postId, className = '' }: CommentsProps) {
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-8">
-              <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <Message01Icon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">No comments yet. Be the first to share your thoughts!</p>
             </div>
           ) : (
@@ -197,7 +197,7 @@ export default function Comments({ postId, className = '' }: CommentsProps) {
               disabled={loading}
               className="flex items-center mx-auto px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
             >
-              <ChevronDown className="w-4 h-4 mr-1" />
+              <ArrowDown01Icon className="w-4 h-4 mr-1" />
               {loading ? 'Loading...' : 'Load More Comments'}
             </button>
           </div>

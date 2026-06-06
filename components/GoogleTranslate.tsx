@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Globe } from 'lucide-react';
+import { GlobeIcon } from "hugeicons-react";
 import { useRouter, usePathname } from 'next/navigation';
 
 declare global {
@@ -457,7 +457,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
         
         {/* Globe Icon */}
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-          <Globe className="h-4 w-4 text-gray-400" />
+          <GlobeIcon className="h-4 w-4 text-gray-400" />
         </div>
       </div>
       

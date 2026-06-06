@@ -51,7 +51,7 @@ export async function GET(
         return NextResponse.json({ comments: enrichedComments });
     } catch (error) {
         console.error('Comments API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }
 
@@ -93,6 +93,6 @@ export async function POST(
 
     } catch (error) {
         console.error('Post Comment Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }

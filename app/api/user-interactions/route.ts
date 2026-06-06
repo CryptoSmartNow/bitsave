@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         {
           type: 'error',
           walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS Cancel 10_15_7)',
           data: {
             error: 'Transaction failed: Insufficient funds',
             context: 'Attempting to transfer 100 USDC',
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       {
         type: 'error',
         walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS Cancel 10_15_7)',
         data: {
           error: 'Transaction failed: Insufficient funds',
           context: 'Attempting to transfer 100 USDC',

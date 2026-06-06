@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -196,13 +196,13 @@ export default function ReferralPage() {
                   </svg>
                 </a>
 
-              {/* X (Twitter) Link */}
+              {/* Cancel (Twitter) Link */}
               <a
                 href="https://x.com/bitsaveprotocol"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-700 to-black text-white rounded-full transition-all duration-500 shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] transform hover:-translate-y-2 hover:scale-110 backdrop-blur-sm border border-white/20 relative overflow-hidden group"
-                aria-label="Follow us on X"
+                aria-label="Follow us on Cancel"
                 style={{
                   background: 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #000000 100%)',
                   boxShadow: '0 8px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'

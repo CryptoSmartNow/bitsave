@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -91,7 +91,9 @@ const solanaConnectors = toSolanaWalletConnectors({
 function InnerProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   const pathname = usePathname();
+  const isBizSwap = pathname?.startsWith('/bizswap');
   const isBizFi = pathname?.startsWith('/bizfi') || pathname?.startsWith('/bizfun');
+  const isPrivyLoginEnabled = isBizFi || isBizSwap;
 
   // Force dark theme for BizFi pages
   const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
@@ -121,12 +123,16 @@ function InnerProviders({ children }: { children: ReactNode }) {
           logo: "/bitsavelogo.png",
           showWalletLoginFirst: true,
         },
-        embeddedWallets: {
+        embeddedWallets: isBizSwap ? {
+          solana: {
+            createOnLogin: "all-users",
+          },
+        } : {
           ethereum: {
             createOnLogin: "users-without-wallets",
           },
         },
-        loginMethods: isBizFi 
+        loginMethods: isPrivyLoginEnabled 
           ? ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'] 
           : ['wallet'],
         supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
@@ -157,7 +163,8 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <InnerProviders>
-        {children}
+        <>
+          {children}
           <Toaster position="top-center" toastOptions={{
             style: {
               background: '#333',
@@ -171,6 +178,7 @@ export function Providers({ children }: { children: ReactNode }) {
               },
             },
           }} />
+        </>
       </InnerProviders>
     </ThemeProvider>
   );

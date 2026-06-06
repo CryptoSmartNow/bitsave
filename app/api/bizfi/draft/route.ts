@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(draft || {});
     } catch (e) {
         console.error("Failed to read draft", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (e) {
         console.error("Failed to save draft", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }
 
@@ -78,6 +78,6 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (e) {
         console.error("Failed to delete draft", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }

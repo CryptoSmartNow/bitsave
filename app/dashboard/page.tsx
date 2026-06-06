@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { Activity01Icon, Tick01Icon, ArrowDown01Icon, Notification01Icon, Dollar01Icon, PlusSignIcon, Cancel01Icon, ViewIcon, Money01Icon, Download01Icon } from "hugeicons-react";
 // React hooks for state management and lifecycle
 import { useState, useEffect, useCallback, useMemo } from 'react';
 // Wagmi hooks for wallet connection and network switching
@@ -32,7 +34,6 @@ import { initializeSavingsCache } from '../../utils/savingsCache';
 import { useENSData } from '../../hooks/useENSData';
 // Date utility functions for formatting timestamps
 import { formatTimestamp } from '../../utils/dateUtils';
-import { HiOutlineArrowRight, HiOutlineCheckCircle, HiOutlineArrowDown, HiOutlineBell, HiOutlineChevronDown, HiOutlineCheck, HiOutlineClipboardDocumentList, HiOutlineCurrencyDollar, HiOutlinePlus, HiOutlineXMark, HiOutlineEye, HiOutlineBanknotes, HiOutlineGift, HiOutlineArrowDownTray } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '../../utils/networkLogos';
 import { toast } from 'react-hot-toast';
 
@@ -173,7 +174,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (mounted) {
       if (address) {
-        // Use ENS hook's getDisplayName which prioritizes ENS > Twitter > saved name > truncated address
+        // Use ENS hook's getDisplayName which prioritizes ENS > TwitterIcon > saved name > truncated address
         setDisplayName(getDisplayName(address));
       } else {
         setDisplayName('User');
@@ -215,7 +216,7 @@ export default function Dashboard() {
 
       clearTimeout(timeoutId); // Clear timeout if request completes
 
-      // Check if the API request was successful
+      // Tick if the API request was successful
       if (!response.ok) {
         throw new Error('Failed to fetch updates');
       }
@@ -287,7 +288,7 @@ export default function Dashboard() {
     if (!address) return;
 
     try {
-      // Send PUT request to mark update as read
+      // Sent PUT request to mark update as read
       const response = await fetch(`/api/updates/${updateId}/read`, {
         method: 'PUT',
         headers: {
@@ -664,7 +665,7 @@ export default function Dashboard() {
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{selectedUpdate.title}</h3>
-                <button onClick={closeUpdateModal} className="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 p-2 rounded-full transition-colors"><HiOutlineXMark className="w-5 h-5" /></button>
+                <button onClick={closeUpdateModal} className="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 p-2 rounded-full transition-colors"><Cancel01Icon className="w-5 h-5" /></button>
               </div>
               <div className="inline-block px-3 py-1 bg-[#81D7B4]/20 text-[#81D7B4] rounded-full text-xs font-bold uppercase tracking-wider mb-6">{new Date(selectedUpdate.date).toLocaleDateString(('en-US'), { year: 'numeric', month: 'long', day: 'numeric' })}</div>
               <div className="text-gray-600 leading-relaxed mb-8">{selectedUpdate.content}</div>
@@ -704,7 +705,7 @@ export default function Dashboard() {
             </div>
             <div className="relative">
               <button id="notification-button" onClick={() => setShowNotifications(!showNotifications)} className="p-3.5 bg-white rounded-2xl border border-gray-200 hover:border-[#81D7B4]/50 shadow-sm relative group transition-all">
-                <HiOutlineBell className="w-5 h-5 text-gray-600 group-hover:text-[#81D7B4] transition-colors" />
+                <Notification01Icon className="w-5 h-5 text-gray-600 group-hover:text-[#81D7B4] transition-colors" />
                 {newUpdatesCount > 0 && <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-[#81D7B4] rounded-full border-2 border-white"></span>}
               </button>
               {showNotifications && (
@@ -757,7 +758,7 @@ export default function Dashboard() {
                         <Image priority src={ensureImageUrl(isSolanaNetwork ? (networkLogos['solana']?.logoUrl || networkLogos['solana']?.fallbackUrl || '/solana.png') : isBaseNetwork ? (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base-square-logo.svg') : isCeloNetwork ? (networkLogos['celo']?.logoUrl || networkLogos['celo']?.fallbackUrl || '/celo.png') : isLiskNetwork ? (networkLogos['lisk']?.logoUrl || networkLogos['lisk']?.fallbackUrl || '/lisk-logo.png') : isAvalancheNetwork ? (networkLogos['avalanche']?.logoUrl || networkLogos['avalanche']?.fallbackUrl || '/eth.png') : (networkLogos['base']?.logoUrl || networkLogos['base']?.fallbackUrl || '/base-square-logo.svg'))} alt={currentNetworkName || 'Network'} width={18} height={18} className="w-4.5 h-4.5 object-contain" />
                         <span className="text-sm font-bold text-black hidden sm:inline">{currentNetworkName || 'Network'}</span>
                         <div className={`w-2 h-2 rounded-full shadow-sm ml-1 ${isNetworkSynced ? 'bg-[#81D7B4]' : 'bg-orange-400 animate-pulse'}`}></div>
-                        {!isMobile && <HiOutlineChevronDown className="w-4 h-4 text-gray-400 ml-1" />}
+                        {!isMobile && <ArrowDown01Icon className="w-4 h-4 text-gray-400 ml-1" />}
                       </button>
 
                       {/* Network Dropdown Desktop */}
@@ -768,7 +769,7 @@ export default function Dashboard() {
                               <Image src={ensureImageUrl(net.icon)} alt={net.name} width={20} height={20} className="w-5 h-5 object-contain" />
                               <span className="flex-1 text-left">{net.name}</span>
                               {net.isComingSoon && <span className="text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md">Soon</span>}
-                              {net.isActive && <HiOutlineCheck className="w-5 h-5 text-[#81D7B4]" />}
+                              {net.isActive && <Tick01Icon className="w-5 h-5 text-[#81D7B4]" />}
                             </button>
                           ))}
                         </div>
@@ -784,13 +785,13 @@ export default function Dashboard() {
                   {/* Buttons with flex-nowrap to prevent wrapping on mobile, overflow-visible allows shadows to breathe */}
                   <div className="relative z-10 pt-8 pb-4 border-t border-[#81D7B4]/10 flex flex-wrap gap-2 sm:gap-4 flex-nowrap">
                     <Link href="/dashboard/create-savings" className="flex-1 sm:flex-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-8 py-3.5 bg-[#81D7B4] hover:bg-opacity-90 text-white text-[13px] sm:text-sm font-bold rounded-2xl transition-all shadow-[0_4px_15px_rgba(129,215,180,0.3)] transform hover:-translate-y-0.5">
-                      <HiOutlinePlus className="w-4 h-4 sm:w-5 sm:h-5 font-bold" /> New Plan
+                      <PlusSignIcon className="w-4 h-4 sm:w-5 sm:h-5 font-bold" /> New Plan
                     </Link>
                     <Link href="/dashboard/plans" className="flex-1 sm:flex-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-8 py-3.5 bg-white/80 hover:bg-white backdrop-blur-sm text-[#81D7B4] border border-[#81D7B4]/20 text-[13px] sm:text-sm font-bold rounded-2xl transition-all shadow-sm hover:shadow-[0_4px_15px_rgba(129,215,180,0.1)]">
-                      <HiOutlineClipboardDocumentList className="w-4 h-4 sm:w-5 sm:h-5" /> View Plans
+                      <Activity01Icon className="w-4 h-4 sm:w-5 sm:h-5" /> View Plans
                     </Link>
                     <button onClick={handleInstallClick} className="md:hidden flex-1 sm:flex-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-8 py-3.5 bg-[#81D7B4] hover:bg-opacity-90 text-white text-[13px] sm:text-sm font-bold rounded-2xl transition-all shadow-sm transform hover:-translate-y-0.5">
-                      <HiOutlineArrowDownTray className="w-4 h-4 sm:w-5 sm:h-5" /> Install App
+                      <Download01Icon className="w-4 h-4 sm:w-5 sm:h-5" /> Install App
                     </button>
                   </div>
                 </div>
@@ -806,7 +807,7 @@ export default function Dashboard() {
 
                   <div className="flex items-center gap-4 mb-6 relative z-10">
                     <div className="w-14 h-14 rounded-2xl bg-white text-[#81D7B4] flex items-center justify-center border border-gray-100 shadow-[0_4px_15px_rgba(0,0,0,0.05)] group-hover:scale-105 transition-transform duration-300">
-                      <HiOutlineGift className="w-7 h-7" />
+                      <Activity01Icon className="w-7 h-7" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-black tracking-tight">Loyalty Rewards</h3>
@@ -934,7 +935,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="w-full bg-white rounded-[2rem] border border-gray-100 p-10 sm:p-16 text-center shadow-[0_10px_30px_rgba(0,0,0,0.03)] relative z-20">
                     <div className="w-20 h-20 bg-[#F8FAF9] rounded-3xl flex items-center justify-center mx-auto mb-6 border border-[#81D7B4]/20 shadow-inner">
-                      {activeTab === 'current' ? <HiOutlinePlus className="w-10 h-10 text-[#81D7B4]" /> : <HiOutlineCheckCircle className="w-10 h-10 text-[#81D7B4]" />}
+                      {activeTab === 'current' ? <PlusSignIcon className="w-10 h-10 text-[#81D7B4]" /> : <Tick01Icon className="w-10 h-10 text-[#81D7B4]" />}
                     </div>
                     <h3 className="text-xl font-bold text-black mb-3">{activeTab === 'current' ? 'No Active Plans' : 'No Completed Plans'}</h3>
                     <p className="text-gray-500 mb-8 text-sm max-w-sm mx-auto font-medium leading-relaxed">{activeTab === 'current' ? 'Start your wealth-building journey by creating your first strategic savings plan today.' : 'Your successfully completed savings plans will appear here.'}</p>

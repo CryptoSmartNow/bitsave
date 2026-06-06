@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     const excerpt = generateExcerpt(content);
     const now = new Date();
 
-    // Check if slug already exists
+    // Tick if slug already exists
     const existingPost = await collection.findOne({ slug });
     if (existingPost) {
       return NextResponse.json(

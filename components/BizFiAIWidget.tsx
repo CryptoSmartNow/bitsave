@@ -1,8 +1,8 @@
 'use client';
+
+import { Cancel01Icon, SentIcon, BotIcon } from "hugeicons-react";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineXMark, HiOutlinePaperAirplane } from 'react-icons/hi2';
-import { Bot } from 'lucide-react';
 import { marked } from 'marked';
 import Link from 'next/link';
 
@@ -87,7 +87,7 @@ export default function BizFiAIWidget() {
             onClick={() => setIsOpen(true)}
             className="fixed bottom-6 right-6 z-[90] w-14 h-14 bg-gradient-to-br from-[#0F1825] to-[#1A2538] border border-[#81D7B4]/20 text-[#81D7B4] rounded-full shadow-[0_8px_30px_rgba(15,24,37,0.4)] hover:shadow-[0_8px_40px_rgba(15,24,37,0.6)] hover:border-[#81D7B4]/50 flex items-center justify-center transition-all group"
           >
-            <Bot className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <BotIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -106,7 +106,7 @@ export default function BizFiAIWidget() {
             <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#0F1825] to-[#1A2538]">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#81D7B4]/20 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-[#81D7B4]" />
+                  <BotIcon className="w-4 h-4 text-[#81D7B4]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#F9F9FB]">BizFi AI</h3>
@@ -118,7 +118,7 @@ export default function BizFiAIWidget() {
                   Full Page
                 </Link>
                 <button onClick={() => setIsOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors text-white">
-                  <HiOutlineXMark className="w-4 h-4" />
+                  <Cancel01Icon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function BizFiAIWidget() {
                   disabled={!input.trim() || isLoading}
                   className="w-8 h-8 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] rounded-lg transition-all disabled:opacity-40 shrink-0"
                 >
-                  <HiOutlinePaperAirplane className="w-4 h-4" />
+                  <SentIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>

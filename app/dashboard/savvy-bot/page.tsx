@@ -1,15 +1,9 @@
 'use client';
+
+import { SentIcon, Delete02Icon, Activity01Icon, Link01Icon, Dollar01Icon, UserMultipleIcon, Money01Icon, Award01Icon, Tick01Icon, RefreshIcon, SparklesIcon, BotIcon } from "hugeicons-react";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
-import {
-  HiOutlinePaperAirplane, HiOutlineTrash, HiOutlineLightBulb, HiOutlineLink,
-  HiOutlineClock, HiOutlineCurrencyDollar, HiOutlineUsers, HiOutlineBanknotes,
-  HiOutlineAcademicCap, HiOutlineTrophy, HiOutlineCheckCircle, HiOutlineXCircle,
-  HiOutlineArrowPath, HiOutlineShare, HiOutlineSparkles, HiOutlineFlag,
-  HiOutlineChatBubbleLeftRight, HiOutlineBookOpen, HiOutlinePuzzlePiece
-} from 'react-icons/hi2';
-import { Bot } from 'lucide-react';
 import { marked } from 'marked';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
@@ -47,32 +41,32 @@ interface ChallengeData {
 type TabType = 'chat' | 'quizzes' | 'challenges';
 
 const CHAT_PROMPTS = [
-  { icon: <HiOutlineLightBulb className="w-4 h-4" />, label: 'Savings Tips', prompt: 'What are the best savings strategies on Bitsave?' },
-  { icon: <HiOutlineLink className="w-4 h-4" />, label: 'Compare Networks', prompt: 'Compare Base, Celo, and Lisk networks for savings. Which is cheapest?' },
-  { icon: <HiOutlineClock className="w-4 h-4" />, label: 'Best Penalties', prompt: 'What penalty percentage should I choose for my savings plan and why?' },
-  { icon: <HiOutlineCurrencyDollar className="w-4 h-4" />, label: 'Token Guide', prompt: 'What tokens can I save on Bitsave and what are the benefits of each?' },
-  { icon: <HiOutlineUsers className="w-4 h-4" />, label: 'Group Savings', prompt: 'How does group savings work on Bitsave?' },
-  { icon: <HiOutlineBanknotes className="w-4 h-4" />, label: '$BTS Rewards', prompt: 'How do I earn more $BTS loyalty tokens on Bitsave?' },
-  { icon: <HiOutlineFlag className="w-4 h-4" />, label: 'Create a Goal', prompt: 'Help me create a savings goal. Guide me step by step.' },
-  { icon: <HiOutlineSparkles className="w-4 h-4" />, label: 'DeFi Explained', prompt: 'Explain DeFi savings in simple terms for a beginner.' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Savings Tips', prompt: 'What are the best savings strategies on Bitsave?' },
+  { icon: <Link01Icon className="w-4 h-4" />, label: 'Compare Networks', prompt: 'Compare Base, Celo, and Lisk networks for savings. Which is cheapest?' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Best Penalties', prompt: 'What penalty percentage should I choose for my savings plan and why?' },
+  { icon: <Dollar01Icon className="w-4 h-4" />, label: 'Token Guide', prompt: 'What tokens can I save on Bitsave and what are the benefits of each?' },
+  { icon: <UserMultipleIcon className="w-4 h-4" />, label: 'Group Savings', prompt: 'How does group savings work on Bitsave?' },
+  { icon: <Money01Icon className="w-4 h-4" />, label: '$BTS Rewards', prompt: 'How do I earn more $BTS loyalty tokens on Bitsave?' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Create a Goal', prompt: 'Help me create a savings goal. Guide me step by step.' },
+  { icon: <SparklesIcon className="w-4 h-4" />, label: 'DeFi Explained', prompt: 'Explain DeFi savings in simple terms for a beginner.' },
 ];
 
 const QUIZ_TOPICS = [
-  { icon: <HiOutlineAcademicCap className="w-4 h-4" />, label: 'DeFi Basics', prompt: 'Generate a quiz about DeFi fundamentals and decentralized finance concepts' },
-  { icon: <HiOutlineBanknotes className="w-4 h-4" />, label: 'Savings Mastery', prompt: 'Generate a quiz about savings strategies, compound interest, and financial planning' },
-  { icon: <HiOutlinePuzzlePiece className="w-4 h-4" />, label: 'Crypto Terms', prompt: 'Generate a quiz about cryptocurrency terminology and blockchain concepts' },
-  { icon: <HiOutlineLightBulb className="w-4 h-4" />, label: 'Bitsave Features', prompt: 'Generate a quiz about Bitsave platform features, tokens, networks, and savings plans' },
-  { icon: <HiOutlineTrophy className="w-4 h-4" />, label: 'Risk Management', prompt: 'Generate a quiz about risk management in crypto and personal finance' },
-  { icon: <HiOutlineBookOpen className="w-4 h-4" />, label: 'Personal Finance', prompt: 'Generate a quiz about personal finance fundamentals, budgeting, and money management' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'DeFi Basics', prompt: 'Generate a quiz about DeFi fundamentals and decentralized finance concepts' },
+  { icon: <Money01Icon className="w-4 h-4" />, label: 'Savings Mastery', prompt: 'Generate a quiz about savings strategies, compound interest, and financial planning' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Crypto Terms', prompt: 'Generate a quiz about cryptocurrency terminology and blockchain concepts' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Bitsave Features', prompt: 'Generate a quiz about Bitsave platform features, tokens, networks, and savings plans' },
+  { icon: <Award01Icon className="w-4 h-4" />, label: 'Risk Management', prompt: 'Generate a quiz about risk management in crypto and personal finance' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Personal Finance', prompt: 'Generate a quiz about personal finance fundamentals, budgeting, and money management' },
 ];
 
 const CHALLENGE_TYPES = [
-  { icon: <HiOutlineFlag className="w-4 h-4" />, label: '7-Day Saver', prompt: 'Suggest a 7-day savings challenge for a beginner on Bitsave' },
-  { icon: <HiOutlineTrophy className="w-4 h-4" />, label: '30-Day Streak', prompt: 'Suggest a 30-day savings streak challenge with progressive difficulty' },
-  { icon: <HiOutlineLink className="w-4 h-4" />, label: 'Multi-Chain', prompt: 'Suggest a challenge to save on multiple blockchain networks using Bitsave' },
-  { icon: <HiOutlineCurrencyDollar className="w-4 h-4" />, label: 'Token Diversity', prompt: 'Suggest a challenge to diversify savings across different tokens on Bitsave' },
-  { icon: <HiOutlineUsers className="w-4 h-4" />, label: 'Group Challenge', prompt: 'Suggest a group savings challenge for friends and family on Bitsave' },
-  { icon: <HiOutlineSparkles className="w-4 h-4" />, label: 'Surprise Me', prompt: 'Suggest a creative and fun savings challenge on Bitsave' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: '7-Day Saver', prompt: 'Suggest a 7-day savings challenge for a beginner on Bitsave' },
+  { icon: <Award01Icon className="w-4 h-4" />, label: '30-Day Streak', prompt: 'Suggest a 30-day savings streak challenge with progressive difficulty' },
+  { icon: <Link01Icon className="w-4 h-4" />, label: 'Multi-Chain', prompt: 'Suggest a challenge to save on multiple blockchain networks using Bitsave' },
+  { icon: <Dollar01Icon className="w-4 h-4" />, label: 'Token Diversity', prompt: 'Suggest a challenge to diversify savings across different tokens on Bitsave' },
+  { icon: <UserMultipleIcon className="w-4 h-4" />, label: 'Group Challenge', prompt: 'Suggest a group savings challenge for friends and family on Bitsave' },
+  { icon: <SparklesIcon className="w-4 h-4" />, label: 'Surprise Me', prompt: 'Suggest a creative and fun savings challenge on Bitsave' },
 ];
 
 export default function SavvyBotPage() {
@@ -366,9 +360,9 @@ export default function SavvyBotPage() {
   };
 
   const TABS: { key: TabType; label: string; icon: React.ReactNode }[] = [
-    { key: 'chat', label: 'Chat', icon: <HiOutlineChatBubbleLeftRight className="w-4 h-4" /> },
-    { key: 'quizzes', label: 'Quizzes', icon: <HiOutlineAcademicCap className="w-4 h-4" /> },
-    { key: 'challenges', label: 'Challenges', icon: <HiOutlineTrophy className="w-4 h-4" /> },
+    { key: 'chat', label: 'Chat', icon: <Activity01Icon className="w-4 h-4" /> },
+    { key: 'quizzes', label: 'Quizzes', icon: <Activity01Icon className="w-4 h-4" /> },
+    { key: 'challenges', label: 'Challenges', icon: <Award01Icon className="w-4 h-4" /> },
   ];
 
   return (
@@ -377,7 +371,7 @@ export default function SavvyBotPage() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center shadow-lg shadow-[#81D7B4]/20">
-            <Bot className="w-6 h-6 text-white" />
+            <BotIcon className="w-6 h-6 text-white" />
           </div>
           <div>
             {/* Removed Savvy Bot h1 per user request */}
@@ -405,7 +399,7 @@ export default function SavvyBotPage() {
         </div>
         {activeTab === 'chat' && messages.length > 0 && (
           <button onClick={clearHistory} className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 rounded-xl text-sm font-bold transition-all shadow-sm">
-            <HiOutlineTrash className="w-4 h-4" />
+            <Delete02Icon className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -417,7 +411,7 @@ export default function SavvyBotPage() {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
                 <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6">
-                  <Bot className="w-10 h-10 text-[#81D7B4]" />
+                  <BotIcon className="w-10 h-10 text-[#81D7B4]" />
                 </div>
                 <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Ask me anything!</h2>
                 <p className="text-gray-500 text-sm font-medium max-w-md mb-8">
@@ -494,7 +488,7 @@ export default function SavvyBotPage() {
                 disabled={!input.trim() || isLoading}
                 className="w-10 h-10 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-white rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-sm"
               >
-                <HiOutlinePaperAirplane className="w-5 h-5" />
+                <SentIcon className="w-5 h-5" />
               </button>
             </div>
             <p className="text-[10px] text-gray-400 text-center mt-2 font-medium">
@@ -510,7 +504,7 @@ export default function SavvyBotPage() {
           {quizLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center">
-                <HiOutlineAcademicCap className="w-8 h-8 text-[#81D7B4] animate-pulse" />
+                <Activity01Icon className="w-8 h-8 text-[#81D7B4] animate-pulse" />
               </div>
               <p className="text-gray-500 font-bold text-sm">Generating your quiz...</p>
               <div className="flex gap-1.5">
@@ -528,7 +522,7 @@ export default function SavvyBotPage() {
                   <p className="text-xs text-gray-500 font-medium mt-0.5">{currentQuiz.questions.length} questions</p>
                 </div>
                 <button onClick={() => { setCurrentQuiz(null); setQuizAnswers({}); setQuizSubmitted(false); }} className="text-xs font-bold text-gray-400 hover:text-gray-600 flex items-center gap-1">
-                  <HiOutlineArrowPath className="w-3.5 h-3.5" /> New Quiz
+                  <RefreshIcon className="w-3.5 h-3.5" /> New Quiz
                 </button>
               </div>
 
@@ -557,8 +551,8 @@ export default function SavvyBotPage() {
                           disabled={quizSubmitted}
                           className={`px-4 py-3 rounded-xl text-left text-sm font-medium transition-all flex items-center gap-3 ${optClass}`}
                         >
-                          {quizSubmitted && isCorrect && <HiOutlineCheckCircle className="w-5 h-5 text-[#81D7B4] shrink-0" />}
-                          {quizSubmitted && isSelected && !isCorrect && <HiOutlineXCircle className="w-5 h-5 text-red-500 shrink-0" />}
+                          {quizSubmitted && isCorrect && <Tick01Icon className="w-5 h-5 text-[#81D7B4] shrink-0" />}
+                          {quizSubmitted && isSelected && !isCorrect && <Activity01Icon className="w-5 h-5 text-red-500 shrink-0" />}
                           <span>{opt}</span>
                         </button>
                       );
@@ -589,10 +583,10 @@ export default function SavvyBotPage() {
                   </p>
                   <div className="flex gap-3 justify-center">
                     <button onClick={shareScore} className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 hover:border-[#81D7B4] font-bold rounded-xl text-sm transition-all">
-                      <HiOutlineShare className="w-4 h-4" /> Share Score
+                      <Activity01Icon className="w-4 h-4" /> Share Score
                     </button>
                     <button onClick={() => { setCurrentQuiz(null); setQuizAnswers({}); setQuizSubmitted(false); }} className="flex items-center gap-2 px-5 py-2.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl text-sm transition-all">
-                      <HiOutlineArrowPath className="w-4 h-4" /> Try Another
+                      <RefreshIcon className="w-4 h-4" /> Try Another
                     </button>
                   </div>
                 </div>
@@ -602,7 +596,7 @@ export default function SavvyBotPage() {
             /* Quiz Topic Selection */
             <div className="flex flex-col items-center justify-center min-h-full text-center px-4 py-6 md:py-0">
               <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 shrink-0">
-                <HiOutlineAcademicCap className="w-10 h-10 text-[#81D7B4]" />
+                <Activity01Icon className="w-10 h-10 text-[#81D7B4]" />
               </div>
               <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Test Your Knowledge</h2>
               <p className="text-gray-500 text-sm font-medium max-w-md mb-8">
@@ -633,7 +627,7 @@ export default function SavvyBotPage() {
           {challengeLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center">
-                <HiOutlineTrophy className="w-8 h-8 text-[#81D7B4] animate-pulse" />
+                <Award01Icon className="w-8 h-8 text-[#81D7B4] animate-pulse" />
               </div>
               <p className="text-gray-500 font-bold text-sm">Creating your challenge...</p>
             </div>
@@ -641,14 +635,14 @@ export default function SavvyBotPage() {
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <button onClick={() => setCurrentChallenge(null)} className="text-xs font-bold text-gray-400 hover:text-gray-600 flex items-center gap-1">
-                  <HiOutlineArrowPath className="w-3.5 h-3.5" /> Back
+                  <RefreshIcon className="w-3.5 h-3.5" /> Back
                 </button>
               </div>
 
               <div className="bg-gradient-to-br from-[#81D7B4]/10 to-transparent rounded-2xl p-6 border border-[#81D7B4]/20">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-[#81D7B4] flex items-center justify-center text-white">
-                    <HiOutlineTrophy className="w-6 h-6" />
+                    <Award01Icon className="w-6 h-6" />
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-gray-900">{currentChallenge.title}</h2>
@@ -671,7 +665,7 @@ export default function SavvyBotPage() {
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tips</p>
                   {currentChallenge.tips.map((tip, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                      <HiOutlineCheckCircle className="w-4 h-4 text-[#81D7B4] shrink-0 mt-0.5" />
+                      <Tick01Icon className="w-4 h-4 text-[#81D7B4] shrink-0 mt-0.5" />
                       <span>{tip}</span>
                     </div>
                   ))}
@@ -696,7 +690,7 @@ export default function SavvyBotPage() {
               {/* Challenge Selector */}
               <div className="flex flex-col items-center text-center px-4 pt-4">
                 <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6">
-                  <HiOutlineTrophy className="w-10 h-10 text-[#81D7B4]" />
+                  <Award01Icon className="w-10 h-10 text-[#81D7B4]" />
                 </div>
                 <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Savings Challenges</h2>
                 <p className="text-gray-500 text-sm font-medium max-w-md mb-8">
@@ -723,7 +717,7 @@ export default function SavvyBotPage() {
               {acceptedChallenges.length > 0 && (
                 <div className="mt-6">
                   <h3 className="text-sm font-black text-gray-900 mb-3 flex items-center gap-2">
-                    <HiOutlineFlag className="w-4 h-4 text-[#81D7B4]" /> My Active Challenges
+                    <Activity01Icon className="w-4 h-4 text-[#81D7B4]" /> My Active Challenges
                   </h3>
                   <div className="space-y-2">
                     {acceptedChallenges.map((c, i) => (
@@ -764,11 +758,11 @@ export default function SavvyBotPage() {
                 onClick={() => setShowShareModal(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <HiOutlineXCircle className="w-6 h-6" />
+                <Activity01Icon className="w-6 h-6" />
               </button>
               
               <div className="w-12 h-12 rounded-full bg-[#81D7B4]/20 flex items-center justify-center mb-4 text-[#81D7B4] mx-auto">
-                <HiOutlineCheckCircle className="w-6 h-6" />
+                <Tick01Icon className="w-6 h-6" />
               </div>
               
               <h3 className="text-xl font-black text-center text-gray-900 mb-2">
@@ -788,7 +782,7 @@ export default function SavvyBotPage() {
                   onClick={() => { navigator.clipboard.writeText(shareUrl); }}
                   className="shrink-0 text-[#81D7B4] hover:text-[#2D5A4A]"
                 >
-                  <HiOutlineLink className="w-4 h-4" />
+                  <Link01Icon className="w-4 h-4" />
                 </button>
               </div>
 
@@ -796,7 +790,7 @@ export default function SavvyBotPage() {
                 <a
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
                     shareType === 'quiz' 
-                    ? `I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Check out my score: ` 
+                    ? `I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Tick out my score: ` 
                     : `I just accepted the "${currentChallenge?.title}" savings challenge on @BitsaveProtocol! My goal: ${currentChallenge?.goal}. Follow my journey: `
                   )}&url=${encodeURIComponent(shareUrl)}`}
                   target="_blank"
@@ -806,18 +800,18 @@ export default function SavvyBotPage() {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
-                  Share on X
+                  Share on Cancel
                 </a>
                 
                 <Link
                   href={`/dashboard/social?post=${encodeURIComponent(
                     shareType === 'quiz' 
-                    ? `I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Check out my score: ${shareUrl}` 
+                    ? `I scored ${getScore()}/${currentQuiz?.questions.length} on the "${currentQuiz?.title}" quiz on @BitsaveProtocol! Tick out my score: ${shareUrl}` 
                     : `I just accepted the "${currentChallenge?.title}" savings challenge on @BitsaveProtocol! My goal: ${currentChallenge?.goal}. Follow my journey: ${shareUrl}`
                   )}`}
                   className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:-translate-y-0.5"
                 >
-                  <HiOutlineUsers className="w-5 h-5" />
+                  <UserMultipleIcon className="w-5 h-5" />
                   Share to Forum
                 </Link>
               </div>

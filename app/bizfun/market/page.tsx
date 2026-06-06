@@ -1,17 +1,9 @@
+'use client';
 
-"use client";
-
+import { Activity01Icon, Dollar01Icon, UserMultipleIcon } from "hugeicons-react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { 
-    HiOutlineRocketLaunch, 
-    HiOutlineClock, 
-    HiOutlineCurrencyDollar,
-    HiOutlineArrowTrendingUp,
-    HiOutlineUserGroup,
-    HiOutlineChatBubbleLeftRight
-} from "react-icons/hi2";
-import Link from "next/link";
+import Link from 'next/link';
 import { Exo } from "next/font/google";
 
 const exo = Exo({ 
@@ -62,7 +54,7 @@ export default function MarketPage() {
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href="/bizfun" className="flex items-center gap-2 group">
                         <div className="w-8 h-8 rounded-lg bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0b0c15] transition-all">
-                            <HiOutlineRocketLaunch className="w-5 h-5" />
+                            <Activity01Icon className="w-5 h-5" />
                         </div>
                         <span className="font-bold text-lg tracking-tight">BizFun<span className="text-[#81D7B4]">.Market</span></span>
                     </Link>
@@ -93,7 +85,7 @@ export default function MarketPage() {
                         href="/bizfun/agent"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20 rounded-xl font-bold hover:bg-[#81D7B4] hover:text-[#0b0c15] transition-all"
                     >
-                        <HiOutlineChatBubbleLeftRight className="w-5 h-5" />
+                        <Activity01Icon className="w-5 h-5" />
                         Back to Agent
                     </Link>
                 </div>
@@ -105,7 +97,7 @@ export default function MarketPage() {
                     </div>
                 ) : markets.length === 0 ? (
                     <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/5">
-                        <HiOutlineRocketLaunch className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                        <Activity01Icon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-gray-300 mb-2">No Markets Yet</h3>
                         <p className="text-gray-500 mb-6">Be the first to create a prediction market with BizMart.</p>
                         <Link 
@@ -152,7 +144,7 @@ export default function MarketPage() {
                                             <div>
                                                 <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Deadline</div>
                                                 <div className="text-sm font-mono text-gray-300 flex items-center gap-1">
-                                                    <HiOutlineClock className="w-3 h-3 text-gray-500" />
+                                                    <Activity01Icon className="w-3 h-3 text-gray-500" />
                                                     {new Date(Number(market.tradingDeadline) * 1000).toLocaleDateString()}
                                                 </div>
                                             </div>

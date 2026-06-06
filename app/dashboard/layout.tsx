@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import { Home01Icon, Activity01Icon, Dollar01Icon, UserMultipleIcon, Award01Icon, UserAdd01Icon, PlusSignIcon, Settings01Icon, Logout01Icon, ArrowDown01Icon, Money01Icon, BotIcon, Menu01Icon, Cancel01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
@@ -10,10 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Exo } from 'next/font/google';
 import CustomConnectButton from '@/components/CustomConnectButton';
-import { HiOutlineHome, HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineUserGroup, HiOutlineTrophy, HiOutlineUserPlus, HiOutlinePlus, HiOutlineCog, HiOutlineArrowRightOnRectangle, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineChevronDown, HiOutlineUsers, HiOutlineBanknotes } from 'react-icons/hi2';
-import { Bot } from 'lucide-react';
 import SavvyBotWidget from '@/components/SavvyBotWidget';
-import { FiMenu as FiMenuIcon, FiX as FiXIcon } from 'react-icons/fi';
 import LanguageSelector from '@/components/LanguageSelector';
 import NetworkDetection from '@/components/NetworkDetection';
 import { PageShimmer } from '@/components/ShimmerLoading';
@@ -122,7 +120,7 @@ export default function DashboardLayout({
               {/* Primary Action */}
               <div className="px-5 mb-4">
                 <Link href="/dashboard/create-savings" onClick={handleMobileNavClick} className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#81D7B4] hover:bg-opacity-90 text-white rounded-2xl font-bold shadow-[0_4px_15px_rgba(129,215,180,0.3)] transition-all transform hover:-translate-y-0.5">
-                  <HiOutlinePlus className="w-5 h-5" strokeWidth={2.5} />
+                  <PlusSignIcon className="w-5 h-5" strokeWidth={2.5} />
                   <span>Create Plan</span>
                 </Link>
               </div>
@@ -134,7 +132,7 @@ export default function DashboardLayout({
                 <div className="mb-2">
                   <button onClick={() => toggleSection('main')} className="w-full flex items-center justify-between px-3 pt-2 pb-1 bg-transparent hover:bg-gray-50 rounded-lg group transition-colors">
                     <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 uppercase tracking-widest transition-colors">Main Menu</span>
-                    {expandedSections.main ? <HiOutlineChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" /> : <HiOutlineChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
+                    {expandedSections.main ? <ArrowDown01Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" /> : <Activity01Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
                   </button>
                   {expandedSections.main && (
                     <div className="mt-1 space-y-1.5 ml-2 pl-2 border-l-2 border-gray-100">
@@ -143,7 +141,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineHome className="w-5 h-5 flex-shrink-0" />
+                          <Home01Icon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Dashboard</span>
                       </Link>
@@ -153,7 +151,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/plans') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineDocumentText className="w-5 h-5 flex-shrink-0" />
+                          <Activity01Icon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>My Plans</span>
                       </Link>
@@ -163,7 +161,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/group-savings') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineUsers className="w-5 h-5 flex-shrink-0" />
+                          <UserMultipleIcon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Group Savings</span>
                       </Link>
@@ -173,7 +171,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/savvy-bot') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <Bot className="w-5 h-5 flex-shrink-0" />
+                          <BotIcon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Savvy Bot</span>
                       </Link>
@@ -183,7 +181,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/ramp') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineBanknotes className="w-5 h-5 flex-shrink-0" />
+                          <Money01Icon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>On/Off Ramp</span>
                       </Link>
@@ -195,7 +193,7 @@ export default function DashboardLayout({
                 <div className="mb-2">
                   <button onClick={() => toggleSection('community')} className="w-full flex items-center justify-between px-3 pt-4 pb-1 bg-transparent hover:bg-gray-50 rounded-lg group transition-colors">
                     <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 uppercase tracking-widest transition-colors">Community & Rewards</span>
-                    {expandedSections.community ? <HiOutlineChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" /> : <HiOutlineChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
+                    {expandedSections.community ? <ArrowDown01Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" /> : <Activity01Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
                   </button>
                   {expandedSections.community && (
                     <div className="mt-1 space-y-1.5 ml-2 pl-2 border-l-2 border-gray-100">
@@ -204,7 +202,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/leaderboard') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineTrophy className="w-5 h-5 flex-shrink-0" />
+                          <Award01Icon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Leaderboard</span>
                       </Link>
@@ -214,7 +212,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/activity') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineCurrencyDollar className="w-5 h-5 flex-shrink-0" />
+                          <Dollar01Icon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Earn $BTS</span>
                       </Link>
@@ -224,7 +222,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/referrals') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineUserPlus className="w-5 h-5 flex-shrink-0" />
+                          <UserAdd01Icon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Referrals</span>
                       </Link>
@@ -234,7 +232,7 @@ export default function DashboardLayout({
                         : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                         }`}>
                         <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/social') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                          <HiOutlineUserGroup className="w-5 h-5 flex-shrink-0" />
+                          <UserMultipleIcon className="w-5 h-5 flex-shrink-0" />
                         </div>
                         <span>Savvy Space</span>
                       </Link>
@@ -253,7 +251,7 @@ export default function DashboardLayout({
                       : 'text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                       }`}>
                       <div className={`p-1.5 rounded-lg transition-colors ${isActive('/dashboard/settings') ? 'bg-white/20 text-white' : 'bg-transparent text-gray-400 group-hover:text-gray-600'}`}>
-                        <HiOutlineCog className="w-5 h-5 flex-shrink-0" />
+                        <Settings01Icon className="w-5 h-5 flex-shrink-0" />
                       </div>
                       <span>Settings</span>
                     </Link>
@@ -273,7 +271,7 @@ export default function DashboardLayout({
                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
                     </div>
                   ) : (
-                    <HiOutlineArrowRightOnRectangle className="w-5 h-5 flex-shrink-0" />
+                    <Logout01Icon className="w-5 h-5 flex-shrink-0" />
                   )}
                   <span>{isDisconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
                 </button>
@@ -291,9 +289,9 @@ export default function DashboardLayout({
             aria-expanded={!sidebarCollapsed}
           >
             {sidebarCollapsed ? (
-              <FiMenuIcon className="w-5 h-5 text-gray-700" />
+              <Menu01Icon className="w-5 h-5 text-gray-700" />
             ) : (
-              <FiXIcon className="w-5 h-5 text-gray-700" />
+              <Cancel01Icon className="w-5 h-5 text-gray-700" />
             )}
           </button>
         </div>

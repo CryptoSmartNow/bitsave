@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useCallback, useMemo } from 'react';
 import { useAccount, useWalletClient, useSwitchChain } from 'wagmi';
@@ -104,7 +104,7 @@ export function useBizFi() {
         return walletClient;
     }, [walletClient, switchChainAsync]);
 
-    // Check Token Allowance
+    // Tick Token Allowance
     const checkAllowance = useCallback(async (amount: bigint, tokenAddress: `0x${string}`, spenderAddress: `0x${string}`, publicClient: any) => {
         if (!address || !publicClient) return false;
         try {
@@ -211,13 +211,13 @@ export function useBizFi() {
                 };
             }
 
-            // Check Native Token Balance for gas (ETH or CELO)
+            // Tick Native Token Balance for gas (ETH or CELO)
             const nativeBalance = await publicClient.getBalance({ address });
             if (nativeBalance === BigInt(0)) {
                 throw new Error(`Insufficient funds. You need ${networkName === 'Celo' ? 'CELO' : 'ETH'} on ${networkName} network to pay for gas fees.`);
             }
 
-            // Check Token Balance
+            // Tick Token Balance
             const tokenBalance = await publicClient.readContract({
                 address: targetTokenAddress,
                 abi: ERC20_ABI,
@@ -225,7 +225,7 @@ export function useBizFi() {
                 args: [address]
             }) as bigint;
 
-            console.log("Registration Check:", {
+            console.log("Registration Tick:", {
                 tier,
                 network: networkName,
                 standardFee: formatUnits(standardFee, tokenDecimals),
@@ -242,7 +242,7 @@ export function useBizFi() {
                 throw new Error(`Insufficient ${tokenSymbol} balance. You have ${available} ${tokenSymbol} but need ${required} ${tokenSymbol}${isDiscounted ? ' (Discount Applied)' : ' (Standard Fee)'}.`);
             }
 
-            // Check Allowance
+            // Tick Allowance
             const hasAllowance = await checkAllowance(finalPrice, targetTokenAddress, targetProxyAddress, publicClient);
             if (!hasAllowance) {
                 await approveToken(finalPrice, targetTokenAddress, targetProxyAddress, targetChainId, publicClient);
@@ -316,7 +316,7 @@ export function useBizFi() {
             if (tokenType === 'ETH' || tokenType === 'CELO') {
                 // Native Gas Token Transfer
                 const value = parseUnits(amount, 18);
-                // Check Balance
+                // Tick Balance
                 const balance = await publicClient.getBalance({ address });
                 if (balance < value) {
                     throw new Error(`Insufficient ${tokenType} balance. You have ${formatUnits(balance, 18)} ${tokenType}.`);
@@ -337,7 +337,7 @@ export function useBizFi() {
                 const decimals = isGd ? 18 : 6;
                 const value = parseUnits(amount, decimals);
 
-                // Check Balance
+                // Tick Balance
                 const balance = await publicClient.readContract({
                     address: tokenAddress,
                     abi: ERC20_ABI,

@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     const otpCollection = db.collection('email_otps');
     
     if (email && walletAddress) {
-      // Check specific OTP
+      // Tick specific OTP
       const otpKey = `${email}_${walletAddress}`;
       const otp = await otpCollection.findOne({ key: otpKey });
       

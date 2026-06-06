@@ -1,17 +1,12 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  HiOutlineCalculator,
-  HiOutlineChartBar,
-  HiOutlineCurrencyDollar,
-  HiOutlineShieldCheck
-} from 'react-icons/hi2';
+import { Activity01Icon, BarChartIcon, Dollar01Icon, Shield01Icon } from "hugeicons-react";
 
 const INSTRUMENTS = [
-  { id: 'BizYield', name: 'BizYield', apr: 10, type: 'Rev Share', icon: HiOutlineChartBar, color: '#FF6B6B' },
-  { id: 'BizCredit', name: 'BizCredit', apr: 14, type: 'Private Credit', icon: HiOutlineCurrencyDollar, color: '#3B82F6' },
-  { id: 'BizBond', name: 'BizBond', apr: 8, type: 'Treasury', icon: HiOutlineShieldCheck, color: '#81D7B4' },
+  { id: 'BizYield', name: 'BizYield', apr: 0, isVariable: true, type: 'Rev Share', icon: BarChartIcon, color: '#FF6B6B' },
+  { id: 'BizCredit', name: 'BizCredit', apr: 16, isVariable: false, type: 'Private Credit', icon: Dollar01Icon, color: '#3B82F6' },
+  { id: 'BizBond', name: 'BizBond', apr: 10, isVariable: false, type: 'Treasury', icon: Shield01Icon, color: '#81D7B4' },
 ];
 
 export default function CalculatorPage() {
@@ -118,7 +113,7 @@ export default function CalculatorPage() {
           <div className="pt-6 border-t border-[#1C2538]">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-[#7B8B9A]">Selected APR</span>
-              <span className="text-lg font-black text-[#81D7B4]">{selectedInstrument.apr}%</span>
+              <span className="text-lg font-black text-[#81D7B4]">{selectedInstrument.isVariable ? 'Variable' : `${selectedInstrument.apr}%`}</span>
             </div>
             <p className="text-xs text-[#4B5A75] leading-relaxed">
               * Yield projections assume full reinvestment of distributions (compounding annually). Actual returns may vary based on pool performance.
@@ -133,11 +128,11 @@ export default function CalculatorPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#1A2538] border border-[#2C3E5D] rounded-3xl p-6">
               <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-2">Total Yield Earned</p>
-              <p className="text-3xl font-black text-[#81D7B4]">+${totalYield.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <p className="text-3xl font-black text-[#81D7B4]">{selectedInstrument.isVariable ? 'Variable' : `+$${totalYield.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}</p>
             </div>
             <div className="bg-[#1A2538] border border-[#2C3E5D] rounded-3xl p-6">
               <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-2">Final Balance</p>
-              <p className="text-3xl font-black text-[#F9F9FB]">${finalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <p className="text-3xl font-black text-[#F9F9FB]">{selectedInstrument.isVariable ? 'Variable' : `$${finalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}</p>
             </div>
           </div>
 
@@ -156,7 +151,13 @@ export default function CalculatorPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1C2538]">
-                  {projections.map((p) => {
+                  {selectedInstrument.isVariable ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-[#7B8B9A] font-medium">
+                        Variable APR depends on monthly business revenue.
+                      </td>
+                    </tr>
+                  ) : projections.map((p) => {
                     const startBalance = p.totalBalance - p.yield;
                     return (
                       <tr key={p.year} className="hover:bg-[#1C2538]/30 transition-colors">

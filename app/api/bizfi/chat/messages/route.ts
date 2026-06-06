@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(messages);
     } catch (e) {
         console.error("Error fetching messages:", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }
 
@@ -59,6 +59,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, message: { ...message, _id: result.insertedId } });
     } catch (e) {
         console.error("Error sending message:", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }

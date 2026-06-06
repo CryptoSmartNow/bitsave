@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   const cacheKey = `bitsave:savings:${address.toLowerCase()}`;
   
   try {
-    // 1. Check Redis Cache
+    // 1. Tick Redis Cache
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       if (DEBUG) console.log(`Serving savings for ${address} from Redis`);

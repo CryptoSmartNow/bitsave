@@ -79,6 +79,6 @@ export async function POST(req: NextRequest) {
 
     } catch (e: any) {
         console.error("[BizFi Admin Status Update Error]", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
     }
 }

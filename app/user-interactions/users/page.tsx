@@ -1,23 +1,11 @@
 'use client';
 
+import { Search01Icon, UserIcon, Calendar01Icon, Clock01Icon, Activity01Icon, ArrowRight01Icon, Wallet01Icon, LinkSquare01Icon, Shield01Icon, FilterIcon, ArrowLeft01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { 
-  Search, 
-  User, 
-  Calendar, 
-  Clock, 
-  Activity, 
-  ChevronRight, 
-  Wallet,
-  ExternalLink,
-  Shield,
-  Filter,
-  ArrowLeft
-} from 'lucide-react';
 import { UserInteraction } from '@/lib/interactionTracker';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 
@@ -249,11 +237,11 @@ export default function UserManagementPage() {
       </div>
 
       <div className="flex-1 flex gap-6 min-h-0">
-        {/* User List Panel */}
+        {/* User ListView Panel */}
         <div className={`w-full lg:w-1/3 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden ${selectedUser ? 'hidden lg:flex' : 'flex'}`}>
           <div className="p-4 border-b border-gray-100 space-y-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input 
                 type="text"
                 placeholder="Search wallet address..."
@@ -263,12 +251,12 @@ export default function UserManagementPage() {
               />
             </div>
             <div className="flex justify-between text-xs text-gray-500 px-1">
-              <span>{filteredProfiles.length} Users Found</span>
+              <span>{filteredProfiles.length} UserMultiple Found</span>
               <button 
                 className="flex items-center hover:text-slate-900"
                 onClick={toggleSort}
               >
-                <Filter className="w-3 h-3 mr-1" /> 
+                <FilterIcon className="w-3 h-3 mr-1" /> 
                 Sort: {sortType.charAt(0).toUpperCase() + sortType.slice(1)}
               </button>
             </div>
@@ -288,13 +276,13 @@ export default function UserManagementPage() {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                      <User className="w-4 h-4" />
+                      <UserIcon className="w-4 h-4" />
                     </div>
                     <span className="font-mono text-sm text-slate-700 font-medium">
                       {profile.address.slice(0, 6)}...{profile.address.slice(-4)}
                     </span>
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-gray-400 ${selectedUser?.address === profile.address ? 'text-[#81D7B4]' : ''}`} />
+                  <ArrowRight01Icon className={`w-4 h-4 text-gray-400 ${selectedUser?.address === profile.address ? 'text-[#81D7B4]' : ''}`} />
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <div className="text-xs text-slate-500 bg-gray-50 px-2 py-1 rounded-lg">
@@ -321,8 +309,8 @@ export default function UserManagementPage() {
                       onClick={() => setSelectedUser(null)}
                       className="lg:hidden mb-4 flex items-center text-slate-500 hover:text-slate-900 transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4 mr-1" />
-                      Back to List
+                      <ArrowLeft01Icon className="w-4 h-4 mr-1" />
+                      Back to ListView
                     </button>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg sm:text-xl font-bold text-slate-900 font-mono truncate" title={selectedUser.address}>
@@ -331,7 +319,7 @@ export default function UserManagementPage() {
                           : selectedUser.address}
                       </h2>
                       <button onClick={handleExternalLink} className="flex-shrink-0 text-gray-400 hover:text-[#81D7B4]">
-                        <ExternalLink className="w-4 h-4" />
+                        <LinkSquare01Icon className="w-4 h-4" />
                       </button>
                     </div>
                     <p className="text-sm text-slate-500 mt-1">Bitsave User Profile</p>
@@ -371,7 +359,7 @@ export default function UserManagementPage() {
               {/* Activity Timeline */}
               <div className="flex-1 overflow-y-auto p-6">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
-                  <Activity className="w-4 h-4 mr-2" />
+                  <Activity01Icon className="w-4 h-4 mr-2" />
                   Activity History
                 </h3>
                 <div className="relative pl-6 border-l-2 border-gray-100 space-y-8">
@@ -399,7 +387,7 @@ export default function UserManagementPage() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <User className="w-8 h-8 text-gray-300" />
+                <UserIcon className="w-8 h-8 text-gray-300" />
               </div>
               <p>Select a user to view detailed profile</p>
             </div>
@@ -438,7 +426,7 @@ export default function UserManagementPage() {
                     onClick={() => setIsChainModalOpen(false)}
                   >
                     <span className="capitalize font-medium">{chain}</span>
-                    <ExternalLink className="w-4 h-4" />
+                    <LinkSquare01Icon className="w-4 h-4" />
                   </a>
                 ))}
               </div>

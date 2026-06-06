@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -12,7 +13,7 @@ function TwitterCallbackContent() {
         const state = searchParams.get('state');
         const error = searchParams.get('error');
         
-        // Check for errors
+        // Tick for errors
         if (error) {
           window.opener?.postMessage({
             type: 'TWITTER_AUTH_ERROR',
@@ -69,7 +70,7 @@ function TwitterCallbackContent() {
           
           const userData = await userResponse.json();
           
-          // Send success message to parent window
+          // Sent success message to parent window
           window.opener?.postMessage({
             type: 'TWITTER_AUTH_SUCCESS',
             username: userData.username,

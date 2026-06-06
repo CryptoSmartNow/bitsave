@@ -1,20 +1,25 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft01Icon, InformationCircleIcon, Shield01Icon, BarChartIcon, Dollar01Icon, ArrowDown01Icon, Tick01Icon } from "hugeicons-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { usePrivy } from '@privy-io/react-auth';
+import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import toast from 'react-hot-toast';
-import { HiOutlineArrowLeft, HiOutlineInformationCircle, HiOutlineShieldCheck, HiOutlineChartBar, HiOutlineCurrencyDollar } from 'react-icons/hi2';
 import { PaymentModal } from '@chainrails/react';
 import '@solana/wallet-adapter-react-ui/styles.css';
+import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
+import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
+import { useRouter } from 'next/navigation';
 
 const INSTRUMENTS = {
   bizyield: {
     id: 'bizyield',
     name: 'BizYield',
     risk: 'High Risk',
-    icon: HiOutlineChartBar,
+    icon: BarChartIcon,
     color: '#FF6B6B',
     min: 10,
     feePercent: 0.5,
@@ -26,7 +31,7 @@ const INSTRUMENTS = {
     id: 'bizcredit',
     name: 'BizCredit',
     risk: 'Medium Risk',
-    icon: HiOutlineCurrencyDollar,
+    icon: Dollar01Icon,
     color: '#F5A623',
     min: 100,
     feePercent: 0,
@@ -38,7 +43,7 @@ const INSTRUMENTS = {
     id: 'bizbond',
     name: 'BizBond',
     risk: 'Low Risk',
-    icon: HiOutlineShieldCheck,
+    icon: Shield01Icon,
     color: '#81D7B4',
     min: 1000,
     feePercent: 0.5,
@@ -48,18 +53,81 @@ const INSTRUMENTS = {
   }
 };
 
+const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5", activeStyleColor?: string) => {
+  let initials = 'BZ';
+  let defaultColorClass = 'text-[#7B8B9A]';
+  if (name === 'BizYield') { initials = 'BY'; defaultColorClass = 'text-[#FF6B6B]'; }
+  if (name === 'BizCredit') { initials = 'BC'; defaultColorClass = 'text-[#3B82F6]'; }
+  if (name === 'BizBond') { initials = 'BB'; defaultColorClass = 'text-[#81D7B4]'; }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${sizeClass} ${!activeStyleColor ? defaultColorClass : ''}`} style={activeStyleColor ? { color: activeStyleColor } : undefined}>
+      <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1"/>
+      <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="9" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
+        {initials}
+      </text>
+    </svg>
+  );
+};
+
 export default function BizSwapAppPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
+  const router = useRouter();
+  
+  const connected = ready && (authenticated || isSolanaConnected);
+  
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  
+  const walletAddress = isSolanaConnected 
+    ? publicKey?.toBase58() 
+    : (privySolanaWallet?.address || user?.wallet?.address);
+    
   const [mounted, setMounted] = useState(false);
   const [selectedInst, setSelectedInst] = useState<keyof typeof INSTRUMENTS>('bizyield');
+  const [selectedBusiness, setSelectedBusiness] = useState('shard');
+  const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false);
+  const businesses = [{ id: 'shard', name: 'Shard' }];
   const [amountStr, setAmountStr] = useState('');
   
   // Payment Flow State
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Solana State
+  const program = useBizSwapProgram();
+  const [remainingCap, setRemainingCap] = useState<number | null>(null);
+  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    async function fetchInstrument() {
+      if (!program) return;
+      
+      let instrumentId = 0;
+      if (selectedInst === 'bizcredit') instrumentId = 1;
+      if (selectedInst === 'bizbond') instrumentId = 2;
+
+      const pda = getInstrumentConfigPda(instrumentId);
+      try {
+        const config = await (program as any).account.instrumentConfig.fetch(pda);
+        const supply = config.currentSupply.toNumber();
+        const cap = config.supplyCap.toNumber();
+        setCurrentSupply(supply);
+        setRemainingCap(cap - supply);
+      } catch (e) {
+        console.error("Failed to fetch instrument config:", e);
+        // Could be uninitialized
+        setRemainingCap(null);
+      }
+    }
+    fetchInstrument();
+  }, [program, selectedInst]);
 
   const inst = INSTRUMENTS[selectedInst];
   const sharesCount = parseInt(amountStr) || 0;
@@ -70,8 +138,8 @@ export default function BizSwapAppPage() {
   const totalCharged = inputAmount + feeAmount;
 
   const handlePurchase = async () => {
-    if (!connected || !publicKey) {
-      toast.error('Please connect your Solana wallet first');
+    if (!connected) {
+      toast.error('Please connect your wallet first');
       return;
     }
     if (inputAmount < inst.min) {
@@ -83,11 +151,12 @@ export default function BizSwapAppPage() {
     try {
       // 1. Get ChainRails session
       const params = new URLSearchParams({
-        recipient: publicKey.toBase58(),
+        recipient: '0x6bd6109FB3Bf59F67c86caB3bC09adB8B77485B7', // Platform Treasury Wallet
         amount: totalCharged.toFixed(2),
-        chain: 'BASE', // Assuming ChainRails is paying in USDC on Base for now, or Solana if supported
+        chain: 'BASE_TESTNET',
         token: 'USDC',
-        mode: 'buy'
+        mode: 'buy',
+        source: 'bizswap'
       });
       const res = await fetch(`/api/chainrails/session?${params}`);
       const data = await res.json();
@@ -113,8 +182,9 @@ export default function BizSwapAppPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wallet: publicKey?.toBase58(),
+          wallet: walletAddress,
           instrument: inst.name,
+          business: selectedInst === 'bizyield' ? selectedBusiness : null,
           investmentAmount: inputAmount,
           feeAmount: feeAmount,
           totalCharged: totalCharged
@@ -126,6 +196,7 @@ export default function BizSwapAppPage() {
       
       toast.success(`${inst.name} Certificate Minted Successfully!`, { id: 'mint' });
       setAmountStr('');
+      setShowSuccessModal(true);
     } catch (e: any) {
       toast.error(e.message || 'Minting failed, contact support', { id: 'mint' });
     }
@@ -140,7 +211,7 @@ export default function BizSwapAppPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/bizswap" className="text-[#7B8B9A] hover:text-[#81D7B4] transition-colors">
-              <HiOutlineArrowLeft className="w-5 h-5" />
+              <ArrowLeft01Icon className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-2">
               <Image src="/bitsavelogo.png" alt="BizMarket" width={100} height={32} className="object-contain" />
@@ -152,7 +223,7 @@ export default function BizSwapAppPage() {
             <Link href="/bizswap/dashboard" className="hidden sm:block text-sm font-bold text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">
               Dashboard
             </Link>
-            <WalletMultiButton style={{ backgroundColor: '#1A2538', border: '1px solid #2C3E5D', height: '36px', fontSize: '14px' }} />
+            <BizSwapAuthButton connectText="Connect Solana" style={{ backgroundColor: '#1A2538', border: '1px solid #2C3E5D', height: '36px', fontSize: '14px', borderRadius: '0.75rem' }} />
           </div>
         </div>
       </nav>
@@ -176,20 +247,58 @@ export default function BizSwapAppPage() {
                   {(Object.keys(INSTRUMENTS) as Array<keyof typeof INSTRUMENTS>).map((key) => {
                     const i = INSTRUMENTS[key];
                     const active = selectedInst === key;
-                    const Icon = i.icon;
                     return (
                       <button
                         key={key}
                         onClick={() => { setSelectedInst(key); setAmountStr(''); }}
                         className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${active ? 'border-[#81D7B4] bg-[#81D7B4]/10' : 'border-[#2C3E5D] bg-[#1A2538] hover:border-[#3A4F73]'}`}
                       >
-                        <Icon className="w-6 h-6" style={{ color: active ? '#81D7B4' : i.color }} />
+                        {getInstrumentIcon(i.name, "w-6 h-6", active ? '#81D7B4' : i.color)}
                         <span className={`text-sm font-bold ${active ? 'text-[#81D7B4]' : 'text-[#9BA8B5]'}`}>{i.name}</span>
                       </button>
                     )
                   })}
                 </div>
               </div>
+
+              {/* Select Business (Only for BizYield) */}
+              {selectedInst === 'bizyield' && (
+                <div className="space-y-3 relative z-10">
+                  <label className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider">Select Business</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsBusinessDropdownOpen(!isBusinessDropdownOpen)}
+                      className="w-full bg-[#1A2538] border border-[#2C3E5D] rounded-xl px-5 py-4 text-xl font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4] transition-colors flex justify-between items-center"
+                    >
+                      <span>{businesses.find(b => b.id === selectedBusiness)?.name || 'Select Business'}</span>
+                      <ArrowDown01Icon className={`w-5 h-5 text-[#9BA8B5] transition-transform ${isBusinessDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isBusinessDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#1C2538] border border-[#2C3E5D] rounded-xl shadow-2xl overflow-hidden">
+                        {businesses.map((bus) => (
+                          <button
+                            key={bus.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedBusiness(bus.id);
+                              setIsBusinessDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-5 py-4 text-xl font-bold transition-colors ${
+                              selectedBusiness === bus.id 
+                                ? 'bg-[#81D7B4]/10 text-[#81D7B4]' 
+                                : 'text-[#F9F9FB] hover:bg-[#2C3E5D]'
+                            }`}
+                          >
+                            {bus.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Input Amount */}
               <div className="space-y-3">
@@ -227,7 +336,7 @@ export default function BizSwapAppPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-[#9BA8B5] flex items-center gap-1">
                     Platform Fee ({inst.feePercent}%)
-                    {inst.feePercent > 0 && <HiOutlineInformationCircle className="w-4 h-4 text-[#7B8B9A]" title="Added on top of investment. Cost of access." />}
+                    {inst.feePercent > 0 && <InformationCircleIcon className="w-4 h-4 text-[#7B8B9A]"  />}
                   </span>
                   <span className="font-bold">${feeAmount.toFixed(2)}</span>
                 </div>
@@ -244,7 +353,7 @@ export default function BizSwapAppPage() {
 
               {/* Action Button */}
               {!connected ? (
-                <WalletMultiButton style={{ width: '100%', justifyContent: 'center', backgroundColor: '#2C3E5D', borderRadius: '0.75rem', height: '56px', fontSize: '16px', fontWeight: 'bold' }} />
+                <BizSwapAuthButton connectText="Connect Wallet to Buy" style={{ width: '100%', justifyContent: 'center', backgroundColor: '#2C3E5D', borderRadius: '0.75rem', height: '56px', fontSize: '16px', fontWeight: 'bold' }} />
               ) : (
                 <button
                   onClick={handlePurchase}
@@ -265,7 +374,7 @@ export default function BizSwapAppPage() {
             
             <div className="flex items-center gap-4 mb-8">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-opacity-10 border border-opacity-20" style={{ backgroundColor: `${inst.color}15`, borderColor: inst.color }}>
-                <inst.icon className="w-8 h-8" style={{ color: inst.color }} />
+                {getInstrumentIcon(inst.name, "w-8 h-8", inst.color)}
               </div>
               <div>
                 <h2 className="text-2xl font-black">{inst.name}</h2>
@@ -288,12 +397,14 @@ export default function BizSwapAppPage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#9BA8B5] text-sm">Supply Cap</span>
-                <span className="font-bold text-[#F9F9FB]">1,000 Units Cycle</span>
+                <span className="font-bold text-[#F9F9FB]">
+                  {remainingCap !== null ? `${remainingCap} Units Remaining` : '1,000 Units Cycle'}
+                </span>
               </div>
             </div>
 
             <div className="mt-8 p-4 bg-[#0F1825] border border-[#2C3E5D] rounded-xl flex gap-3">
-              <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4] shrink-0" />
+              <Shield01Icon className="w-5 h-5 text-[#81D7B4] shrink-0" />
               <p className="text-xs text-[#7B8B9A] leading-relaxed">
                 Your ownership is recorded on the Solana blockchain immediately. You will receive a digital certificate in your wallet upon successful purchase.
               </p>
@@ -315,6 +426,30 @@ export default function BizSwapAppPage() {
           toast.error('Payment cancelled');
         }}
       />
+
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#121A27] border border-[#81D7B4]/30 p-8 rounded-2xl max-w-md w-full text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 to-transparent pointer-events-none" />
+            <div className="w-20 h-20 bg-[#81D7B4]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Tick01Icon className="w-10 h-10 text-[#81D7B4]" />
+            </div>
+            <h2 className="text-3xl font-black text-white mb-2">Mint Successful!</h2>
+            <p className="text-[#7B8B9A] mb-8">
+              Your certificate has been successfully minted to your wallet and recorded on the Solana blockchain.
+            </p>
+            <div className="flex flex-col gap-3 relative z-10">
+              <button onClick={() => router.push('/bizswap/dashboard')} className="w-full py-3 px-4 bg-[#81D7B4] hover:bg-[#6BC29F] text-[#0A0F17] font-bold rounded-xl transition-colors">
+                Go to Dashboard
+              </button>
+              <button onClick={() => setShowSuccessModal(false)} className="w-full py-3 px-4 bg-[#1C2538] hover:bg-[#2C3E5D] text-white font-bold rounded-xl transition-colors">
+                Purchase Another
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

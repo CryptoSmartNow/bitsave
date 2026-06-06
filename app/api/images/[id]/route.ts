@@ -10,7 +10,7 @@ export async function GET(
 
     if (!id) {
       return NextResponse.json(
-        { error: 'Image ID is required' },
+        { error: 'AiImage ID is required' },
         { status: 400 }
       );
     }
@@ -26,7 +26,7 @@ export async function GET(
 
     if (!result.buffer) {
       return NextResponse.json(
-        { error: 'Image data not found' },
+        { error: 'AiImage data not found' },
         { status: 404 }
       );
     }

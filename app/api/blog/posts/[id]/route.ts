@@ -91,7 +91,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       updateData.title = title;
       updateData.slug = generateSlug(title);
       
-      // Check if new slug conflicts with existing posts
+      // Tick if new slug conflicts with existing posts
       const slugConflict = await collection.findOne({ 
         slug: updateData.slug, 
         _id: { $ne: new ObjectId(id) } 

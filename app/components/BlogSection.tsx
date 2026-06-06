@@ -1,9 +1,10 @@
 'use client';
+
+import { ArrowRight01Icon, TextIcon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blogDatabase';
 import BlogImage, { BlogImageSizes } from './BlogImage';
-import { FiArrowRight, FiFileText } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 interface BlogResponse {
@@ -110,7 +111,7 @@ export default function BlogSection() {
               className="hidden md:inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gray-50 border border-gray-100 text-lg font-bold text-gray-900 hover:bg-[#81D7B4] hover:text-white hover:border-[#81D7B4] transition-all duration-300 group"
             >
               View All Posts
-              <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight01Icon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>
         </div>
@@ -130,7 +131,7 @@ export default function BlogSection() {
                   className="group flex flex-col h-full bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:border-[#81D7B4]/30 hover:shadow-2xl hover:shadow-[#81D7B4]/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden snap-center shrink-0 min-w-[280px] max-w-[340px] md:min-w-0 md:max-w-none md:shrink md:snap-align-none"
                 >
                   <Link href={`/blog/${post.slug}`} className="flex flex-col h-full">
-                    {/* Featured Image */}
+                    {/* Featured AiImage */}
                     <div className="w-full aspect-[4/3] relative">
                       {post.featuredImage ? (
                         <div className="w-full h-full relative overflow-hidden">
@@ -147,7 +148,7 @@ export default function BlogSection() {
                         </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200 group-hover:bg-[#81D7B4]/5 transition-colors">
-                          <FiFileText className="w-12 h-12 text-gray-400 group-hover:text-[#81D7B4] transition-colors duration-500" />
+                          <TextIcon className="w-12 h-12 text-gray-400 group-hover:text-[#81D7B4] transition-colors duration-500" />
                         </div>
                       )}
                       
@@ -178,7 +179,7 @@ export default function BlogSection() {
                       <div className="pt-6 mt-auto border-t border-gray-200/50">
                         <span className="inline-flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide group-hover:translate-x-2 transition-transform duration-300">
                           Read Article
-                          <FiArrowRight className="w-4 h-4 text-[#81D7B4]" />
+                          <ArrowRight01Icon className="w-4 h-4 text-[#81D7B4]" />
                         </span>
                       </div>
                     </div>
@@ -193,7 +194,7 @@ export default function BlogSection() {
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#81D7B4] text-white font-bold shadow-lg shadow-[#81D7B4]/20 hover:bg-[#6BC5A0] transition-all"
               >
                 View All Posts
-                <FiArrowRight className="w-5 h-5" />
+                <ArrowRight01Icon className="w-5 h-5" />
               </Link>
             </div>
           </>
@@ -206,13 +207,13 @@ export default function BlogSection() {
             className="text-center py-32 bg-gray-50 rounded-[3rem] border border-gray-100"
           >
             <div className="w-24 h-24 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-8 text-[#81D7B4]">
-              <FiFileText className="w-10 h-10" />
+              <TextIcon className="w-10 h-10" />
             </div>
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
               Coming Soon
             </h3>
             <p className="text-xl text-gray-500 mb-8 max-w-md mx-auto">
-              We're crafting new content. Check back shortly for updates.
+              We're crafting new content. Tick back shortly for updates.
             </p>
           </motion.div>
         )}
