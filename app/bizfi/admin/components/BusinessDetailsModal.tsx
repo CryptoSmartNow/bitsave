@@ -1,6 +1,6 @@
+import { Cancel01Icon, TextIcon, Calendar01Icon, Wallet01Icon, Building04Icon, Ticket01Icon, Dollar01Icon, Message02Icon } from "hugeicons-react";
 
 import { motion } from 'framer-motion';
-import { X, FileText, Calendar, Wallet, Building2, Ticket, DollarSign, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
@@ -56,7 +56,7 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
             onClick={onClose}
             className="p-2 hover:bg-[#7B8B9A]/10 rounded-lg text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors shrink-0"
           >
-            <X className="w-5 h-5" />
+            <Cancel01Icon className="w-5 h-5" />
           </button>
         </div>
 
@@ -83,15 +83,15 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
           {/* Core Details */}
           <div>
             <h3 className="text-sm font-bold text-[#F9F9FB] mb-4 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#81D7B4]" />
+              <Building04Icon className="w-4 h-4 text-[#81D7B4]" />
               Business Information
             </h3>
             <div className="grid grid-cols-1 gap-4">
-              <DetailRow label="Owner Address" value={business.owner} icon={Wallet} />
-              <DetailRow label="Registration Date" value={business.createdAt ? format(new Date(business.createdAt), 'PPpp') : '-'} icon={Calendar} />
+              <DetailRow label="Owner Address" value={business.owner} icon={Wallet01Icon} />
+              <DetailRow label="Registration Date" value={business.createdAt ? format(new Date(business.createdAt), 'PPpp') : '-'} icon={Calendar01Icon} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <DetailRow label="Fee Paid" value={business.feePaid ? `$${business.feePaid}` : 'Free'} icon={DollarSign} />
-                <DetailRow label="Referral Code" value={business.referralCode} icon={Ticket} />
+                <DetailRow label="Fee Paid" value={business.feePaid ? `$${business.feePaid}` : 'Free'} icon={Dollar01Icon} />
+                <DetailRow label="Referral Code" value={business.referralCode} icon={Ticket01Icon} />
               </div>
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
           {business.metadata && (
             <div>
               <h3 className="text-sm font-bold text-[#F9F9FB] mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#81D7B4]" />
+                <TextIcon className="w-4 h-4 text-[#81D7B4]" />
                 Additional Details
               </h3>
               <div className="grid grid-cols-1 gap-4">
@@ -131,14 +131,14 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
             onClick={handleMessage}
             className="w-full sm:w-auto px-5 py-2.5 bg-[#1A2538] border border-[#81D7B4]/30 text-[#81D7B4] font-bold rounded-xl hover:bg-[#81D7B4]/10 transition-colors flex items-center justify-center gap-2 order-2"
           >
-            <MessageSquare className="w-4 h-4" />
+            <Message02Icon className="w-4 h-4" />
             Message
           </button>
           <button
             onClick={onOpenAgreement}
             className="w-full sm:w-auto px-5 py-2.5 bg-[#81D7B4] text-[#0F1825] font-bold rounded-xl hover:bg-[#6BC4A0] transition-colors shadow-lg shadow-[#81D7B4]/20 flex items-center justify-center gap-2 order-1 sm:order-3"
           >
-            <FileText className="w-4 h-4" />
+            <TextIcon className="w-4 h-4" />
             Manage Loan Agreement
           </button>
         </div>

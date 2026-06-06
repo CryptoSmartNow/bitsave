@@ -1,15 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Activity01Icon, LinkSquare01Icon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  HiOutlineDocumentText,
-  HiOutlineChartBar,
-  HiOutlineCurrencyDollar,
-  HiOutlineShieldCheck,
-  HiOutlineArrowTopRightOnSquare
-} from 'react-icons/hi2';
+import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
+import { CertificateCard } from '@/components/CertificateCard';
 
 interface Holding {
   _id: string;
@@ -23,18 +19,29 @@ interface Holding {
 }
 
 export default function CertificatesPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
+
+  const connected = ready && (authenticated || isSolanaConnected);
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  
+  const walletAddress = isSolanaConnected 
+    ? publicKey?.toBase58() 
+    : (privySolanaWallet?.address || user?.wallet?.address);
+
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (connected && publicKey) {
-      fetchHoldings(publicKey.toBase58());
-    } else {
+    if (connected && walletAddress) {
+      fetchHoldings(walletAddress);
+    } else if (!connected && ready) {
       setHoldings([]);
       setLoading(false);
     }
-  }, [connected, publicKey]);
+  }, [connected, walletAddress, ready]);
 
   const fetchHoldings = async (wallet: string) => {
     setLoading(true);
@@ -54,34 +61,12 @@ export default function CertificatesPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const d = new Date(dateString);
-    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  };
 
-  const getInstrumentIcon = (name: string) => {
-    switch(name) {
-      case 'BizYield': return <HiOutlineChartBar className="w-8 h-8 text-[#FF6B6B]" />;
-      case 'BizCredit': return <HiOutlineCurrencyDollar className="w-8 h-8 text-[#3B82F6]" />;
-      case 'BizBond': return <HiOutlineShieldCheck className="w-8 h-8 text-[#81D7B4]" />;
-      default: return <HiOutlineDocumentText className="w-8 h-8 text-[#7B8B9A]" />;
-    }
-  };
-
-  const getInstrumentColorClass = (name: string, type: 'gradientFrom' | 'border' | 'text' | 'bg') => {
-    switch(name) {
-      case 'BizYield': return type === 'gradientFrom' ? 'from-[#FF6B6B]/10' : type === 'border' ? 'border-[#FF6B6B]/30' : type === 'text' ? 'text-[#FF6B6B]' : 'bg-[#FF6B6B]/10';
-      case 'BizCredit': return type === 'gradientFrom' ? 'from-[#3B82F6]/10' : type === 'border' ? 'border-[#3B82F6]/30' : type === 'text' ? 'text-[#3B82F6]' : 'bg-[#3B82F6]/10';
-      case 'BizBond': return type === 'gradientFrom' ? 'from-[#81D7B4]/10' : type === 'border' ? 'border-[#81D7B4]/30' : type === 'text' ? 'text-[#81D7B4]' : 'bg-[#81D7B4]/10';
-      default: return type === 'gradientFrom' ? 'from-gray-800/10' : type === 'border' ? 'border-gray-700' : type === 'text' ? 'text-gray-400' : 'bg-gray-800/10';
-    }
-  };
 
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <HiOutlineDocumentText className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
         <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet to view your digital certificates.</p>
       </div>
@@ -103,60 +88,9 @@ export default function CertificatesPage() {
       ) : holdings.length === 0 ? (
         <div className="py-12 text-center text-[#7B8B9A]">You have no active certificates.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-12 items-center w-full">
           {holdings.map((h) => (
-            <div key={h._id} className={`group bg-[#121A27] rounded-3xl border ${getInstrumentColorClass(h.instrument, 'border')} relative overflow-hidden transition-all hover:scale-[1.02] hover:shadow-2xl cursor-pointer`}>
-              
-              {/* Card Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${getInstrumentColorClass(h.instrument, 'gradientFrom')} to-transparent opacity-50`} />
-              
-              {/* Card Content */}
-              <div className="relative p-8 flex flex-col h-full">
-                
-                {/* Header */}
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h3 className={`text-xl font-black ${getInstrumentColorClass(h.instrument, 'text')}`}>{h.instrument}</h3>
-                    <p className="text-xs text-[#F9F9FB] font-bold mt-1 tracking-widest uppercase">
-                      {h.instrument === 'BizYield' ? 'Revenue Share' : h.instrument === 'BizCredit' ? 'Private Credit' : 'Treasury Bond'}
-                    </p>
-                  </div>
-                  <div className={`p-3 rounded-2xl ${getInstrumentColorClass(h.instrument, 'bg')}`}>
-                    {getInstrumentIcon(h.instrument)}
-                  </div>
-                </div>
-
-                {/* Main Value */}
-                <div className="mb-8">
-                  <p className="text-xs text-[#7B8B9A] uppercase tracking-wider font-bold mb-1">Face Value</p>
-                  <p className="text-4xl font-black text-[#F9F9FB]">${h.investmentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                </div>
-
-                {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
-                  <div>
-                    <p className="text-[#7B8B9A] text-xs uppercase tracking-wider mb-1">Issue Date</p>
-                    <p className="font-bold text-[#F9F9FB]">{formatDate(h.purchaseDate)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[#7B8B9A] text-xs uppercase tracking-wider mb-1">Yield Rate</p>
-                    <p className="font-bold text-[#F9F9FB]">{h.apr}</p>
-                  </div>
-                </div>
-
-                {/* Serial & Footer */}
-                <div className="mt-auto pt-6 border-t border-[#1C2538] flex justify-between items-center">
-                  <div>
-                    <p className="text-[10px] text-[#4B5A75] uppercase tracking-widest mb-1">Certificate Serial</p>
-                    <p className="font-mono text-xs text-[#7B8B9A]">#{h.serialNumber.substring(0, 12)}...</p>
-                  </div>
-                  <button className="w-10 h-10 rounded-xl bg-[#1C2538] flex items-center justify-center text-[#7B8B9A] hover:text-[#81D7B4] hover:bg-[#2C3E5D] transition-colors" title="View on Explorer">
-                    <HiOutlineArrowTopRightOnSquare className="w-5 h-5" />
-                  </button>
-                </div>
-
-              </div>
-            </div>
+            <CertificateCard key={h._id} holding={h} />
           ))}
         </div>
       )}

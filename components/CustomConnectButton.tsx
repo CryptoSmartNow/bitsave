@@ -1,11 +1,11 @@
 'use client';
 
+import { Logout01Icon, Activity01Icon } from "hugeicons-react";
 import { usePrivy } from '@privy-io/react-auth';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+// removed WalletMultiButton import
 import { useEffect, useState } from 'react';
-import { HiOutlineArrowRightOnRectangle, HiOutlineWallet } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 
 export default function CustomConnectButton() {
@@ -88,7 +88,7 @@ export default function CustomConnectButton() {
           className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors font-medium text-sm"
           title="Disconnect Wallet"
         >
-          <HiOutlineArrowRightOnRectangle className="w-5 h-5" />
+          <Logout01Icon className="w-5 h-5" />
         </button>
       </div>
     );
@@ -103,11 +103,12 @@ export default function CustomConnectButton() {
         <span className="text-[15px]">Connect EVM Wallet</span>
       </button>
 
-      <div className="w-full relative [&_.wallet-adapter-button]:w-full [&_.wallet-adapter-button]:justify-center [&_.wallet-adapter-button]:bg-transparent [&_.wallet-adapter-button]:hover:bg-[#81D7B4]/5 [&_.wallet-adapter-button]:text-[#81D7B4] [&_.wallet-adapter-button]:border-2 [&_.wallet-adapter-button]:border-[#81D7B4] [&_.wallet-adapter-button]:font-semibold [&_.wallet-adapter-button]:py-3.5 [&_.wallet-adapter-button]:px-8 [&_.wallet-adapter-button]:rounded-[1.25rem] [&_.wallet-adapter-button]:h-[auto] [&_.wallet-adapter-button]:min-h-[52px] [&_.wallet-adapter-button]:transition-all [&_.wallet-adapter-button]:duration-300 [&_.wallet-adapter-dropdown]:w-full">
-        <WalletMultiButton>
-          <span className="text-[15px]">Connect Solana</span>
-        </WalletMultiButton>
-      </div>
+      <button
+        onClick={() => login({ loginMethods: ['wallet'], walletChainType: 'solana-only' })}
+        className="w-full justify-center bg-transparent hover:bg-[#81D7B4]/5 text-[#81D7B4] border-2 border-[#81D7B4] font-semibold py-3.5 px-8 rounded-[1.25rem] transition-all duration-300 min-h-[52px] flex items-center gap-2"
+      >
+        <span className="text-[15px]">Connect Solana</span>
+      </button>
     </div>
   );
 }

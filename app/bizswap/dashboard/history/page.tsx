@@ -1,16 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Activity01Icon, Download01Icon, LinkSquare01Icon, BarChartIcon, Dollar01Icon, Shield01Icon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  HiOutlineClock,
-  HiOutlineArrowDownTray,
-  HiOutlineArrowTopRightOnSquare,
-  HiOutlineFunnel,
-  HiOutlineChartBar,
-  HiOutlineCurrencyDollar,
-  HiOutlineShieldCheck
-} from 'react-icons/hi2';
+import { usePrivy } from '@privy-io/react-auth';
 
 // Mock data since we don't have a payout history API yet
 const MOCK_HISTORY = [
@@ -22,7 +15,9 @@ const MOCK_HISTORY = [
 ];
 
 export default function HistoryPage() {
-  const { connected } = useWallet();
+  const { connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated } = usePrivy();
+  const connected = ready && (authenticated || isSolanaConnected);
   const [filter, setFilter] = useState('All');
 
   const filteredHistory = filter === 'All' ? MOCK_HISTORY : MOCK_HISTORY.filter(h => h.instrument === filter);
@@ -34,9 +29,9 @@ export default function HistoryPage() {
 
   const getInstrumentIcon = (name: string) => {
     switch(name) {
-      case 'BizYield': return <HiOutlineChartBar className="w-4 h-4 text-[#FF6B6B]" />;
-      case 'BizCredit': return <HiOutlineCurrencyDollar className="w-4 h-4 text-[#3B82F6]" />;
-      case 'BizBond': return <HiOutlineShieldCheck className="w-4 h-4 text-[#81D7B4]" />;
+      case 'BizYield': return <BarChartIcon className="w-4 h-4 text-[#FF6B6B]" />;
+      case 'BizCredit': return <Dollar01Icon className="w-4 h-4 text-[#3B82F6]" />;
+      case 'BizBond': return <Shield01Icon className="w-4 h-4 text-[#81D7B4]" />;
       default: return null;
     }
   };
@@ -44,7 +39,7 @@ export default function HistoryPage() {
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <HiOutlineClock className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
         <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet to view your payout history.</p>
       </div>
@@ -61,7 +56,7 @@ export default function HistoryPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="bg-[#121A27] border border-[#1C2538] rounded-lg px-3 py-2 flex items-center gap-2">
-            <HiOutlineFunnel className="w-4 h-4 text-[#7B8B9A]" />
+            <Activity01Icon className="w-4 h-4 text-[#7B8B9A]" />
             <select 
               className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none"
               value={filter}
@@ -74,7 +69,7 @@ export default function HistoryPage() {
             </select>
           </div>
           <button className="flex items-center gap-2 text-sm font-bold text-[#F9F9FB] hover:text-[#81D7B4] border border-[#1C2538] bg-[#0A0F17] px-4 py-2 rounded-lg transition-colors">
-            <HiOutlineArrowDownTray className="w-4 h-4" />
+            <Download01Icon className="w-4 h-4" />
             Export CSV
           </button>
         </div>
@@ -114,7 +109,7 @@ export default function HistoryPage() {
                   </td>
                   <td className="px-5 py-4">
                     <button className="flex items-center gap-2 text-xs font-mono text-[#7B8B9A] hover:text-[#81D7B4] transition-colors">
-                      {h.txHash} <HiOutlineArrowTopRightOnSquare className="w-3 h-3" />
+                      {h.txHash} <LinkSquare01Icon className="w-3 h-3" />
                     </button>
                   </td>
                 </tr>

@@ -1,13 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Calendar01Icon, Activity01Icon, Tick01Icon, Dollar01Icon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  HiOutlineCalendar, 
-  HiOutlineClock,
-  HiOutlineCheckCircle,
-  HiOutlineCurrencyDollar
-} from 'react-icons/hi2';
+import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 
 interface Holding {
@@ -26,18 +22,29 @@ interface CalendarEvent {
 }
 
 export default function CalendarPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
+
+  const connected = ready && (authenticated || isSolanaConnected);
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  
+  const walletAddress = isSolanaConnected 
+    ? publicKey?.toBase58() 
+    : (privySolanaWallet?.address || user?.wallet?.address);
+
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (connected && publicKey) {
-      fetchHoldings(publicKey.toBase58());
-    } else {
+    if (connected && walletAddress) {
+      fetchHoldings(walletAddress);
+    } else if (!connected && ready) {
       setEvents([]);
       setLoading(false);
     }
-  }, [connected, publicKey]);
+  }, [connected, walletAddress, ready]);
 
   const fetchHoldings = async (wallet: string) => {
     setLoading(true);
@@ -79,7 +86,7 @@ export default function CalendarPage() {
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <HiOutlineCalendar className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <Calendar01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
         <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet to view your payout calendar.</p>
       </div>
@@ -139,7 +146,7 @@ export default function CalendarPage() {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <span className="flex items-center gap-1 text-[10px] font-bold text-[#F5A623] bg-[#F5A623]/10 px-2 py-1 rounded">
-                        <HiOutlineClock className="w-3 h-3" /> Upcoming
+                        <Activity01Icon className="w-3 h-3" /> Upcoming
                       </span>
                     </div>
                   </div>

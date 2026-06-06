@@ -1,12 +1,12 @@
 'use client';
 
+import { Activity01Icon, Download01Icon, Tick01Icon, Alert02Icon } from "hugeicons-react";
 import { useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
 import BitSaveABI from '../../abi/contractABI.js';
 import { handleContractError } from '../../../lib/contractErrorHandler';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineWallet, HiOutlineArrowDownTray, HiOutlineCheckCircle, HiOutlineExclamationTriangle } from 'react-icons/hi2';
 
 const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
 const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
@@ -73,7 +73,7 @@ export default function WithdrawPage() {
             className="bg-white/80 backdrop-blur-xl rounded-2xl xs:rounded-3xl shadow-2xl p-6 xs:p-8 text-center border border-white/20"
           >
             <div className="w-16 h-16 xs:w-20 xs:h-20 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC7A0]/20 rounded-full flex items-center justify-center mx-auto mb-4 xs:mb-6">
-              <HiOutlineWallet className="w-8 h-8 xs:w-10 xs:h-10 text-[#81D7B4]" />
+              <Activity01Icon className="w-8 h-8 xs:w-10 xs:h-10 text-[#81D7B4]" />
             </div>
             <h2 className="text-2xl xs:text-3xl font-bold bg-gradient-to-r from-[#2D5A4A] to-[#81D7B4] bg-clip-text text-transparent mb-3 xs:mb-4">
               Connect Your Wallet
@@ -111,7 +111,7 @@ export default function WithdrawPage() {
                   className="flex items-center space-x-3 xs:space-x-4"
                 >
                   <div className="w-10 h-10 xs:w-12 xs:h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                    <HiOutlineArrowDownTray className="w-5 h-5 xs:w-6 xs:h-6 text-white" />
+                    <Download01Icon className="w-5 h-5 xs:w-6 xs:h-6 text-white" />
                   </div>
                   <div>
                     <h1 className="text-2xl xs:text-3xl font-bold text-white mb-1">Withdraw Savings</h1>
@@ -133,7 +133,7 @@ export default function WithdrawPage() {
                     className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl xs:rounded-2xl p-4 xs:p-6"
                   >
                     <div className="flex items-start space-x-3">
-                      <HiOutlineExclamationTriangle className="w-5 h-5 xs:w-6 xs:h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                      <Alert02Icon className="w-5 h-5 xs:w-6 xs:h-6 text-red-500 flex-shrink-0 mt-0.5" />
                       <p className="text-red-800 font-medium text-sm xs:text-base">{error}</p>
                     </div>
                   </motion.div>
@@ -147,7 +147,7 @@ export default function WithdrawPage() {
                     className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl xs:rounded-2xl p-4 xs:p-6"
                   >
                     <div className="flex items-start space-x-3">
-                      <HiOutlineCheckCircle className="w-5 h-5 xs:w-6 xs:h-6 text-green-500 flex-shrink-0 mt-0.5" />
+                      <Tick01Icon className="w-5 h-5 xs:w-6 xs:h-6 text-green-500 flex-shrink-0 mt-0.5" />
                       <p className="text-green-800 font-medium text-sm xs:text-base">{success}</p>
                     </div>
                   </motion.div>
@@ -199,7 +199,7 @@ export default function WithdrawPage() {
                       </>
                     ) : (
                       <>
-                        <HiOutlineArrowDownTray className="w-4 h-4 xs:w-5 xs:h-5 flex-shrink-0" />
+                        <Download01Icon className="w-4 h-4 xs:w-5 xs:h-5 flex-shrink-0" />
                         <span className="text-sm xs:text-base">Withdraw Savings</span>
                       </>
                     )}
@@ -216,7 +216,7 @@ export default function WithdrawPage() {
               >
                 <div className="flex items-start space-x-3 xs:space-x-4">
                   <div className="w-8 h-8 xs:w-10 xs:h-10 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC7A0]/20 rounded-lg xs:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <HiOutlineCheckCircle className="w-4 h-4 xs:w-5 xs:h-5 text-[#81D7B4]" />
+                    <Tick01Icon className="w-4 h-4 xs:w-5 xs:h-5 text-[#81D7B4]" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-gray-800 mb-1 xs:mb-2 text-base xs:text-lg">Secure Withdrawal</h3>

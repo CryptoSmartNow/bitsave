@@ -1,10 +1,10 @@
 'use client';
 
+import { Loading02Icon, Alert01Icon, Dollar01Icon, UserMultipleIcon, Activity01Icon, ArrowUpRight01Icon, RefreshIcon, Clock01Icon } from "hugeicons-react";
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { 
-  BarChart, 
+import { BarChart, 
   Bar, 
   XAxis, 
   YAxis, 
@@ -17,17 +17,7 @@ import {
   Pie,
   Cell,
   Legend
-} from 'recharts';
-import { 
-  Loader2, 
-  AlertCircle, 
-  DollarSign, 
-  Users, 
-  Activity, 
-  TrendingUp,
-  RefreshCw,
-  Clock
-} from 'lucide-react';
+ } from 'recharts';
 
 // BizFi Brand Palette
 const BIZFI_COLORS = {
@@ -94,7 +84,7 @@ export default function BizFiAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-        <Loader2 
+        <Loading02Icon 
           className="w-10 h-10 animate-spin" 
           style={{ color: BIZFI_COLORS.primary }}
         />
@@ -116,7 +106,7 @@ export default function BizFiAnalyticsPage() {
             color: BIZFI_COLORS.status.rejected
           }}
         >
-          <AlertCircle className="w-8 h-8" />
+          <Alert01Icon className="w-8 h-8" />
           <h3 className="text-lg font-bold">Error Loading Data</h3>
           <p className="text-sm opacity-80" style={{ color: BIZFI_COLORS.text.secondary }}>{error}</p>
           <button 
@@ -127,7 +117,7 @@ export default function BizFiAnalyticsPage() {
               color: BIZFI_COLORS.status.rejected
             }}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshIcon className="w-4 h-4" />
             Try Again
           </button>
         </div>
@@ -181,7 +171,7 @@ export default function BizFiAnalyticsPage() {
         <div className="flex flex-wrap items-center gap-3">
           {lastUpdated && (
             <div className="flex items-center gap-2 text-sm text-[#7B8B9A] bg-[#1A2538]/50 px-3 py-1.5 rounded-lg border border-[#7B8B9A]/10">
-              <Clock className="w-4 h-4" />
+              <Clock01Icon className="w-4 h-4" />
               <span>Updated {format(lastUpdated, 'h:mm a')}</span>
             </div>
           )}
@@ -191,7 +181,7 @@ export default function BizFiAnalyticsPage() {
             className="p-2 bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-[#81D7B4] rounded-lg border border-[#81D7B4]/20 transition-all disabled:opacity-50"
             title="Refresh Data"
           >
-            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshIcon className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
@@ -201,25 +191,25 @@ export default function BizFiAnalyticsPage() {
         <SummaryCard 
           title="Total Revenue (Est.)" 
           value={`$${data?.totalRevenue?.toLocaleString() || 0}`}
-          icon={DollarSign}
+          icon={Dollar01Icon}
           color={BIZFI_COLORS.primary}
         />
         <SummaryCard 
           title="Total Businesses" 
           value={data?.totalBusinesses?.toLocaleString() || 0}
-          icon={Users}
+          icon={UserMultipleIcon}
           color={BIZFI_COLORS.secondary}
         />
         <SummaryCard 
           title="Active Rate" 
           value={`${activeRate}%`}
-          icon={Activity}
+          icon={Activity01Icon}
           color={BIZFI_COLORS.primary}
         />
         <SummaryCard 
-          title="Avg. Revenue/User" 
+          title="Avg. Revenue/UserIcon" 
           value={`$${arpu}`}
-          icon={TrendingUp}
+          icon={ArrowUpRight01Icon}
           color={BIZFI_COLORS.secondary}
         />
       </div>
@@ -450,7 +440,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-[#9BA8B5] space-y-2">
       <div className="p-3 bg-[#7B8B9A]/10 rounded-full">
-        <Activity className="w-6 h-6 opacity-50" />
+        <Activity01Icon className="w-6 h-6 opacity-50" />
       </div>
       <p>{message}</p>
     </div>

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ViewIcon, Calendar01Icon, Clock01Icon, UserMultipleIcon, Message01Icon, Share01Icon, BarChartIcon, Target01Icon } from "hugeicons-react";
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { Eye, Calendar, Clock, Users, MessageCircle, Share2, BarChart3, Target } from 'lucide-react';
 
 interface AnalyticsDisplayProps {
   postId: string;
@@ -89,7 +89,7 @@ export default function AnalyticsDisplay({
   if (!showDetailed) {
     return (
       <div className={`flex items-center space-x-2 text-gray-600 ${className}`}>
-        <Eye className="w-4 h-4" />
+        <ViewIcon className="w-4 h-4" />
         <span className="text-sm font-medium">
           {formatNumber(analytics.viewCount)} views
         </span>
@@ -100,7 +100,7 @@ export default function AnalyticsDisplay({
   return (
     <div className={`bg-white rounded-xl border border-[#81D7B4]/20 p-6 shadow-sm ${className}`}>
       <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-        <BarChart3 className="w-5 h-5 mr-2 text-[#81D7B4]" />
+        <BarChartIcon className="w-5 h-5 mr-2 text-[#81D7B4]" />
         Enhanced Analytics Dashboard
       </h3>
       
@@ -114,7 +114,7 @@ export default function AnalyticsDisplay({
                 {formatNumber(analytics.viewCount)}
               </p>
             </div>
-            <Eye className="w-8 h-8 text-[#81D7B4]" />
+            <ViewIcon className="w-8 h-8 text-[#81D7B4]" />
           </div>
         </div>
         
@@ -126,7 +126,7 @@ export default function AnalyticsDisplay({
                 {formatNumber(analytics.uniqueViews)}
               </p>
             </div>
-            <Users className="w-8 h-8 text-[#6bc4a1]" />
+            <UserMultipleIcon className="w-8 h-8 text-[#6bc4a1]" />
           </div>
         </div>
         
@@ -138,7 +138,7 @@ export default function AnalyticsDisplay({
                 {formatNumber(getRecentViews())}
               </p>
             </div>
-            <Calendar className="w-8 h-8 text-[#81D7B4]" />
+            <Calendar01Icon className="w-8 h-8 text-[#81D7B4]" />
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function AnalyticsDisplay({
                 {analytics.avgReadTime ? `${Math.round(analytics.avgReadTime / 60)}m ${analytics.avgReadTime % 60}s` : '2m 30s'}
               </p>
             </div>
-            <Clock className="w-6 h-6 text-gray-500" />
+            <Clock01Icon className="w-6 h-6 text-gray-500" />
           </div>
         </div>
         
@@ -165,7 +165,7 @@ export default function AnalyticsDisplay({
                 {analytics.engagementRate ? `${analytics.engagementRate.toFixed(1)}%` : '68.5%'}
               </p>
             </div>
-            <Target className="w-6 h-6 text-gray-500" />
+            <Target01Icon className="w-6 h-6 text-gray-500" />
           </div>
         </div>
         
@@ -177,7 +177,7 @@ export default function AnalyticsDisplay({
                 {analytics.commentsCount || 12}
               </p>
             </div>
-            <MessageCircle className="w-6 h-6 text-gray-500" />
+            <Message01Icon className="w-6 h-6 text-gray-500" />
           </div>
         </div>
         
@@ -189,7 +189,7 @@ export default function AnalyticsDisplay({
                 {analytics.sharesCount || 8}
               </p>
             </div>
-            <Share2 className="w-6 h-6 text-gray-500" />
+            <Share01Icon className="w-6 h-6 text-gray-500" />
           </div>
         </div>
       </div>

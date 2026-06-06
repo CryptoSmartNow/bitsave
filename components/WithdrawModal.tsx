@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +28,7 @@ const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
 const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
 const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
 
-// Helper function to ensure image URLs are properly formatted for Next.js Image
+// Helper function to ensure image URLs are properly formatted for Next.js AiImage
 const ensureImageUrl = (url: string | undefined): string => {
   if (!url) return '/default-network.png'
   // If it's a relative path starting with /, it's fine
@@ -188,7 +188,7 @@ const WithdrawModal = memo(function WithdrawModal({
     try {
       const sanitizedPlanName = planName;
 
-      // Check if network is Solana
+      // Tick if network is Solana
       const isSolana = (planNetwork || '').toLowerCase() === 'solana' || currentNetwork === 'solana';
 
       // Added timeout to prevent hanging

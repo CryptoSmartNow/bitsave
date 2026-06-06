@@ -1,7 +1,7 @@
 'use client';
 
+import { Tick01Icon, Cancel01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface SuccessModalProps {
@@ -127,7 +127,7 @@ export default function SuccessModal({
               className="absolute top-4 right-4 p-2.5 rounded-full bg-white/80 hover:bg-white/90 backdrop-blur-sm transition-all duration-200 z-10 shadow-lg hover:shadow-xl border border-white/60 group"
               aria-label="Close modal"
             >
-              <X className="w-5 h-5 text-gray-600 group-hover:text-gray-800 transition-colors" />
+              <Cancel01Icon className="w-5 h-5 text-gray-600 group-hover:text-gray-800 transition-colors" />
             </button>
 
             {/* Content */}
@@ -145,7 +145,7 @@ export default function SuccessModal({
                 className="mx-auto mb-6 w-20 h-20 bg-gradient-to-br from-[#81D7B4] via-[#6BC5A0] to-[#81D7B4] rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(129,215,180,0.4)] relative"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                <CheckCircle className="w-10 h-10 text-white drop-shadow-lg" />
+                <Tick01Icon className="w-10 h-10 text-white drop-shadow-lg" />
                 
                 {/* Animated rings */}
                 <motion.div

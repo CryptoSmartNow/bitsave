@@ -1,8 +1,8 @@
 'use client';
+
+import { Cancel01Icon, SentIcon, BotIcon } from "hugeicons-react";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineXMark, HiOutlinePaperAirplane } from 'react-icons/hi2';
-import { Bot } from 'lucide-react';
 import { marked } from 'marked';
 import Link from 'next/link';
 
@@ -118,7 +118,7 @@ export default function SavvyBotWidget() {
             onClick={() => setIsOpen(true)}
             className="fixed bottom-6 right-6 z-[90] w-14 h-14 bg-gradient-to-br from-[#81D7B4] to-[#5CB899] text-white rounded-full shadow-[0_8px_30px_rgba(129,215,180,0.4)] hover:shadow-[0_8px_40px_rgba(129,215,180,0.6)] flex items-center justify-center transition-shadow group"
           >
-            <Bot className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <BotIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -137,7 +137,7 @@ export default function SavvyBotWidget() {
             <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0]">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-white" />
+                  <BotIcon className="w-4 h-4 text-white" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-white">Savvy Bot</h3>
@@ -149,7 +149,7 @@ export default function SavvyBotWidget() {
                   Full Page
                 </Link>
                 <button onClick={() => setIsOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors text-white">
-                  <HiOutlineXMark className="w-4 h-4" />
+                  <Cancel01Icon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -202,7 +202,7 @@ export default function SavvyBotWidget() {
                   disabled={!input.trim() || isLoading}
                   className="w-8 h-8 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-white rounded-lg transition-all disabled:opacity-40 shrink-0"
                 >
-                  <HiOutlinePaperAirplane className="w-4 h-4" />
+                  <SentIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>

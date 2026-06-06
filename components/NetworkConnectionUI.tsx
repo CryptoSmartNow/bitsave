@@ -1,11 +1,10 @@
-'use client'
+'use client';
 
 import { memo } from 'react';
 import ModernCard from '@/components/ui/ModernCard';
-import {
-  ConnectWallet,
+import { ConnectWallet,
   Wallet,
-} from '@coinbase/onchainkit/wallet';
+ } from '@coinbase/onchainkit/wallet';
 
 interface NetworkConnectionUIProps {
   onDisconnect?: () => void;

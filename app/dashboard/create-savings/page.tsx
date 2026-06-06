@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import { Tick01Icon, Activity01Icon } from "hugeicons-react";
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -15,8 +16,6 @@ import { trackSavingsCreated, trackError, trackPageVisit } from '@/lib/interacti
 import { useReferrals } from '@/lib/useReferrals';
 import { handleContractError } from '@/lib/contractErrorHandler';
 import { useSavingsData } from '@/hooks/useSavingsData';
-import { HiCheckCircle, HiBolt } from 'react-icons/hi2';
-import { FaRobot } from 'react-icons/fa6';
 import NetworkDetection from '@/components/NetworkDetection';
 import { useWalletDetection } from '@/hooks/useWalletDetection';
 import WalletRecommendationModal from '@/components/WalletRecommendationModal';
@@ -478,7 +477,7 @@ export default function CreateSavingsPage() {
           </motion.button>
           <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={() => setNlpMode(true)}
             className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2 ${nlpMode ? 'bg-[#F4FBF8] text-[#81D7B4] shadow-sm ring-1 ring-[#81D7B4]/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}>
-            <FaRobot className="w-4 h-4" />
+            <Activity01Icon className="w-4 h-4" />
             Smart Input
           </motion.button>
         </div>
@@ -493,7 +492,7 @@ export default function CreateSavingsPage() {
             {success ? (
               <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16">
                 <div className="w-20 h-20 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-6 ring-4 ring-green-100">
-                  <HiCheckCircle className="w-10 h-10 text-green-500" />
+                  <Tick01Icon className="w-10 h-10 text-green-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Savings Plan Created!</h2>
                 <p className="text-sm text-gray-500 mb-8 max-w-xs mx-auto">Your plan is now active and tracking. You can view it on your dashboard.</p>

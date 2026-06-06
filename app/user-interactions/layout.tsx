@@ -1,17 +1,10 @@
 'use client';
 
+import { Activity01Icon, Alert02Icon, UserMultipleIcon, DashboardSquare01Icon, FlashIcon, Menu01Icon } from "hugeicons-react";
 import { useState } from 'react';
 import UserInteractionsSidebar, { SidebarState } from '@/components/UserInteractionsSidebar';
 import { AuthProvider, useAuth } from '@/lib/adminAuth';
 import UserInteractionsLoginForm from './components/UserInteractionsLoginForm';
-import { 
-  Activity, 
-  AlertTriangle, 
-  Users, 
-  LayoutDashboard, 
-  Zap,
-  Menu
-} from 'lucide-react';
 
 function UserInteractionsLayoutInner({
   children,
@@ -24,31 +17,31 @@ function UserInteractionsLayoutInner({
   const navigationItems = [
     {
       name: 'Dashboard',
-      icon: LayoutDashboard,
+      icon: DashboardSquare01Icon,
       href: '/user-interactions',
       description: 'Overview & Health'
     },
     {
       name: 'Analytics',
-      icon: Activity,
+      icon: Activity01Icon,
       href: '/user-interactions/analytics',
       description: 'User & System Metrics'
     },
     {
       name: 'Error Logs',
-      icon: AlertTriangle,
+      icon: Alert02Icon,
       href: '/user-interactions/errors',
       description: 'Bug Tracking & Diagnostics'
     },
     {
       name: 'User Management',
-      icon: Users,
+      icon: UserMultipleIcon,
       href: '/user-interactions/users',
       description: 'Search & Profiles'
     },
     {
       name: 'Real-time',
-      icon: Zap,
+      icon: FlashIcon,
       href: '/user-interactions/real-time',
       description: 'Live Activity Feed'
     }
@@ -84,7 +77,7 @@ function UserInteractionsLayoutInner({
         }`}
         aria-label="Open Menu"
       >
-        <Menu className="w-6 h-6" />
+        <Menu01Icon className="w-6 h-6" />
       </button>
       
       <div 

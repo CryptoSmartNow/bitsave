@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Building2, BadgeCheck, Users, Rocket } from 'lucide-react';
+import { ArrowRight01Icon, Building04Icon, CheckmarkBadge01Icon, UserMultipleIcon, RocketIcon } from "hugeicons-react";
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -9,17 +9,17 @@ export default function BizFiSection() {
     { 
       title: "On-chain Registration", 
       desc: "Secure your business identity on Base with official on-chain registration.", 
-      icon: <Building2 className="w-6 h-6" /> 
+      icon: <Building04Icon className="w-6 h-6" /> 
     },
     { 
       title: "Verifiable Attestations", 
       desc: "Build trust with EAS-powered attestations that prove your legitimacy.", 
-      icon: <BadgeCheck className="w-6 h-6" /> 
+      icon: <CheckmarkBadge01Icon className="w-6 h-6" /> 
     },
     { 
       title: "Global Capital Access", 
       desc: "Connect with investors and raise capital directly on the blockchain.", 
-      icon: <Users className="w-6 h-6" /> 
+      icon: <UserMultipleIcon className="w-6 h-6" /> 
     }
   ];
 
@@ -61,7 +61,7 @@ export default function BizFiSection() {
             <div>
               <Link href="/bizfi" className="inline-flex items-center gap-2 px-8 py-4 bg-[#81D7B4] text-white font-bold rounded-full hover:bg-[#6BC5A0] transition-colors shadow-lg shadow-[#81D7B4]/20 hover:scale-105 transform duration-200">
                 Tokenize Your Business
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight01Icon className="w-5 h-5" />
               </Link>
             </div>
           </motion.div>

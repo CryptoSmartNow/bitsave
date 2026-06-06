@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
+import { ArrowUp01Icon } from "hugeicons-react";
 import { useEffect, useState } from "react";
-import { FiChevronUp } from "react-icons/fi";
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
@@ -38,7 +38,7 @@ export default function ScrollToTop() {
         right: "calc(2rem + env(safe-area-inset-right, 0px))"
       }}
     >
-      <FiChevronUp className="h-6 w-6" />
+      <ArrowUp01Icon className="h-6 w-6" />
     </button>
   );
 }

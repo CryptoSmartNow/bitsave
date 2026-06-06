@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     const slug = generateSlug(name);
     const now = new Date();
 
-    // Check if category already exists
+    // Tick if category already exists
     const existingCategory = await collection.findOne({ 
       $or: [{ name }, { slug }] 
     });

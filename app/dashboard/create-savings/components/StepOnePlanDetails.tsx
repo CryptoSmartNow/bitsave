@@ -1,7 +1,7 @@
 import React, { useState } from "react";
+import { ArrowDown01Icon, Cancel01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import { HiChevronDown, HiXMark } from "react-icons/hi2";
+import Image from 'next/image';
 
 interface StepOnePlanDetailsProps {
   name: string;
@@ -139,7 +139,7 @@ export default function StepOnePlanDetails({
             ) : (
               <span className="font-medium text-gray-400">Select Network</span>
             )}
-            {chain !== 'solana' && <HiChevronDown className="w-5 h-5 text-gray-500 transition-transform" />}
+            {chain !== 'solana' && <ArrowDown01Icon className="w-5 h-5 text-gray-500 transition-transform" />}
           </button>
         </div>
 
@@ -174,7 +174,7 @@ export default function StepOnePlanDetails({
             ) : (
               <span className="font-medium text-gray-400">Select Currency</span>
             )}
-            <HiChevronDown className="w-5 h-5 text-gray-500 transition-transform" />
+            <ArrowDown01Icon className="w-5 h-5 text-gray-500 transition-transform" />
           </button>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function StepOnePlanDetails({
                   onClick={() => setIsNetworkOpen(false)}
                   className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
                 >
-                  <HiXMark className="w-5 h-5" />
+                  <Cancel01Icon className="w-5 h-5" />
                 </button>
               </div>
               <div className="overflow-y-auto p-3">
@@ -301,7 +301,7 @@ export default function StepOnePlanDetails({
                   onClick={() => setIsCurrencyOpen(false)}
                   className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
                 >
-                  <HiXMark className="w-5 h-5" />
+                  <Cancel01Icon className="w-5 h-5" />
                 </button>
               </div>
               <div className="overflow-y-auto p-3">

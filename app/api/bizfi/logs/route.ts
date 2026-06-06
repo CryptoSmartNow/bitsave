@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
     return NextResponse.json({
         status: 'active',
-        message: 'Log ingestion endpoint ready. Send POST requests with { level, message, context } to log to server console.'
+        message: 'Log ingestion endpoint ready. Sent POST requests with { level, message, context } to log to server console.'
     });
 }
 

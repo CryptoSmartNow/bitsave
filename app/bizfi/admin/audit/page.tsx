@@ -1,8 +1,8 @@
 'use client';
 
+import { Shield01Icon, Clock01Icon, Loading02Icon, Alert01Icon } from "hugeicons-react";
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Clock, Loader2, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Log {
@@ -39,7 +39,7 @@ export default function BizFiAuditPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="w-8 h-8 text-[#81D7B4] animate-spin" />
+        <Loading02Icon className="w-8 h-8 text-[#81D7B4] animate-spin" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function BizFiAuditPage() {
   if (error) {
     return (
       <div className="p-6 bg-red-900/10 border border-red-900/30 rounded-2xl text-red-200 flex items-center gap-3">
-        <AlertCircle className="w-6 h-6" />
+        <Alert01Icon className="w-6 h-6" />
         {error}
       </div>
     );
@@ -74,13 +74,13 @@ export default function BizFiAuditPage() {
             {logs.map((log) => (
               <div key={log._id} className="p-4 flex items-start gap-4 hover:bg-[#0F1825]/50 transition-colors">
                 <div className="w-10 h-10 rounded-full bg-[#1A2538] border border-[#7B8B9A]/20 flex items-center justify-center text-[#9BA8B5] shrink-0 mt-1">
-                  <Shield className="w-4 h-4" />
+                  <Shield01Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1.5">
                     <h4 className="font-bold text-[#F9F9FB] text-base truncate">{log.action}</h4>
                     <span className="text-[10px] md:text-xs font-medium text-[#7B8B9A] bg-[#0F1825] px-2 py-0.5 rounded-full border border-[#7B8B9A]/10 flex items-center gap-1 w-fit">
-                      <Clock className="w-3 h-3" />
+                      <Clock01Icon className="w-3 h-3" />
                       {log.timestamp ? formatDistanceToNow(new Date(log.timestamp), { addSuffix: true }) : '-'}
                     </span>
                   </div>

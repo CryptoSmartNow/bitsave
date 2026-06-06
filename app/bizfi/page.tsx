@@ -1,5 +1,6 @@
-"use client";
+'use client';
 
+import { Activity01Icon, Award01Icon, Dollar01Icon, Shield01Icon, Money01Icon, Cancel01Icon, Notification01Icon, TelegramIcon, TwitterIcon, Building04Icon, RocketIcon, BarChartIcon, GiftIcon, ArrowLeftRightIcon } from "hugeicons-react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -7,28 +8,8 @@ import { useAccount, useDisconnect } from "wagmi";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 
 // import { usePrivy } from "@privy-io/react-auth";
-import {
-    HiOutlineRocketLaunch,
-    HiOutlineTrophy,
-    HiOutlineCurrencyDollar,
-    HiOutlineArrowLeft,
-    HiOutlineBuildingStorefront,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineArrowsRightLeft,
-    HiOutlineGift,
-    HiOutlineChartBarSquare,
-    HiOutlineArrowRight,
-    HiOutlineShieldCheck,
-    HiOutlineBanknotes,
-    HiOutlineBars3,
-    HiOutlineXMark,
-    HiOutlineCubeTransparent,
-    HiOutlineBell
-} from "react-icons/hi2";
-import { FaTelegramPlane } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
 import { Archivo } from "next/font/google";
-import Link from "next/link";
+import Link from 'next/link';
 import LanguageSelector from "@/components/LanguageSelector";
 import "./bizfi-colors.css";
 
@@ -53,26 +34,26 @@ const HOW_IT_WORKS = [
     {
         step: "01",
         title: "Submit Your Business",
-        description: "Complete our simple assessment form and select your business tier",
-        icon: HiOutlineBuildingStorefront
+        description: "Complete our simple assessment form and select your business tier. Includes ChainRails for fast fiat-to-crypto registration.",
+        icon: Building04Icon
     },
     {
         step: "02",
         title: "Get Reviewed",
         description: "Our team reviews your application within 24-48 hours",
-        icon: HiOutlineShieldCheck
+        icon: Shield01Icon
     },
     {
         step: "03",
         title: "Launch & Raise",
         description: "Your business goes live and starts raising capital from global investors",
-        icon: HiOutlineChartBarSquare
+        icon: BarChartIcon
     },
     {
         step: "04",
         title: "Grow Together",
         description: "Scale your business with capital and community support",
-        icon: HiOutlineTrophy
+        icon: Award01Icon
     }
 ];
 
@@ -81,7 +62,7 @@ const FEATURES = [
     {
         title: "For Business Owners",
         description: "Tokenize your SME, Start-Up, Company, Project, or Idea on BizMarket.",
-        icon: HiOutlineRocketLaunch,
+        icon: RocketIcon,
         link: "/bizfi/dashboard",
         buttonText: "Launch Business",
         available: true
@@ -89,7 +70,7 @@ const FEATURES = [
     {
         title: "For Investors",
         description: "Own equity or revenue of Real World Businesses curated from our portfolio.",
-        icon: HiOutlineCurrencyDollar,
+        icon: Dollar01Icon,
         link: "#",
         buttonText: "Coming Feb 2026",
         available: false
@@ -102,21 +83,21 @@ const PRODUCTS = [
         id: "bizfun",
         title: "BizFun",
         description: "Create Your Promo Tokens in minutes, raise Liquidity, build Your Movement, reward your community.",
-        icon: HiOutlineGift,
+        icon: GiftIcon,
         status: "Coming January 2026"
     },
     {
         id: "bizswap",
         title: "BizSwap",
         description: "Provide liquidity for the top 1% projects on BizMarket; earn a Savvy 10% markup every time Primary Market buyers sell at a 10% discount.",
-        icon: HiOutlineArrowsRightLeft,
+        icon: ArrowLeftRightIcon,
         status: "Coming April 2026"
     },
     {
         id: "bitloans",
         title: "Bitloans",
         description: "Use your BizShares or ETH, as collateral and borrow Local StableCoins.",
-        icon: HiOutlineBanknotes,
+        icon: Money01Icon,
         status: "Coming March 2026"
     }
 ];
@@ -144,12 +125,12 @@ function NotifyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                         onClick={onClose}
                         className="absolute top-4 right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
                     >
-                        <HiOutlineXMark className="w-6 h-6" />
+                        <Cancel01Icon className="w-6 h-6" />
                     </button>
 
                     <div className="flex flex-col items-center text-center">
                         <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 text-[#81D7B4]">
-                            <HiOutlineBell className="w-8 h-8" />
+                            <Notification01Icon className="w-8 h-8" />
                         </div>
                         <h3 className="text-2xl font-bold text-[#F9F9FB] mb-2">Stay Updated</h3>
                         <p className="text-[#9BA8B5] mb-8">
@@ -215,7 +196,7 @@ export default function BizFiPage() {
                         <div className="flex items-center gap-8">
                             <Link href="/bizfi/dashboard" className="flex items-center gap-2 text-[#F9F9FB] font-bold text-xl hover:opacity-80 transition-opacity">
                                 <div className="w-8 h-8 rounded-lg bg-[#81D7B4] flex items-center justify-center text-[#0F1825]">
-                                    <HiOutlineRocketLaunch className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                 </div>
                                 BizFi
                             </Link>
@@ -236,7 +217,7 @@ export default function BizFiPage() {
                                 href="/dashboard"
                                 className="hidden sm:flex items-center gap-2 text-[#7B8B9A] hover:text-[#81D7B4] transition-colors group text-sm font-medium"
                             >
-                                <HiOutlineArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                <Activity01Icon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                                 Back to SaveFi
                             </Link>
 
@@ -263,7 +244,7 @@ export default function BizFiPage() {
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                 className="md:hidden p-2 rounded-lg text-[#F9F9FB] hover:bg-[#1A2538] transition-colors"
                             >
-                                {isMobileMenuOpen ? <HiOutlineXMark className="w-6 h-6" /> : <HiOutlineBars3 className="w-6 h-6" />}
+                                {isMobileMenuOpen ? <Cancel01Icon className="w-6 h-6" /> : <Activity01Icon className="w-6 h-6" />}
                             </button>
                         </div>
                     </div >
@@ -286,7 +267,7 @@ export default function BizFiPage() {
                                     <a href="#products" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-[#F9F9FB]">Products</a>
                                     <div className="h-px bg-[#7B8B9A]/20 my-4"></div>
                                     <Link href="/dashboard" className="flex items-center gap-2 text-[#7B8B9A]">
-                                        <HiOutlineArrowLeft className="w-5 h-5" />
+                                        <Activity01Icon className="w-5 h-5" />
                                         Back to SaveFi
                                     </Link>
                                 </div>
@@ -344,7 +325,7 @@ export default function BizFiPage() {
                                 className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-lg bg-[#81D7B4] text-[#0F1825] hover:bg-[#6BC4A0] transition-all hover:scale-105 shadow-[0_0_20px_rgba(129,215,180,0.2)] flex items-center justify-center gap-2 min-w-[180px]"
                             >
                                 Launch Business
-                                <HiOutlineArrowRight className="w-5 h-5" />
+                                <Activity01Icon className="w-5 h-5" />
                             </Link>
                             <Link
                                 href="https://t.me/+YimKRR7wAkVmZGRk"
@@ -366,17 +347,17 @@ export default function BizFiPage() {
                             {
                                 title: "Launch Onchain",
                                 desc: "Deploy your business entity on the blockchain securely.",
-                                icon: HiOutlineRocketLaunch
+                                icon: RocketIcon
                             },
                             {
                                 title: "Global Access",
                                 desc: "Connect with a borderless network of investors.",
-                                icon: HiOutlineCurrencyDollar
+                                icon: Dollar01Icon
                             },
                             {
                                 title: "Transparent",
                                 desc: "Built on immutable protocols for trust and security.",
-                                icon: HiOutlineShieldCheck
+                                icon: Shield01Icon
                             }
                         ].map((item, index) => (
                             <motion.div
@@ -494,7 +475,7 @@ export default function BizFiPage() {
                                             className="inline-flex items-center gap-2 text-[#81D7B4] font-bold hover:gap-3 transition-all"
                                         >
                                             {feature.buttonText}
-                                            <HiOutlineArrowRight className="w-4 h-4" />
+                                            <Activity01Icon className="w-4 h-4" />
                                         </Link>
                                     ) : (
                                         <div className="text-[#7B8B9A] font-medium text-sm flex items-center gap-2">
@@ -527,7 +508,7 @@ export default function BizFiPage() {
                             onClick={() => setShowNotifyModal(true)}
                             className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#7B8B9A]/20 text-[#F9F9FB] hover:border-[#81D7B4] hover:text-[#81D7B4] transition-all"
                         >
-                            <HiOutlineBell className="w-5 h-5" />
+                            <Notification01Icon className="w-5 h-5" />
                             <span>Get Notified</span>
                         </button>
                     </motion.div>
@@ -618,7 +599,7 @@ export default function BizFiPage() {
                                 rel="noopener noreferrer"
                                 className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors"
                             >
-                                <FaXTwitter className="w-5 h-5" />
+                                <TwitterIcon className="w-5 h-5" />
                             </a>
                             <a 
                                 href="https://t.me/+YimKRR7wAkVmZGRk" 
@@ -626,7 +607,7 @@ export default function BizFiPage() {
                                 rel="noopener noreferrer"
                                 className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors"
                             >
-                                <FaTelegramPlane className="w-5 h-5" />
+                                <TelegramIcon className="w-5 h-5" />
                             </a>
                         </div>
                     </div>

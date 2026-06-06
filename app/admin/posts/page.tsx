@@ -1,9 +1,10 @@
 'use client';
+
+import { BarChartIcon } from "hugeicons-react";
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blogDatabase';
 import ViewCounter from '@/components/ViewCounter';
-import { BarChart3 } from 'lucide-react';
 import AnalyticsModal from '@/components/AnalyticsModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 
@@ -195,7 +196,7 @@ export default function AdminPostsPage() {
         </div>
       </div>
 
-      {/* Posts List */}
+      {/* Posts ListView */}
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-[#81D7B4]/10 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -285,7 +286,7 @@ export default function AdminPostsPage() {
                       className="flex items-center gap-1 px-3 py-1 text-gray-600 hover:text-[#81D7B4] hover:bg-[#81D7B4]/10 rounded-lg transition-colors text-sm font-medium"
                       title="View Analytics"
                     >
-                      <BarChart3 className="w-4 h-4" />
+                      <BarChartIcon className="w-4 h-4" />
                       Analytics
                     </button>
                     

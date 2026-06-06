@@ -1,13 +1,8 @@
 import React, { useState } from "react";
+import { Activity01Icon, Tick01Icon, Shield01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import Image from 'next/image';
 import { format } from "date-fns";
-import {
-  HiCurrencyDollar,
-  HiCheckCircle,
-  HiOutlineShieldCheck,
-  HiOutlineReceiptRefund,
-} from "react-icons/hi2";
 
 interface StepThreeReviewProps {
   name: string;
@@ -175,7 +170,7 @@ export default function StepThreeReview({
       {/* Fee notice */}
       <div className="flex items-center gap-4 px-6 py-5 bg-white rounded-[24px] border border-[#81D7B4]/30 shadow-[0_4px_24px_rgb(0,0,0,0.03)] bg-gradient-to-r from-[#F4FBF8] to-white">
         <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-[#81D7B4] border border-[#81D7B4]/20">
-          <HiOutlineReceiptRefund className="w-6 h-6" />
+          <Activity01Icon className="w-6 h-6" />
         </div>
         <div className="flex flex-col">
           <span className="text-xs font-black text-[#81D7B4] uppercase tracking-widest mb-0.5">
@@ -203,7 +198,7 @@ export default function StepThreeReview({
         >
           <div className="flex items-center gap-4 text-left">
             <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
-              <HiOutlineShieldCheck className="w-5 h-5" />
+              <Shield01Icon className="w-5 h-5" />
             </div>
             <span className="text-[#0f172a] font-bold text-base">
               How Penalties Protect You
@@ -350,7 +345,7 @@ export default function StepThreeReview({
           ) : (
             <>
               Initialize Plan
-              <HiCheckCircle className="w-5 h-5" />
+              <Tick01Icon className="w-5 h-5" />
             </>
           )}
         </button>

@@ -1,19 +1,8 @@
 'use client';
 
+import { FlashIcon, Activity01Icon, GlobeIcon, CloudServerIcon, DatabaseIcon, Clock01Icon, ArrowRight01Icon, CpuIcon, Alert02Icon, Tick01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Zap, 
-  Activity, 
-  Globe, 
-  Server, 
-  Database, 
-  Clock,
-  ArrowRight,
-  Cpu,
-  AlertTriangle,
-  CheckCircle as CheckCircleIcon
-} from 'lucide-react';
 import { UserInteraction } from '@/lib/interactionTracker';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 
@@ -75,7 +64,7 @@ export default function RealTimeMonitoringPage() {
         const sorted = data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         setEvents(sorted.slice(0, 50)); // Keep last 50 events
         
-        // Calculate "Active Users" (users seen in last 15 mins)
+        // Calculate "Active UserMultiple" (users seen in last 15 mins)
         const now = Date.now();
         const active = new Set(
           sorted.filter(e => now - new Date(e.timestamp).getTime() < 15 * 60 * 1000)
@@ -120,12 +109,12 @@ export default function RealTimeMonitoringPage() {
   };
 
   const getStatusIcon = (status: string) => {
-    if (connectionStatus === 'disconnected') return <AlertTriangle className="w-4 h-4 mr-1" />;
+    if (connectionStatus === 'disconnected') return <Alert02Icon className="w-4 h-4 mr-1" />;
     switch (status) {
-      case 'Operational': return <CheckCircleIcon className="w-4 h-4 mr-1" />;
-      case 'High Load': return <Activity className="w-4 h-4 mr-1" />;
-      case 'Critical': return <AlertTriangle className="w-4 h-4 mr-1" />;
-      default: return <Clock className="w-4 h-4 mr-1" />;
+      case 'Operational': return <Tick01Icon className="w-4 h-4 mr-1" />;
+      case 'High Load': return <Activity01Icon className="w-4 h-4 mr-1" />;
+      case 'Critical': return <Alert02Icon className="w-4 h-4 mr-1" />;
+      default: return <Clock01Icon className="w-4 h-4 mr-1" />;
     }
   };
 
@@ -156,16 +145,16 @@ export default function RealTimeMonitoringPage() {
 
       {/* Live Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        {/* Active Users Card */}
+        {/* Active UserMultiple Card */}
         <div className="bg-slate-900 rounded-2xl p-4 sm:p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Globe className="w-16 h-16 sm:w-24 sm:h-24" />
+            <GlobeIcon className="w-16 h-16 sm:w-24 sm:h-24" />
           </div>
           <div className="relative z-10">
-            <h3 className="text-slate-400 font-medium mb-1 text-sm sm:text-base">Active Users (15m)</h3>
+            <h3 className="text-slate-400 font-medium mb-1 text-sm sm:text-base">Active UserMultiple (15m)</h3>
             <div className="text-3xl sm:text-4xl font-bold">{activeUsers}</div>
             <div className="mt-4 flex items-center text-[#81D7B4] text-xs sm:text-sm">
-              <Activity className="w-4 h-4 mr-1" />
+              <Activity01Icon className="w-4 h-4 mr-1" />
               Live counting
             </div>
           </div>
@@ -174,7 +163,7 @@ export default function RealTimeMonitoringPage() {
         {/* System Load Card */}
         <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5">
-            <Cpu className="w-16 h-16 sm:w-24 sm:h-24" />
+            <CpuIcon className="w-16 h-16 sm:w-24 sm:h-24" />
           </div>
           <div className="relative z-10">
             <h3 className="text-slate-500 font-medium mb-1 text-sm sm:text-base">System Status</h3>
@@ -198,7 +187,7 @@ export default function RealTimeMonitoringPage() {
         {/* Latest Event / TPS Card */}
         <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5">
-            <Server className="w-16 h-16 sm:w-24 sm:h-24" />
+            <CloudServerIcon className="w-16 h-16 sm:w-24 sm:h-24" />
           </div>
           <div className="relative z-10">
             <h3 className="text-slate-500 font-medium mb-1 text-sm sm:text-base">Event Throughput</h3>
@@ -216,7 +205,7 @@ export default function RealTimeMonitoringPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50/50">
           <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-[#81D7B4]" />
+            <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
             Live Event Stream
           </h2>
           <span className="text-xs font-mono text-gray-500 flex items-center gap-2">
@@ -240,7 +229,7 @@ export default function RealTimeMonitoringPage() {
                   event.type.includes('error') ? 'bg-red-50 text-red-600' : 
                   'bg-[#81D7B4]/10 text-[#81D7B4]'
                 }`}>
-                  {event.type.includes('error') ? <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" /> : <Zap className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  {event.type.includes('error') ? <Alert02Icon className="w-4 h-4 sm:w-5 sm:h-5" /> : <FlashIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </div>
                 
                 <div className="flex-1 min-w-0">

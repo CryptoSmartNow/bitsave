@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useRef, useEffect, ReactNode } from 'react';
 

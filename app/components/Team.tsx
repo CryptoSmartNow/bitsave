@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
+import { GithubIcon, Linkedin01Icon, TwitterIcon } from "hugeicons-react";
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { Github, Linkedin, Twitter } from 'lucide-react'
 
 // Custom Farcaster Icon
 const FarcasterIcon = ({ className }: { className?: string }) => (
@@ -138,7 +138,7 @@ export default function Team() {
                     <div className="flex gap-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                       {member.socials.twitter && (
                         <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <Twitter className="w-5 h-5" />
+                          <TwitterIcon className="w-5 h-5" />
                         </a>
                       )}
                       {member.socials.farcaster && (
@@ -148,12 +148,12 @@ export default function Team() {
                       )}
                       {member.socials.github && (
                         <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <Github className="w-5 h-5" />
+                          <GithubIcon className="w-5 h-5" />
                         </a>
                       )}
                       {member.socials.linkedin && (
                         <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <Linkedin className="w-5 h-5" />
+                          <Linkedin01Icon className="w-5 h-5" />
                         </a>
                       )}
                     </div>

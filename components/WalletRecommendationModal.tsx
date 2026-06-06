@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
+import { Cancel01Icon, Shield01Icon, ViewIcon, Tick01Icon, RefreshIcon, Dollar01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineXMark, HiOutlineShieldCheck, HiOutlineEye, HiOutlineCheckCircle, HiOutlineArrowPath, HiOutlineCurrencyDollar } from 'react-icons/hi2';
 import NextImage from 'next/image';
 
 interface WalletRecommendationModalProps {
@@ -53,7 +53,7 @@ export default function WalletRecommendationModal({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-[#81D7B4]/10 rounded-xl flex items-center justify-center">
-                    <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4]" />
+                    <Shield01Icon className="w-5 h-5 text-[#81D7B4]" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-gray-900">Upgrade Your Wallet</h2>
@@ -64,7 +64,7 @@ export default function WalletRecommendationModal({
                   onClick={onClose}
                   className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
                 >
-                  <HiOutlineXMark className="w-4 h-4" />
+                  <Cancel01Icon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -75,7 +75,7 @@ export default function WalletRecommendationModal({
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Current Wallet</span>
-                  <HiOutlineCheckCircle className="w-4 h-4 text-green-500" />
+                  <Tick01Icon className="w-4 h-4 text-green-500" />
                 </div>
                 <div className="flex items-center gap-3">
                   {getWalletLogo(currentWallet) && (
@@ -123,7 +123,7 @@ export default function WalletRecommendationModal({
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2">
                     <div className="w-5 h-5 bg-[#81D7B4]/10 rounded flex items-center justify-center flex-shrink-0">
-                      <HiOutlineShieldCheck className="w-3 h-3 text-[#81D7B4]" />
+                      <Shield01Icon className="w-3 h-3 text-[#81D7B4]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900 text-xs">Security</p>
@@ -132,7 +132,7 @@ export default function WalletRecommendationModal({
                   </div>
                   <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2">
                     <div className="w-5 h-5 bg-[#81D7B4]/10 rounded flex items-center justify-center flex-shrink-0">
-                      <HiOutlineEye className="w-3 h-3 text-[#81D7B4]" />
+                      <ViewIcon className="w-3 h-3 text-[#81D7B4]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900 text-xs">Preview</p>
@@ -147,7 +147,7 @@ export default function WalletRecommendationModal({
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 bg-[#81D7B4]/10 rounded flex items-center justify-center">
-                      <HiOutlineArrowPath className="w-3 h-3 text-[#81D7B4]" />
+                      <RefreshIcon className="w-3 h-3 text-[#81D7B4]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900 text-xs">Multi-Chain</p>
@@ -156,7 +156,7 @@ export default function WalletRecommendationModal({
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 bg-[#81D7B4]/10 rounded flex items-center justify-center">
-                      <HiOutlineCurrencyDollar className="w-3 h-3 text-[#81D7B4]" />
+                      <Dollar01Icon className="w-3 h-3 text-[#81D7B4]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900 text-xs">Gas Saver</p>

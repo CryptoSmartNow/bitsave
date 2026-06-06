@@ -1,8 +1,8 @@
 'use client';
 
+import { UserIcon, Activity01Icon, GlobeIcon, ArrowUpRight01Icon, LockIcon, Shield01Icon, CursorPointer01Icon, Wallet01Icon, UserMultipleIcon, ArrowDown01Icon } from "hugeicons-react";
 import { motion, useInView } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
-import { User, Activity, Globe, TrendingUp, Lock, ShieldCheck, MousePointerClick, Wallet, Users, TrendingDown } from 'lucide-react';
 
 // Animated counter hook
 function useCountUp(end: number, duration: number = 2000, inView: boolean = false) {
@@ -59,21 +59,21 @@ export default function Security() {
       value: 70, 
       suffix: "%+", 
       desc: "of onchain users have no structured savings behavior.",
-      icon: <TrendingDown className="w-5 h-5 text-[#81D7B4]" />
+      icon: <ArrowDown01Icon className="w-5 h-5 text-[#81D7B4]" />
     },
     { 
       label: "Dipping into Savings", 
       value: 60, 
       suffix: "%+", 
       desc: "of Web3 earners use savings for essentials like rent/bills.",
-      icon: <Wallet className="w-5 h-5 text-[#81D7B4]" />
+      icon: <Wallet01Icon className="w-5 h-5 text-[#81D7B4]" />
     },
     { 
       label: "Web3 Earners", 
       value: 190, 
       suffix: "k+", 
       desc: "people earning in Web3 with no dedicated savings protocol.",
-      icon: <Users className="w-5 h-5 text-[#81D7B4]" />
+      icon: <UserMultipleIcon className="w-5 h-5 text-[#81D7B4]" />
     }
   ];
 
@@ -81,22 +81,22 @@ export default function Security() {
     {
       title: "Simple UX Design",
       desc: "Intuitive interface designed for both Web3 natives and newcomers.",
-      icon: <MousePointerClick />
+      icon: <CursorPointer01Icon />
     },
     {
       title: "Goal-Based Locked Savings",
       desc: "Set savings goals and lock your funds until you reach them.",
-      icon: <Lock />
+      icon: <LockIcon />
     },
     {
       title: "Earn $BTS Tokens",
       desc: "Get rewarded with $BTS tokens for consistent saving habits.",
-      icon: <TrendingUp />
+      icon: <ArrowUpRight01Icon />
     },
     {
       title: "Child-Parent Security",
       desc: "Enhanced security through our innovative contract structure.",
-      icon: <ShieldCheck />
+      icon: <Shield01Icon />
     }
   ];
 
@@ -137,7 +137,7 @@ export default function Security() {
                 {/* Persona Header */}
                 <div className="flex items-center gap-6 mb-8">
                   <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:shadow-lg transition-all duration-500">
-                    <User className="w-8 h-8 text-gray-400 group-hover:text-[#81D7B4] transition-colors" />
+                    <UserIcon className="w-8 h-8 text-gray-400 group-hover:text-[#81D7B4] transition-colors" />
                   </div>
                   <div>
                     <h3 className="font-display text-2xl font-bold text-gray-900 leading-none mb-2">{problem.person}</h3>
@@ -147,7 +147,7 @@ export default function Security() {
                   </div>
                 </div>
 
-                {/* Quote */}
+                {/* QuoteDown */}
                 <div className="mb-10 relative">
                   <span className="absolute -top-4 -left-2 text-6xl text-[#81D7B4]/10 font-serif leading-none">"</span>
                   <p className="text-xl font-medium text-gray-700 leading-relaxed relative z-10 pl-4">
@@ -234,7 +234,7 @@ export default function Security() {
           <div className="py-20 px-6 sm:px-12 md:px-16" ref={statsRef}>
              <div className="mb-16 text-center">
               <div className="inline-flex items-center gap-2 mb-4 bg-[#81D7B4]/10 border border-[#81D7B4]/20 px-4 py-1.5 rounded-full">
-                <Globe className="w-4 h-4 text-[#5fb392]" />
+                <GlobeIcon className="w-4 h-4 text-[#5fb392]" />
                 <span className="text-xs font-bold text-[#2D5A4A] tracking-widest uppercase font-display">The Opportunity</span>
               </div>
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">

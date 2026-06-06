@@ -1,8 +1,8 @@
 'use client';
 
+import { Cancel01Icon, UserMultipleIcon, Search01Icon } from "hugeicons-react";
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiXMark, HiOutlineUsers, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import { useAccount } from 'wagmi';
 
@@ -49,7 +49,7 @@ export default function SharePlanModal({
         setIsSearching(true);
 
         try {
-            // 1. Check if user exists securely
+            // 1. Tick if user exists securely
             const lookupRes = await fetch(`/api/users/lookup?savvyName=${cleanedInput}`);
             const lookupData = await lookupRes.json();
 
@@ -111,7 +111,7 @@ export default function SharePlanModal({
                     <div className="bg-gradient-to-r from-[#81D7B4]/10 to-[#6BC5A0]/10 px-6 py-5 border-b border-[#81D7B4]/20 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <div className="bg-white p-2 rounded-xl shadow-sm border border-[#81D7B4]/20 text-[#81D7B4]">
-                                <HiOutlineUsers className="w-5 h-5" />
+                                <UserMultipleIcon className="w-5 h-5" />
                             </div>
                             <h3 className="font-bold text-gray-900 text-lg">Add to Plan</h3>
                         </div>
@@ -119,7 +119,7 @@ export default function SharePlanModal({
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 bg-white/50 hover:bg-white rounded-full p-1.5 transition-colors"
                         >
-                            <HiXMark className="w-5 h-5" />
+                            <Cancel01Icon className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -154,7 +154,7 @@ export default function SharePlanModal({
                                     )}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                                    <HiOutlineMagnifyingGlass className="w-3 h-3" />
+                                    <Search01Icon className="w-3 h-3" />
                                     Only exact Savvy Names can be added securely
                                 </p>
                             </div>

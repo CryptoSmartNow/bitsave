@@ -1,21 +1,7 @@
 'use client';
+
+import { TextBoldIcon, TextItalicIcon, TextUnderlineIcon, ListViewIcon, QuoteDownIcon, Link01Icon, AiImageIcon, CodeIcon, TextIcon, ViewIcon, Edit02Icon, HeadingIcon } from "hugeicons-react";
 import { useState, useRef } from 'react';
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  List, 
-  ListOrdered, 
-  Quote, 
-  Link, 
-  Image, 
-  Code, 
-  Heading1, 
-  Heading2, 
-  Heading3,
-  Eye,
-  Edit3
-} from 'lucide-react';
 
 
 interface RichTextEditorProps {
@@ -151,7 +137,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           const newValue = newValueWithPlaceholder.replace(uploadingText, imageMarkdown);
           onChange(newValue);
           
-          console.log('Upload Successful: Image has been uploaded and inserted successfully!');
+          console.log('Upload Successful: AiImage has been uploaded and inserted successfully!');
         } else {
           // Remove the uploading text on error
           const newValue = newValueWithPlaceholder.replace(uploadingText, '');
@@ -197,18 +183,18 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   };
 
   const toolbarButtons = [
-    { icon: Bold, action: formatBold, title: 'Bold (Ctrl+B)' },
-    { icon: Italic, action: formatItalic, title: 'Italic (Ctrl+I)' },
-    { icon: Underline, action: formatUnderline, title: 'Underline' },
-    { icon: Code, action: formatCode, title: 'Inline Code' },
-    { icon: Heading1, action: formatH1, title: 'Heading 1' },
-    { icon: Heading2, action: formatH2, title: 'Heading 2' },
-    { icon: Heading3, action: formatH3, title: 'Heading 3' },
-    { icon: List, action: formatUnorderedList, title: 'Bullet List' },
-    { icon: ListOrdered, action: formatOrderedList, title: 'Numbered List' },
-    { icon: Quote, action: formatQuote, title: 'Quote' },
-    { icon: Link, action: formatLink, title: 'Insert Link' },
-    { icon: Image, action: formatImage, title: 'Upload Image' },
+    { icon: TextBoldIcon, action: formatBold, title: 'TextBold (Ctrl+B)' },
+    { icon: TextItalicIcon, action: formatItalic, title: 'TextItalic (Ctrl+I)' },
+    { icon: TextUnderlineIcon, action: formatUnderline, title: 'TextUnderline' },
+    { icon: CodeIcon, action: formatCode, title: 'Inline Code' },
+    { icon: HeadingIcon, action: formatH1, title: 'Heading 1' },
+    { icon: HeadingIcon, action: formatH2, title: 'Heading 2' },
+    { icon: HeadingIcon, action: formatH3, title: 'Heading 3' },
+    { icon: ListViewIcon, action: formatUnorderedList, title: 'Bullet ListView' },
+    { icon: ListViewIcon, action: formatOrderedList, title: 'Numbered ListView' },
+    { icon: QuoteDownIcon, action: formatQuote, title: 'QuoteDown' },
+    { icon: Link01Icon, action: formatLink, title: 'Insert Link' },
+    { icon: AiImageIcon, action: formatImage, title: 'Upload AiImage' },
   ];
 
   // Keyboard shortcuts
@@ -259,7 +245,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
             title="Code Block"
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
           >
-            <Code size={16} />
+            <CodeIcon size={16} />
             <span className="ml-1 text-xs">Block</span>
           </button>
           
@@ -276,7 +262,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
                 : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
             }`}
           >
-            {isPreviewMode ? <Edit3 size={16} /> : <Eye size={16} />}
+            {isPreviewMode ? <Edit02Icon size={16} /> : <ViewIcon size={16} />}
             <span className="text-sm font-medium">
               {isPreviewMode ? 'Edit' : 'Preview'}
             </span>

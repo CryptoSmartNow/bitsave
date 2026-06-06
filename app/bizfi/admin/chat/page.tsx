@@ -1,18 +1,9 @@
 'use client';
 
+import { SentIcon, Activity01Icon, Search01Icon, Edit02Icon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import {
-    HiOutlinePaperAirplane,
-    HiOutlinePaperClip,
-    HiOutlineFaceSmile,
-    HiOutlineMagnifyingGlass,
-    HiOutlineEllipsisVertical,
-    HiOutlineBuildingStorefront,
-    HiOutlinePencil,
-    HiOutlineArrowLeft
-} from 'react-icons/hi2';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
 
@@ -110,7 +101,7 @@ export default function AdminChatPage() {
         const init = async () => {
             const data = await fetchConversations();
 
-            // Check for query params to start/open a chat
+            // Tick for query params to start/open a chat
             const paramId = searchParams.get('businessId');
             if (paramId && !initialized.current) {
                 initialized.current = true;
@@ -256,7 +247,7 @@ export default function AdminChatPage() {
                 <div className="p-6 border-b border-[#7B8B9A]/10">
                     <h2 className="text-xl font-bold text-[#F9F9FB] mb-6 tracking-wide">Messages</h2>
                     <div className="relative group">
-                        <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9BA8B5] group-focus-within:text-[#81D7B4] transition-colors" />
+                        <Search01Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#9BA8B5] group-focus-within:text-[#81D7B4] transition-colors" />
                         <input
                             type="text"
                             placeholder="Search businesses..."
@@ -329,10 +320,10 @@ export default function AdminChatPage() {
                                     onClick={() => setSelectedConversation(null)}
                                     className="md:hidden p-2 -ml-2 text-[#9BA8B5] hover:text-[#F9F9FB] shrink-0"
                                 >
-                                    <HiOutlineArrowLeft className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                 </button>
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center text-[#0F1825] font-bold shadow-lg shadow-[#81D7B4]/20 shrink-0">
-                                    <HiOutlineBuildingStorefront className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <h2 className="font-bold text-[#F9F9FB] text-base md:text-lg leading-tight break-words line-clamp-2 md:truncate">
@@ -346,10 +337,10 @@ export default function AdminChatPage() {
                             </div>
                             <div className="flex items-center gap-1 md:gap-2 shrink-0">
                                 <button className="p-2.5 hover:bg-[#1A2538] rounded-xl text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors border border-transparent hover:border-[#7B8B9A]/10">
-                                    <HiOutlineMagnifyingGlass className="w-5 h-5" />
+                                    <Search01Icon className="w-5 h-5" />
                                 </button>
                                 <button className="p-2.5 hover:bg-[#1A2538] rounded-xl text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors border border-transparent hover:border-[#7B8B9A]/10">
-                                    <HiOutlineEllipsisVertical className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -427,20 +418,20 @@ export default function AdminChatPage() {
                                         disabled={uploading}
                                         className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                                     >
-                                        <HiOutlinePaperClip className="w-5 h-5" />
+                                        <Activity01Icon className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => setShowDoodle(true)}
                                         disabled={uploading}
                                         className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                                     >
-                                        <HiOutlinePencil className="w-5 h-5" />
+                                        <Edit02Icon className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => setShowEmoji(!showEmoji)}
                                         className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                                     >
-                                        <HiOutlineFaceSmile className="w-5 h-5" />
+                                        <Activity01Icon className="w-5 h-5" />
                                     </button>
                                 </div>
 
@@ -469,7 +460,7 @@ export default function AdminChatPage() {
                                     {sending || uploading ? (
                                         <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-[#0F1825] border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                        <HiOutlinePaperAirplane className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
+                                        <SentIcon className="w-5 h-5 md:w-6 md:h-6 transform -rotate-45 translate-x-0.5" />
                                     )}
                                 </button>
                             </div>
@@ -484,7 +475,7 @@ export default function AdminChatPage() {
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-[#9BA8B5] relative z-10 p-6 text-center">
                         <div className="w-20 h-20 md:w-24 md:h-24 bg-[#1A2538]/50 rounded-3xl border border-[#7B8B9A]/10 flex items-center justify-center mb-6 shadow-xl backdrop-blur-sm">
-                            <HiOutlinePaperAirplane className="w-8 h-8 md:w-10 md:h-10 transform -rotate-45 text-[#81D7B4]/50" />
+                            <SentIcon className="w-8 h-8 md:w-10 md:h-10 transform -rotate-45 text-[#81D7B4]/50" />
                         </div>
                         <h3 className="text-xl md:text-2xl font-bold text-[#F9F9FB] mb-3">Select a Conversation</h3>
                         <p className="text-[#7B8B9A] max-w-xs text-center leading-relaxed text-sm md:text-base">Choose a business from the sidebar to start messaging and manage support requests.</p>

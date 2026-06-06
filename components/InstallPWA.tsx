@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -13,7 +13,7 @@ export default function InstallPWA() {
       setPromptInstall(e);
     };
     
-    // Check if window exists (client-side)
+    // Tick if window exists (client-side)
     if (typeof window !== 'undefined') {
         window.addEventListener('beforeinstallprompt', handler);
     }

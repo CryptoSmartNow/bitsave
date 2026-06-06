@@ -1,19 +1,11 @@
 'use client';
+
+import { Wallet01Icon, Money01Icon, Shield01Icon, UserIcon, File01Icon, Refresh01Icon, Notification01Icon, Megaphone01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Exo } from 'next/font/google';
-import {
-  HiOutlineIdentification,
-  HiOutlineBanknotes,
-  HiOutlineDocumentText,
-  HiOutlineArrowPathRoundedSquare,
-  HiOutlineBellAlert,
-  HiOutlineWallet,
-  HiOutlineCheckBadge,
-  HiOutlineBuildingLibrary
-} from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 
 const exo = Exo({
@@ -27,7 +19,11 @@ export default function BizSwapSettings() {
   const { user } = usePrivy();
   const { publicKey } = useWallet();
   
-  const address = publicKey?.toBase58() || wagmiAddress || user?.wallet?.address;
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  
+  const address = publicKey?.toBase58() || privySolanaWallet?.address || wagmiAddress || user?.wallet?.address;
 
   const [mounted, setMounted] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'Investor Profile' | 'Payouts' | 'Auto-Invest' | 'Notifications'>('Investor Profile');
@@ -95,7 +91,7 @@ export default function BizSwapSettings() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
                      <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-[#1A2538] flex items-center justify-center shadow-sm border border-[#2C3E5D] shrink-0">
-                           <HiOutlineWallet className="w-6 h-6 text-[#81D7B4]" />
+                           <Wallet01Icon className="w-6 h-6 text-[#81D7B4]" />
                         </div>
                         <div className="overflow-hidden">
                            <p className="font-bold text-[#F9F9FB] text-[15px]">Connected Wallet</p>
@@ -120,7 +116,7 @@ export default function BizSwapSettings() {
                      <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
                         <div className="flex items-center gap-4">
                            <div className="w-12 h-12 bg-[#1A2538] border border-[#2C3E5D] rounded-xl flex items-center justify-center">
-                             <HiOutlineIdentification className="w-6 h-6 text-[#F5A623]" />
+                             <Shield01Icon className="w-6 h-6 text-[#F5A623]" />
                            </div>
                            <div>
                               <p className="font-bold text-[#F9F9FB] text-[15px]">KYC Status</p>
@@ -135,7 +131,7 @@ export default function BizSwapSettings() {
                      <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
                         <div className="flex items-center gap-4">
                            <div className="w-12 h-12 bg-[#1A2538] border border-[#2C3E5D] rounded-xl flex items-center justify-center">
-                             <HiOutlineCheckBadge className="w-6 h-6 text-[#3B82F6]" />
+                             <UserIcon className="w-6 h-6 text-[#3B82F6]" />
                            </div>
                            <div>
                               <p className="font-bold text-[#F9F9FB] text-[15px]">Investor Type</p>
@@ -161,7 +157,7 @@ export default function BizSwapSettings() {
                  <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
                     <div className="flex items-center gap-4 mb-4">
                        <div className="w-12 h-12 rounded-full bg-[#1A2538] flex items-center justify-center shadow-sm border border-[#2C3E5D]">
-                          <HiOutlineBanknotes className="w-6 h-6 text-[#81D7B4]" />
+                          <Money01Icon className="w-6 h-6 text-[#81D7B4]" />
                        </div>
                        <div>
                           <p className="font-bold text-[#F9F9FB] text-[15px]">Default Payout Stablecoin</p>
@@ -189,7 +185,7 @@ export default function BizSwapSettings() {
                  <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17] flex items-center justify-between">
                     <div className="flex items-center gap-4">
                        <div className="w-12 h-12 rounded-full bg-[#1A2538] flex items-center justify-center shadow-sm border border-[#2C3E5D]">
-                          <HiOutlineDocumentText className="w-6 h-6 text-[#81D7B4]" />
+                          <File01Icon className="w-6 h-6 text-[#81D7B4]" />
                        </div>
                        <div>
                           <p className="font-bold text-[#F9F9FB] text-[15px]">Tax Documents</p>
@@ -231,7 +227,7 @@ export default function BizSwapSettings() {
                <div className={`p-6 rounded-[1.5rem] border transition-all ${autoReinvest ? 'border-[#81D7B4]/30 bg-[#81D7B4]/5' : 'border-[#2C3E5D] bg-[#0A0F17] opacity-50'}`}>
                   <div className="flex items-center gap-4 mb-6">
                      <div className="w-12 h-12 rounded-full bg-[#1A2538] flex items-center justify-center border border-[#2C3E5D]">
-                        <HiOutlineArrowPathRoundedSquare className="w-6 h-6 text-[#81D7B4]" />
+                        <Refresh01Icon className="w-6 h-6 text-[#81D7B4]" />
                      </div>
                      <div>
                         <p className="font-bold text-[#F9F9FB] text-[15px]">Compounding Strategy</p>
@@ -267,7 +263,7 @@ export default function BizSwapSettings() {
                  <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
                     <div className="flex items-center gap-4">
                        <div className="w-12 h-12 rounded-full bg-[#1A2538] flex items-center justify-center border border-[#2C3E5D]">
-                          <HiOutlineBellAlert className="w-6 h-6 text-[#81D7B4]" />
+                          <Notification01Icon className="w-6 h-6 text-[#81D7B4]" />
                        </div>
                        <div>
                           <p className="font-bold text-[#F9F9FB] text-[15px]">Yield Distributions</p>
@@ -287,7 +283,7 @@ export default function BizSwapSettings() {
                  <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
                     <div className="flex items-center gap-4">
                        <div className="w-12 h-12 rounded-full bg-[#1A2538] flex items-center justify-center border border-[#2C3E5D]">
-                          <HiOutlineBuildingLibrary className="w-6 h-6 text-[#81D7B4]" />
+                          <Megaphone01Icon className="w-6 h-6 text-[#81D7B4]" />
                        </div>
                        <div>
                           <p className="font-bold text-[#F9F9FB] text-[15px]">New Listings</p>

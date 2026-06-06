@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
+import { Wallet01Icon, Coins01Icon, Plant01Icon, ArrowRight01Icon } from "hugeicons-react";
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { WalletCards, Coins, Sprout, ArrowRight } from 'lucide-react';
 
 export default function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -13,19 +13,19 @@ export default function HowItWorks() {
       number: "01",
       title: "Connect Wallet",
       description: "Connect your preferred Web3 wallet securely. We support Rabby, MetaMask, WalletConnect, and all major providers for seamless access.",
-      Icon: WalletCards
+      Icon: Wallet01Icon
     },
     {
       number: "02",
       title: "Fund Your Wallet",
       description: "Deposit stablecoins directly into your savings dashboard. We support a select few stablecoins for now to ensure maximum security and stability.",
-      Icon: Coins
+      Icon: Coins01Icon
     },
     {
       number: "03",
       title: "Create Your Savings",
       description: "Set your financial goals and start earning instantly. Create custom savings pools for rent, tuition, or emergencies with flexible lock-up periods.",
-      Icon: Sprout
+      Icon: Plant01Icon
     }
   ];
 
@@ -118,7 +118,7 @@ export default function HowItWorks() {
           >
             Start Saving Now
             <span className="p-2.5 rounded-full bg-gray-100 group-hover:bg-gradient-to-br group-hover:from-[#81D7B4] group-hover:to-[#5fb392] group-hover:text-white group-hover:shadow-lg group-hover:shadow-[#81D7B4]/25 transition-all duration-300 group-hover:scale-110">
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight01Icon className="w-5 h-5" />
             </span>
           </Link>
         </motion.div>

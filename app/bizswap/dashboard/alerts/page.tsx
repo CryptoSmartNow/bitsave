@@ -1,15 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Notification01Icon, Tick01Icon, InformationCircleIcon, Dollar01Icon, Shield01Icon, BarChartIcon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  HiOutlineBell,
-  HiOutlineCheckCircle,
-  HiOutlineInformationCircle,
-  HiOutlineCurrencyDollar,
-  HiOutlineShieldCheck,
-  HiOutlineChartBar
-} from 'react-icons/hi2';
+import { usePrivy } from '@privy-io/react-auth';
 
 const MOCK_ALERTS = [
   { id: 1, type: 'success', title: 'Yield Distribution Complete', message: 'Your monthly BizYield distribution of $12.50 USDC has been successfully deposited to your wallet.', time: '2 hours ago', isNew: true },
@@ -19,7 +13,9 @@ const MOCK_ALERTS = [
 ];
 
 export default function AlertsPage() {
-  const { connected } = useWallet();
+  const { connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated } = usePrivy();
+  const connected = ready && (authenticated || isSolanaConnected);
   const [alerts, setAlerts] = useState(MOCK_ALERTS);
 
   const markAllAsRead = () => {
@@ -28,16 +24,16 @@ export default function AlertsPage() {
 
   const getIcon = (type: string) => {
     switch(type) {
-      case 'success': return <HiOutlineCheckCircle className="w-6 h-6 text-[#81D7B4]" />;
-      case 'info': return <HiOutlineInformationCircle className="w-6 h-6 text-[#3B82F6]" />;
-      default: return <HiOutlineBell className="w-6 h-6 text-[#7B8B9A]" />;
+      case 'success': return <Tick01Icon className="w-6 h-6 text-[#81D7B4]" />;
+      case 'info': return <InformationCircleIcon className="w-6 h-6 text-[#3B82F6]" />;
+      default: return <Notification01Icon className="w-6 h-6 text-[#7B8B9A]" />;
     }
   };
 
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <HiOutlineBell className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <Notification01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
         <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet to view your notifications.</p>
       </div>

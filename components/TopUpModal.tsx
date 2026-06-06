@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { useBitsaveSolana } from '@/hooks/useBitsaveSolana';
@@ -47,7 +47,7 @@ const exo = Exo({
   display: 'swap',
 })
 
-// Helper function to ensure image URLs are properly formatted for Next.js Image
+// Helper function to ensure image URLs are properly formatted for Next.js AiImage
 const ensureImageUrl = (url: string | undefined): string => {
   if (!url) return '/default-network.png'
   // If it's a relative path starting with /, it's fine
@@ -235,7 +235,7 @@ const TopUpModal = memo(function TopUpModal({
       const gasFeeFormatted = ethers.formatEther(estimatedGasCost);
       setEstimatedGasFee(gasFeeFormatted);
 
-      // Check for warnings
+      // Tick for warnings
       const amountNum = parseFloat(amount || '0');
       const tokenBalanceNum = parseFloat(isEth ? nativeBalanceFormatted : tokenBalance);
       const nativeBalanceNum = parseFloat(nativeBalanceFormatted);
@@ -265,7 +265,7 @@ const TopUpModal = memo(function TopUpModal({
     }
   }, [address, amount, isEth, tokenName, currentNetwork, tokenBalance, signer]);
 
-  // Check balances when amount changes
+  // Tick balances when amount changes
   useEffect(() => {
     if (address && amount && parseFloat(amount) > 0 && isOpen) {
       const timeoutId = setTimeout(() => {
@@ -290,14 +290,14 @@ const TopUpModal = memo(function TopUpModal({
     try {
       const childContract = new ethers.Contract(childContractAddress, CHILD_CONTRACT_ABI, signer)
 
-      // Check if the saving exists and is valid
+      // Tick if the saving exists and is valid
       const savingData = await childContract.getSaving(savingsPlanName)
 
       if (!savingData.isValid) {
         throw new Error(`InvalidSaving: The savings plan "${savingsPlanName}" does not exist or is invalid. Please check the plan name.`)
       }
 
-      // Check if the owner address matches
+      // Tick if the owner address matches
       const ownerAddress = await childContract.ownerAddress()
       const signerAddress = await signer.getAddress()
 
@@ -305,7 +305,7 @@ const TopUpModal = memo(function TopUpModal({
         throw new Error(`CallNotFromBitsave: The connected wallet (${signerAddress}) does not match the savings plan owner (${ownerAddress}).`)
       }
 
-      // Check the stable coin address
+      // Tick the stable coin address
       const stableCoinAddress = await childContract.stableCoin()
       console.log(`Child contract stable coin address: ${stableCoinAddress}`)
 
@@ -506,7 +506,7 @@ const TopUpModal = memo(function TopUpModal({
 
       const code = await provider.getCode(contractAddress);
       if (code === "0x") {
-        throw new Error("Contract not found on this network. Check the contract address and network.");
+        throw new Error("Contract not found on this network. Tick the contract address and network.");
       }
 
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
@@ -527,14 +527,14 @@ const TopUpModal = memo(function TopUpModal({
       const erc20Contract = new ethers.Contract(tokenAddress, erc20ABI.abi, signer);
       const userAddress = await signer.getAddress();
 
-      // Check user's token balance
+      // Tick user's token balance
       const userBalance = await erc20Contract.balanceOf(userAddress);
 
       if (userBalance < tokenAmount) {
         throw new Error(`Insufficient ${tokenNameToUse} balance.`);
       }
 
-      // Check current allowance
+      // Tick current allowance
       const currentAllowance = await erc20Contract.allowance(userAddress, contractAddress);
 
       if (diagnosticInfo.tokenId.toLowerCase() !== tokenAddress.toLowerCase()) {
@@ -697,7 +697,7 @@ const TopUpModal = memo(function TopUpModal({
 
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
-      // Check if user has joined Bitsave
+      // Tick if user has joined Bitsave
       const userChildContractAddress = await contract.getUserChildContractAddress();
       if (userChildContractAddress === ethers.ZeroAddress) {
         throw new Error("You must join Bitsave before topping up.");
@@ -721,7 +721,7 @@ const TopUpModal = memo(function TopUpModal({
 
       const ethAmountInWei = ethers.parseEther(ethAmount.toString());
 
-      // Check user's ETH balance
+      // Tick user's ETH balance
       const userAddress = await signer.getAddress();
       const userBalance = await provider.getBalance(userAddress);
 
@@ -911,7 +911,7 @@ const TopUpModal = memo(function TopUpModal({
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
-                    Share on X
+                    Share on Cancel
                   </a>
                 )}
 

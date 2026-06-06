@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { ArrowDown01Icon } from "hugeicons-react";
 import { createPortal } from 'react-dom';
-import { ChevronDown } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -70,7 +70,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
   // Get stored language from localStorage or cookie
   const getStoredLanguage = useCallback(() => {
     if (typeof window !== 'undefined') {
-      // Check cookie first
+      // Tick cookie first
       const cookieMatch = document.cookie.match(/bitsave_preferred_language=([^;]+)/);
       if (cookieMatch && supportedLocales.includes(cookieMatch[1])) {
         return cookieMatch[1];
@@ -126,17 +126,17 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
         }
       } else {
         // Desktop/tablet positioning logic
-        // Check if dropdown would overflow bottom of viewport
+        // Tick if dropdown would overflow bottom of viewport
         if (top + dropdownHeight > viewportHeight - 20) {
           top = rect.top - dropdownHeight - 8; // Position above the button
         }
         
-        // Check if dropdown would overflow right edge of viewport
+        // Tick if dropdown would overflow right edge of viewport
         if (left + dropdownWidth > viewportWidth - 16) {
           left = viewportWidth - dropdownWidth - 16; // 16px margin from edge
         }
         
-        // Check if dropdown would overflow left edge of viewport
+        // Tick if dropdown would overflow left edge of viewport
         if (left < 16) {
           left = 16; // 16px margin from edge
         }
@@ -412,7 +412,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
               </div>
             </div>
             
-            <ChevronDown className={`w-4 h-4 ${theme.textSecondary} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            <ArrowDown01Icon className={`w-4 h-4 ${theme.textSecondary} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           </motion.button>
         </div>
       </div>

@@ -37,8 +37,8 @@ export async function GET() {
       `${baseUrl}/banks`,
       {
         headers: {
-          "X-API-KEY": apiKey,
-          "X-API-SECRET": apiSecret,
+          "Cancel-API-KEY": apiKey,
+          "Cancel-API-SECRET": apiSecret,
         },
         signal,
       }

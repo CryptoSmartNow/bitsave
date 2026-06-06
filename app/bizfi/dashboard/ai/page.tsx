@@ -1,4 +1,5 @@
 'use client';
+
 import { Exo } from 'next/font/google';
 import BizFiAI from '../components/BizFiAI';
 

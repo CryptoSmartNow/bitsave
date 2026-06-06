@@ -4,7 +4,7 @@ export async function GET() {
     return NextResponse.json({
         "name": "BizMart Autonomous Prediction API",
         "version": "1.0",
-        "description": "Submit prediction market proposals to BizMart. Markets are deployed on-chain on Base, BSC, or Monad. Users can also create predictions manually via the wizard at /bizfun/agent.",
+        "description": "Submit prediction market proposals to BizMart. Markets are deployed on-chain on Base, BSC, or Monad. UserMultiple can also create predictions manually via the wizard at /bizfun/agent.",
         "endpoint": "POST /api/bizfun/autonomous-prediction",
         "baseUrl": "https://bitsave.io",
         "authentication": {

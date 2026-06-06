@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
+import Script from 'next/script'
 
 // Inter: excellent readability at all sizes, modern body font
 const inter = Inter({
@@ -10,7 +11,7 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
-// Plus Jakarta Sans: geometric display font for headings — premium, modern feel
+// PlusSign Jakarta Sans: geometric display font for headings — premium, modern feel
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   display: 'swap',
@@ -82,7 +83,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
       <head>
-        <script
+        <Script
+          id="disable-console"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if (typeof window !== 'undefined') {

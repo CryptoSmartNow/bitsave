@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Cancel01Icon, ViewIcon, Clock01Icon, UserMultipleIcon, BarChartIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Clock, Users, BarChart3 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface AnalyticsModalProps {
@@ -107,7 +107,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
                 onClick={onClose}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
-                <X className="w-6 h-6" />
+                <Cancel01Icon className="w-6 h-6" />
               </button>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
                         <p className="text-sm font-medium text-blue-600">Total Views</p>
                         <p className="text-2xl font-bold text-blue-800">{analytics.viewCount}</p>
                       </div>
-                      <Eye className="w-8 h-8 text-blue-500" />
+                      <ViewIcon className="w-8 h-8 text-blue-500" />
                     </div>
                   </div>
                   
@@ -138,7 +138,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
                         <p className="text-sm font-medium text-green-600">Unique Views</p>
                         <p className="text-2xl font-bold text-green-800">{analytics.uniqueViews}</p>
                       </div>
-                      <Users className="w-8 h-8 text-green-500" />
+                      <UserMultipleIcon className="w-8 h-8 text-green-500" />
                     </div>
                   </div>
                   
@@ -153,7 +153,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
                           }
                         </p>
                       </div>
-                      <Clock className="w-8 h-8 text-purple-500" />
+                      <Clock01Icon className="w-8 h-8 text-purple-500" />
                     </div>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
                 <div className="bg-gray-50 rounded-xl p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
+                      <BarChartIcon className="w-5 h-5" />
                       Views Over Time
                     </h3>
                     
@@ -216,7 +216,7 @@ export default function AnalyticsModal({ isOpen, onClose, postId, postTitle }: A
                   
                   {getTabData().length === 0 && (
                     <div className="text-center py-8 text-gray-500">
-                      <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <BarChartIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p>No data available for this period</p>
                     </div>
                   )}

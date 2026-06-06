@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -318,11 +319,11 @@ export default function EditPostPage({ params }: EditPostPageProps) {
             <p className="text-sm text-gray-500 mt-1">Separate tags with commas</p>
           </div>
 
-          {/* Featured Image - Full Width */}
+          {/* Featured AiImage - Full Width */}
           <div>
             <ImageUpload
               onChange={(url: string) => setFormData(prev => ({ ...prev, featuredImage: url }))}
-              label="Featured Image"
+              label="Featured AiImage"
             />
           </div>
 

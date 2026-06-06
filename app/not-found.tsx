@@ -1,10 +1,10 @@
 'use client';
 
+import { Activity01Icon, Home01Icon } from "hugeicons-react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Exo } from 'next/font/google';
-import { HiOutlineArrowRight, HiOutlineHome } from 'react-icons/hi2';
 
 const exo = Exo({
   subsets: ['latin'],
@@ -88,7 +88,7 @@ export default function NotFound() {
             href="/"
             className="group w-full flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-4 bg-[#81D7B4] hover:bg-opacity-90 text-white font-bold rounded-2xl transition-all duration-200 shadow-[0_8px_20px_rgba(129,215,180,0.25)] hover:-translate-y-0.5"
           >
-            <HiOutlineHome className="w-5 h-5" />
+            <Home01Icon className="w-5 h-5" />
             Return Home
           </Link>
           <Link
@@ -96,7 +96,7 @@ export default function NotFound() {
             className="group w-full flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-4 bg-white text-gray-700 font-bold rounded-2xl border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:-translate-y-0.5"
           >
             Dashboard
-            <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Activity01Icon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 

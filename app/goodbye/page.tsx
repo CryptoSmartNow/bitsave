@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
+import { Activity01Icon } from "hugeicons-react";
 import Link from 'next/link';
 import Image from 'next/image';
-import { HiOutlineArrowRight } from 'react-icons/hi2';
 import { Exo } from 'next/font/google';
 
 const exo = Exo({
@@ -31,7 +31,7 @@ export default function GoodbyePage() {
 
         <div className="space-y-4">
           <Link href="/" className="w-full flex items-center justify-center gap-2 py-4 bg-[#81D7B4] hover:bg-opacity-90 text-white rounded-2xl font-bold shadow-[0_4px_15px_rgba(129,215,180,0.3)] transition-all transform hover:-translate-y-0.5">
-            Return to Home <HiOutlineArrowRight className="w-5 h-5" />
+            Return to Home <Activity01Icon className="w-5 h-5" />
           </Link>
         </div>
       </div>

@@ -1,8 +1,9 @@
 'use client';
+
+import { Activity01Icon, SentIcon, PlusSignIcon, Cancel01Icon, SparklesIcon, HashtagIcon } from "hugeicons-react";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineChatBubbleLeftRight, HiOutlineHeart, HiOutlinePaperAirplane, HiOutlinePlus, HiOutlineXMark, HiOutlineSparkles, HiOutlineHashtag } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 
 function MentionInput({ value, onChange, onKeyDown, placeholder, className, participants, isTextarea = false }: any) {
@@ -71,7 +72,7 @@ function MentionInput({ value, onChange, onKeyDown, placeholder, className, part
                   className={`w-full text-left px-3 py-2.5 text-[13px] font-bold flex items-center gap-2 transition-colors ${idx === selectedIndex ? 'bg-[#81D7B4]/10 text-[#2D5A4A]' : 'hover:bg-gray-50 text-gray-700'}`}
                 >
                   {p === 'SavvyBot' ? (
-                    <span className="w-5 h-5 rounded-md bg-[#81D7B4] flex items-center justify-center text-white"><HiOutlineSparkles className="w-3 h-3"/></span>
+                    <span className="w-5 h-5 rounded-md bg-[#81D7B4] flex items-center justify-center text-white"><SparklesIcon className="w-3 h-3"/></span>
                   ) : (
                      <span className="w-5 h-5 rounded-md bg-gray-100 flex items-center justify-center text-gray-500 font-mono text-[9px]">@</span>
                   )}
@@ -243,7 +244,7 @@ export default function SavvyForum() {
         setReplyInputs(prev => ({ ...prev, [postId]: '' }));
         await fetchPosts(false);
 
-        // Check if reply invokes the bot
+        // Tick if reply invokes the bot
         if (replyContent.toLowerCase().includes('@savvybot')) {
           setBotTypingInPost(postId);
           const currentPost = posts.find(p => p._id === postId);
@@ -387,7 +388,7 @@ export default function SavvyForum() {
           <p className="text-gray-500 mt-1 ml-4 text-sm">Discuss strategies, ask questions, and chat with Savvy Bot</p>
         </div>
         <button onClick={() => setShowCreateForm(true)} className="flex items-center gap-1.5 px-4 py-2.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl text-sm transition-colors shadow-sm">
-          <HiOutlinePlus className="w-4 h-4" /> New Post
+          <PlusSignIcon className="w-4 h-4" /> New Post
         </button>
       </div>
 
@@ -398,7 +399,7 @@ export default function SavvyForum() {
         </button>
         {TAGS.map(tag => (
           <button key={tag} onClick={() => setActiveTag(tag)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 ${activeTag === tag ? 'bg-[#81D7B4] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-            <HiOutlineHashtag className="w-3 h-3" />{tag}
+            <HashtagIcon className="w-3 h-3" />{tag}
           </button>
         ))}
       </div>
@@ -410,7 +411,7 @@ export default function SavvyForum() {
         </div>
       ) : posts.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-          <HiOutlineChatBubbleLeftRight className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <Activity01Icon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm font-medium">No posts yet. Start the conversation!</p>
         </div>
       ) : (
@@ -443,13 +444,13 @@ export default function SavvyForum() {
                 {/* Actions */}
                 <div className="flex items-center gap-3">
                   <button onClick={() => handleLike(post._id)} className={`flex items-center gap-1 text-xs font-bold transition-colors ${post.likedBy?.includes(address?.toLowerCase() || '') ? 'text-[#81D7B4]' : 'text-gray-400 hover:text-[#81D7B4]'}`}>
-                    <HiOutlineHeart className={`w-4 h-4 ${post.likedBy?.includes(address?.toLowerCase() || '') ? 'fill-[#81D7B4]/20' : ''}`} /> {post.likes || 0}
+                    <Activity01Icon className={`w-4 h-4 ${post.likedBy?.includes(address?.toLowerCase() || '') ? 'fill-[#81D7B4]/20' : ''}`} /> {post.likes || 0}
                   </button>
                   <button onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)} className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-[#81D7B4] transition-colors">
-                    <HiOutlineChatBubbleLeftRight className="w-4 h-4" /> {post.replyCount || 0}
+                    <Activity01Icon className="w-4 h-4" /> {post.replyCount || 0}
                   </button>
                   <button onClick={() => startAskBot(post)} className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-[#81D7B4] transition-colors ml-auto">
-                    <HiOutlineSparkles className="w-4 h-4" /> Ask Bot
+                    <SparklesIcon className="w-4 h-4" /> Ask Bot
                   </button>
                 </div>
               </div>
@@ -465,7 +466,7 @@ export default function SavvyForum() {
                       {post.replies?.map((reply) => (
                         <div key={reply._id} className="flex gap-2.5">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${reply.savvyName === 'SavvyBot' ? 'bg-[#81D7B4] text-white shadow-sm' : 'bg-[#81D7B4]/15 text-[#2D5A4A]'}`}>
-                            {reply.savvyName === 'SavvyBot' ? <HiOutlineSparkles className="w-3.5 h-3.5"/> : <span className="text-[8px] font-black">{reply.savvyName ? reply.savvyName.slice(0, 2).toUpperCase() : reply.walletAddress.slice(2, 4).toUpperCase()}</span>}
+                            {reply.savvyName === 'SavvyBot' ? <SparklesIcon className="w-3.5 h-3.5"/> : <span className="text-[8px] font-black">{reply.savvyName ? reply.savvyName.slice(0, 2).toUpperCase() : reply.walletAddress.slice(2, 4).toUpperCase()}</span>}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
@@ -479,7 +480,7 @@ export default function SavvyForum() {
                       {botTypingInPost === post._id && (
                         <div className="flex gap-2.5 opacity-70">
                           <div className="w-6 h-6 rounded-full bg-[#81D7B4] flex items-center justify-center text-white shrink-0 mt-0.5 shadow-sm">
-                            <HiOutlineSparkles className="w-3.5 h-3.5"/>
+                            <SparklesIcon className="w-3.5 h-3.5"/>
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
@@ -511,7 +512,7 @@ export default function SavvyForum() {
                         ])).filter(Boolean)}
                       />
                       <button onClick={() => handleReply(post._id)} disabled={!replyInputs[post._id]?.trim()} className="w-8 h-8 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-white rounded-lg disabled:opacity-40 shrink-0">
-                        <HiOutlinePaperAirplane className="w-3.5 h-3.5" />
+                        <SentIcon className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </motion.div>
@@ -530,7 +531,7 @@ export default function SavvyForum() {
               <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-[#81D7B4]/10 to-transparent">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#81D7B4] to-[#6BC4A0] flex items-center justify-center text-white">
-                    <HiOutlineSparkles className="w-4 h-4" />
+                    <SparklesIcon className="w-4 h-4" />
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 leading-tight">Ask SavvyBot</h3>
@@ -538,7 +539,7 @@ export default function SavvyForum() {
                   </div>
                 </div>
                 <button onClick={() => setAskBotPost(null)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
-                  <HiOutlineXMark className="w-5 h-5" />
+                  <Cancel01Icon className="w-5 h-5" />
                 </button>
               </div>
 
@@ -578,7 +579,7 @@ export default function SavvyForum() {
                     className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
                   />
                   <button onClick={handleAskBotQuery} disabled={!askBotInput.trim() || isBotThinking} className="w-9 h-9 flex items-center justify-center bg-[#81D7B4] hover:bg-[#6BC4A0] text-white rounded-lg disabled:opacity-50 shrink-0 shadow-sm transition-all focus:ring-4 focus:ring-[#81D7B4]/20">
-                    <HiOutlinePaperAirplane className="w-4 h-4" />
+                    <SentIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -596,7 +597,7 @@ export default function SavvyForum() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-black text-gray-900">New Discussion</h2>
                   <button onClick={() => setShowCreateForm(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500">
-                    <HiOutlineXMark className="w-5 h-5" />
+                    <Cancel01Icon className="w-5 h-5" />
                   </button>
                 </div>
 

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const cacheKey = `api:prices:${ids}`;
     
-    // Check Redis cache first
+    // Tick Redis cache first
     const cachedPrices = await getCache<any>(cacheKey);
     if (cachedPrices) {
       return NextResponse.json(cachedPrices);

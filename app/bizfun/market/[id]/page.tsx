@@ -1,25 +1,11 @@
-"use client";
+'use client';
 
+import { Activity01Icon, Dollar01Icon, UserMultipleIcon, Shield01Icon, Cancel01Icon, Tick01Icon } from "hugeicons-react";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import Link from 'next/link';
 import { Exo } from "next/font/google";
-import {
-    HiOutlineRocketLaunch,
-    HiOutlineClock,
-    HiOutlineCurrencyDollar,
-    HiOutlineArrowTrendingUp,
-    HiOutlineUserGroup,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineArrowLeft,
-    HiOutlineShare,
-    HiOutlineShieldCheck,
-    HiOutlineExclamationCircle,
-    HiXMark,
-    HiCheck,
-    HiLink
-} from "react-icons/hi2";
 import { useAccount } from "wagmi";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle } from "@radix-ui/react-dialog";
@@ -154,7 +140,7 @@ export default function MarketDetailPage() {
 
     const handleShareTwitter = () => {
         if (!market) return;
-        const text = `Check out this prediction market on BizFun: ${getMarketName(market)}`;
+        const text = `Tick out this prediction market on BizFun: ${getMarketName(market)}`;
         const url = window.location.href;
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
     };
@@ -182,7 +168,7 @@ export default function MarketDetailPage() {
             <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0b0c15]/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href="/bizfun/market" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                        <HiOutlineArrowLeft className="w-5 h-5" />
+                        <Activity01Icon className="w-5 h-5" />
                         <span className="font-medium">Back</span>
                     </Link>
 
@@ -191,7 +177,7 @@ export default function MarketDetailPage() {
                             onClick={() => setIsShareModalOpen(true)}
                             className="p-2 text-gray-400 hover:text-[#81D7B4] transition-colors"
                         >
-                            <HiOutlineShare className="w-5 h-5" />
+                            <Activity01Icon className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -203,14 +189,14 @@ export default function MarketDetailPage() {
                     <div className="flex justify-between items-center mb-6">
                         <DialogTitle className="text-xl font-bold text-white">Share Market</DialogTitle>
                         <button onClick={() => setIsShareModalOpen(false)} className="text-gray-400 hover:text-white">
-                            <HiXMark className="w-6 h-6" />
+                            <Cancel01Icon className="w-6 h-6" />
                         </button>
                     </div>
 
                     <div className="space-y-6">
                         <div className="bg-[#0b0c15] border border-white/10 rounded-xl p-3 flex items-center gap-3">
                             <div className="bg-[#81D7B4]/10 p-2 rounded-lg">
-                                <HiLink className="w-5 h-5 text-[#81D7B4]" />
+                                <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                             </div>
                             <input
                                 type="text"
@@ -222,7 +208,7 @@ export default function MarketDetailPage() {
                                 onClick={handleCopyLink}
                                 className="px-3 py-1.5 bg-[#81D7B4] text-[#0b0c15] text-xs font-bold rounded-lg hover:bg-[#6BC5A0] transition-colors flex items-center gap-1"
                             >
-                                {isCopied ? <HiCheck className="w-3 h-3" /> : null}
+                                {isCopied ? <Tick01Icon className="w-3 h-3" /> : null}
                                 {isCopied ? 'Copied' : 'Copy'}
                             </button>
                         </div>
@@ -233,7 +219,7 @@ export default function MarketDetailPage() {
                                 className="flex items-center justify-center gap-2 bg-[#000000] border border-white/10 hover:border-white/30 text-white py-3 rounded-xl transition-all font-medium"
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                                Share on X
+                                Share on Cancel
                             </button>
                             <button
                                 onClick={() => {
@@ -261,7 +247,7 @@ export default function MarketDetailPage() {
                                     {market.vibe || 'Experimental'}
                                 </span>
                                 <span className="text-gray-500 text-sm flex items-center gap-1">
-                                    <HiOutlineClock className="w-4 h-4" />
+                                    <Activity01Icon className="w-4 h-4" />
                                     Ends {new Date(Number(market.tradingDeadline) * 1000).toLocaleDateString()}
                                 </span>
                             </div>
@@ -279,7 +265,7 @@ export default function MarketDetailPage() {
                                 </div>
                                 <div className="h-4 w-px bg-white/10"></div>
                                 <div className="flex items-center gap-1 text-[#81D7B4]">
-                                    <HiOutlineCurrencyDollar className="w-4 h-4" />
+                                    <Dollar01Icon className="w-4 h-4" />
                                     <span>${market.volume || '0'} Vol</span>
                                 </div>
                             </div>
@@ -288,7 +274,7 @@ export default function MarketDetailPage() {
                         {/* Chart Area (Placeholder) */}
                         <div className="h-[400px] w-full bg-[#151725] rounded-2xl border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
                             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                            <HiOutlineArrowTrendingUp className="w-24 h-24 text-white/5 mb-4 group-hover:text-[#81D7B4]/20 transition-colors duration-500" />
+                            <Activity01Icon className="w-24 h-24 text-white/5 mb-4 group-hover:text-[#81D7B4]/20 transition-colors duration-500" />
                             <p className="text-gray-500 font-mono text-sm">Market Activity Chart</p>
                             <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#81D7B4]/5 to-transparent"></div>
                         </div>
@@ -356,7 +342,7 @@ export default function MarketDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Comments List */}
+                                    {/* Comments ListView */}
                                     <div className="space-y-4">
                                         {comments.map((comment) => (
                                             <div key={comment.id} className="bg-[#151725] rounded-2xl p-6 border border-white/5">
@@ -412,7 +398,7 @@ export default function MarketDetailPage() {
                         {/* Trade Panel */}
                         <div className="bg-[#151725] rounded-2xl p-6 border border-white/5 sticky top-24">
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <HiOutlineCurrencyDollar className="text-[#81D7B4]" />
+                                <Dollar01Icon className="text-[#81D7B4]" />
                                 Trade
                             </h2>
 

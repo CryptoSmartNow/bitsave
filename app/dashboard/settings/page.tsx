@@ -1,4 +1,6 @@
 'use client';
+
+import { Tick01Icon, Activity01Icon, Link01Icon, UserMultipleIcon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy, useWallets, WalletWithMetadata } from '@privy-io/react-auth';
@@ -7,19 +9,6 @@ import { useNetworkSync } from '@/hooks/useNetworkSync';
 import { Exo } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageShimmer } from '@/components/ShimmerLoading';
-import {
-  HiOutlineCheck,
-  HiOutlineGlobeAlt,
-  HiOutlineUserCircle,
-  HiOutlineTag,
-  HiOutlineWallet,
-  HiOutlineClipboard,
-  HiOutlineEnvelope,
-  HiOutlineLink,
-  HiOutlineUsers,
-  HiOutlineSun,
-  HiOutlineBellAlert,
-} from 'react-icons/hi2'
 import toast from 'react-hot-toast';
 import NetworkDetection from '@/components/NetworkDetection';
 import ENSLinking from '@/components/ENSLinking';
@@ -73,7 +62,7 @@ export default function Settings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isEmailConnected, setIsEmailConnected] = useState(false);
 
-  // X/Twitter authentication state
+  // Cancel01Icon/TwitterIcon authentication state
   const [isXConnected, setIsXConnected] = useState(false);
   const [xUsername, setXUsername] = useState('');
   const [isConnectingX, setIsConnectingX] = useState(false);
@@ -390,7 +379,7 @@ export default function Settings() {
     }
   };
 
-  // X/Twitter authentication function
+  // Cancel01Icon/TwitterIcon authentication function
   const handleConnectX = async () => {
     setIsConnectingX(true);
 
@@ -450,7 +439,7 @@ export default function Settings() {
           clearInterval(checkClosed);
           popup?.close();
           console.error('Twitter authentication failed:', event.data.error);
-          toast.error(`X Connection Failed: ${event.data.error}`);
+          toast.error(`Cancel Connection Failed: ${event.data.error}`);
           setIsConnectingX(false);
           window.removeEventListener('message', messageListener);
         }
@@ -459,12 +448,12 @@ export default function Settings() {
       window.addEventListener('message', messageListener);
 
     } catch (error) {
-      console.error('X/Twitter authentication failed:', error);
+      console.error('Cancel01Icon/TwitterIcon authentication failed:', error);
       setIsConnectingX(false);
     }
   };
 
-  // Load X/Twitter connection status from localStorage
+  // Load Cancel01Icon/TwitterIcon connection status from localStorage
   useEffect(() => {
     const savedXUsername = localStorage.getItem('xUsername');
     const savedXConnected = localStorage.getItem('isXConnected');
@@ -484,7 +473,7 @@ export default function Settings() {
     }
   }, []);
 
-  // Function to disconnect X/Twitter
+  // Function to disconnect Cancel01Icon/TwitterIcon
   const handleDisconnectX = () => {
     setIsXConnected(false);
     setXUsername('');
@@ -559,7 +548,7 @@ export default function Settings() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9] hover:border-gray-200 transition-colors">
                      <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100 shrink-0">
-                           <HiOutlineWallet className="w-6 h-6 text-[#81D7B4]" />
+                           <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                         </div>
                         <div className="overflow-hidden">
                            <p className="font-bold text-[#0f172a] text-[15px]">Wallet Address</p>
@@ -591,7 +580,7 @@ export default function Settings() {
                         <div className="flex items-center gap-4">
                            <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center font-bold text-xl">𝕏</div>
                            <div>
-                              <p className="font-bold text-[#0f172a] text-[15px]">X (Twitter)</p>
+                              <p className="font-bold text-[#0f172a] text-[15px]">Cancel (Twitter)</p>
                               <p className="text-[13px] text-[#64748b] font-medium mt-0.5">{isXConnected && xUsername ? `@${xUsername}` : 'Not connected'}</p>
                            </div>
                         </div>
@@ -644,7 +633,7 @@ export default function Settings() {
                   </div>
                   {currentSavvyName && (
                      <p className="mt-4 text-[13px] text-[#81D7B4] font-black uppercase tracking-widest flex items-center gap-1.5">
-                       <HiOutlineCheck className="w-4 h-4" /> Active Savvy Name
+                       <Tick01Icon className="w-4 h-4" /> Active Savvy Name
                      </p>
                   )}
                </div>
@@ -660,7 +649,7 @@ export default function Settings() {
                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9]">
                   <div className="flex items-center gap-4">
                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                        <HiOutlineGlobeAlt className="w-6 h-6 text-[#81D7B4]" />
+                        <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                      </div>
                      <div>
                         <p className="font-bold text-[#0f172a] text-[15px]">Interface Language</p>
@@ -683,7 +672,7 @@ export default function Settings() {
                <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9]">
                   <div className="flex items-center gap-4">
                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                        <HiOutlineSun className="w-6 h-6 text-[#81D7B4]" />
+                        <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
                      </div>
                      <div>
                         <div className="flex items-center gap-2">
@@ -712,7 +701,7 @@ export default function Settings() {
                   <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
                      <div className="relative flex-1">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                           <HiOutlineEnvelope className="w-5 h-5" />
+                           <Activity01Icon className="w-5 h-5" />
                         </span>
                         <input
                           type="email"
@@ -725,7 +714,7 @@ export default function Settings() {
                      </div>
                      {isEmailConnected ? (
                         <div className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] font-black rounded-xl flex items-center justify-center gap-2 min-w-[160px]">
-                           <HiOutlineCheck className="w-5 h-5 stroke-[3]" /> Verified
+                           <Tick01Icon className="w-5 h-5 stroke-[3]" /> Verified
                         </div>
                      ) : (
                         <button
@@ -791,7 +780,7 @@ export default function Settings() {
                 className="bg-white rounded-[2rem] p-8 sm:p-10 max-w-[400px] w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-gray-100"
               >
                 <div className="bg-[#81D7B4]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <HiOutlineEnvelope className="w-8 h-8 text-[#81D7B4]" />
+                  <Activity01Icon className="w-8 h-8 text-[#81D7B4]" />
                 </div>
                 <h3 className="text-[24px] font-black text-center text-[#0f172a] mb-2 tracking-tight">Verify Email</h3>
                 <p className="text-center text-[#64748b] text-[14px] font-medium mb-8 leading-relaxed">Enter the 6-digit code sent to<br/><span className="text-[#0f172a] font-bold">{email}</span></p>
@@ -851,7 +840,7 @@ export default function Settings() {
             exit={{ opacity: 0, y: -20, x: '-50%' }}
             className="fixed top-8 left-1/2 z-50 bg-[#0f172a] text-white px-5 py-3 rounded-full font-bold text-[14px] shadow-xl flex items-center gap-2"
           >
-            <HiOutlineCheck className="w-5 h-5 text-[#81D7B4]" /> Address copied!
+            <Tick01Icon className="w-5 h-5 text-[#81D7B4]" /> Address copied!
           </motion.div>
         )}
       </AnimatePresence>
@@ -894,7 +883,7 @@ export default function Settings() {
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
-                  Share on X
+                  Share on Cancel
                 </a>
                 <button
                   onClick={() => setShowShareModal(false)}

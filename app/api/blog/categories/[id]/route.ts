@@ -82,7 +82,7 @@ export async function PUT(
     const trimmedName = name.trim();
     const newSlug = generateSlug(trimmedName);
 
-    // Check if category exists
+    // Tick if category exists
     const existingCategory = await categoriesCollection.findOne({
       _id: new ObjectId(id)
     });
@@ -94,7 +94,7 @@ export async function PUT(
       );
     }
 
-    // Check for slug conflicts (only if slug is changing)
+    // Tick for slug conflicts (only if slug is changing)
     if (newSlug !== existingCategory.slug) {
       const slugConflict = await categoriesCollection.findOne({
         slug: newSlug,
@@ -168,7 +168,7 @@ export async function DELETE(
       );
     }
 
-    // Check if category exists
+    // Tick if category exists
     const existingCategory = await categoriesCollection.findOne({
       _id: new ObjectId(id)
     });
@@ -180,7 +180,7 @@ export async function DELETE(
       );
     }
 
-    // TODO: Check if category is being used by any posts
+    // TODO: Tick if category is being used by any posts
     // You might want to prevent deletion of categories that have posts
     // or reassign posts to a default category
 

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     // This key must match the mint_authority set in the GlobalConfig PDA on-chain.
     const secretStr = process.env.MINT_AUTHORITY_SECRET;
     if (!secretStr) {
-      return NextResponse.json({ error: 'Server misconfiguration: Missing MINT_AUTHORITY_SECRET' }, { status: 500 });
+      return NextResponse.json({ error: 'CloudServer misconfiguration: Missing MINT_AUTHORITY_SECRET' }, { status: 500 });
     }
     const mintAuthority = Keypair.fromSecretKey(bs58.decode(secretStr));
 

@@ -1,15 +1,11 @@
 'use client';
+
+import { Download01Icon, Activity01Icon, Tick01Icon, Money01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import { Exo } from 'next/font/google';
-import {
-  HiOutlineArrowDownTray,
-  HiOutlineArrowUpTray,
-  HiOutlineCheckCircle,
-  HiOutlineBanknotes
-} from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import { PaymentModal } from '@chainrails/react';
 import { ShimmerLoader } from '@/components/ShimmerLoader';
@@ -321,13 +317,13 @@ export default function OnOffRampPage() {
               onClick={() => { setMode('buy'); setQuotes(null); setDexPayOrder(null); clearPolling(); }}
               className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-colors ${mode === 'buy' ? 'bg-white text-[#059669] border-b-2 border-[#059669]' : 'text-[#64748b] hover:text-[#0F1825] bg-[#f8fafc] hover:bg-gray-50 border-b-2 border-transparent'}`}
             >
-              <HiOutlineArrowDownTray className="w-5 h-5" /> Buy
+              <Download01Icon className="w-5 h-5" /> Buy
             </button>
             <button
               onClick={() => { setMode('sell'); setQuotes(null); setDexPayOrder(null); clearPolling(); }}
               className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-colors ${mode === 'sell' ? 'bg-white text-[#059669] border-b-2 border-[#059669]' : 'text-[#64748b] hover:text-[#0F1825] bg-[#f8fafc] hover:bg-gray-50 border-b-2 border-transparent'}`}
             >
-              <HiOutlineArrowUpTray className="w-5 h-5" /> Sell
+              <Activity01Icon className="w-5 h-5" /> Sell
             </button>
           </div>
 
@@ -488,7 +484,7 @@ export default function OnOffRampPage() {
               <div className="space-y-5 py-2">
                 <div className="text-center">
                   <div className="w-14 h-14 mx-auto bg-[#f0fdf4] text-[#059669] rounded-full flex items-center justify-center mb-3">
-                    <HiOutlineCheckCircle className="w-7 h-7" />
+                    <Tick01Icon className="w-7 h-7" />
                   </div>
                   <h3 className="font-semibold text-xl text-[#0F1825]">Awaiting Transfer</h3>
                   <p className="text-sm font-medium text-[#64748b] mt-1">Please complete the payment using the details below.</p>
@@ -507,7 +503,7 @@ export default function OnOffRampPage() {
                       </div>
                       <div className="h-px w-full bg-[#e2e8f0]"></div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[#94a3b8] font-medium">Amount to Send</span>
+                        <span className="text-[#94a3b8] font-medium">Amount to Sent</span>
                         <span className="font-semibold text-lg text-[#059669]">₦{amount}</span>
                       </div>
                     </>
@@ -521,7 +517,7 @@ export default function OnOffRampPage() {
                       </div>
                       <div className="h-px w-full bg-[#e2e8f0] mt-3"></div>
                       <div className="flex justify-between items-center mt-3">
-                        <span className="text-[#94a3b8] font-medium">Amount to Send</span>
+                        <span className="text-[#94a3b8] font-medium">Amount to Sent</span>
                         <span className="font-semibold text-lg text-[#059669]">{quotes.dexpay?.cryptoAmount || dexPayOrder.tokenAmount || amount} {selectedToken.symbol}</span>
                       </div>
                     </>
@@ -548,7 +544,7 @@ export default function OnOffRampPage() {
         <div className="mt-6 bg-[#f0fdf4] border border-[#81D7B4]/30 rounded-3xl p-5 md:p-6 text-[#0F1825] relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#81D7B4] rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
           <div className="flex items-start gap-4 relative z-10">
-            <HiOutlineBanknotes className="w-7 h-7 text-[#059669] shrink-0" />
+            <Money01Icon className="w-7 h-7 text-[#059669] shrink-0" />
             <div>
               <h4 className="font-semibold text-base text-[#0F1825] mb-1">Make Your Money Work</h4>
               <p className="text-sm font-medium text-[#64748b] leading-relaxed">
@@ -569,7 +565,7 @@ export default function OnOffRampPage() {
         close={() => setIsChainrailsModalOpen(false)}
         onSuccess={() => {
           setIsChainrailsModalOpen(false);
-          toast.success('Payment verified! Check your wallet.');
+          toast.success('Payment verified! Tick your wallet.');
         }}
         onCancel={() => {
           setIsChainrailsModalOpen(false);

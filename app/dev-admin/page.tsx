@@ -1,20 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Award01Icon, ArrowLeftRightIcon, Notification01Icon, Logout01Icon, Edit02Icon, Delete02Icon, LegalHammerIcon, ArrowDown01Icon, ArrowUp01Icon, FlashIcon, PlusSignIcon } from "hugeicons-react";
 import { AuthProvider, useAuth } from '@/lib/adminAuth';
-import {
-  Trophy,
-  ArrowRightLeft,
-  Bell,
-  LogOut,
-  Edit2,
-  Trash2,
-  Hammer,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Zap,
-  Plus
-} from 'lucide-react';
 
 // --- MAIN PAGE COMPONENT ---
 export default function DevAdminPage() {
@@ -46,7 +34,7 @@ function AdminContent() {
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <div className="text-center space-y-2">
             <div className="w-16 h-16 bg-[#81D7B4]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Hammer className="w-8 h-8 text-[#0f766e]" />
+              <LegalHammerIcon className="w-8 h-8 text-[#0f766e]" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Dev Admin Access</h1>
             <p className="text-gray-500 text-sm">Restricted access for developers only.</p>
@@ -95,19 +83,19 @@ function AdminContent() {
           <SidebarItem
             active={activeTab === 'transactions'}
             onClick={() => setActiveTab('transactions')}
-            icon={<ArrowRightLeft className="w-5 h-5" />}
+            icon={<ArrowLeftRightIcon className="w-5 h-5" />}
             label="Transactions"
           />
           <SidebarItem
             active={activeTab === 'leaderboard'}
             onClick={() => setActiveTab('leaderboard')}
-            icon={<Trophy className="w-5 h-5" />}
+            icon={<Award01Icon className="w-5 h-5" />}
             label="Leaderboard"
           />
           <SidebarItem
             active={activeTab === 'updates'}
             onClick={() => setActiveTab('updates')}
-            icon={<Bell className="w-5 h-5" />}
+            icon={<Notification01Icon className="w-5 h-5" />}
             label="Updates"
           />
         </nav>
@@ -117,7 +105,7 @@ function AdminContent() {
             onClick={logout}
             className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
-            <LogOut className="w-5 h-5" />
+            <Logout01Icon className="w-5 h-5" />
             Sign Out
           </button>
         </div>
@@ -273,7 +261,7 @@ function LeaderboardPanel() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 divide-y xl:divide-y-0 xl:divide-x divide-gray-200 min-h-[600px]">
-      {/* List Section */}
+      {/* ListView Section */}
       <div className="xl:col-span-2 p-6 flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-gray-900">Current Leaderboard</h3>
@@ -328,10 +316,10 @@ function LeaderboardPanel() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => handleEdit(user)} className="p-1.5 text-gray-400 hover:text-[#0f766e] hover:bg-[#81D7B4]/10 rounded-lg">
-                              <Edit2 className="w-4 h-4" />
+                              <Edit02Icon className="w-4 h-4" />
                             </button>
                             <button onClick={() => handleDelete(user.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                              <Trash2 className="w-4 h-4" />
+                              <Delete02Icon className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -549,11 +537,11 @@ function TransactionsPanel() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 divide-y xl:divide-y-0 xl:divide-x divide-gray-200 min-h-[600px]">
-      {/* List Section */}
+      {/* ListView Section */}
       <div className="xl:col-span-2 p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-gray-900">Recent Transactions</h3>
-          <button onClick={fetchTransactions} className="text-sm text-[#0f766e] font-medium hover:underline">Refresh List</button>
+          <button onClick={fetchTransactions} className="text-sm text-[#0f766e] font-medium hover:underline">Refresh ListView</button>
         </div>
 
         <div className="space-y-3">
@@ -569,9 +557,9 @@ function TransactionsPanel() {
                       tx.transaction_type === 'withdraw' ? 'bg-red-100 text-red-600' :
                         'bg-blue-100 text-blue-600'
                     }`}>
-                    {tx.transaction_type === 'deposit' ? <ArrowDownCircle className="w-5 h-5" /> :
-                      tx.transaction_type === 'withdraw' ? <ArrowUpCircle className="w-5 h-5" /> :
-                        <Zap className="w-5 h-5" />}
+                    {tx.transaction_type === 'deposit' ? <ArrowDown01Icon className="w-5 h-5" /> :
+                      tx.transaction_type === 'withdraw' ? <ArrowUp01Icon className="w-5 h-5" /> :
+                        <FlashIcon className="w-5 h-5" />}
                   </div>
                   <div>
                     <div className="font-bold text-gray-900">{tx.amount} {tx.currency}</div>
@@ -585,10 +573,10 @@ function TransactionsPanel() {
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => handleEdit(tx)} className="p-2 text-gray-400 hover:text-[#0f766e] hover:bg-[#81D7B4]/10 rounded-lg">
-                      <Edit2 className="w-4 h-4" />
+                      <Edit02Icon className="w-4 h-4" />
                     </button>
                     <button onClick={() => handleDelete(tx.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                      <Trash2 className="w-4 h-4" />
+                      <Delete02Icon className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -790,8 +778,8 @@ function UpdatesPanel() {
           updates.map((update) => (
             <div key={update.id} className="bg-white p-5 rounded-xl border border-gray-100 hover:border-[#81D7B4] hover:shadow-md transition-all relative group">
               <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => handleEdit(update)} className="p-1.5 text-gray-400 hover:text-[#0f766e] hover:bg-[#81D7B4]/10 rounded-lg"><Edit2 className="w-4 h-4" /></button>
-                <button onClick={() => handleDelete(update.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => handleEdit(update)} className="p-1.5 text-gray-400 hover:text-[#0f766e] hover:bg-[#81D7B4]/10 rounded-lg"><Edit02Icon className="w-4 h-4" /></button>
+                <button onClick={() => handleDelete(update.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Delete02Icon className="w-4 h-4" /></button>
               </div>
               <div className="flex items-center gap-3 mb-2">
                 <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${update.isNew ? 'bg-[#81D7B4]/20 text-[#0f766e]' : 'bg-gray-100 text-gray-600'}`}>

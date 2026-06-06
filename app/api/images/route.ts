@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listImages, getStorageStats, deleteImage } from '@/lib/imageStorage';
 
-// GET /api/images - List images with optional filtering
+// GET /api/images - ListView images with optional filtering
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -81,7 +81,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Image deleted successfully'
+      message: 'AiImage deleted successfully'
     });
 
   } catch (error) {

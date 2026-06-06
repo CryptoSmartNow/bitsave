@@ -1,29 +1,9 @@
 'use client';
 
+import { Activity01Icon, Calendar01Icon, Dollar01Icon, Tick01Icon, Download01Icon, Building04Icon, Wallet01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { format } from 'date-fns';
-import {
-    HiOutlineArrowLeft,
-    HiOutlineBuildingStorefront,
-    HiOutlineWallet,
-    HiOutlineCalendar,
-    HiOutlineCurrencyDollar,
-    HiOutlineTicket,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineDocumentText,
-    HiCheckCircle,
-    HiXCircle,
-    HiOutlineClock,
-    HiOutlineIdentification,
-    HiOutlineGlobeAlt,
-    HiOutlinePhone,
-    HiOutlineArrowDownTray,
-    HiOutlineClipboardDocumentCheck,
-    HiOutlineTableCells,
-    HiOutlineCheckCircle,
-    HiOutlineXCircle
-} from 'react-icons/hi2';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import LoanAgreementEditor from '../../components/LoanAgreementEditor';
 
@@ -148,7 +128,7 @@ export default function BusinessDetailsPage() {
         return (
             <div className="min-h-screen bg-[#0F1825] flex flex-col items-center justify-center text-[#9BA8B5] gap-6">
                 <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                    <HiXCircle className="w-12 h-12 text-red-500" />
+                    <Activity01Icon className="w-12 h-12 text-red-500" />
                 </div>
                 <div className="text-center space-y-2">
                     <h2 className="text-3xl font-bold text-[#F9F9FB]">{error || 'Business not found'}</h2>
@@ -158,7 +138,7 @@ export default function BusinessDetailsPage() {
                     onClick={() => router.back()}
                     className="flex items-center gap-2 px-8 py-3 bg-[#1A2538] rounded-xl hover:bg-[#1A2538]/80 transition-all border border-[#7B8B9A]/10 text-[#F9F9FB] font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
-                    <HiOutlineArrowLeft className="w-5 h-5" /> Return to Dashboard
+                    <Activity01Icon className="w-5 h-5" /> Return to Dashboard
                 </button>
             </div>
         );
@@ -184,7 +164,7 @@ export default function BusinessDetailsPage() {
                         className="self-start flex items-center gap-3 text-[#9BA8B5] hover:text-[#F9F9FB] transition-all group"
                     >
                         <div className="w-10 h-10 rounded-full bg-[#1A2538]/50 flex items-center justify-center border border-[#7B8B9A]/10 group-hover:border-[#81D7B4]/30 transition-colors">
-                            <HiOutlineArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                            <Activity01Icon className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
                         </div>
                         <span className="font-medium">Back to Businesses</span>
                     </button>
@@ -194,14 +174,14 @@ export default function BusinessDetailsPage() {
                             onClick={handleMessage}
                             className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1A2538]/50 backdrop-blur-md text-[#81D7B4] rounded-lg border border-[#81D7B4]/20 hover:bg-[#81D7B4]/10 transition-all font-medium text-sm"
                         >
-                            <HiOutlineChatBubbleLeftRight className="w-4 h-4" />
+                            <Activity01Icon className="w-4 h-4" />
                             <span className="whitespace-nowrap">Message Owner</span>
                         </button>
                         <button
                             onClick={() => setShowAgreement(true)}
                             className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#81D7B4] text-[#0F1825] rounded-lg font-bold hover:bg-[#6BC4A0] transition-all shadow-lg shadow-[#81D7B4]/20 text-sm"
                         >
-                            <HiOutlineDocumentText className="w-4 h-4" />
+                            <Activity01Icon className="w-4 h-4" />
                             <span className="whitespace-nowrap">Loan Agreement</span>
                         </button>
                     </div>
@@ -211,7 +191,7 @@ export default function BusinessDetailsPage() {
                 <motion.div variants={itemVariants} className="mb-10 relative">
                     <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/10 p-8 md:p-10 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                            <HiOutlineBuildingStorefront className="w-64 h-64 text-[#81D7B4]" />
+                            <Activity01Icon className="w-64 h-64 text-[#81D7B4]" />
                         </div>
 
                         <div className="flex flex-col gap-6 relative z-10">
@@ -237,9 +217,9 @@ export default function BusinessDetailsPage() {
                                                     `}
                                                 >
                                                     {isApproved ? (
-                                                        <HiOutlineCheckCircle className="w-4 h-4" />
+                                                        <Tick01Icon className="w-4 h-4" />
                                                     ) : (
-                                                        <HiOutlineXCircle className="w-4 h-4" />
+                                                        <Activity01Icon className="w-4 h-4" />
                                                     )}
                                                     <span>Mark as {isApproved ? 'Approved' : 'Rejected'}</span>
                                                 </button>
@@ -277,7 +257,7 @@ export default function BusinessDetailsPage() {
                                             <span className="truncate">ID: {business.transactionHash.slice(0, 6)}...{business.transactionHash.slice(-4)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <HiOutlineCalendar className="w-4 h-4 text-[#81D7B4] shrink-0" />
+                                            <Calendar01Icon className="w-4 h-4 text-[#81D7B4] shrink-0" />
                                             <span className="whitespace-nowrap">Joined {format(new Date(business.createdAt), 'MMM d, yyyy')}</span>
                                         </div>
                                     </div>
@@ -297,20 +277,20 @@ export default function BusinessDetailsPage() {
                             <StatCard
                                 label="Business Tier"
                                 value={business.tier}
-                                icon={HiOutlineBuildingStorefront}
+                                icon={Building04Icon}
                                 highlight
                             />
                             <StatCard
                                 label="Fee Paid"
                                 value={business.feePaid ? `$${business.feePaid}` : 'Free'}
-                                icon={HiOutlineCurrencyDollar}
+                                icon={Dollar01Icon}
                             />
                         </div>
 
                         {/* Owner Details Card */}
                         <div className="bg-[#1A2538]/30 backdrop-blur-md rounded-2xl border border-[#7B8B9A]/10 p-4 sm:p-6">
                             <h3 className="text-xs font-bold text-[#9BA8B5] uppercase tracking-wider mb-4 sm:mb-5 flex items-center gap-2">
-                                <HiOutlineWallet className="w-4 h-4 text-[#81D7B4]" />
+                                <Activity01Icon className="w-4 h-4 text-[#81D7B4]" />
                                 Owner Information
                             </h3>
 
@@ -327,7 +307,7 @@ export default function BusinessDetailsPage() {
                                         <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Referral Code</p>
                                         <div className="flex items-center gap-3 p-3 bg-[#0F1825]/50 rounded-lg border border-[#7B8B9A]/10">
                                             <div className="w-8 h-8 rounded-md bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] shrink-0">
-                                                <HiOutlineTicket className="w-5 h-5" />
+                                                <Activity01Icon className="w-5 h-5" />
                                             </div>
                                             <span className="font-bold text-[#F9F9FB] tracking-wide break-all">{business.referralCode}</span>
                                         </div>
@@ -384,7 +364,7 @@ export default function BusinessDetailsPage() {
                                                 </div>
                                             ) : (
                                                 <div className="text-center py-20 opacity-50">
-                                                    <HiOutlineClipboardDocumentCheck className="w-12 h-12 mx-auto mb-4 text-[#9BA8B5]" />
+                                                    <Activity01Icon className="w-12 h-12 mx-auto mb-4 text-[#9BA8B5]" />
                                                     <p className="text-[#9BA8B5] font-medium">No additional metadata provided.</p>
                                                 </div>
                                             )}
@@ -411,7 +391,7 @@ export default function BusinessDetailsPage() {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                                                     <div className="space-y-5">
                                                         <div className="flex items-center gap-2 text-[#81D7B4] font-bold text-sm uppercase tracking-wider mb-2">
-                                                            <HiOutlineIdentification className="w-5 h-5" />
+                                                            <Activity01Icon className="w-5 h-5" />
                                                             Identity Info
                                                         </div>
                                                         <InfoRow label="ID Type" value={business.metadata.kyc.idType} />
@@ -421,7 +401,7 @@ export default function BusinessDetailsPage() {
 
                                                     <div className="space-y-5">
                                                         <div className="flex items-center gap-2 text-[#81D7B4] font-bold text-sm uppercase tracking-wider mb-2">
-                                                            <HiOutlineBuildingStorefront className="w-5 h-5" />
+                                                            <Activity01Icon className="w-5 h-5" />
                                                             Business Status
                                                         </div>
                                                         <InfoRow label="Registered" value={business.metadata.kyc.isRegistered} />
@@ -444,7 +424,7 @@ export default function BusinessDetailsPage() {
                                         ) : (
                                             <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 p-12 text-center">
                                                 <div className="w-16 h-16 rounded-full bg-[#1A2538] border border-[#7B8B9A]/10 flex items-center justify-center mx-auto mb-4 text-[#9BA8B5]">
-                                                    <HiOutlineIdentification className="w-8 h-8" />
+                                                    <Activity01Icon className="w-8 h-8" />
                                                 </div>
                                                 <h3 className="text-lg font-bold text-[#F9F9FB] mb-2">KYC Not Submitted</h3>
                                                 <p className="text-[#9BA8B5]">The business has not provided KYC details yet.</p>
@@ -551,7 +531,7 @@ function InfoRow({ label, value, mono = false }: { label: string, value: string,
 function DocumentCard({ label, url }: { label: string, url: string | undefined }) {
     if (!url) return (
         <div className="flex flex-col items-center justify-center gap-2 p-4 bg-[#0F1825]/30 text-[#9BA8B5]/50 rounded-xl border border-[#7B8B9A]/10 border-dashed">
-            <HiOutlineDocumentText className="w-6 h-6" />
+            <Activity01Icon className="w-6 h-6" />
             <span className="text-xs font-medium">{label} Missing</span>
         </div>
     );
@@ -565,7 +545,7 @@ function DocumentCard({ label, url }: { label: string, url: string | undefined }
         >
             <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-                <HiOutlineArrowDownTray className="w-5 h-5" />
+                <Download01Icon className="w-5 h-5" />
             </div>
             <div className="text-center relative z-10">
                 <span className="block text-xs font-bold text-[#F9F9FB] mb-0.5">{label}</span>

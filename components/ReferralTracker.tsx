@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect } from 'react';
 import { useReferrals } from '@/lib/useReferrals';
@@ -7,7 +7,7 @@ export default function ReferralTracker() {
   const { trackReferralVisit } = useReferrals()
 
   useEffect(() => {
-    // Check for referral code in URL parameters
+    // Tick for referral code in URL parameters
     const urlParams = new URLSearchParams(window.location.search)
     const referralCode = urlParams.get('ref')
     

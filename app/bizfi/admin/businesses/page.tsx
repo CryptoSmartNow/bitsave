@@ -1,17 +1,10 @@
 'use client';
 
+import { Search01Icon, FilterIcon, MoreVerticalIcon, Download01Icon, Alert01Icon, TextIcon } from "hugeicons-react";
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import {
-  Search,
-  Filter,
-  MoreVertical,
-  Download,
-  AlertCircle,
-  FileText
-} from 'lucide-react';
 
 interface Business {
   transactionHash: string;
@@ -161,7 +154,7 @@ export default function BizFiBusinessesPage() {
             onClick={handleExport}
             className="flex items-center gap-2 px-6 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/30 active:scale-95 group"
           >
-            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <Download01Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
             Export CSV
           </button>
         </div>
@@ -173,7 +166,7 @@ export default function BizFiBusinessesPage() {
           animate={{ opacity: 1, height: 'auto' }}
           className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 flex items-center gap-3"
         >
-          <AlertCircle className="w-5 h-5 shrink-0" />
+          <Alert01Icon className="w-5 h-5 shrink-0" />
           {error}
         </motion.div>
       )}
@@ -183,7 +176,7 @@ export default function BizFiBusinessesPage() {
         {/* Filters Bar */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7B8B9A]" />
+            <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7B8B9A]" />
             <input
               type="text"
               placeholder="Search by business name, owner name, or ID..."
@@ -203,7 +196,7 @@ export default function BizFiBusinessesPage() {
               <option value="approved">Verified</option>
               <option value="rejected">Rejected</option>
             </select>
-            <Filter className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
+            <FilterIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
           </div>
         </div>
 
@@ -226,7 +219,7 @@ export default function BizFiBusinessesPage() {
                   <td colSpan={6} className="px-6 py-20 text-center text-[#9BA8B5]">
                     <div className="flex flex-col items-center gap-4 opacity-50">
                       <div className="w-16 h-16 rounded-full bg-[#1A2538] flex items-center justify-center">
-                        <Search className="w-8 h-8 opacity-40" />
+                        <Search01Icon className="w-8 h-8 opacity-40" />
                       </div>
                       <p className="text-lg font-medium text-[#F9F9FB]">No businesses found</p>
                       <p className="text-sm">Try adjusting your search or filters</p>
@@ -295,7 +288,7 @@ export default function BizFiBusinessesPage() {
                           <option value="rejected">Rejected</option>
                         </select>
                         <button className="p-2 rounded-lg hover:bg-[#1A2538] text-[#7B8B9A] group-hover/action:text-[#81D7B4] group-hover/action:bg-[#81D7B4]/10 transition-all">
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVerticalIcon className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

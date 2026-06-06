@@ -1,11 +1,11 @@
 'use client';
 
+import { LockIcon, GiftIcon, GlobeIcon, ArrowRight01Icon, PlayIcon, Wallet01Icon, Shield01Icon, ArrowUpRight01Icon, FlashIcon } from "hugeicons-react";
 import Image from 'next/image';
 import { useEffect, useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 import Link from 'next/link';
-import { Lock, Gift, Globe, ArrowRight, Play, Wallet, ShieldCheck, TrendingUp, Zap } from 'lucide-react';
 
 // Helper function
 const ensureImageUrl = (url: string | undefined): string => {
@@ -25,9 +25,9 @@ const Hero = memo(() => {
   const [notificationIndex, setNotificationIndex] = useState(0);
 
   const notifications = [
-    { text: "Savings Completed", icon: TrendingUp, color: "bg-emerald-50", textColor: "text-emerald-600" },
-    { text: "Rewards Claimed", icon: Gift, color: "bg-emerald-50", textColor: "text-emerald-600" },
-    { text: "Auto-Compounded", icon: Lock, color: "bg-emerald-50", textColor: "text-emerald-600" }
+    { text: "Savings Completed", icon: ArrowUpRight01Icon, color: "bg-emerald-50", textColor: "text-emerald-600" },
+    { text: "Rewards Claimed", icon: GiftIcon, color: "bg-emerald-50", textColor: "text-emerald-600" },
+    { text: "Auto-Compounded", icon: LockIcon, color: "bg-emerald-50", textColor: "text-emerald-600" }
   ];
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const Hero = memo(() => {
       accentColor: '#0052FF',
       gradient: 'from-[#81D7B4] to-[#6BC5A0]',
       savingsLocked: '$512,450.00',
-      floatingBadge: { text: 'High Yield', icon: TrendingUp }
+      floatingBadge: { text: 'High Yield', icon: ArrowUpRight01Icon }
     },
     {
       name: 'Celo',
@@ -64,7 +64,7 @@ const Hero = memo(() => {
       accentColor: '#FCFF52',
       gradient: 'from-yellow-400 to-yellow-500',
       savingsLocked: '$308,320.50',
-      floatingBadge: { text: 'Eco-Friendly', icon: Globe }
+      floatingBadge: { text: 'Eco-Friendly', icon: GlobeIcon }
     },
     {
       name: 'Lisk',
@@ -74,7 +74,7 @@ const Hero = memo(() => {
       accentColor: '#0842D4',
       gradient: 'from-[#81D7B4] to-[#6BC5A0]',
       savingsLocked: '$500,180.25',
-      floatingBadge: { text: 'Low Fees', icon: Wallet }
+      floatingBadge: { text: 'Low Fees', icon: Wallet01Icon }
     },
     {
       name: 'BSC',
@@ -84,7 +84,7 @@ const Hero = memo(() => {
       accentColor: '#F0B90B',
       gradient: 'from-yellow-400 to-yellow-600',
       savingsLocked: '$415,750.00',
-      floatingBadge: { text: 'Popular', icon: TrendingUp }
+      floatingBadge: { text: 'Popular', icon: ArrowUpRight01Icon }
     },
     {
       name: 'Avalanche',
@@ -94,7 +94,7 @@ const Hero = memo(() => {
       accentColor: '#E84142',
       gradient: 'from-red-500 to-red-600',
       savingsLocked: '$209,940.75',
-      floatingBadge: { text: 'Fast', icon: Zap }
+      floatingBadge: { text: 'Fast', icon: FlashIcon }
     }
   ];
 
@@ -177,7 +177,7 @@ const Hero = memo(() => {
                 className="group w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white font-bold text-lg rounded-full hover:from-[#6BC5A0] hover:to-[#5fb392] transition-all hover:-translate-y-1 flex items-center justify-center gap-2.5 shimmer-btn glow-pulse"
               >
                 Start Saving Now
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight01Icon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a
                 href="https://youtu.be/BDQxf_fgsNo"
@@ -185,7 +185,7 @@ const Hero = memo(() => {
                 rel="noopener noreferrer"
                 className="group w-full sm:w-auto px-8 py-4 glass-card text-gray-900 font-semibold text-lg rounded-full hover:border-[#81D7B4]/50 hover:text-[#5fb392] transition-all flex items-center justify-center gap-2.5 hover:shadow-lg"
               >
-                <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" />
+                <PlayIcon className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" />
                 Watch Demo
               </a>
             </motion.div>
@@ -198,9 +198,9 @@ const Hero = memo(() => {
               className="pt-4 flex flex-wrap justify-center lg:justify-start gap-6 text-sm font-medium text-gray-500"
             >
               {[
-                { icon: ShieldCheck, label: "Non-Custodial" },
-                { icon: Gift, label: "Reward Bearing" },
-                { icon: Globe, label: "Multi-Chain" }
+                { icon: Shield01Icon, label: "Non-Custodial" },
+                { icon: GiftIcon, label: "Reward Bearing" },
+                { icon: GlobeIcon, label: "Multi-Chain" }
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-2.5 group/feature cursor-default">
                   <div className="p-2 rounded-xl bg-[#81D7B4]/8 text-[#81D7B4] group-hover/feature:bg-[#81D7B4]/15 group-hover/feature:scale-110 transition-all duration-300">
@@ -282,7 +282,7 @@ const Hero = memo(() => {
                                </div>
                              </div>
                              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#81D7B4] to-[#5fb392] flex items-center justify-center text-white shadow-lg shadow-[#81D7B4]/25">
-                               <Gift className="w-4 h-4" />
+                               <GiftIcon className="w-4 h-4" />
                              </div>
                           </div>
                         </div>

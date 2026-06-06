@@ -1,10 +1,11 @@
 'use client';
+
+import { PlusSignIcon, UserMultipleIcon, Cancel01Icon, UserAdd01Icon, BarChartIcon, Calendar01Icon, Delete02Icon, ArrowDown01Icon } from "hugeicons-react";
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
-import { HiOutlinePlus, HiOutlineUsers, HiOutlineXMark, HiOutlineUserPlus, HiOutlineChartBar, HiOutlineCalendar, HiOutlineTrash, HiOutlineChevronDown } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 import CustomDatePicker from '@/components/CustomDatePicker';
@@ -196,7 +197,7 @@ export default function GroupSavingsPage() {
         </button>
       </div>
 
-      {/* Groups List */}
+      {/* Groups ListView */}
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2].map(i => <div key={i} className="bg-white rounded-2xl h-40 animate-pulse border border-gray-100" />)}
@@ -220,7 +221,7 @@ export default function GroupSavingsPage() {
               <circle cx="55" cy="122" r="1.5" fill="#2D5A4A" />
               <circle cx="55" cy="128" r="1.5" fill="#2D5A4A" />
 
-              {/* Piggy Bank Eye */}
+              {/* Piggy Bank View */}
               <circle cx="85" cy="115" r="4" fill="#2D5A4A" />
 
               {/* Piggy Bank Coin Slot */}
@@ -234,7 +235,7 @@ export default function GroupSavingsPage() {
               <circle cx="150" cy="35" r="11" fill="#FDE047" fillOpacity="0.9" />
               <path d="M150 27V43M146 32C146 30.5 148 29.5 150 29.5C152 29.5 154 30.5 154 32C154 34 146 36 146 38.5C146 40 148 41 150 41C152 41 154 40 154 38.5" stroke="#CA8A04" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 
-              {/* Group of Users / People Icons */}
+              {/* Group of UserMultipleIcon / People Icons */}
 
               {/* Left Person */}
               <circle cx="45" cy="95" r="12" fill="#E8F7F0" stroke="#81D7B4" strokeWidth="2" />
@@ -305,7 +306,7 @@ export default function GroupSavingsPage() {
                 </div>
                 {group.maturityDate && (
                   <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
-                    <HiOutlineCalendar className="w-3 h-3" />
+                    <Calendar01Icon className="w-3 h-3" />
                     {new Date(group.maturityDate).toLocaleDateString()}
                   </span>
                 )}
@@ -328,7 +329,7 @@ export default function GroupSavingsPage() {
                     <p className="text-sm text-gray-500 font-medium mt-1.5 text-center sm:text-left">Set up a shared savings goal and invite friends.</p>
                   </div>
                   <button onClick={() => setShowCreateModal(false)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
-                    <HiOutlineXMark className="w-6 h-6" />
+                    <Cancel01Icon className="w-6 h-6" />
                   </button>
                 </div>
 
@@ -366,7 +367,7 @@ export default function GroupSavingsPage() {
                           <select value={formChain} onChange={e => setFormChain(e.target.value)} className="w-full px-4 py-3.5 appearance-none rounded-xl border border-gray-200 focus:border-[#81D7B4] bg-gray-50/50 focus:bg-white outline-none text-sm font-bold text-gray-900 transition-all focus:ring-4 focus:ring-[#81D7B4]/10 cursor-pointer">
                             {NETWORKS.filter(n => !n.isComingSoon).map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
                           </select>
-                          <HiOutlineChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          <ArrowDown01Icon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -375,7 +376,7 @@ export default function GroupSavingsPage() {
                           <select value={formToken} onChange={e => setFormToken(e.target.value)} className="w-full px-4 py-3.5 appearance-none rounded-xl border border-gray-200 focus:border-[#81D7B4] bg-gray-50/50 focus:bg-white outline-none text-sm font-bold text-gray-900 transition-all focus:ring-4 focus:ring-[#81D7B4]/10 cursor-pointer">
                             {availableTokens.map((t: string) => <option key={t} value={t}>{t}</option>)}
                           </select>
-                          <HiOutlineChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          <ArrowDown01Icon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -384,7 +385,7 @@ export default function GroupSavingsPage() {
                           <select value={formPenalty} onChange={e => setFormPenalty(e.target.value)} className="w-full px-4 py-3.5 appearance-none rounded-xl border border-gray-200 focus:border-[#81D7B4] bg-gray-50/50 focus:bg-white outline-none text-sm font-bold text-gray-900 transition-all focus:ring-4 focus:ring-[#81D7B4]/10 cursor-pointer">
                             {['10%', '20%', '30%'].map((p: string) => <option key={p} value={p}>{p}</option>)}
                           </select>
-                          <HiOutlineChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          <ArrowDown01Icon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
                       </div>
                       <div className="relative space-y-1.5">
@@ -397,7 +398,7 @@ export default function GroupSavingsPage() {
                           <span className={formMaturity ? 'text-gray-900' : 'text-gray-400 font-medium'}>
                             {formMaturity ? format(parseISO(formMaturity), 'MMM d, yyyy') : 'Select Date'}
                           </span>
-                          <HiOutlineCalendar className="w-5 h-5 text-gray-400" />
+                          <Calendar01Icon className="w-5 h-5 text-gray-400" />
                         </button>
 
                         <AnimatePresence>
@@ -419,7 +420,7 @@ export default function GroupSavingsPage() {
                                 <div className="p-4 bg-[#81D7B4]/5 border-b border-gray-100 flex items-center justify-between">
                                   <h3 className="text-sm font-black text-gray-900 tracking-tight">Select Target Date</h3>
                                   <button onClick={() => setShowFormCalendar(false)} className="text-gray-400 hover:text-gray-600">
-                                    <HiOutlineXMark className="w-5 h-5" />
+                                    <Cancel01Icon className="w-5 h-5" />
                                   </button>
                                 </div>
                                 <CustomDatePicker
@@ -451,7 +452,7 @@ export default function GroupSavingsPage() {
                         <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#81D7B4]/20 rounded-full blur-xl pointer-events-none" />
 
                         <label className="text-sm font-bold text-[#2D5A4A] flex items-center gap-2 mb-3 relative z-10">
-                          <HiOutlineUserPlus className="w-5 h-5" /> Invite by Savvy Name
+                          <UserAdd01Icon className="w-5 h-5" /> Invite by Savvy Name
                         </label>
                         <input value={formInvites} onChange={e => setFormInvites(e.target.value)} placeholder="@alice, @bob" className="w-full px-4 py-3.5 rounded-xl border border-white/60 focus:border-[#81D7B4] outline-none text-sm font-bold text-gray-900 shadow-sm transition-all focus:ring-4 focus:ring-[#81D7B4]/20 bg-white/80 backdrop-blur-sm relative z-10" />
                         <p className="text-xs text-[#2D5A4A]/70 mt-2.5 font-medium relative z-10">Separate multiple Savvy Names with commas.</p>
@@ -481,7 +482,7 @@ export default function GroupSavingsPage() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-black text-gray-900 tracking-tight">{selectedGroup.name}</h2>
                   <button onClick={() => setSelectedGroup(null)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
-                    <HiOutlineXMark className="w-5 h-5" />
+                    <Cancel01Icon className="w-5 h-5" />
                   </button>
                 </div>
 
@@ -491,7 +492,7 @@ export default function GroupSavingsPage() {
                 <div className="bg-[#F8FAF9] rounded-2xl p-5 mb-6 border border-[#81D7B4]/10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <HiOutlineChartBar className="w-5 h-5 text-[#81D7B4]" />
+                      <BarChartIcon className="w-5 h-5 text-[#81D7B4]" />
                       <span className="text-sm font-bold text-gray-700">Group Status</span>
                     </div>
                   </div>
@@ -512,7 +513,7 @@ export default function GroupSavingsPage() {
                       }}
                       className="w-full py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(129,215,180,0.2)] transition-all flex items-center justify-center gap-2"
                     >
-                      <HiOutlinePlus className="w-5 h-5" />
+                      <PlusSignIcon className="w-5 h-5" />
                       Create Savings for Group
                     </button>
                   </div>
@@ -520,7 +521,7 @@ export default function GroupSavingsPage() {
 
                 {/* Members */}
                 <h3 className="text-sm font-black text-gray-900 mb-3 uppercase tracking-wider flex items-center gap-2 mt-2">
-                  <HiOutlineUsers className="w-4 h-4 text-[#81D7B4]" /> Members ({selectedGroup.members.length})
+                  <UserMultipleIcon className="w-4 h-4 text-[#81D7B4]" /> Members ({selectedGroup.members.length})
                 </h3>
                 <div className="flex gap-2 mb-4">
                   <input
@@ -566,7 +567,7 @@ export default function GroupSavingsPage() {
                       disabled={isDeleting}
                       className="flex-1 py-3.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-red-100 disabled:opacity-50"
                     >
-                      <HiOutlineTrash className="w-5 h-5" />
+                      <Delete02Icon className="w-5 h-5" />
                       {isDeleting ? 'Deleting...' : 'Delete Group'}
                     </button>
                   )}

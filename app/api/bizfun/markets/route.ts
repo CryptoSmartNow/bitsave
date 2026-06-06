@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ markets });
     } catch (error) {
         console.error('Markets API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }
 
@@ -75,6 +75,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, market: { ...newMarket, _id: result.insertedId } });
     } catch (error) {
         console.error('Create Market API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal CloudServer Error' }, { status: 500 });
     }
 }

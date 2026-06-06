@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import { Link01Icon, Logout01Icon } from "hugeicons-react";
 import { useState } from 'react';
 import { useSavingsData } from '../hooks/useSavingsData';
 import { useAccount } from 'wagmi';
@@ -7,7 +8,6 @@ import { useNetworkSync } from '../hooks/useNetworkSync';
 import { useOptimizedDisconnect } from '../lib/useOptimizedDisconnect';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { HiOutlineLink, HiOutlineArrowRightOnRectangle } from 'react-icons/hi2';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '../utils/networkLogos';
 import { useEffect } from 'react';
 
@@ -100,7 +100,7 @@ export default function NetworkDetection({ className = '' }: NetworkDetectionPro
             {/* Header */}
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-16 h-16 mb-4 bg-white rounded-3xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 text-[#81D7B4]">
-                <HiOutlineLink className="w-8 h-8 text-[#81D7B4]" />
+                <Link01Icon className="w-8 h-8 text-[#81D7B4]" />
               </div>
               <h2 className="text-[26px] font-black tracking-tight text-gray-900 mb-2.5 leading-tight">Unsupported Network</h2>
               <p className="text-[15px] text-gray-500 mt-1 max-w-[280px] font-medium leading-relaxed">
@@ -108,7 +108,7 @@ export default function NetworkDetection({ className = '' }: NetworkDetectionPro
               </p>
             </div>
 
-            {/* Network List */}
+            {/* Network ListView */}
             <div className="overflow-y-auto flex-1 space-y-3 pb-4 custom-scrollbar pr-1 -mr-1">
               {isLoadingLogos && (
                 <div className="flex flex-col items-center justify-center py-6">
@@ -156,7 +156,7 @@ export default function NetworkDetection({ className = '' }: NetworkDetectionPro
                     <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  <HiOutlineArrowRightOnRectangle className="w-5 h-5 flex-shrink-0" />
+                  <Logout01Icon className="w-5 h-5 flex-shrink-0" />
                 )}
                 <span>Disconnect Wallet</span>
               </button>

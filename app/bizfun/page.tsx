@@ -1,37 +1,12 @@
-"use client";
+'use client';
 
+import { Activity01Icon, Dollar01Icon, Cancel01Icon, SparklesIcon, BarChartIcon, Money01Icon, LinkSquare01Icon, CrabIcon, CubeIcon, PresentationBarChart01Icon, BalanceScaleIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
-import {
-    HiOutlineRocketLaunch,
-    HiOutlineGift,
-    HiOutlineCurrencyDollar,
-    HiOutlineArrowRight,
-    HiOutlineArrowLeft,
-    HiOutlineBars3,
-    HiOutlineXMark,
-    HiOutlineSparkles,
-    HiOutlineLightBulb,
-    HiOutlinePuzzlePiece,
-    HiOutlineChartBar,
-    HiOutlineGlobeAlt,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineBriefcase,
-    HiOutlineAcademicCap,
-    HiOutlinePresentationChartLine,
-    HiOutlineCubeTransparent,
-    HiOutlineScale,
-    HiOutlineBanknotes,
-    HiOutlineCpuChip,
-    HiOutlineArrowTopRightOnSquare,
-    HiOutlineCog6Tooth,
-    HiOutlineServer
-} from "react-icons/hi2";
-import { GiCrabClaw } from "react-icons/gi";
 import { Exo } from "next/font/google";
-import Link from "next/link";
+import Link from 'next/link';
 import LanguageSelector from "@/components/LanguageSelector";
 
 const exo = Exo({
@@ -49,7 +24,7 @@ const BizMartLink = () => (
         className="font-bold text-[#81D7B4] hover:text-[#6BC5A0] hover:underline transition-colors inline-flex items-center gap-0.5 cursor-pointer"
     >
         $BizMart
-        <HiOutlineArrowTopRightOnSquare className="w-3 h-3" />
+        <LinkSquare01Icon className="w-3 h-3" />
     </Link>
 );
 
@@ -58,25 +33,25 @@ const FEATURES = [
     {
         title: "Tokenize Business",
         description: <>Tokenize your business or idea instantly with our AI agent <BizMartLink />.</>,
-        icon: HiOutlineCubeTransparent,
+        icon: CubeIcon,
         detail: "Instant Tokenization"
     },
     {
         title: "Prediction Markets",
         description: "Deploy to prediction markets where AI agents and humans debate and trade.",
-        icon: HiOutlinePresentationChartLine,
+        icon: PresentationBarChart01Icon,
         detail: "Market Deployment"
     },
     {
         title: "AI & Human Trading",
         description: "Let AI agents and humans trade your business tokens based on performance.",
-        icon: HiOutlineScale,
+        icon: BalanceScaleIcon,
         detail: "Public Trading"
     },
     {
         title: "Public Funding",
         description: "Get funded publicly by a global network of AI agents and investors.",
-        icon: HiOutlineBanknotes,
+        icon: Money01Icon,
         detail: "Global Access"
     }
 ];
@@ -157,7 +132,7 @@ export default function BizFunPage() {
                         <Link href="/bizfun" className="flex items-center gap-2 group">
                             <div className="relative">
                                 <div className="w-10 h-10 rounded-xl bg-[#81D7B4]/10 border border-[#81D7B4]/50 flex items-center justify-center text-[#81D7B4] shadow-[0_0_15px_rgba(129,215,180,0.3)] transition-transform group-hover:scale-105">
-                                    <HiOutlineGift className="w-6 h-6" />
+                                    <Activity01Icon className="w-6 h-6" />
                                 </div>
                             </div>
                             <span className="text-xl font-bold tracking-tight text-white font-mono">BizFun</span>
@@ -181,7 +156,7 @@ export default function BizFunPage() {
                             href="/dashboard"
                             className="text-sm font-medium text-gray-400 hover:text-[#81D7B4] transition-colors flex items-center gap-2 mr-4"
                         >
-                            <HiOutlineArrowLeft className="w-4 h-4" />
+                            <Activity01Icon className="w-4 h-4" />
                             Back to SaveFi
                         </Link>
 
@@ -207,7 +182,7 @@ export default function BizFunPage() {
                         className="xl:hidden relative z-50 p-2 text-gray-300 hover:text-[#81D7B4] transition-colors"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
-                         {isMobileMenuOpen ? <HiOutlineXMark className="w-6 h-6" /> : <HiOutlineBars3 className="w-6 h-6" />}
+                         {isMobileMenuOpen ? <Cancel01Icon className="w-6 h-6" /> : <Activity01Icon className="w-6 h-6" />}
                     </button>
                 </div>
 
@@ -226,7 +201,7 @@ export default function BizFunPage() {
                                 <a href="#bizmart" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 rounded-lg">Meet $BizMart</a>
                                 <div className="h-px bg-white/10 my-2"></div>
                                 <Link href="/dashboard" className="block px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 rounded-lg flex items-center gap-2">
-                                    <HiOutlineArrowLeft className="w-5 h-5" />
+                                    <Activity01Icon className="w-5 h-5" />
                                     Back to SaveFi
                                 </Link>
                                 <div className="px-4">
@@ -251,30 +226,30 @@ export default function BizFunPage() {
 
                         {/* Claw Decoration - Large Background */}
                         <div className="hidden md:block absolute -right-20 top-1/4 opacity-[0.03] rotate-[-15deg]">
-                             <GiCrabClaw className="w-[600px] h-[600px] text-[#81D7B4]" />
+                             <CrabIcon className="w-[600px] h-[600px] text-[#81D7B4]" />
                         </div>
                         <div className="hidden md:block absolute -left-20 bottom-0 opacity-[0.03] rotate-[195deg]">
-                             <GiCrabClaw className="w-[500px] h-[500px] text-[#81D7B4]" />
+                             <CrabIcon className="w-[500px] h-[500px] text-[#81D7B4]" />
                         </div>
                         
-                        {/* Tech/Bot Doodles Background */}
+                        {/* Tech/BotIcon Doodles Background */}
                         <div className="absolute inset-0 opacity-[0.05]">
                             {/* Desktop only doodles */}
-                            <HiOutlineCpuChip className="hidden md:block absolute top-[15%] left-[10%] w-24 h-24 text-[#81D7B4] animate-pulse" />
-                            <HiOutlineServer className="hidden md:block absolute top-[20%] right-[15%] w-32 h-32 rotate-12" />
-                            <HiOutlineCog6Tooth className="hidden md:block absolute bottom-[20%] left-[15%] w-28 h-28 animate-[spin_10s_linear_infinite]" />
-                            <HiOutlineChartBar className="hidden md:block absolute bottom-[25%] right-[10%] w-24 h-24 -rotate-6" />
-                            <HiOutlineGlobeAlt className="hidden md:block absolute top-[40%] left-[5%] w-20 h-20 rotate-12" />
-                            <GiCrabClaw className="hidden md:block absolute top-[35%] right-[5%] w-24 h-24 -rotate-12" />
-                            <HiOutlineBriefcase className="hidden md:block absolute bottom-[10%] right-[30%] w-20 h-20 rotate-6" />
-                            <HiOutlinePresentationChartLine className="hidden md:block absolute top-[60%] left-[80%] w-20 h-20 rotate-12" />
-                            <HiOutlineSparkles className="hidden md:block absolute top-[50%] left-[15%] w-12 h-12 animate-pulse text-[#81D7B4]" />
+                            <Activity01Icon className="hidden md:block absolute top-[15%] left-[10%] w-24 h-24 text-[#81D7B4] animate-pulse" />
+                            <Activity01Icon className="hidden md:block absolute top-[20%] right-[15%] w-32 h-32 rotate-12" />
+                            <Activity01Icon className="hidden md:block absolute bottom-[20%] left-[15%] w-28 h-28 animate-[spin_10s_linear_infinite]" />
+                            <BarChartIcon className="hidden md:block absolute bottom-[25%] right-[10%] w-24 h-24 -rotate-6" />
+                            <Activity01Icon className="hidden md:block absolute top-[40%] left-[5%] w-20 h-20 rotate-12" />
+                            <CrabIcon className="hidden md:block absolute top-[35%] right-[5%] w-24 h-24 -rotate-12" />
+                            <Activity01Icon className="hidden md:block absolute bottom-[10%] right-[30%] w-20 h-20 rotate-6" />
+                            <Activity01Icon className="hidden md:block absolute top-[60%] left-[80%] w-20 h-20 rotate-12" />
+                            <SparklesIcon className="hidden md:block absolute top-[50%] left-[15%] w-12 h-12 animate-pulse text-[#81D7B4]" />
                             
                             {/* Mobile specific well-spaced doodles (Corners only) */}
-                            <HiOutlineCpuChip className="md:hidden absolute top-[5%] left-[5%] w-10 h-10 -rotate-12 text-[#81D7B4]" />
-                            <HiOutlineCog6Tooth className="md:hidden absolute top-[10%] right-[5%] w-12 h-12 rotate-12 animate-[spin_10s_linear_infinite]" />
-                            <HiOutlineChartBar className="md:hidden absolute bottom-[15%] right-[5%] w-10 h-10 -rotate-6" />
-                            <HiOutlineSparkles className="md:hidden absolute bottom-[20%] left-[8%] w-8 h-8 animate-pulse text-[#81D7B4]" />
+                            <Activity01Icon className="md:hidden absolute top-[5%] left-[5%] w-10 h-10 -rotate-12 text-[#81D7B4]" />
+                            <Activity01Icon className="md:hidden absolute top-[10%] right-[5%] w-12 h-12 rotate-12 animate-[spin_10s_linear_infinite]" />
+                            <BarChartIcon className="md:hidden absolute bottom-[15%] right-[5%] w-10 h-10 -rotate-6" />
+                            <SparklesIcon className="md:hidden absolute bottom-[20%] left-[8%] w-8 h-8 animate-pulse text-[#81D7B4]" />
                         </div>
                     </div>
 
@@ -342,7 +317,7 @@ export default function BizFunPage() {
                                 href="/bizfun/agent"
                                 className="w-full sm:w-auto px-8 py-4 bg-[#81D7B4] text-[#0b0c15] font-bold text-lg rounded-full shadow-[0_0_20px_rgba(129,215,180,0.3)] hover:bg-[#6BC5A0] hover:shadow-[0_0_30px_rgba(129,215,180,0.5)] transition-all flex items-center justify-center gap-2 group"
                             >
-                                <HiOutlineRocketLaunch className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                                <Activity01Icon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                                 Launch Agent
                             </Link>
                             <Link
@@ -420,7 +395,7 @@ export default function BizFunPage() {
                                     viewport={{ once: true }}
                                     className="inline-flex items-center gap-2 mb-6 justify-center lg:justify-start"
                                 >
-                                    <GiCrabClaw className="w-6 h-6 text-[#81D7B4] rotate-90" />
+                                    <CrabIcon className="w-6 h-6 text-[#81D7B4] rotate-90" />
                                     <span className="text-sm font-bold text-[#81D7B4] tracking-widest uppercase font-mono">Your AI Underwriter</span>
                                 </motion.div>
                                 <motion.h2
@@ -449,7 +424,7 @@ export default function BizFunPage() {
                                 >
                                     <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10 shadow-sm hover:border-[#81D7B4]/30 transition-colors">
                                         <div className="p-2 rounded-lg bg-[#81D7B4]/10 text-[#81D7B4]">
-                                            <HiOutlineCpuChip className="w-6 h-6" />
+                                            <Activity01Icon className="w-6 h-6" />
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-white">Autonomous Valuation</h4>
@@ -458,7 +433,7 @@ export default function BizFunPage() {
                                     </div>
                                     <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10 shadow-sm hover:border-[#81D7B4]/30 transition-colors">
                                         <div className="p-2 rounded-lg bg-[#81D7B4]/10 text-[#81D7B4]">
-                                            <HiOutlinePresentationChartLine className="w-6 h-6" />
+                                            <Activity01Icon className="w-6 h-6" />
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-white">Market Deployment</h4>
@@ -481,7 +456,7 @@ export default function BizFunPage() {
                                         className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#81D7B4] border border-[#81D7B4] text-[#0b0c15] font-bold hover:bg-[#6BC5A0] hover:text-[#0b0c15] transition-all shadow-[0_0_20px_rgba(129,215,180,0.3)] hover:shadow-[0_0_30px_rgba(129,215,180,0.5)] group"
                                     >
                                         <span>View Agent Profile</span>
-                                        <HiOutlineArrowTopRightOnSquare className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                        <LinkSquare01Icon className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                     </Link>
                                 </motion.div>
                             </div>
@@ -505,14 +480,14 @@ export default function BizFunPage() {
                                             
                                             <div className="text-center relative z-10 w-full">
                                                 <div className="w-20 h-20 sm:w-32 sm:h-32 mx-auto bg-[#81D7B4]/10 rounded-full flex items-center justify-center mb-4 sm:mb-6 text-[#81D7B4] group-hover:scale-110 transition-transform duration-300 border border-[#81D7B4]/30 shadow-[0_0_20px_rgba(129,215,180,0.2)]">
-                                                <GiCrabClaw className="w-10 h-10 sm:w-16 sm:h-16 rotate-45" />
+                                                <CrabIcon className="w-10 h-10 sm:w-16 sm:h-16 rotate-45" />
                                             </div>
                                                 <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-[#81D7B4] transition-colors">$BizMart</h3>
                                                 <p className="text-[#81D7B4] font-mono text-xs sm:text-sm bg-[#81D7B4]/10 px-3 py-1 rounded-full inline-block border border-[#81D7B4]/20 whitespace-nowrap">AI Underwriter Agent</p>
                                                 
                                                 <div className="mt-4 sm:mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
                                                     <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#81D7B4]">
-                                                        View on Clanker <HiOutlineArrowTopRightOnSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                        View on Clanker <LinkSquare01Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                                                     </span>
                                                 </div>
                                             </div>
@@ -575,8 +550,8 @@ export default function BizFunPage() {
                                 <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] bg-[#6BC5A0]/20 rounded-full blur-[80px]"></div>
                                 
                                 {/* Fun Doodles */}
-                                <GiCrabClaw className="absolute top-[10%] left-[10%] w-24 h-24 text-[#81D7B4] opacity-20 -rotate-12" />
-                                <GiCrabClaw className="absolute bottom-[15%] right-[10%] w-32 h-32 text-[#81D7B4] opacity-20 rotate-12" />
+                                <CrabIcon className="absolute top-[10%] left-[10%] w-24 h-24 text-[#81D7B4] opacity-20 -rotate-12" />
+                                <CrabIcon className="absolute bottom-[15%] right-[10%] w-32 h-32 text-[#81D7B4] opacity-20 rotate-12" />
                             </div>
 
                             <div className="relative z-10">

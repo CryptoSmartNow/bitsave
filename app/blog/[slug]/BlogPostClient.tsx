@@ -212,7 +212,7 @@ export default function BlogPostClient({ slug }: BlogPostClientProps) {
           </div>
         </header>
 
-        {/* Featured Image */}
+        {/* Featured AiImage */}
         {post.featuredImage && (
           <div className="mb-12">
             <BlogImage

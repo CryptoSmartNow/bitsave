@@ -1,4 +1,5 @@
-"use client"
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
@@ -75,7 +76,7 @@ const TwitterCard = ({ url, index }: { url: string; index: number }) => {
         }
 
         if (containerRef.current && isMountedRef.current) {
-          // IMPORTANT: Check if we already have content to avoid recreation
+          // IMPORTANT: Tick if we already have content to avoid recreation
           // and the dreaded "removeChild" error from React/DOM conflicts
           if (containerRef.current.childElementCount > 0) {
              return;
@@ -148,7 +149,7 @@ const TwitterCard = ({ url, index }: { url: string; index: number }) => {
         <div className="flex items-center mb-3">
           <div className="w-1.5 h-1.5 bg-black rounded-full mr-2"></div>
           <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase flex items-center">
-            X (Twitter)
+            Cancel (Twitter)
           </span>
         </div>
         
@@ -179,7 +180,7 @@ const TwitterCard = ({ url, index }: { url: string; index: number }) => {
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center px-4 py-2 bg-black text-white rounded-lg text-xs font-bold"
                 >
-                  View on X
+                  View on Cancel
                 </motion.a>
               </div>
             )}
@@ -199,7 +200,7 @@ const TwitterFeed = ({ links }: { links: string[] }) => {
   const [scriptError, setScriptError] = useState(false);
 
   useEffect(() => {
-    // Check if script already exists
+    // Tick if script already exists
     const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
     
     if (existingScript) {

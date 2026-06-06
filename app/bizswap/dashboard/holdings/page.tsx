@@ -1,14 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Activity01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, ArrowDown01Icon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  HiOutlineBriefcase, 
-  HiOutlineChartBar, 
-  HiOutlineShieldCheck, 
-  HiOutlineCurrencyDollar,
-  HiOutlineChevronDown
-} from 'react-icons/hi2';
+import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 
 interface Holding {
@@ -26,18 +21,29 @@ interface Holding {
 }
 
 export default function HoldingsPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
+
+  const connected = ready && (authenticated || isSolanaConnected);
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  
+  const walletAddress = isSolanaConnected 
+    ? publicKey?.toBase58() 
+    : (privySolanaWallet?.address || user?.wallet?.address);
+
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (connected && publicKey) {
-      fetchHoldings(publicKey.toBase58());
-    } else {
+    if (connected && walletAddress) {
+      fetchHoldings(walletAddress);
+    } else if (!connected && ready) {
       setHoldings([]);
       setLoading(false);
     }
-  }, [connected, publicKey]);
+  }, [connected, walletAddress, ready]);
 
   const fetchHoldings = async (wallet: string) => {
     setLoading(true);
@@ -68,13 +74,21 @@ export default function HoldingsPage() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getInstrumentIcon = (name: string) => {
-    switch(name) {
-      case 'BizYield': return <HiOutlineChartBar className="w-5 h-5 text-[#FF6B6B]" />;
-      case 'BizCredit': return <HiOutlineCurrencyDollar className="w-5 h-5 text-[#3B82F6]" />;
-      case 'BizBond': return <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4]" />;
-      default: return <HiOutlineBriefcase className="w-5 h-5 text-[#7B8B9A]" />;
-    }
+  const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5") => {
+    let initials = 'BZ';
+    let colorClass = 'text-[#7B8B9A]';
+    if (name === 'BizYield') { initials = 'BY'; colorClass = 'text-[#FF6B6B]'; }
+    if (name === 'BizCredit') { initials = 'BC'; colorClass = 'text-[#3B82F6]'; }
+    if (name === 'BizBond') { initials = 'BB'; colorClass = 'text-[#81D7B4]'; }
+
+    return (
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${sizeClass} ${colorClass}`}>
+        <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1"/>
+        <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="9" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
+          {initials}
+        </text>
+      </svg>
+    );
   };
 
   const getInstrumentColorClass = (name: string, type: 'bg') => {
@@ -89,7 +103,7 @@ export default function HoldingsPage() {
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <HiOutlineBriefcase className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
         <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet to view your active holdings.</p>
       </div>
@@ -116,7 +130,7 @@ export default function HoldingsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-[#1A2538] border border-[#2C3E5D] p-5 rounded-2xl flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-[#FF6B6B]/10 flex items-center justify-center">
-            <HiOutlineChartBar className="w-6 h-6 text-[#FF6B6B]" />
+            {getInstrumentIcon('BizYield', 'w-6 h-6')}
           </div>
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">BizYield</p>
@@ -128,7 +142,7 @@ export default function HoldingsPage() {
         </div>
         <div className="bg-[#1A2538] border border-[#2C3E5D] p-5 rounded-2xl flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-[#3B82F6]/10 flex items-center justify-center">
-            <HiOutlineCurrencyDollar className="w-6 h-6 text-[#3B82F6]" />
+            {getInstrumentIcon('BizCredit', 'w-6 h-6')}
           </div>
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">BizCredit</p>
@@ -140,7 +154,7 @@ export default function HoldingsPage() {
         </div>
         <div className="bg-[#1A2538] border border-[#2C3E5D] p-5 rounded-2xl flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-[#81D7B4]/10 flex items-center justify-center">
-            <HiOutlineShieldCheck className="w-6 h-6 text-[#81D7B4]" />
+            {getInstrumentIcon('BizBond', 'w-6 h-6')}
           </div>
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">BizBond</p>
@@ -222,7 +236,7 @@ export default function HoldingsPage() {
                     </td>
                     <td className="px-5 py-4">
                       <button className="w-8 h-8 rounded-lg bg-[#1C2538] hover:bg-[#2C3E5D] flex items-center justify-center text-[#7B8B9A] transition-colors border border-[#2C3E5D]">
-                        <HiOutlineChevronDown className="w-4 h-4" />
+                        <ArrowDown01Icon className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>

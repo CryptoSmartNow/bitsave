@@ -1,13 +1,14 @@
 'use client';
+
+import { LinkSquare01Icon } from "hugeicons-react";
 import { motion } from 'framer-motion';
-import { HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 
 const CREDENTIALS = [
     {
         month: "July",
         title: "Finished 3rd Place in Base Batch 3",
         link: "https://x.com/BitsaveProtocol/status/1947312149342146604?s=20",
-        linkText: "Check Out the Base Tweet here"
+        linkText: "Tick Out the Base Tweet here"
     },
     {
         month: "September",
@@ -115,7 +116,7 @@ export default function CredibilitySection() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 text-sm font-bold text-[#5fb392] hover:text-[#2D5A4A] transition-colors mt-auto group-hover:translate-x-0.5 transition-transform duration-300 font-display"
                             >
-                                {cred.linkText} <HiOutlineArrowTopRightOnSquare className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                                {cred.linkText} <LinkSquare01Icon className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                             </a>
                         </motion.div>
                     ))}

@@ -1,7 +1,7 @@
 'use client';
 
+import { WifiDisconnected01Icon, RotateRight01Icon, Wallet01Icon } from "hugeicons-react";
 import { motion } from 'framer-motion';
-import { WifiOff, RotateCw, Wallet } from 'lucide-react';
 
 export default function OfflinePage() {
     return (
@@ -16,7 +16,7 @@ export default function OfflinePage() {
                         transition={{ duration: 2, repeat: Infinity }}
                     />
                     <div className="relative w-full h-full bg-[#81D7B4]/10 rounded-full flex items-center justify-center text-[#81D7B4]">
-                        <WifiOff className="w-10 h-10" />
+                        <WifiDisconnected01Icon className="w-10 h-10" />
                     </div>
 
                     {/* Floating Safety Badge */}
@@ -25,7 +25,7 @@ export default function OfflinePage() {
                         animate={{ y: [0, -5, 0] }}
                         transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
                     >
-                        <Wallet className="w-5 h-5 text-[#81D7B4]" />
+                        <Wallet01Icon className="w-5 h-5 text-[#81D7B4]" />
                     </motion.div>
                 </div>
 
@@ -40,7 +40,7 @@ export default function OfflinePage() {
                     onClick={() => window.location.reload()}
                     className="w-full py-4 bg-[#81D7B4] text-white font-bold rounded-2xl hover:bg-[#6BC5A0] transition-all shadow-lg hover:shadow-[#81D7B4]/20 flex items-center justify-center gap-2 group"
                 >
-                    <RotateCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                    <RotateRight01Icon className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                     Try Reconnecting
                 </button>
 

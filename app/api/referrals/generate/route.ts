@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const usersCollection = db.collection('users');
     
-    // Check if user already exists
+    // Tick if user already exists
     const user = await usersCollection.findOne({ walletAddress });
     
     if (user && user.referralCode) {

@@ -1,16 +1,8 @@
-"use client";
+'use client';
+
+import { Tick01Icon, Activity01Icon, Money01Icon, Shield01Icon } from "hugeicons-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-    HiOutlineCheckCircle, 
-    HiOutlineCloudArrowUp,
-    HiOutlineIdentification,
-    HiOutlineBuildingOffice2,
-    HiOutlineChatBubbleLeftRight,
-    HiOutlineBanknotes,
-    HiOutlineShieldCheck,
-    HiOutlineExclamationCircle
-} from "react-icons/hi2";
 
 interface KYCSubmissionFormProps {
     business: any;
@@ -49,7 +41,7 @@ const RadioOption = ({ label, value, checked, onChange, name }: any) => (
 const Checkbox = ({ label, checked, onChange }: any) => (
     <label className="flex items-start gap-3 cursor-pointer group">
         <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors shrink-0 ${checked ? 'border-[#81D7B4] bg-[#81D7B4]' : 'border-gray-600 group-hover:border-gray-500'}`}>
-            {checked && <HiOutlineCheckCircle className="w-4 h-4 text-gray-900" />}
+            {checked && <Tick01Icon className="w-4 h-4 text-gray-900" />}
         </div>
         <input
             type="checkbox"
@@ -133,9 +125,9 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                 "metadata.kyc": formData,
                 "status": "under_review", // Move to review state
                 "kycSteps": [
-                    { id: 1, label: "Submission", description: "Details submitted", icon: HiOutlineCheckCircle },
-                    { id: 2, label: "Review", description: "Under manual review", icon: HiOutlineShieldCheck },
-                    { id: 3, label: "Approval", description: "Verification complete", icon: HiOutlineCheckCircle }
+                    { id: 1, label: "Submission", description: "Details submitted", icon: Tick01Icon },
+                    { id: 2, label: "Review", description: "Under manual review", icon: Shield01Icon },
+                    { id: 3, label: "Approval", description: "Verification complete", icon: Tick01Icon }
                 ]
             };
 
@@ -165,7 +157,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <HiOutlineShieldCheck className="w-6 h-6 text-[#81D7B4]" />
+                        <Shield01Icon className="w-6 h-6 text-[#81D7B4]" />
                         KYC/KYB Verification
                     </h3>
                     <p className="text-sm text-gray-400 mt-1">Complete verification to unlock full dashboard features.</p>
@@ -178,7 +170,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                     {/* Identity Verification */}
                     <section className="space-y-4">
                         <h4 className="text-white font-semibold flex items-center gap-2 border-b border-gray-800 pb-2">
-                            <HiOutlineIdentification className="w-5 h-5 text-[#81D7B4]" />
+                            <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                             Identity Verification <span className="text-xs text-[#81D7B4] border border-[#81D7B4]/30 px-2 py-0.5 rounded">Required</span>
                         </h4>
                         
@@ -225,7 +217,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                     {/* Business Registration */}
                     <section className="space-y-4">
                         <h4 className="text-white font-semibold flex items-center gap-2 border-b border-gray-800 pb-2">
-                            <HiOutlineBuildingOffice2 className="w-5 h-5 text-[#81D7B4]" />
+                            <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                             Business Registration
                         </h4>
 
@@ -287,7 +279,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                      {/* Confirmations */}
                      <section className="space-y-4">
                         <h4 className="text-white font-semibold flex items-center gap-2 border-b border-gray-800 pb-2">
-                            <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4]" />
+                            <Shield01Icon className="w-5 h-5 text-[#81D7B4]" />
                             Acknowledgements
                         </h4>
                         <div className="space-y-3 bg-gray-800/30 p-4 rounded-xl">
@@ -312,7 +304,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                     {/* Contact & Payout */}
                     <section className="space-y-4">
                         <h4 className="text-white font-semibold flex items-center gap-2 border-b border-gray-800 pb-2">
-                            <HiOutlineChatBubbleLeftRight className="w-5 h-5 text-[#81D7B4]" />
+                            <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                             Contact & Payout
                         </h4>
 
@@ -369,7 +361,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                     {/* Declaration */}
                     <section className="space-y-4">
                         <h4 className="text-white font-semibold flex items-center gap-2 border-b border-gray-800 pb-2">
-                            <HiOutlineShieldCheck className="w-5 h-5 text-[#81D7B4]" />
+                            <Shield01Icon className="w-5 h-5 text-[#81D7B4]" />
                             Declaration
                         </h4>
                         <div className="space-y-3">
@@ -390,7 +382,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
 
             {error && (
                 <div className="flex items-center gap-2 text-red-400 bg-red-500/10 p-4 rounded-xl border border-red-500/20">
-                    <HiOutlineExclamationCircle className="w-5 h-5 shrink-0" />
+                    <Activity01Icon className="w-5 h-5 shrink-0" />
                     <p className="text-sm">{error}</p>
                 </div>
             )}
@@ -409,7 +401,7 @@ export default function KYCSubmissionForm({ business, onSuccess }: KYCSubmission
                     ) : (
                         <>
                             Submit Verification
-                            <HiOutlineCheckCircle className="w-5 h-5" />
+                            <Tick01Icon className="w-5 h-5" />
                         </>
                     )}
                 </button>

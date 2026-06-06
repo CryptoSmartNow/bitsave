@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { Shield, Layout, Lock, ArrowUpRight } from 'lucide-react'
+import { Shield01Icon, Layout01Icon, LockIcon, ArrowUpRight01Icon } from "hugeicons-react";
 import { motion } from 'framer-motion'
 
 export default function Features() {
@@ -9,19 +9,19 @@ export default function Features() {
       title: "Secure Savings",
       description: "Bitsave provides goal-based savings plans with non-custodial smart contracts. You own your funds, withdrawals are automated.",
       detail: "Stable & Secure",
-      icon: <Shield className="w-10 h-10" />,
+      icon: <Shield01Icon className="w-10 h-10" />,
     },
     {
       title: "Simplicity First",
       description: "Experience a clean and intuitive savings experience. Saving on-chain has never been easier than saving in your bank.",
       detail: "No DeFi Jargon",
-      icon: <Layout className="w-10 h-10" />,
+      icon: <Layout01Icon className="w-10 h-10" />,
     },
     {
       title: "Total Control",
       description: "Peace of mind with a non-custodial savings model. Unique 'Parent-child' contracts ensure full isolation and security.",
       detail: "Full Ownership",
-      icon: <Lock className="w-10 h-10" />,
+      icon: <LockIcon className="w-10 h-10" />,
     }
   ];
 
@@ -88,7 +88,7 @@ export default function Features() {
                 <div className="pt-6 border-t border-gray-200/60 mt-6">
                   <span className="inline-flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wider group-hover:translate-x-2 transition-transform duration-300 font-display">
                     {feature.detail}
-                    <ArrowUpRight className="w-5 h-5 text-[#81D7B4] group-hover:rotate-45 transition-transform duration-300" />
+                    <ArrowUpRight01Icon className="w-5 h-5 text-[#81D7B4] group-hover:rotate-45 transition-transform duration-300" />
                   </span>
                 </div>
               </div>

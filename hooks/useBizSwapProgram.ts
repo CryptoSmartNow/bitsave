@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair } from "@solana/web3.js";
 import { Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import idl from "../idl/bizswap_solana.json";
@@ -11,9 +11,14 @@ export function useBizSwapProgram() {
   const wallet = useAnchorWallet();
 
   const program = useMemo(() => {
-    if (!wallet) return null;
+    // If no native wallet is connected (e.g. using Privy), provide a dummy read-only wallet
+    const readOnlyWallet = wallet || {
+      publicKey: Keypair.generate().publicKey,
+      signTransaction: async (tx: any) => tx,
+      signAllTransactions: async (txs: any[]) => txs,
+    };
     
-    const provider = new AnchorProvider(connection, wallet, {
+    const provider = new AnchorProvider(connection, readOnlyWallet, {
       preflightCommitment: "confirmed",
     });
     

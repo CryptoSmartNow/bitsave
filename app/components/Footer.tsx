@@ -1,11 +1,9 @@
-'use client'
+'use client';
 
+import { TelegramIcon, YoutubeIcon, TwitterIcon, ArrowRight01Icon } from "hugeicons-react";
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaTelegramPlane, FaYoutube } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
-import { ArrowRight } from 'lucide-react';
 
 const footerLinks = {
   product: [
@@ -24,19 +22,19 @@ const footerLinks = {
 
 const socialLinks = [
   {
-    name: 'X',
+    name: 'Cancel',
     href: 'https://x.com/bitsaveprotocol',
-    icon: <FaXTwitter className="w-5 h-5" />
+    icon: <TwitterIcon className="w-5 h-5" />
   },
   {
     name: 'Telegram',
     href: 'https://t.me/+YimKRR7wAkVmZGRk',
-    icon: <FaTelegramPlane className="w-5 h-5" />
+    icon: <TelegramIcon className="w-5 h-5" />
   },
   {
     name: 'YouTube',
     href: 'https://www.youtube.com/@bitsaveprotocol',
-    icon: <FaYoutube className="w-5 h-5" />
+    icon: <YoutubeIcon className="w-5 h-5" />
   }
 ];
 
@@ -136,7 +134,7 @@ export default function Footer() {
                     type="submit"
                     className="absolute right-2 top-2 p-1.5 bg-[#81D7B4] text-white rounded-lg hover:bg-[#6BC5A0] transition-colors"
                   >
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight01Icon className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-xs text-gray-400">

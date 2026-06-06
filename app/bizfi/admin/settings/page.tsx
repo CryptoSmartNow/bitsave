@@ -1,7 +1,7 @@
 'use client';
 
+import { UserIcon, Logout01Icon, Shield01Icon } from "hugeicons-react";
 import { motion } from 'framer-motion';
-import { User, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/adminAuth';
 
 export default function BizFiSettingsPage() {
@@ -22,7 +22,7 @@ export default function BizFiSettingsPage() {
         {/* Account Information */}
         <div className="bg-[#1A2538]/50 backdrop-blur-sm p-6 rounded-2xl border border-[#7B8B9A]/10">
           <div className="flex items-center gap-3 mb-6">
-            <User className="w-6 h-6 text-[#81D7B4]" />
+            <UserIcon className="w-6 h-6 text-[#81D7B4]" />
             <h3 className="text-lg font-bold text-[#F9F9FB]">Account Information</h3>
           </div>
           <div className="space-y-4">
@@ -49,7 +49,7 @@ export default function BizFiSettingsPage() {
         {/* Session Management */}
         <div className="bg-[#1A2538]/50 backdrop-blur-sm p-6 rounded-2xl border border-[#7B8B9A]/10">
           <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-6 h-6 text-[#F59E0B]" />
+            <Shield01Icon className="w-6 h-6 text-[#F59E0B]" />
             <h3 className="text-lg font-bold text-[#F9F9FB]">Session Management</h3>
           </div>
           <div className="space-y-4">
@@ -60,7 +60,7 @@ export default function BizFiSettingsPage() {
               onClick={logout}
               className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-bold transition-colors border border-red-500/20"
             >
-              <LogOut className="w-5 h-5" />
+              <Logout01Icon className="w-5 h-5" />
               Sign Out
             </button>
           </div>

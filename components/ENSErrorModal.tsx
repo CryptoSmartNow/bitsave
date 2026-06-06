@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -80,7 +80,7 @@ export default function ENSErrorModal({
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1 h-1 bg-[#81D7B4] rounded-full flex-shrink-0" />
-                    Check spelling and try again
+                    Tick spelling and try again
                   </li>
                 </ul>
               </div>

@@ -1,4 +1,5 @@
-"use client"
+'use client';
+
 import { memo } from 'react';
 import { TableShimmer } from '@/components/ShimmerLoading';
 
