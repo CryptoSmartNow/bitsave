@@ -13,6 +13,7 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
 import { useRouter } from 'next/navigation';
+import { useConfig } from 'wagmi';
 
 const INSTRUMENTS = {
   bizyield: {
@@ -74,6 +75,7 @@ export default function BizSwapAppPage() {
   const { publicKey, connected: isSolanaConnected } = useWallet();
   const { ready, authenticated, user } = usePrivy();
   const router = useRouter();
+  const wagmiConfig = useConfig();
   
   const connected = ready && (authenticated || isSolanaConnected);
   
@@ -151,7 +153,7 @@ export default function BizSwapAppPage() {
     try {
       // 1. Get ChainRails session
       const params = new URLSearchParams({
-        recipient: '0x6bd6109FB3Bf59F67c86caB3bC09adB8B77485B7', // Platform Treasury Wallet
+        recipient: '0xdef9a133ae1147f3af90214f16b451e8bed60974', // Revenue Wallet
         amount: totalCharged.toFixed(2),
         chain: 'BASE_TESTNET',
         token: 'USDC',
@@ -223,7 +225,7 @@ export default function BizSwapAppPage() {
             <Link href="/bizswap/dashboard" className="hidden sm:block text-sm font-bold text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">
               Dashboard
             </Link>
-            <BizSwapAuthButton connectText="Connect Solana" style={{ backgroundColor: '#1A2538', border: '1px solid #2C3E5D', height: '36px', fontSize: '14px', borderRadius: '0.75rem' }} />
+            <BizSwapAuthButton connectText="Login" style={{ backgroundColor: '#1A2538', border: '1px solid #2C3E5D', height: '36px', fontSize: '14px', borderRadius: '0.75rem' }} />
           </div>
         </div>
       </nav>
@@ -353,15 +355,23 @@ export default function BizSwapAppPage() {
 
               {/* Action Button */}
               {!connected ? (
-                <BizSwapAuthButton connectText="Connect Wallet to Buy" style={{ width: '100%', justifyContent: 'center', backgroundColor: '#2C3E5D', borderRadius: '0.75rem', height: '56px', fontSize: '16px', fontWeight: 'bold' }} />
+                <BizSwapAuthButton connectText="Login to Buy" style={{ width: '100%', justifyContent: 'center', backgroundColor: '#2C3E5D', borderRadius: '0.75rem', height: '56px', fontSize: '16px', fontWeight: 'bold' }} />
               ) : (
-                <button
-                  onClick={handlePurchase}
-                  disabled={isProcessing || inputAmount < inst.min}
-                  className="w-full h-14 bg-[#81D7B4] hover:bg-[#6BC4A0] disabled:bg-[#2C3E5D] disabled:text-[#7B8B9A] text-[#0F1825] font-black rounded-xl transition-all text-lg shadow-[0_0_20px_rgba(129,215,180,0.1)]"
-                >
-                  {isProcessing ? 'Processing...' : `Purchase ${inst.name}`}
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={handlePurchase}
+                    disabled={isProcessing || inputAmount < inst.min}
+                    className="w-full h-14 bg-[#81D7B4] hover:bg-[#6BC4A0] disabled:bg-[#2C3E5D] disabled:text-[#7B8B9A] text-[#0F1825] font-black rounded-xl transition-all text-lg shadow-[0_0_20px_rgba(129,215,180,0.1)]"
+                  >
+                    {isProcessing ? 'Processing...' : `Purchase ${inst.name}`}
+                  </button>
+                  <div className="flex items-start gap-2 p-3 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-xl">
+                    <InformationCircleIcon className="w-5 h-5 text-[#81D7B4] shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#81D7B4] leading-relaxed">
+                      Ensure you have enough <span className="font-bold">ETH</span> on <span className="font-bold">Base Testnet</span> for gas fees. Without gas fees, the transfer will fail.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -414,6 +424,7 @@ export default function BizSwapAppPage() {
       </div>
 
       <PaymentModal
+        wagmiConfig={wagmiConfig}
         sessionToken={sessionToken}
         isOpen={isModalOpen}
         amount={totalCharged.toFixed(2)}
@@ -424,6 +435,16 @@ export default function BizSwapAppPage() {
         onCancel={() => {
           setIsModalOpen(false);
           toast.error('Payment cancelled');
+        }}
+        // @ts-ignore - undocumented prop but common in these libraries
+        onError={(err: any) => {
+          setIsModalOpen(false);
+          const msg = err?.message || String(err);
+          if (msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('gas') || msg.toLowerCase().includes('revert')) {
+            toast.error('Transfer failed. Please try again. Ensure you have ETH on Base Testnet for gas fees.', { duration: 6000 });
+          } else {
+            toast.error(`Transfer failed: ${msg}`);
+          }
         }}
       />
 
