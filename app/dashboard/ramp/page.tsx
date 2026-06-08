@@ -558,7 +558,6 @@ export default function OnOffRampPage() {
       </div>
 
       <PaymentModal
-        wagmiConfig={wagmiConfig}
         sessionToken={sessionToken}
         isOpen={isChainrailsModalOpen}
         amount={quotes?.chainrails?.cryptoAmount?.toFixed(2) || (parseFloat(amount) / 1409).toFixed(2)}

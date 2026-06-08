@@ -63,7 +63,7 @@ const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5", activeStyleColor
 
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${sizeClass} ${!activeStyleColor ? defaultColorClass : ''}`} style={activeStyleColor ? { color: activeStyleColor } : undefined}>
-      <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1"/>
+      <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1" />
       <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="9" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
         {initials}
       </text>
@@ -76,24 +76,24 @@ export default function BizSwapAppPage() {
   const { ready, authenticated, user } = usePrivy();
   const router = useRouter();
   const wagmiConfig = useConfig();
-  
+
   const connected = ready && (authenticated || isSolanaConnected);
-  
+
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
-  
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
+
+  const walletAddress = isSolanaConnected
+    ? publicKey?.toBase58()
     : (privySolanaWallet?.address || user?.wallet?.address);
-    
+
   const [mounted, setMounted] = useState(false);
   const [selectedInst, setSelectedInst] = useState<keyof typeof INSTRUMENTS>('bizyield');
   const [selectedBusiness, setSelectedBusiness] = useState('shard');
   const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false);
   const businesses = [{ id: 'shard', name: 'Shard' }];
   const [amountStr, setAmountStr] = useState('');
-  
+
   // Payment Flow State
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -110,7 +110,7 @@ export default function BizSwapAppPage() {
   useEffect(() => {
     async function fetchInstrument() {
       if (!program) return;
-      
+
       let instrumentId = 0;
       if (selectedInst === 'bizcredit') instrumentId = 1;
       if (selectedInst === 'bizbond') instrumentId = 2;
@@ -134,7 +134,7 @@ export default function BizSwapAppPage() {
   const inst = INSTRUMENTS[selectedInst];
   const sharesCount = parseInt(amountStr) || 0;
   const inputAmount = sharesCount * inst.min;
-  
+
   // Calculate Fee
   const feeAmount = inst.feePercent > 0 ? (inputAmount * inst.feePercent) / 100 : 0;
   const totalCharged = inputAmount + feeAmount;
@@ -153,18 +153,18 @@ export default function BizSwapAppPage() {
     try {
       // 1. Get ChainRails session
       const params = new URLSearchParams({
-        recipient: '0xdef9a133ae1147f3af90214f16b451e8bed60974', // Revenue Wallet
+        recipient: '6HPVCff7ist4ZNVUAakzuxq5sGekncdPHdvgNautx1D4',
         amount: totalCharged.toFixed(2),
-        chain: 'BASE_TESTNET',
+        chain: 'SOLANA_TESTNET',
         token: 'USDC',
         mode: 'buy',
         source: 'bizswap'
       });
       const res = await fetch(`/api/chainrails/session?${params}`);
       const data = await res.json();
-      
+
       if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
-      
+
       setSessionToken(data.sessionToken || data.token || data.session_token);
       setIsModalOpen(true);
     } catch (e: any) {
@@ -177,7 +177,7 @@ export default function BizSwapAppPage() {
   const handlePaymentSuccess = async () => {
     setIsModalOpen(false);
     toast.loading('Minting your certificate on Solana...', { id: 'mint' });
-    
+
     try {
       // Call our mock backend to record purchase and mint
       const res = await fetch('/api/bizswap/mint', {
@@ -192,10 +192,10 @@ export default function BizSwapAppPage() {
           totalCharged: totalCharged
         })
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
+
       toast.success(`${inst.name} Certificate Minted Successfully!`, { id: 'mint' });
       setAmountStr('');
       setShowSuccessModal(true);
@@ -232,7 +232,7 @@ export default function BizSwapAppPage() {
 
       {/* MAIN LAYOUT */}
       <div className="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-12 gap-8">
-        
+
         {/* LEFT COLUMN: SWAP INTERFACE */}
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-[#0F1825] border border-[#2C3E5D] rounded-3xl overflow-hidden shadow-2xl">
@@ -240,7 +240,7 @@ export default function BizSwapAppPage() {
               <h1 className="text-xl font-black">Swap Stablecoins</h1>
               <span className="px-3 py-1 bg-[#81D7B4]/10 text-[#81D7B4] text-xs font-bold uppercase tracking-widest rounded-full">Primary Issuance</span>
             </div>
-            
+
             <div className="p-6 space-y-8">
               {/* Select Instrument */}
               <div className="space-y-3">
@@ -276,7 +276,7 @@ export default function BizSwapAppPage() {
                       <span>{businesses.find(b => b.id === selectedBusiness)?.name || 'Select Business'}</span>
                       <ArrowDown01Icon className={`w-5 h-5 text-[#9BA8B5] transition-transform ${isBusinessDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     {isBusinessDropdownOpen && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-[#1C2538] border border-[#2C3E5D] rounded-xl shadow-2xl overflow-hidden">
                         {businesses.map((bus) => (
@@ -287,11 +287,10 @@ export default function BizSwapAppPage() {
                               setSelectedBusiness(bus.id);
                               setIsBusinessDropdownOpen(false);
                             }}
-                            className={`w-full text-left px-5 py-4 text-xl font-bold transition-colors ${
-                              selectedBusiness === bus.id 
-                                ? 'bg-[#81D7B4]/10 text-[#81D7B4]' 
-                                : 'text-[#F9F9FB] hover:bg-[#2C3E5D]'
-                            }`}
+                            className={`w-full text-left px-5 py-4 text-xl font-bold transition-colors ${selectedBusiness === bus.id
+                              ? 'bg-[#81D7B4]/10 text-[#81D7B4]'
+                              : 'text-[#F9F9FB] hover:bg-[#2C3E5D]'
+                              }`}
                           >
                             {bus.name}
                           </button>
@@ -338,7 +337,7 @@ export default function BizSwapAppPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-[#9BA8B5] flex items-center gap-1">
                     Platform Fee ({inst.feePercent}%)
-                    {inst.feePercent > 0 && <InformationCircleIcon className="w-4 h-4 text-[#7B8B9A]"  />}
+                    {inst.feePercent > 0 && <InformationCircleIcon className="w-4 h-4 text-[#7B8B9A]" />}
                   </span>
                   <span className="font-bold">${feeAmount.toFixed(2)}</span>
                 </div>
@@ -381,7 +380,7 @@ export default function BizSwapAppPage() {
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-[#1A2538] border border-[#2C3E5D] rounded-3xl p-6">
             <h3 className="font-bold text-[#7B8B9A] uppercase tracking-wider text-xs mb-6">Selected Instrument Specs</h3>
-            
+
             <div className="flex items-center gap-4 mb-8">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-opacity-10 border border-opacity-20" style={{ backgroundColor: `${inst.color}15`, borderColor: inst.color }}>
                 {getInstrumentIcon(inst.name, "w-8 h-8", inst.color)}
@@ -424,7 +423,6 @@ export default function BizSwapAppPage() {
       </div>
 
       <PaymentModal
-        wagmiConfig={wagmiConfig}
         sessionToken={sessionToken}
         isOpen={isModalOpen}
         amount={totalCharged.toFixed(2)}
@@ -461,6 +459,14 @@ export default function BizSwapAppPage() {
               Your certificate has been successfully minted to your wallet and recorded on the Solana blockchain.
             </p>
             <div className="flex flex-col gap-3 relative z-10">
+              <a 
+                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me, backed by real business revenue, private credit, or government treasuries.\n\nhttps://www.bitsave.io/bizswap`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 bg-black hover:bg-zinc-900 border border-[#2C3E5D] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                Post to X
+              </a>
               <button onClick={() => router.push('/bizswap/dashboard')} className="w-full py-3 px-4 bg-[#81D7B4] hover:bg-[#6BC29F] text-[#0A0F17] font-bold rounded-xl transition-colors">
                 Go to Dashboard
               </button>
