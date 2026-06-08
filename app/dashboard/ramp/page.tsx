@@ -3,7 +3,7 @@
 import { Download01Icon, Activity01Icon, Tick01Icon, Money01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useAccount } from 'wagmi';
+import { useAccount, useConfig } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import { Exo } from 'next/font/google';
 import toast from 'react-hot-toast';
@@ -23,6 +23,7 @@ const SELL_AMOUNT_PRESETS_USD = [10, 25, 50, 100, 250];
 
 export default function OnOffRampPage() {
   const { address: wagmiAddress } = useAccount();
+  const wagmiConfig = useConfig();
   const { user } = usePrivy();
   const address = user?.wallet?.address || wagmiAddress;
 
@@ -557,6 +558,7 @@ export default function OnOffRampPage() {
       </div>
 
       <PaymentModal
+        wagmiConfig={wagmiConfig}
         sessionToken={sessionToken}
         isOpen={isChainrailsModalOpen}
         amount={quotes?.chainrails?.cryptoAmount?.toFixed(2) || (parseFloat(amount) / 1409).toFixed(2)}

@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, http } from 'wagmi';
-import { base, celo, avalanche, mainnet } from 'viem/chains';
+import { base, celo, avalanche, mainnet, baseSepolia } from 'viem/chains';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
@@ -63,13 +63,14 @@ const hedera = {
 } as const;
 
 // Define the supported chains
-const chains = [base, celo, avalanche, lisk, hedera, mainnet] as const;
+const chains = [base, baseSepolia, celo, avalanche, lisk, hedera, mainnet] as const;
 
 const config = createConfig({
   chains,
   ssr: true,
   transports: {
     [base.id]: http(process.env.NEXT_PUBLIC_RPC_URL),
+    [baseSepolia.id]: http(),
     [celo.id]: http(),
     [avalanche.id]: http(),
     [lisk.id]: http(),
@@ -132,10 +133,12 @@ function InnerProviders({ children }: { children: ReactNode }) {
             createOnLogin: "users-without-wallets",
           },
         },
-        loginMethods: isPrivyLoginEnabled 
-          ? ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'] 
-          : ['wallet'],
-        supportedChains: [base, celo, avalanche, lisk, hedera, mainnet],
+        loginMethods: isBizSwap 
+          ? ['email', 'google', 'twitter', 'linkedin', 'discord', 'apple']
+          : isBizFi 
+            ? ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'] 
+            : ['wallet'],
+        supportedChains: [base, baseSepolia, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
           walletConnect: { enabled: true },
           solana: { connectors: solanaConnectors }
