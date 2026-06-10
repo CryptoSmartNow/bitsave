@@ -93,28 +93,77 @@ export default function BizSwapAppPage() {
   const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false);
   const businesses = [{ id: 'shard', name: 'Shard' }];
   const [amountStr, setAmountStr] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [isReferralValid, setIsReferralValid] = useState(false);
+  const [validatingReferral, setValidatingReferral] = useState(false);
+  const [referralError, setReferralError] = useState('');
+  const [emailInput, setEmailInput] = useState('');
 
-  // Payment Flow State
   const [isProcessing, setIsProcessing] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Solana State
   const program = useBizSwapProgram();
   const [remainingCap, setRemainingCap] = useState<number | null>(null);
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    setMounted(true); 
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('ref') || localStorage.getItem('bizswapPendingReferralCode');
+    if (code) {
+      setReferralCode(code);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.email?.address && !emailInput) {
+      setEmailInput(user.email.address);
+    }
+  }, [user?.email?.address]);
+
+  const validateReferral = async (code: string) => {
+    if (!code) return;
+    setValidatingReferral(true);
+    setReferralError('');
+    setIsReferralValid(false);
+    try {
+      const res = await fetch('/api/bizswap/referrals/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bizswapReferralCode: code, buyerWalletAddress: walletAddress })
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setIsReferralValid(true);
+        localStorage.setItem('bizswapPendingReferralCode', code);
+      } else {
+        setReferralError(data.error || 'Invalid code');
+        localStorage.removeItem('bizswapPendingReferralCode');
+      }
+    } catch (e) {
+      setReferralError('Validation failed');
+    } finally {
+      setValidatingReferral(false);
+    }
+  };
+
+  useEffect(() => {
+    if (referralCode && mounted && !isReferralValid && !referralError && !validatingReferral) {
+      // Auto-validate on mount if loaded from storage
+      validateReferral(referralCode);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
 
   useEffect(() => {
     async function fetchInstrument() {
       if (!program) return;
-
       let instrumentId = 0;
       if (selectedInst === 'bizcredit') instrumentId = 1;
       if (selectedInst === 'bizbond') instrumentId = 2;
-
       const pda = getInstrumentConfigPda(instrumentId);
       try {
         const config = await (program as any).account.instrumentConfig.fetch(pda);
@@ -123,8 +172,6 @@ export default function BizSwapAppPage() {
         setCurrentSupply(supply);
         setRemainingCap(cap - supply);
       } catch (e) {
-        console.error("Failed to fetch instrument config:", e);
-        // Could be uninitialized
         setRemainingCap(null);
       }
     }
@@ -134,37 +181,26 @@ export default function BizSwapAppPage() {
   const inst = INSTRUMENTS[selectedInst];
   const sharesCount = parseInt(amountStr) || 0;
   const inputAmount = sharesCount * inst.min;
-
-  // Calculate Fee
-  const feeAmount = inst.feePercent > 0 ? (inputAmount * inst.feePercent) / 100 : 0;
+  const effectiveFeePercent = (inst.feePercent === 0.5 && isReferralValid) ? 0.4 : inst.feePercent;
+  const feeAmount = effectiveFeePercent > 0 ? (inputAmount * effectiveFeePercent) / 100 : 0;
   const totalCharged = inputAmount + feeAmount;
 
   const handlePurchase = async () => {
-    if (!connected) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-    if (inputAmount < inst.min) {
-      toast.error(`Minimum buy-in for ${inst.name} is $${inst.min}`);
-      return;
-    }
-
+    if (!connected) { toast.error('Please connect your wallet first'); return; }
+    if (inputAmount < inst.min) { toast.error(`Minimum buy-in for ${inst.name} is $${inst.min}`); return; }
     setIsProcessing(true);
     try {
-      // 1. Get ChainRails session
       const params = new URLSearchParams({
         recipient: '6HPVCff7ist4ZNVUAakzuxq5sGekncdPHdvgNautx1D4',
         amount: totalCharged.toFixed(2),
-        chain: 'SOLANA_TESTNET',
+        chain: 'SOLANA',
         token: 'USDC',
         mode: 'buy',
         source: 'bizswap'
       });
       const res = await fetch(`/api/chainrails/session?${params}`);
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
-
       setSessionToken(data.sessionToken || data.token || data.session_token);
       setIsModalOpen(true);
     } catch (e: any) {
@@ -177,9 +213,7 @@ export default function BizSwapAppPage() {
   const handlePaymentSuccess = async () => {
     setIsModalOpen(false);
     toast.loading('Minting your certificate on Solana...', { id: 'mint' });
-
     try {
-      // Call our mock backend to record purchase and mint
       const res = await fetch('/api/bizswap/mint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -189,13 +223,13 @@ export default function BizSwapAppPage() {
           business: selectedInst === 'bizyield' ? selectedBusiness : null,
           investmentAmount: inputAmount,
           feeAmount: feeAmount,
-          totalCharged: totalCharged
+          totalCharged: totalCharged,
+          bizswapReferralCode: isReferralValid ? referralCode : null,
+          email: emailInput || user?.email?.address
         })
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-
       toast.success(`${inst.name} Certificate Minted Successfully!`, { id: 'mint' });
       setAmountStr('');
       setShowSuccessModal(true);
@@ -207,45 +241,80 @@ export default function BizSwapAppPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#0A0F17] text-[#F9F9FB] font-sans">
+    <div
+      className="min-h-screen text-[#F9F9FB]"
+      style={{ backgroundColor: '#080E18', fontFamily: 'var(--font-inter), system-ui, sans-serif', zoom: 0.9 }}
+    >
       {/* NAV */}
-      <nav className="border-b border-[#2C3E5D] bg-[#0F1825] sticky top-0 z-40">
+      <nav
+        className="sticky top-0 z-40 border-b"
+        style={{ backgroundColor: '#080E18', borderColor: '#1E2F45' }}
+      >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/bizswap" className="text-[#7B8B9A] hover:text-[#81D7B4] transition-colors">
-              <ArrowLeft01Icon className="w-5 h-5" />
+          <div className="flex items-center gap-5">
+            <Link href="/bizswap" className="text-[#4A5568] hover:text-[#81D7B4] transition-colors">
+              <ArrowLeft01Icon className="w-4 h-4" />
             </Link>
-            <div className="flex items-center gap-2">
-              <Image src="/bitsavelogo.png" alt="BizMarket" width={100} height={32} className="object-contain" />
-              <span className="text-[#2C3E5D]">|</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-[#81D7B4]">Market</span>
-            </div>
+            <div className="h-5 w-px bg-[#1E2F45]" />
+            <span
+              className="text-lg font-extrabold text-[#81D7B4] tracking-tight"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              BizSwap
+            </span>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/bizswap/dashboard" className="hidden sm:block text-sm font-bold text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">
+          <div className="flex items-center gap-5">
+            <Link
+              href="/bizswap/dashboard"
+              className="hidden sm:block text-sm font-semibold text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
+            >
               Dashboard
             </Link>
-            <BizSwapAuthButton connectText="Login" style={{ backgroundColor: '#1A2538', border: '1px solid #2C3E5D', height: '36px', fontSize: '14px', borderRadius: '0.75rem' }} />
+            <BizSwapAuthButton
+              connectText="Login"
+              style={{
+                backgroundColor: '#0D1724',
+                border: '1px solid #1E2F45',
+                height: '36px',
+                fontSize: '13px',
+                borderRadius: '10px',
+                fontWeight: '700',
+              }}
+            />
           </div>
         </div>
       </nav>
 
-      {/* MAIN LAYOUT */}
-      <div className="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-12 gap-8">
+      {/* PAGE BODY */}
+      <div className="max-w-7xl mx-auto px-6 py-12 grid lg:grid-cols-12 gap-8 items-start">
 
-        {/* LEFT COLUMN: SWAP INTERFACE */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-[#0F1825] border border-[#2C3E5D] rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-[#2C3E5D] flex justify-between items-center">
-              <h1 className="text-xl font-black">Swap Stablecoins</h1>
-              <span className="px-3 py-1 bg-[#81D7B4]/10 text-[#81D7B4] text-xs font-bold uppercase tracking-widest rounded-full">Primary Issuance</span>
+        {/* ── LEFT: SWAP PANEL ── */}
+        <div className="lg:col-span-7">
+          <div
+            className="rounded-3xl border overflow-hidden"
+            style={{ backgroundColor: '#0D1724', borderColor: '#1E2F45' }}
+          >
+            {/* Panel header */}
+            <div className="px-8 py-6 border-b" style={{ borderColor: '#1E2F45' }}>
+              <h1
+                className="text-2xl font-extrabold text-[#F9F9FB]"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Swap Stablecoins
+              </h1>
+              <p className="text-sm text-[#7B8B9A] mt-1">
+                Select an instrument, choose your share count, and earn real-world yield.
+              </p>
             </div>
 
-            <div className="p-6 space-y-8">
-              {/* Select Instrument */}
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider">Select Instrument</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-8 space-y-8">
+
+              {/* ── Instrument selector ── */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
+                  Select Instrument
+                </label>
+                <div className="grid grid-cols-3 gap-3">
                   {(Object.keys(INSTRUMENTS) as Array<keyof typeof INSTRUMENTS>).map((key) => {
                     const i = INSTRUMENTS[key];
                     const active = selectedInst === key;
@@ -253,44 +322,77 @@ export default function BizSwapAppPage() {
                       <button
                         key={key}
                         onClick={() => { setSelectedInst(key); setAmountStr(''); }}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${active ? 'border-[#81D7B4] bg-[#81D7B4]/10' : 'border-[#2C3E5D] bg-[#1A2538] hover:border-[#3A4F73]'}`}
+                        className="relative flex flex-col items-start gap-1.5 p-4 rounded-2xl border transition-all text-left overflow-hidden"
+                        style={{
+                          backgroundColor: active ? `${i.color}10` : '#0A1019',
+                          borderColor: active ? `${i.color}50` : '#1E2F45',
+                        }}
                       >
-                        {getInstrumentIcon(i.name, "w-6 h-6", active ? '#81D7B4' : i.color)}
-                        <span className={`text-sm font-bold ${active ? 'text-[#81D7B4]' : 'text-[#9BA8B5]'}`}>{i.name}</span>
+                        {active && (
+                          <div
+                            className="absolute top-0 left-0 right-0 h-px"
+                            style={{ background: `linear-gradient(to right, transparent, ${i.color}80, transparent)` }}
+                          />
+                        )}
+                        <div className="flex items-center justify-between w-full">
+                          {getInstrumentIcon(i.name, "w-5 h-5", active ? i.color : '#3A4F73')}
+                          <span
+                            className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
+                            style={{
+                              color: i.color,
+                              backgroundColor: `${i.color}15`,
+                            }}
+                          >
+                            {i.risk.split(' ')[0]}
+                          </span>
+                        </div>
+                        <span
+                          className="text-sm font-extrabold mt-1"
+                          style={{ color: active ? i.color : '#9BA8B5', fontFamily: 'var(--font-display)' }}
+                        >
+                          {i.name}
+                        </span>
+                        <span className="text-[10px] text-[#7B8B9A]">{i.apr}</span>
                       </button>
-                    )
+                    );
                   })}
                 </div>
               </div>
 
-              {/* Select Business (Only for BizYield) */}
+              {/* ── Business selector (BizYield only) ── */}
               {selectedInst === 'bizyield' && (
-                <div className="space-y-3 relative z-10">
-                  <label className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider">Select Business</label>
+                <div className="relative z-10">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
+                    Select Business
+                  </label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setIsBusinessDropdownOpen(!isBusinessDropdownOpen)}
-                      className="w-full bg-[#1A2538] border border-[#2C3E5D] rounded-xl px-5 py-4 text-xl font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4] transition-colors flex justify-between items-center"
+                      className="w-full rounded-xl border px-5 py-4 text-base font-bold text-[#F9F9FB] flex justify-between items-center transition-colors focus:outline-none"
+                      style={{
+                        backgroundColor: '#0A1019',
+                        borderColor: isBusinessDropdownOpen ? '#81D7B4' : '#1E2F45',
+                      }}
                     >
                       <span>{businesses.find(b => b.id === selectedBusiness)?.name || 'Select Business'}</span>
-                      <ArrowDown01Icon className={`w-5 h-5 text-[#9BA8B5] transition-transform ${isBusinessDropdownOpen ? 'rotate-180' : ''}`} />
+                      <ArrowDown01Icon className={`w-4 h-4 text-[#7B8B9A] transition-transform ${isBusinessDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
-
                     {isBusinessDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#1C2538] border border-[#2C3E5D] rounded-xl shadow-2xl overflow-hidden">
+                      <div
+                        className="absolute top-full left-0 right-0 mt-2 rounded-xl border overflow-hidden shadow-2xl z-20"
+                        style={{ backgroundColor: '#0D1724', borderColor: '#1E2F45' }}
+                      >
                         {businesses.map((bus) => (
                           <button
                             key={bus.id}
                             type="button"
-                            onClick={() => {
-                              setSelectedBusiness(bus.id);
-                              setIsBusinessDropdownOpen(false);
+                            onClick={() => { setSelectedBusiness(bus.id); setIsBusinessDropdownOpen(false); }}
+                            className="w-full text-left px-5 py-3.5 text-sm font-bold transition-colors"
+                            style={{
+                              color: selectedBusiness === bus.id ? '#81D7B4' : '#F9F9FB',
+                              backgroundColor: selectedBusiness === bus.id ? '#81D7B410' : 'transparent',
                             }}
-                            className={`w-full text-left px-5 py-4 text-xl font-bold transition-colors ${selectedBusiness === bus.id
-                              ? 'bg-[#81D7B4]/10 text-[#81D7B4]'
-                              : 'text-[#F9F9FB] hover:bg-[#2C3E5D]'
-                              }`}
                           >
                             {bus.name}
                           </button>
@@ -301,11 +403,15 @@ export default function BizSwapAppPage() {
                 </div>
               )}
 
-              {/* Input Amount */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-end">
-                  <label className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider">Select No of BizShares</label>
-                  <span className="text-xs text-[#9BA8B5]">1 Share = ${inst.min}</span>
+              {/* ── Share count input ── */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A]">
+                    Number of BizShares
+                  </label>
+                  <span className="text-xs text-[#7B8B9A] font-medium">
+                    1 Share = <span className="text-[#F9F9FB] font-bold">${inst.min.toLocaleString()}</span>
+                  </span>
                 </div>
                 <div className="relative">
                   <input
@@ -314,114 +420,239 @@ export default function BizSwapAppPage() {
                     step="1"
                     value={amountStr}
                     onChange={(e) => setAmountStr(e.target.value)}
-                    placeholder="e.g. 1"
-                    className="w-full bg-[#1A2538] border border-[#2C3E5D] rounded-xl px-5 py-4 text-2xl font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="0"
+                    className="w-full rounded-xl border px-5 py-4 text-3xl font-extrabold text-[#F9F9FB] outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#2C3E5D]"
+                    style={{
+                      backgroundColor: '#0A1019',
+                      borderColor: '#1E2F45',
+                      fontFamily: 'var(--font-display)',
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = '#81D7B4')}
+                    onBlur={(e) => (e.target.style.borderColor = '#1E2F45')}
                   />
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[#9BA8B5] font-bold">
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-[#3A4F73]">
                     Shares
                   </div>
                 </div>
                 {sharesCount > 0 && (
-                  <div className="mt-2 text-sm text-[#81D7B4] font-bold">
-                    Equivalent Amount: ${inputAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                  </div>
+                  <p className="mt-2.5 text-sm font-semibold" style={{ color: inst.color }}>
+                    ≈ ${inputAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                  </p>
                 )}
               </div>
 
-              {/* Order Summary & Fee Calculation */}
-              <div className="bg-[#1A2538] border border-[#2C3E5D] rounded-xl p-5 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#9BA8B5]">Investment Amount</span>
-                  <span className="font-bold">${inputAmount.toFixed(2)}</span>
+              {/* ── Referral Code ── */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
+                  Referral Code (Optional)
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => {
+                      setReferralCode(e.target.value.toUpperCase());
+                      setIsReferralValid(false);
+                      setReferralError('');
+                    }}
+                    placeholder="Enter code"
+                    className="w-full rounded-xl border px-4 py-3 text-sm font-bold text-[#F9F9FB] outline-none transition-colors placeholder:text-[#2C3E5D]"
+                    style={{
+                      backgroundColor: '#0A1019',
+                      borderColor: isReferralValid ? '#81D7B4' : referralError ? '#FF6B6B' : '#1E2F45',
+                    }}
+                    onBlur={() => referralCode && validateReferral(referralCode)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => validateReferral(referralCode)}
+                    disabled={validatingReferral || !referralCode || isReferralValid}
+                    className="px-5 rounded-xl text-xs font-bold transition-colors border disabled:opacity-50"
+                    style={{
+                      backgroundColor: isReferralValid ? '#81D7B410' : '#0A1019',
+                      borderColor: isReferralValid ? '#81D7B450' : '#1E2F45',
+                      color: isReferralValid ? '#81D7B4' : '#F9F9FB'
+                    }}
+                  >
+                    {validatingReferral ? '...' : isReferralValid ? 'Applied' : 'Apply'}
+                  </button>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#9BA8B5] flex items-center gap-1">
-                    Platform Fee ({inst.feePercent}%)
-                    {inst.feePercent > 0 && <InformationCircleIcon className="w-4 h-4 text-[#7B8B9A]" />}
-                  </span>
-                  <span className="font-bold">${feeAmount.toFixed(2)}</span>
+                {referralError && <p className="mt-2 text-[10px] font-bold text-[#FF6B6B]">{referralError}</p>}
+                {isReferralValid && <p className="mt-2 text-[10px] font-bold text-[#81D7B4]">Referral applied! Platform fee reduced to 0.4%.</p>}
+              </div>
+
+              {/* ── Receipt Email ── */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
+                  Receipt Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="Where should we send your receipt?"
+                  className="w-full rounded-xl border px-4 py-3 text-sm font-bold text-[#F9F9FB] outline-none transition-colors placeholder:text-[#2C3E5D]"
+                  style={{
+                    backgroundColor: '#0A1019',
+                    borderColor: '#1E2F45',
+                  }}
+                />
+              </div>
+
+              {/* ── Order summary ── */}
+              <div className="rounded-2xl border" style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}>
+                <div className="px-6 py-4 border-b" style={{ borderColor: '#1E2F45' }}>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A]">Order Summary</span>
                 </div>
-                <div className="h-px w-full bg-[#2C3E5D]" />
-                <div className="flex justify-between items-center">
-                  <span className="text-[#F9F9FB] font-bold">Total You Pay</span>
-                  <span className="text-xl font-black text-[#81D7B4]">${totalCharged.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs text-[#7B8B9A] pt-1">
-                  <span>BizShares you receive:</span>
-                  <span className="font-bold text-[#F9F9FB]">{sharesCount} Share{sharesCount !== 1 ? 's' : ''}</span>
+                <div className="px-6 py-5 space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#7B8B9A]">Investment Amount</span>
+                    <span className="font-semibold text-[#F9F9FB]">${inputAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#7B8B9A] flex items-center gap-1.5">
+                      Platform Fee ({effectiveFeePercent}%)
+                      {effectiveFeePercent > 0 && <InformationCircleIcon className="w-3.5 h-3.5 text-[#3A4F73]" />}
+                    </span>
+                    <span className="font-semibold text-[#F9F9FB]">${feeAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="h-px w-full" style={{ backgroundColor: '#1E2F45' }} />
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-sm font-bold text-[#F9F9FB]">Total You Pay</span>
+                    <span
+                      className="text-2xl font-black"
+                      style={{ color: '#81D7B4', fontFamily: 'var(--font-display)' }}
+                    >
+                      ${totalCharged.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-[#7B8B9A]">
+                    <span>BizShares you receive</span>
+                    <span className="font-bold text-[#F9F9FB]">
+                      {sharesCount} Share{sharesCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Button */}
+              {/* ── Terms & Conditions ── */}
+              <div className="flex items-start gap-3 px-1 py-2">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 bg-[#0A1019] border-[#1E2F45] text-[#81D7B4] rounded focus:ring-[#81D7B4] focus:ring-offset-[#020611] cursor-pointer"
+                  id="terms-checkbox"
+                />
+                <label htmlFor="terms-checkbox" className="text-xs text-[#7B8B9A] leading-relaxed cursor-pointer select-none">
+                  I have read and agree to the <Link href="/terms" className="text-[#81D7B4] hover:underline transition-colors" target="_blank">BizMarket Protocol Terms & Conditions</Link>. I understand the risks involved in purchasing BizShares instruments.
+                </label>
+              </div>
+
+              {/* ── Action ── */}
               {!connected ? (
-                <BizSwapAuthButton connectText="Login to Buy" style={{ width: '100%', justifyContent: 'center', backgroundColor: '#2C3E5D', borderRadius: '0.75rem', height: '56px', fontSize: '16px', fontWeight: 'bold' }} />
+                <BizSwapAuthButton
+                  connectText="Login to Buy"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    backgroundColor: '#0D1724',
+                    border: '1px solid #1E2F45',
+                    borderRadius: '14px',
+                    height: '56px',
+                    fontSize: '15px',
+                    fontWeight: '700',
+                  }}
+                />
               ) : (
-                <div className="space-y-3">
-                  <button
-                    onClick={handlePurchase}
-                    disabled={isProcessing || inputAmount < inst.min}
-                    className="w-full h-14 bg-[#81D7B4] hover:bg-[#6BC4A0] disabled:bg-[#2C3E5D] disabled:text-[#7B8B9A] text-[#0F1825] font-black rounded-xl transition-all text-lg shadow-[0_0_20px_rgba(129,215,180,0.1)]"
-                  >
-                    {isProcessing ? 'Processing...' : `Purchase ${inst.name}`}
-                  </button>
-                  <div className="flex items-start gap-2 p-3 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-xl">
-                    <InformationCircleIcon className="w-5 h-5 text-[#81D7B4] shrink-0 mt-0.5" />
-                    <p className="text-xs text-[#81D7B4] leading-relaxed">
-                      Ensure you have enough <span className="font-bold">ETH</span> on <span className="font-bold">Base Testnet</span> for gas fees. Without gas fees, the transfer will fail.
-                    </p>
-                  </div>
-                </div>
+                <button
+                  onClick={handlePurchase}
+                  disabled={isProcessing || inputAmount < inst.min || !agreedToTerms}
+                  className="w-full h-14 font-black rounded-2xl transition-all text-base disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 hover:scale-[1.01]"
+                  style={{
+                    backgroundColor: '#81D7B4',
+                    color: '#080E18',
+                    fontFamily: 'var(--font-display)',
+                    boxShadow: '0 8px 32px rgba(129,215,180,0.18)',
+                  }}
+                >
+                  {isProcessing ? 'Processing...' : `Purchase ${inst.name}`}
+                </button>
               )}
+
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: INSTRUMENT DETAILS */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-[#1A2538] border border-[#2C3E5D] rounded-3xl p-6">
-            <h3 className="font-bold text-[#7B8B9A] uppercase tracking-wider text-xs mb-6">Selected Instrument Specs</h3>
+        {/* ── RIGHT: INSTRUMENT DETAIL ── */}
+        <div className="lg:col-span-5 flex flex-col gap-5">
 
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-opacity-10 border border-opacity-20" style={{ backgroundColor: `${inst.color}15`, borderColor: inst.color }}>
-                {getInstrumentIcon(inst.name, "w-8 h-8", inst.color)}
-              </div>
+          {/* Instrument header card */}
+          <div
+            className="rounded-3xl border p-7 relative overflow-hidden"
+            style={{ backgroundColor: '#0D1724', borderColor: `${inst.color}30` }}
+          >
+            <div
+              className="absolute top-0 left-0 right-0 h-px"
+              style={{ background: `linear-gradient(to right, transparent, ${inst.color}40, transparent)` }}
+            />
+            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[50px] opacity-15"
+              style={{ backgroundColor: inst.color }} />
+
+            <div className="flex items-start justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-black">{inst.name}</h2>
-                <span className="text-sm font-bold px-2 py-0.5 rounded" style={{ backgroundColor: `${inst.color}20`, color: inst.color }}>{inst.risk}</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-4 border-b border-[#2C3E5D]">
-                <span className="text-[#9BA8B5] text-sm">Return Profile</span>
-                <span className="font-bold text-[#F9F9FB]">{inst.apr}</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-[#2C3E5D]">
-                <span className="text-[#9BA8B5] text-sm">Payout Frequency</span>
-                <span className="font-bold text-[#F9F9FB]">{inst.payout}</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-[#2C3E5D]">
-                <span className="text-[#9BA8B5] text-sm">Transferability</span>
-                <span className="font-bold text-[#F9F9FB]">{inst.id === 'bizcredit' ? 'Immediate' : 'Locked for 3 months'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#9BA8B5] text-sm">Supply Cap</span>
-                <span className="font-bold text-[#F9F9FB]">
-                  {remainingCap !== null ? `${remainingCap} Units Remaining` : '1,000 Units Cycle'}
+                <h2
+                  className="text-3xl font-extrabold text-[#F9F9FB] leading-none mb-2"
+                  style={{ fontFamily: 'var(--font-display)', color: inst.color }}
+                >
+                  {inst.name}
+                </h2>
+                <span
+                  className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full"
+                  style={{ backgroundColor: `${inst.color}15`, color: inst.color, border: `1px solid ${inst.color}30` }}
+                >
+                  {inst.risk}
                 </span>
               </div>
+              {getInstrumentIcon(inst.name, "w-10 h-10", inst.color)}
             </div>
 
-            <div className="mt-8 p-4 bg-[#0F1825] border border-[#2C3E5D] rounded-xl flex gap-3">
-              <Shield01Icon className="w-5 h-5 text-[#81D7B4] shrink-0" />
-              <p className="text-xs text-[#7B8B9A] leading-relaxed">
-                Your ownership is recorded on the Solana blockchain immediately. You will receive a digital certificate in your wallet upon successful purchase.
-              </p>
+            {/* Spec rows */}
+            <div className="space-y-0">
+              {[
+                { label: 'Return Profile', value: inst.apr },
+                { label: 'Payout Frequency', value: inst.payout },
+                { label: 'Transferability', value: inst.id === 'bizcredit' ? 'Immediate' : 'Locked · 3 months' },
+                { label: 'Supply Cap', value: remainingCap !== null ? `${remainingCap} Units Remaining` : '1,000 Units / Cycle' },
+              ].map(({ label, value }, i, arr) => (
+                <div
+                  key={label}
+                  className="flex justify-between items-center py-4"
+                  style={{ borderBottom: i < arr.length - 1 ? '1px solid #1E2F45' : 'none' }}
+                >
+                  <span className="text-sm text-[#7B8B9A]">{label}</span>
+                  <span className="text-sm font-bold text-[#F9F9FB]">{value}</span>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Trust note — minimal, no icon */}
+          <div
+            className="rounded-2xl border px-6 py-5"
+            style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}
+          >
+            <p className="text-xs text-[#7B8B9A] leading-relaxed">
+              Your ownership is recorded on the <span className="text-[#F9F9FB] font-semibold">Solana blockchain</span> immediately. You will receive a digital certificate in your wallet upon successful purchase.
+            </p>
+          </div>
+
+
+
         </div>
       </div>
 
+      {/* Payment Modal */}
       <PaymentModal
         sessionToken={sessionToken}
         isOpen={isModalOpen}
@@ -430,47 +661,68 @@ export default function BizSwapAppPage() {
         open={() => setIsModalOpen(true)}
         close={() => setIsModalOpen(false)}
         onSuccess={handlePaymentSuccess}
-        onCancel={() => {
-          setIsModalOpen(false);
-          toast.error('Payment cancelled');
-        }}
-        // @ts-ignore - undocumented prop but common in these libraries
+        onCancel={() => { setIsModalOpen(false); toast.error('Payment cancelled'); }}
+        // @ts-ignore
         onError={(err: any) => {
           setIsModalOpen(false);
           const msg = err?.message || String(err);
           if (msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('gas') || msg.toLowerCase().includes('revert')) {
-            toast.error('Transfer failed. Please try again. Ensure you have ETH on Base Testnet for gas fees.', { duration: 6000 });
+            toast.error('Transfer failed. Please try again. Ensure you have ETH on Base for gas fees.', { duration: 6000 });
           } else {
             toast.error(`Transfer failed: ${msg}`);
           }
         }}
       />
 
-      {/* SUCCESS MODAL */}
+      {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#121A27] border border-[#81D7B4]/30 p-8 rounded-2xl max-w-md w-full text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/10 to-transparent pointer-events-none" />
-            <div className="w-20 h-20 bg-[#81D7B4]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Tick01Icon className="w-10 h-10 text-[#81D7B4]" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div
+            className="rounded-3xl border p-10 max-w-md w-full text-center relative overflow-hidden"
+            style={{ backgroundColor: '#0D1724', borderColor: '#81D7B430' }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, #81D7B450, transparent)' }} />
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full blur-[60px] bg-[#81D7B4]/10" />
+
+            {/* Check mark — text-based to avoid icon clutter */}
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-8 text-2xl font-black"
+              style={{ backgroundColor: '#81D7B415', border: '1px solid #81D7B430', color: '#81D7B4' }}
+            >
+              ✓
             </div>
-            <h2 className="text-3xl font-black text-white mb-2">Mint Successful!</h2>
-            <p className="text-[#7B8B9A] mb-8">
+
+            <h2
+              className="text-3xl font-extrabold text-[#F9F9FB] mb-3"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Mint Successful!
+            </h2>
+            <p className="text-[#7B8B9A] text-sm leading-relaxed mb-10">
               Your certificate has been successfully minted to your wallet and recorded on the Solana blockchain.
             </p>
+
             <div className="flex flex-col gap-3 relative z-10">
-              <a 
+              <a
                 href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me, backed by real business revenue, private credit, or government treasuries.\n\nhttps://www.bitsave.io/bizswap`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 px-4 bg-black hover:bg-zinc-900 border border-[#2C3E5D] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-5 font-bold rounded-xl transition-colors text-sm border text-[#F9F9FB] flex items-center justify-center gap-2"
+                style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}
               >
                 Post to X
               </a>
-              <button onClick={() => router.push('/bizswap/dashboard')} className="w-full py-3 px-4 bg-[#81D7B4] hover:bg-[#6BC29F] text-[#0A0F17] font-bold rounded-xl transition-colors">
+              <button
+                onClick={() => router.push('/bizswap/dashboard')}
+                className="w-full py-3.5 px-5 font-black rounded-xl transition-all text-sm hover:opacity-90"
+                style={{ backgroundColor: '#81D7B4', color: '#080E18', fontFamily: 'var(--font-display)' }}
+              >
                 Go to Dashboard
               </button>
-              <button onClick={() => setShowSuccessModal(false)} className="w-full py-3 px-4 bg-[#1C2538] hover:bg-[#2C3E5D] text-white font-bold rounded-xl transition-colors">
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-3.5 px-5 font-semibold rounded-xl transition-colors text-sm text-[#7B8B9A] hover:text-[#F9F9FB]"
+              >
                 Purchase Another
               </button>
             </div>

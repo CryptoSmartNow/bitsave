@@ -13,6 +13,11 @@ import ScrollToTop from './components/ScrollToTop';
 export default function Home() {
   return (
     <div className="min-h-screen">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (min-width: 1024px) {
+          html { font-size: 90% !important; }
+        }
+      `}} />
       <Header />
       <main>
         <Hero />

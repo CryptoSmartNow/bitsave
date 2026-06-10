@@ -40,6 +40,12 @@ function UserInteractionsLayoutInner({
       description: 'Search & Profiles'
     },
     {
+      name: 'BizSwap',
+      icon: DashboardSquare01Icon,
+      href: '/user-interactions/bizswap',
+      description: 'BizSwap Analytics'
+    },
+    {
       name: 'Real-time',
       icon: FlashIcon,
       href: '/user-interactions/real-time',

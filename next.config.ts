@@ -16,7 +16,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       "framer-motion",
       "lucide-react",
-      "@radix-ui/react-dialog"
+      "@radix-ui/react-dialog",
+      "hugeicons-react"
     ],
   },
 
