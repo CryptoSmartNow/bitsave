@@ -31,8 +31,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Recipient wallet address is required' }, { status: 400 });
         }
 
-        // Ensure you are using your ChainRails Sandbox API Key, not the Production one!
-        const env = 'sandbox' as any;
+        const env = 'production' as any;
         Chainrails.config({
             api_key: CHAINRAILS_API_KEY,
             env: env,

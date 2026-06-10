@@ -4,6 +4,7 @@ import { TelegramIcon, YoutubeIcon, TwitterIcon, ArrowRight01Icon } from "hugeic
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import NewsletterEmbed from './NewsletterEmbed';
 
 const footerLinks = {
   product: [
@@ -43,8 +44,6 @@ export default function Footer() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle newsletter signup
-    setEmail('');
   };
 
   return (
@@ -117,29 +116,31 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Newsletter - Simplified */}
+            {/* Newsletter */}
             <div className="col-span-2 md:col-span-1">
-              <h3 className="font-display font-bold text-gray-900 mb-6">Stay Updated</h3>
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="relative">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-all"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-2 p-1.5 bg-[#81D7B4] text-white rounded-lg hover:bg-[#6BC5A0] transition-colors"
-                  >
-                    <ArrowRight01Icon className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400">
-                  Subscribe to our newsletter for the latest updates.
-                </p>
+              <h3 className="font-display font-bold text-gray-900 mb-6">Newsletter</h3>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                Get smarter with your money. Subscribe to <span className="font-semibold text-gray-900">The art of Savviness</span> for strategies to build growth.
+              </p>
+              <form 
+                action="https://bitsaveprotocol.substack.com/subscribe" 
+                method="get" 
+                target="_blank"
+                className="relative flex items-center"
+              >
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email address"
+                  className="w-full pl-4 pr-12 py-3 rounded-xl text-sm font-medium focus:outline-none bg-gray-50/50 border border-gray-100 text-gray-900 focus:border-[#81D7B4] focus:bg-white placeholder:text-gray-400 transition-all shadow-sm"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-2 bottom-2 w-9 flex items-center justify-center rounded-lg bg-gradient-to-br from-[#81D7B4] to-[#5fb392] text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300"
+                >
+                  <ArrowRight01Icon className="w-5 h-5" />
+                </button>
               </form>
             </div>
           </div>

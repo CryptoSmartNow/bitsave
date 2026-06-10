@@ -1,28 +1,14 @@
 'use client';
 
-import { Activity01Icon, Award01Icon, UserMultipleIcon, Tick01Icon, Logout01Icon, WhatsappIcon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import { useEffect, useState } from "react";
-// Coinbase OnchainKit wallet components removed as we use Privy
 import { BizFiAuthButton } from "@/components/BizFiAuth";
-import { useAccount, useDisconnect } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
-import { Exo } from "next/font/google";
 import WizardForm from "./components/WizardForm";
-import WalletDetailsModal from "./components/WalletDetailsModal";
 import "../bizfi-colors.css";
 
-const exo = Exo({
-    subsets: ['latin'],
-    display: 'swap',
-    variable: '--font-exo',
-});
-
-
-
-// Tiers
 type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
 
 const TIERS: Array<{
@@ -62,23 +48,14 @@ const TIERS: Array<{
         }
     ];
 
-
-
 export default function BizFiDashboardPage() {
     const router = useRouter();
-    const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
-    const { user, authenticated: isPrivyAuthenticated, logout: privyLogout, ready } = usePrivy();
-    const { disconnect: wagmiDisconnect } = useDisconnect();
+    const { user, authenticated, logout: privyLogout, ready } = usePrivy();
 
-    // Combined auth state
-    // If wagmi is connected, use that address. Otherwise fallback to Privy wallet address.
-    const address = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
-    const authenticated = ready && (isWagmiConnected || isPrivyAuthenticated);
+    // Use Privy user ID or email as the primary identifier
+    const address = user?.id || user?.email?.address;
 
     const handleLogout = async () => {
-        if (isWagmiConnected) {
-            wagmiDisconnect();
-        }
         await privyLogout();
     };
 
@@ -88,15 +65,11 @@ export default function BizFiDashboardPage() {
     const [isReferralValid, setIsReferralValid] = useState(false);
     const [showConsultancyModal, setShowConsultancyModal] = useState(false);
     const [businessCount, setBusinessCount] = useState(1000);
-    const [copiedAddress, setCopiedAddress] = useState(false);
-    const [showBuyCryptoModal, setShowBuyCryptoModal] = useState(false);
-    const [showWalletModal, setShowWalletModal] = useState(false);
     const [validatingReferral, setValidatingReferral] = useState(false);
 
     useEffect(() => {
         setMounted(true);
 
-        // Fetch and increment global business counter
         const fetchCounter = async () => {
             try {
                 const response = await fetch('/api/bizfi/counter');
@@ -109,7 +82,6 @@ export default function BizFiDashboardPage() {
 
         fetchCounter();
 
-        // Load saved referral code from draft
         const loadDraft = async () => {
             if (!address) return;
             try {
@@ -117,7 +89,6 @@ export default function BizFiDashboardPage() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data) {
-                        // Tick both root and formData for referralCode
                         const savedCode = data.referralCode || (data.formData && data.formData.referralCode);
                         if (savedCode) {
                             setReferralCode(savedCode);
@@ -133,15 +104,6 @@ export default function BizFiDashboardPage() {
         if (address) {
             loadDraft();
         }
-
-        // Listen for Buy Crypto modal event from WizardForm
-        const handleOpenBuyCryptoModal = () => {
-            setShowBuyCryptoModal(true);
-        };
-        window.addEventListener('openBuyCryptoModal', handleOpenBuyCryptoModal);
-        return () => {
-            window.removeEventListener('openBuyCryptoModal', handleOpenBuyCryptoModal);
-        };
     }, [address]);
 
     const validateReferralCode = async (code: string) => {
@@ -175,10 +137,8 @@ export default function BizFiDashboardPage() {
             return;
         }
 
-        // Debounce validation
         const timeoutId = setTimeout(() => {
             validateReferralCode(code);
-            // Save to draft
             if (address) {
                 fetch('/api/bizfi/draft', {
                     method: 'POST',
@@ -186,7 +146,7 @@ export default function BizFiDashboardPage() {
                     body: JSON.stringify({
                         address,
                         formData: { referralCode: code },
-                        referralCode: code, // keep both for compatibility
+                        referralCode: code,
                         step: 1
                     })
                 }).catch(e => console.error('Failed to save referral code:', e));
@@ -195,90 +155,71 @@ export default function BizFiDashboardPage() {
         return () => clearTimeout(timeoutId);
     };
 
-    const handleCopyAddress = async () => {
-        if (!address) return;
-        try {
-            await navigator.clipboard.writeText(address);
-            setCopiedAddress(true);
-            setTimeout(() => setCopiedAddress(false), 2000);
-        } catch (err) {
-            console.error('Failed to copy address:', err);
-        }
-    };
-
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen flex items-center justify-center`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
+            <div className="font-sans min-h-screen flex items-center justify-center bg-[#0F1825]">
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-sans`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)', minHeight: '100vh' }}>
+        <div className="font-sans bg-[#0F1825] min-h-screen text-[#F9F9FB]">
+            <style dangerouslySetInnerHTML={{ __html: `
+                @media (min-width: 1024px) {
+                    html { font-size: 90% !important; }
+                }
+            `}} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-12">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl tracking-tight" style={{ color: '#F9F9FB', fontWeight: 500 }}>Business Dashboard</h1>
-                        <p className="text-sm sm:text-base font-medium" style={{ color: '#7B8B9A' }}>Manage your business listing and track performance</p>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-[#1E2F45] pb-8">
+                    <div className="space-y-2">
+                        <h1 className="text-[40px] md:text-[56px] font-extrabold tracking-tight leading-[1.1] text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>
+                            BUSINESS <span className="text-[#81D7B4]">DASHBOARD</span>
+                        </h1>
+                        <p className="text-base md:text-lg font-medium text-[#7B8B9A]">Manage your business listing and track performance.</p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4 flex-1">
+                    <div className="flex flex-wrap items-center justify-end gap-4">
                         <button
                             onClick={() => setShowConsultancyModal(true)}
-                            className="flex items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 font-bold rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 active:scale-95 whitespace-nowrap"
-                            style={{ backgroundColor: '#81D7B4', color: '#0F1825' }}
+                            className="px-6 py-3 font-bold text-sm tracking-wide uppercase bg-[#0D1724] border border-[#81D7B4] text-[#81D7B4] hover:bg-[#81D7B4] hover:text-[#0F1825] transition-all"
                         >
-                            <Activity01Icon className="w-4 h-4" />
-                            <span className="text-xs sm:text-sm">
-                                <span className="sm:hidden">Book</span>
-                                <span className="hidden sm:inline">Book Consultancy</span>
-                            </span>
+                            BOOK CONSULTANCY
                         </button>
                         {authenticated && address && (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setShowWalletModal(true)}
-                                    className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all bg-gray-900/40 border border-gray-800 hover:border-white/50 group active:scale-95 flex items-center gap-2 shadow-inner min-w-fit"
-                                >
-                                    <Activity01Icon className="w-4 h-4 text-white" />
-                                    <span className="text-xs font-bold text-gray-300">{address.slice(0, 4)}...{address.slice(-4)}</span>
-                                </button>
+                            <div className="flex items-center gap-4">
+                                <span className="px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-xs font-bold text-gray-300 uppercase tracking-widest">
+                                    {user?.email?.address || 'AUTHENTICATED'}
+                                </span>
                                 <button
                                     onClick={() => handleLogout()}
-                                    className="px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all bg-transparent border-none text-gray-400 hover:text-red-400 active:scale-95 flex items-center gap-1.5 sm:gap-2 min-w-fit"
-                                    title="Logout"
+                                    className="px-4 py-3 bg-transparent text-[#7B8B9A] hover:text-red-400 font-bold text-sm tracking-wide uppercase transition-colors"
                                 >
-                                    <Logout01Icon className="w-4 h-4 font-bold" />
-                                    <span className="hidden sm:inline text-xs font-bold">Logout</span>
+                                    LOGOUT
                                 </button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Business Counter */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 text-center"
+                    className="mb-12"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-3 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(44, 62, 93, 0.5) 0%, rgba(129, 215, 180, 0.1) 100%)', borderColor: 'rgba(129, 215, 180, 0.3)' }}>
-                        <Tick01Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4]" />
-                        <p className="text-xs sm:text-base md:text-lg leading-relaxed whitespace-nowrap" style={{ color: '#7B8B9A' }}>
-                            <span className="text-[#81D7B4] font-bold">{(1000 + businessCount).toLocaleString()}</span> Real World Businesses have listed Onchain
+                    <div className="inline-block px-6 py-4 bg-[#0D1724] border border-[#1E2F45]">
+                        <p className="text-sm md:text-base font-medium tracking-wide uppercase text-[#7B8B9A]">
+                            <span className="text-[#81D7B4] font-bold text-lg mr-2">{(1000 + businessCount).toLocaleString()}</span> 
+                            REAL WORLD BUSINESSES LISTED ONCHAIN
                         </p>
                     </div>
                 </motion.div>
 
                 {!authenticated ? (
                     <div className="flex flex-col items-center justify-center py-20 px-4">
-                        <div className="backdrop-blur-sm rounded-2xl border p-8 max-w-lg w-full text-center" style={{ backgroundColor: 'rgba(44, 62, 93, 0.4)', borderColor: 'rgba(123, 139, 154, 0.2)' }}>
-                            <div className="p-4 rounded-full inline-block mb-4" style={{ backgroundColor: 'rgba(129, 215, 180, 0.1)' }}>
-                                <Activity01Icon className="w-10 h-10 text-[#81D7B4]" />
-                            </div>
-                            <h2 className="text-2xl font-bold mb-4" style={{ color: '#F9F9FB' }}>Login to BizFi</h2>
-                            <p className="mb-8" style={{ color: '#7B8B9A' }}>
-                                Log in with your Email, Cancel (Twitter), or connect a wallet to list your business and access the dashboard features.
+                        <div className="bg-[#0D1724] border border-[#1E2F45] p-12 max-w-xl w-full text-center">
+                            <h2 className="text-[32px] font-extrabold mb-4 tracking-tight" style={{ fontFamily: "var(--font-display)" }}>ACCESS BIZFI</h2>
+                            <p className="mb-10 text-[#7B8B9A] leading-relaxed">
+                                Log in with your email or social accounts to list your business and access the dashboard features.
                             </p>
                             <div className="flex justify-center w-full">
                                 <BizFiAuthButton className="w-full" />
@@ -286,186 +227,145 @@ export default function BizFiDashboardPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid lg:grid-cols-3 gap-8">
-                        {/* Form Section */}
-                        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-                            {/* Intro Video */}
-                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-gray-800 p-1 sm:p-4 overflow-hidden relative group">
-                                <div className="relative pt-[56.25%] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-2xl">
-                                    <iframe
-                                        className="absolute top-0 left-0 w-full h-full"
-                                        src="https://www.youtube.com/embed/yxEQHPaM6MU?rel=0&autoplay=0"
-                                        title="Introduction to BizFi"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                            </div>
-                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-gray-800 p-4 sm:p-8">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(129, 215, 180, 0.15)' }}>
-                                        <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>ListView Your Business</h2>
-                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Fill the form to bring your business onchain</p>
-                                    </div>
-                                </div>
-
-                                <div className="mb-6 p-4 rounded-xl border" style={{ background: 'linear-gradient(90deg, rgba(129, 215, 180, 0.1) 0%, transparent 100%)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
-                                    <p className="text-sm leading-relaxed" style={{ color: '#F9F9FB' }}>
-                                        Fill the Form to Bring your business onchain, <span className="text-[#81D7B4] font-bold">raise capital</span> to expand globally, and get new customers.
-                                    </p>
-                                </div>
-
-                                {/* Tier Selection */}
+                    <div className="grid lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="bg-[#0D1724] border border-[#1E2F45] p-8 md:p-10">
                                 <div className="mb-8">
-                                    <label className="block text-sm font-medium mb-3 text-gray-400">Select Your Business Tier</label>
+                                    <h2 className="text-[32px] font-extrabold tracking-tight mb-2" style={{ fontFamily: "var(--font-display)" }}>LIST YOUR BUSINESS</h2>
+                                    <p className="text-[#7B8B9A]">Fill the form to bring your business onchain, raise capital, and expand globally.</p>
+                                </div>
+
+                                <div className="mb-10">
+                                    <label className="block text-xs font-bold tracking-widest uppercase mb-4 text-[#7B8B9A]">SELECT YOUR BUSINESS TIER</label>
                                     <div className="grid sm:grid-cols-2 gap-4">
                                         {TIERS.map((tier) => (
                                             <button
                                                 key={tier.id}
                                                 onClick={() => setSelectedTier(tier)}
-                                                className={`text-left p-4 rounded-xl border transition-all duration-300 ${selectedTier.id === tier.id
-                                                    ? ''
-                                                    : ''
+                                                className={`text-left p-6 border transition-all duration-300 ${selectedTier.id === tier.id
+                                                    ? 'bg-[#1E2F45]/30 border-[#81D7B4]'
+                                                    : 'bg-[#080E18] border-[#1E2F45] hover:border-[#7B8B9A]'
                                                     }`}
-                                                style={{
-                                                    backgroundColor: selectedTier.id === tier.id ? 'rgba(129, 215, 180, 0.1)' : 'rgba(31, 41, 55, 0.5)',
-                                                    borderColor: selectedTier.id === tier.id ? '#81D7B4' : 'rgba(55, 65, 81, 0.5)',
-                                                    boxShadow: selectedTier.id === tier.id ? '0 0 0 1px #81D7B4' : 'none'
-                                                }}
                                             >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <span className="font-bold" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB' }}>
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <span className="font-bold text-lg tracking-wide uppercase" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB', fontFamily: "var(--font-display)" }}>
                                                         {tier.name}
                                                     </span>
-                                                    <span className="text-sm font-mono" style={{ color: '#7B8B9A' }}>${tier.price}</span>
+                                                    <span className="text-lg font-mono font-bold text-[#F9F9FB]">${tier.price}</span>
                                                 </div>
-                                                <p className="text-xs leading-relaxed" style={{ color: '#7B8B9A' }}>{tier.description}</p>
+                                                <p className="text-sm leading-relaxed text-[#7B8B9A]">{tier.description}</p>
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Referral Code */}
-                                <div className="mb-8 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label className="flex items-center text-sm font-medium text-[#81D7B4]">
-                                            Have a Referral Code?
-                                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20 animate-pulse">
-                                                Save up to 40%
-                                            </span>
+                                <div className="mb-12 p-6 bg-[#080E18] border border-[#1E2F45]">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                                        <label className="text-sm font-bold tracking-wide uppercase text-[#81D7B4]">
+                                            HAVE A REFERRAL CODE?
                                         </label>
+                                        <span className="inline-block px-3 py-1 text-xs font-bold bg-[#81D7B4]/10 text-[#81D7B4] uppercase tracking-widest">
+                                            SAVE UP TO 40%
+                                        </span>
                                     </div>
-                                    <p className="text-xs mb-3" style={{ color: '#7B8B9A' }}>
+                                    <p className="text-sm mb-4 text-[#7B8B9A]">
                                         Don't have one?{' '}
-                                        <Link
-                                            href="/dashboard/referrals"
-                                            className="text-[#81D7B4] hover:underline font-semibold inline-flex items-center gap-1 group"
-                                        >
-                                            Head to your referrals page to get one
-                                            <Activity01Icon className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                        <Link href="/dashboard/referrals" className="text-[#81D7B4] hover:underline font-bold uppercase tracking-wide">
+                                            GET ONE HERE
                                         </Link>
                                     </p>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
-                                            placeholder="Enter code to save on listing fees"
+                                            placeholder="ENTER CODE"
                                             value={referralCode}
                                             onChange={(e) => handleReferralCheck(e.target.value)}
-                                            className="flex-1 px-4 py-2 rounded-lg focus:outline-none bg-gray-800 border border-gray-700 text-white"
-                                            onFocus={(e) => e.currentTarget.style.borderColor = '#81D7B4'}
-                                            onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(55, 65, 81, 1)'}
+                                            className="flex-1 px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-white focus:border-[#81D7B4] focus:outline-none font-mono uppercase"
                                         />
                                         {validatingReferral && (
-                                            <div className="flex items-center gap-1 text-sm font-bold px-3" style={{ color: '#7B8B9A' }}>
-                                                <div className="w-4 h-4 border-2 border-[#7B8B9A] border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="flex items-center gap-2 px-4 text-[#7B8B9A] uppercase tracking-widest text-xs font-bold">
+                                                VALIDATING...
                                             </div>
                                         )}
                                         {!validatingReferral && isReferralValid && (
-                                            <div className="flex items-center gap-1 text-sm font-bold px-3" style={{ color: '#81D7B4' }}>
-                                                <Tick01Icon className="w-5 h-5" />
-                                                <span>-${selectedTier.price - selectedTier.referralPrice}</span>
+                                            <div className="flex items-center gap-2 px-4 text-[#81D7B4] font-bold text-lg font-mono">
+                                                -${selectedTier.price - selectedTier.referralPrice}
                                             </div>
                                         )}
                                     </div>
                                     {!validatingReferral && isReferralValid && (
-                                        <p className="text-xs mt-2" style={{ color: '#81D7B4' }}>
-                                            Code applied! You pay <span className="font-bold">${selectedTier.referralPrice}</span> instead of ${selectedTier.price}.
+                                        <p className="text-sm mt-4 text-[#81D7B4] font-bold tracking-wide">
+                                            CODE APPLIED! YOU PAY ${selectedTier.referralPrice} INSTEAD OF ${selectedTier.price}.
                                         </p>
                                     )}
                                     {!validatingReferral && referralCode && !isReferralValid && (
-                                        <p className="text-xs mt-2 text-red-400">
-                                            Invalid referral code
+                                        <p className="text-sm mt-4 text-[#FF6B6B] font-bold tracking-wide uppercase">
+                                            INVALID REFERRAL CODE
                                         </p>
                                     )}
                                 </div>
+                                
+                                <WizardForm
+                                    selectedTier={selectedTier}
+                                    referralCode={referralCode}
+                                    isReferralValid={isReferralValid}
+                                    address={address}
+                                />
                             </div>
-
-                            <WizardForm
-                                selectedTier={selectedTier}
-                                referralCode={referralCode}
-                                isReferralValid={isReferralValid}
-                            />
                         </div>
 
-                        {/* Sidebar / Info */}
-                        <div className="space-y-6">
-                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
-                                <h3 className="text-lg font-bold mb-4" style={{ color: '#F9F9FB' }}>Why ListView on BizFi?</h3>
-                                <ul className="space-y-3">
-                                    <li className="flex gap-3">
-                                        <div className="mt-1"><Tick01Icon className="w-5 h-5 text-[#81D7B4]" /></div>
-                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Access global investors from the web3 space.</p>
-                                    </li>
-                                    <li className="flex gap-3">
-                                        <div className="mt-1"><Tick01Icon className="w-5 h-5 text-[#81D7B4]" /></div>
-                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Tokenize equity or revenue streams easily.</p>
-                                    </li>
-                                    <li className="flex gap-3">
-                                        <div className="mt-1"><Tick01Icon className="w-5 h-5 text-[#81D7B4]" /></div>
-                                        <p className="text-sm" style={{ color: '#7B8B9A' }}>Automated compliance and investor management.</p>
-                                    </li>
-                                </ul>
+                        <div className="lg:col-span-4 space-y-8">
+                            <div className="bg-[#0D1724] border border-[#1E2F45] p-8">
+                                <h3 className="text-lg font-bold mb-6 tracking-wide uppercase text-[#F9F9FB]">WHY LIST ON BIZFI?</h3>
+                                <div className="space-y-6">
+                                    <div className="border-l-2 border-[#81D7B4] pl-4">
+                                        <h4 className="font-bold text-[#F9F9FB] mb-1">GLOBAL ACCESS</h4>
+                                        <p className="text-sm text-[#7B8B9A]">Connect with investors from the web3 space.</p>
+                                    </div>
+                                    <div className="border-l-2 border-[#81D7B4] pl-4">
+                                        <h4 className="font-bold text-[#F9F9FB] mb-1">EASY TOKENIZATION</h4>
+                                        <p className="text-sm text-[#7B8B9A]">Tokenize equity or revenue streams seamlessly.</p>
+                                    </div>
+                                    <div className="border-l-2 border-[#81D7B4] pl-4">
+                                        <h4 className="font-bold text-[#F9F9FB] mb-1">AUTOMATED COMPLIANCE</h4>
+                                        <p className="text-sm text-[#7B8B9A]">Built-in investor management and compliance.</p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6">
-                                <h3 className="text-lg font-bold mb-2 text-white">Need Help?</h3>
-                                <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                            <div className="bg-[#0D1724] border border-[#1E2F45] p-8">
+                                <h3 className="text-lg font-bold mb-4 tracking-wide uppercase text-[#F9F9FB]">NEED HELP?</h3>
+                                <p className="text-sm text-[#7B8B9A] mb-8 leading-relaxed">
                                     Not sure which tier fits you? Book a free consultancy session with our experts.
                                 </p>
-
                                 <a
                                     href="https://calendly.com/cryptosmartnow/15min"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block w-full py-3 px-4 font-bold rounded-xl text-center transition-all bg-transparent border border-[#81D7B4] text-[#81D7B4] hover:bg-[#81D7B4] hover:text-[#0F1825]"
+                                    className="block w-full py-4 font-bold text-sm tracking-wide uppercase text-center border border-[#81D7B4] text-[#81D7B4] hover:bg-[#81D7B4] hover:text-[#0F1825] transition-all"
                                 >
-                                    Schedule Call
+                                    SCHEDULE CALL
                                 </a>
-                                <div className="pt-3 mt-6 border-t border-[#81D7B4]/20">
-                                    <p className="text-xs mb-3 text-[#7B8B9A]">Join our community for updates and support:</p>
-                                    <a
-                                        href="https://t.me/bitsaveprotocol"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 w-full py-2.5 font-bold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10"
-                                    >
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.638z" />
-                                        </svg>
-                                        Join Telegram
-                                    </a>
-                                    <a
-                                        href="https://whatsapp.com/biz/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 w-full py-2.5 font-bold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 mt-3"
-                                    >
-                                        <WhatsappIcon className="w-5 h-5" />
-                                        WhatsApp
-                                    </a>
+                                <div className="pt-8 mt-8 border-t border-[#1E2F45]">
+                                    <p className="text-xs font-bold tracking-widest uppercase mb-4 text-[#7B8B9A]">COMMUNITY SUPPORT</p>
+                                    <div className="space-y-3">
+                                        <a
+                                            href="https://t.me/bitsaveprotocol"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block w-full py-3 font-bold text-sm tracking-wide uppercase text-center bg-[#080E18] text-[#F9F9FB] hover:bg-[#1E2F45] transition-colors"
+                                        >
+                                            JOIN TELEGRAM
+                                        </a>
+                                        <a
+                                            href="https://whatsapp.com/biz/"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block w-full py-3 font-bold text-sm tracking-wide uppercase text-center bg-[#080E18] text-[#F9F9FB] hover:bg-[#1E2F45] transition-colors"
+                                        >
+                                            WHATSAPP SUPPORT
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -473,7 +373,6 @@ export default function BizFiDashboardPage() {
                 )}
             </div>
 
-            {/* Consultancy Modal */}
             <AnimatePresence>
                 {showConsultancyModal && (
                     <motion.div
@@ -481,137 +380,41 @@ export default function BizFiDashboardPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-                        style={{ backgroundColor: 'rgba(15, 24, 37, 0.8)' }}
+                        style={{ backgroundColor: 'rgba(15, 24, 37, 0.9)' }}
                         onClick={() => setShowConsultancyModal(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
+                            initial={{ scale: 0.95, y: 10 }}
                             animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
+                            exit={{ scale: 0.95, y: 10 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="rounded-2xl border shadow-2xl w-full max-w-md p-6"
-                            style={{ backgroundColor: 'rgba(44, 62, 93, 0.95)', borderColor: 'rgba(123, 139, 154, 0.3)' }}
+                            className="bg-[#0D1724] border border-[#1E2F45] w-full max-w-md p-8"
                         >
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold" style={{ color: '#F9F9FB' }}>Book Consultancy</h2>
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold tracking-wide uppercase text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>BOOK CONSULTANCY</h2>
                                 <button
                                     onClick={() => setShowConsultancyModal(false)}
-                                    className="transition-colors"
-                                    style={{ color: '#7B8B9A' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
+                                    className="text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors text-sm font-bold tracking-widest uppercase"
                                 >
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    CLOSE
                                 </button>
                             </div>
-                            <p className="mb-6" style={{ color: '#7B8B9A' }}>
+                            <p className="mb-8 text-[#7B8B9A] leading-relaxed">
                                 Schedule a 15-minute call with a BizFi representative to discuss your business needs and listing strategy.
                             </p>
-                            {/* Mock Calendar Embed Placeholder */}
-                            <div className="rounded-xl h-64 flex items-center justify-center mb-6 border" style={{ backgroundColor: 'rgba(26, 37, 56, 0.8)', borderColor: 'rgba(123, 139, 154, 0.3)' }}>
-                                <p className="text-sm" style={{ color: '#7B8B9A' }}>Calendar Integration Loading...</p>
+                            <div className="h-64 flex items-center justify-center mb-8 bg-[#080E18] border border-[#1E2F45]">
+                                <p className="text-sm font-bold tracking-widest uppercase text-[#7B8B9A]">CALENDAR LOADING...</p>
                             </div>
                             <button
                                 onClick={() => setShowConsultancyModal(false)}
-                                className="w-full py-3 font-bold rounded-lg transition-all border"
-                                style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', color: '#F9F9FB', borderColor: 'rgba(123, 139, 154, 0.3)' }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.7)'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)'}
+                                className="w-full py-4 font-bold text-sm tracking-wide uppercase bg-[#1E2F45] text-[#F9F9FB] hover:bg-[#2A3F5C] transition-colors"
                             >
-                                Close
+                                CANCEL
                             </button>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Buy Crypto Modal */}
-            <AnimatePresence>
-                {showBuyCryptoModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-                        style={{ backgroundColor: 'rgba(15, 24, 37, 0.9)' }}
-                        onClick={() => setShowBuyCryptoModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="rounded-2xl border shadow-2xl w-full max-w-lg p-8"
-                            style={{ backgroundColor: 'rgba(26, 37, 56, 0.98)', borderColor: 'rgba(129, 215, 180, 0.3)' }}
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold" style={{ color: '#F9F9FB' }}>Get Crypto</h2>
-                                <button
-                                    onClick={() => setShowBuyCryptoModal(false)}
-                                    className="transition-colors"
-                                    style={{ color: '#7B8B9A' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
-                                >
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <p className="mb-8 text-base" style={{ color: '#9BA8B5' }}>
-                                Choose how you'd like to get USDC to complete your business listing:
-                            </p>
-
-                            <div className="space-y-4">
-                                {/* Telegram Option */}
-                                <a
-                                    href="https://t.me/bitsaveprotocol"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block p-6 rounded-xl border transition-all hover:border-[#81D7B4] hover:bg-[#81D7B4]/5 group"
-                                    style={{ backgroundColor: 'rgba(44, 62, 93, 0.5)', borderColor: 'rgba(123, 139, 154, 0.3)' }}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 rounded-lg bg-[#81D7B4]/10 group-hover:bg-[#81D7B4]/20 transition-colors">
-                                            <svg className="w-6 h-6 text-[#81D7B4]" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.638z" />
-                                            </svg>
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-bold mb-2 text-[#F9F9FB] group-hover:text-[#81D7B4] transition-colors">
-                                                Join Our Telegram
-                                            </h3>
-                                            <p className="text-sm leading-relaxed" style={{ color: '#9BA8B5' }}>
-                                                Get personalized help from our team. We'll guide you through buying crypto and completing your listing.
-                                            </p>
-                                            <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-[#81D7B4]">
-                                                <span>Get Help Now</span>
-                                                <Activity01Icon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div className="mt-6 p-4 rounded-lg border" style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)', borderColor: 'rgba(129, 215, 180, 0.2)' }}>
-                                <p className="text-xs leading-relaxed" style={{ color: '#9BA8B5' }}>
-                                    <span className="font-semibold text-[#81D7B4]">Note:</span> You'll need USDC (on Base network) to complete your business listing. The amount depends on your selected tier.
-                                </p>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <WalletDetailsModal
-                isOpen={showWalletModal}
-                onClose={() => setShowWalletModal(false)}
-                address={address as `0x${string}` | undefined}
-                logout={() => handleLogout()}
-            />
-        </div >
+        </div>
     );
 }

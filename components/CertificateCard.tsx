@@ -285,11 +285,15 @@ export function CertificateCard({ holding }: CertificateCardProps) {
           </div>
           
           <div className="flex flex-col items-center w-1/3 pb-1">
-             <div className="flex items-center gap-1.5 mb-1">
-               <span className="text-3xl">🏪</span>
-               <span className="text-2xl md:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
-                 Biz<span className="font-light">Market</span>
-               </span>
+             <div className="flex items-center justify-center mb-1 w-32 md:w-40">
+               <Image 
+                 src="/bizmarket.png" 
+                 alt="BizMarket" 
+                 width={200} 
+                 height={60} 
+                 className="w-full h-auto object-contain"
+                 style={{ filter: 'brightness(1.1)' }}
+               />
              </div>
              <p className={`text-[10px] uppercase tracking-widest font-semibold ${themeConfig.textSecondary}`}>Authorized Issuer</p>
           </div>

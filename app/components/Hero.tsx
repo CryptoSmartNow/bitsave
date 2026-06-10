@@ -100,10 +100,10 @@ const Hero = memo(() => {
 
   return (
     <section className="relative w-full min-h-[100dvh] flex items-center justify-center pt-24 pb-12 overflow-hidden bg-white">
-      
+
       {/* Mesh Gradient Background */}
       <div className="absolute inset-0 mesh-gradient pointer-events-none" />
-      
+
       {/* Dot Pattern Overlay */}
       <div className="absolute inset-0 dot-pattern pointer-events-none opacity-60" />
 
@@ -116,23 +116,9 @@ const Hero = memo(() => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[90rem] relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
+
           {/* Left Column: Content */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-8 sm:space-y-10">
-            
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full glass-card shadow-sm"
-            >
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#81D7B4] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#81D7B4]"></span>
-              </span>
-              <span className="text-sm font-semibold text-gray-600 tracking-wide">Decentralized Savings Protocol</span>
-            </motion.div>
 
             {/* Heading */}
             <div className="space-y-5">
@@ -145,14 +131,14 @@ const Hero = memo(() => {
                 Your Crypto<br />
                 <span className="text-gradient-animated">Savings Protocol</span>
               </motion.h1>
-              
+
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-lg sm:text-xl text-gray-500 font-normal leading-relaxed max-w-xl mx-auto lg:mx-0 tracking-[-0.01em]"
               >
-                Save your <span className="text-gray-900 font-semibold">Stable Coins</span>. 
+                Save your <span className="text-gray-900 font-semibold">Stable Coins</span>.
                 Lock your Crypto. Build Wealth on Bitsave That Stops You From Rugging Yourself across
                 <span className="inline-flex items-center align-middle mx-2 gap-1.5">
                   <Image src="/base-square-logo.svg" alt="Base" width={20} height={20} className="w-5 h-5 object-contain" />
@@ -214,7 +200,7 @@ const Hero = memo(() => {
 
           {/* Right Column: Visuals */}
           <div className="relative h-[400px] sm:h-[500px] lg:h-[700px] w-full flex items-center justify-center lg:justify-end perspective-1000">
-            
+
             {/* Card Stack Container */}
             <div className="relative w-full max-w-[340px] aspect-[3/4] md:max-w-[380px]">
               <AnimatePresence mode="wait">
@@ -232,7 +218,7 @@ const Hero = memo(() => {
                     >
                       {/* Card Body */}
                       <div className="w-full h-full bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] border border-white/50 p-8 flex flex-col relative overflow-hidden group">
-                        
+
                         {/* Animated Gradient Border Glow */}
                         <div className="absolute inset-0 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{
                           background: 'linear-gradient(135deg, rgba(129,215,180,0.2), transparent, rgba(91,179,146,0.15))',
@@ -245,25 +231,25 @@ const Hero = memo(() => {
                         <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#81D7B4]/6 blur-[60px] rounded-full group-hover:bg-[#81D7B4]/12 transition-colors duration-700" />
 
                         {/* Floating Badge (Unique per chain) */}
-                        <motion.div 
+                        <motion.div
                           animate={{ y: [0, -5, 0] }}
                           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                           className="absolute top-8 left-8 z-10"
                         >
-                           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card shadow-sm">
-                              {chain.floatingBadge && (() => {
-                                const Icon = chain.floatingBadge.icon;
-                                return <Icon className="w-3.5 h-3.5 text-[#81D7B4]" />;
-                              })()}
-                              <span className="text-[11px] font-bold text-gray-600 tracking-wide">{chain.floatingBadge?.text}</span>
-                           </div>
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card shadow-sm">
+                            {chain.floatingBadge && (() => {
+                              const Icon = chain.floatingBadge.icon;
+                              return <Icon className="w-3.5 h-3.5 text-[#81D7B4]" />;
+                            })()}
+                            <span className="text-[11px] font-bold text-gray-600 tracking-wide">{chain.floatingBadge?.text}</span>
+                          </div>
                         </motion.div>
 
                         {/* Top Section: Logo */}
                         <div className="relative flex justify-end items-start mb-12">
                           <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-gray-50/80 border border-gray-100/80 backdrop-blur-sm">
-                             <Image src={chain.logo} alt={chain.name} width={20} height={20} className="object-contain" />
-                             <span className="text-xs font-bold text-gray-700 tracking-wide">{chain.name}</span>
+                            <Image src={chain.logo} alt={chain.name} width={20} height={20} className="object-contain" />
+                            <span className="text-xs font-bold text-gray-700 tracking-wide">{chain.name}</span>
                           </div>
                         </div>
 
@@ -271,19 +257,19 @@ const Hero = memo(() => {
                         <div className="relative flex-1 flex flex-col justify-center -mt-4">
                           <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.15em] mb-1.5 font-display">Total Savings Locked</p>
                           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-6 font-display">{chain.savingsLocked}</h2>
-                          
+
                           {/* Rewards Box */}
                           <div className="flex items-center justify-between py-3.5 px-4 rounded-2xl bg-[#81D7B4]/5 border border-[#81D7B4]/15">
-                             <div className="flex flex-col">
-                               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.12em] mb-0.5">Rewards Earned</span>
-                               <div className="flex items-baseline gap-1">
-                                 <span className="text-lg font-extrabold text-gray-900 font-display">+450</span>
-                                 <span className="text-xs font-bold text-[#81D7B4]">$BTS</span>
-                               </div>
-                             </div>
-                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#81D7B4] to-[#5fb392] flex items-center justify-center text-white shadow-lg shadow-[#81D7B4]/25">
-                               <GiftIcon className="w-4 h-4" />
-                             </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.12em] mb-0.5">Rewards Earned</span>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-lg font-extrabold text-gray-900 font-display">+450</span>
+                                <span className="text-xs font-bold text-[#81D7B4]">$BTS</span>
+                              </div>
+                            </div>
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#81D7B4] to-[#5fb392] flex items-center justify-center text-white shadow-lg shadow-[#81D7B4]/25">
+                              <GiftIcon className="w-4 h-4" />
+                            </div>
                           </div>
                         </div>
 
@@ -304,15 +290,15 @@ const Hero = memo(() => {
                               </div>
                             </div>
                             <div className="text-right">
-                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em] mb-1">Status</p>
-                               <div className="flex items-center gap-1.5 text-xs font-bold text-[#81D7B4]">
-                                 <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
-                                 Active
-                               </div>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em] mb-1">Status</p>
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-[#81D7B4]">
+                                <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
+                                Active
+                              </div>
                             </div>
                           </div>
                         </div>
-                        
+
                       </div>
                     </motion.div>
                   );
@@ -329,29 +315,29 @@ const Hero = memo(() => {
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute -right-8 top-20 glass-card bg-white/90 p-3.5 rounded-2xl shadow-xl border border-white/50 z-30 hidden sm:flex items-center gap-3 min-w-[200px] will-change-transform"
               >
-                 <AnimatePresence mode="wait">
-                   {(() => {
-                     const NotificationIcon = notifications[notificationIndex].icon;
-                     return (
-                       <motion.div
-                         key={notificationIndex}
-                         initial={{ opacity: 0, y: 10 }}
-                         animate={{ opacity: 1, y: 0 }}
-                         exit={{ opacity: 0, y: -10 }}
-                         transition={{ duration: 0.3 }}
-                         className="flex items-center gap-3 w-full"
-                       >
-                         <div className={`w-9 h-9 rounded-full ${notifications[notificationIndex].color} flex items-center justify-center ${notifications[notificationIndex].textColor}`}>
-                            <NotificationIcon className="w-4 h-4" />
-                         </div>
-                         <div>
-                            <p className="text-xs font-bold text-gray-900">{notifications[notificationIndex].text}</p>
-                            <p className="text-[10px] text-gray-400 font-medium">Just now</p>
-                         </div>
-                       </motion.div>
-                     );
-                   })()}
-                 </AnimatePresence>
+                <AnimatePresence mode="wait">
+                  {(() => {
+                    const NotificationIcon = notifications[notificationIndex].icon;
+                    return (
+                      <motion.div
+                        key={notificationIndex}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center gap-3 w-full"
+                      >
+                        <div className={`w-9 h-9 rounded-full ${notifications[notificationIndex].color} flex items-center justify-center ${notifications[notificationIndex].textColor}`}>
+                          <NotificationIcon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">{notifications[notificationIndex].text}</p>
+                          <p className="text-[10px] text-gray-400 font-medium">Just now</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+                </AnimatePresence>
               </motion.div>
             </div>
           </div>

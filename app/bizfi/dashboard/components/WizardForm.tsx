@@ -1,14 +1,9 @@
 'use client';
 
-import { Tick01Icon, Activity01Icon, Dollar01Icon, Cancel01Icon, LinkSquare01Icon } from "hugeicons-react";
+import { Cancel01Icon, LinkSquare01Icon } from "hugeicons-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useBizFi, ReferralDiscount } from "../../hooks/useBizFi";
-import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
-import { parseUnits, zeroAddress, toHex } from "viem";
-import PaymentSummaryModal from "./PaymentSummaryModal";
-
+import { PaymentModal } from "@chainrails/react";
 
 type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
 
@@ -21,6 +16,7 @@ interface WizardFormProps {
     };
     referralCode: string;
     isReferralValid: boolean;
+    address: string | undefined;
 }
 
 const TIER_STEPS = {
@@ -63,22 +59,18 @@ const INDUSTRIES = [
 
 const CURRENCIES = ["USD", "EUR", "GBP", "NGN", "KES", "ZAR", "GHS", "UGX"];
 
-export default function WizardForm({ selectedTier, referralCode, isReferralValid }: WizardFormProps) {
+export default function WizardForm({ selectedTier, referralCode, isReferralValid, address }: WizardFormProps) {
     const [currentStep, setCurrentStep] = useState(1);
-    const [paymentNetwork, setPaymentNetwork] = useState<'base' | 'celo'>('base');
     const [formData, setFormData] = useState<any>({});
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-    const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
-    const { user, authenticated: isPrivyAuthenticated } = usePrivy();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [sessionToken, setSessionToken] = useState<string | null>(null);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [attestationNetwork, setAttestationNetwork] = useState('base');
+    const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
 
-    // Address derivation: Wagmi first, then Privy wallet
-    const address = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
-    const isSignedIn = isWagmiConnected || isPrivyAuthenticated;
-
-    const { registerBusiness, loading, error } = useBizFi();
     const [showNotification, setShowNotification] = useState(false);
-    const [showPaymentSummary, setShowPaymentSummary] = useState(false);
     const [notificationConfig, setNotificationConfig] = useState<{
         type: 'success' | 'error';
         title: string;
@@ -130,12 +122,6 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         return () => clearTimeout(timer);
     }, [formData, currentStep, address]);
 
-    const handleBuyCrypto = () => {
-        // Trigger the Buy Crypto modal in the parent dashboard component
-        const event = new CustomEvent('openBuyCryptoModal');
-        window.dispatchEvent(event);
-    };
-
     const steps = TIER_STEPS[selectedTier.id];
     const isLastStep = currentStep === steps.length;
     const isFirstStep = currentStep === 1;
@@ -145,7 +131,6 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             '1': ['name', 'email', 'phone', 'birthday', 'bio', 'ownsBusiness'],
         };
 
-        // Add tier-specific required fields
         if (selectedTier.id === 'micro') {
             if (step === 2) requiredFields['2'] = ['businessName', 'isRegistered', 'businessType', 'businessDescription', 'yearStarted', 'countryOfOperation', 'cityOfOperation', 'businessAddress', 'ownerName', 'businessEmail', 'businessPhone'];
             if (step === 3) requiredFields['3'] = ['monthlyRevenue', 'monthlyExpenses', 'customersPerMonth', 'salesChannels', 'repeatCustomers', 'hasFinancialRecords'];
@@ -173,7 +158,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         if (missingFields.length > 0) {
             setNotificationConfig({
                 type: 'error',
-                title: 'Missing Fields',
+                title: 'MISSING FIELDS',
                 message: `Please fill in all required fields before proceeding: ${missingFields.join(', ')}`
             });
             setShowNotification(true);
@@ -196,134 +181,109 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
         }
     };
 
-    const handleSubmit = async () => {
+    const handleCheckout = async () => {
         if (!validateStep(currentStep)) return;
+        if (!agreedToTerms) {
+            setNotificationConfig({ type: 'error', title: 'TERMS REQUIRED', message: 'You must agree to the terms to proceed.' });
+            setShowNotification(true);
+            return;
+        }
+        
+        setIsProcessing(true);
+        
+        const priceToPay = isReferralValid ? selectedTier.referralPrice : selectedTier.price;
+
         try {
-            console.log("Submitting form...", formData);
+            const params = new URLSearchParams({
+                recipient: '6HPVCff7ist4ZNVUAakzuxq5sGekncdPHdvgNautx1D4',
+                amount: priceToPay.toFixed(2),
+                chain: 'SOLANA',
+                token: 'USDC',
+                mode: 'buy',
+                source: 'bizfi'
+            });
+            const res = await fetch(`/api/chainrails/session?${params}`);
+            const data = await res.json();
+            
+            const tokenToUse = data.sessionToken || data.token || data.session_token;
+            if (tokenToUse) {
+                setSessionToken(tokenToUse);
+                setIsPaymentModalOpen(true);
+            } else {
+                throw new Error(data.error || "Failed to create payment session.");
+            }
+        } catch (error) {
+            console.error("Checkout initialization failed:", error);
+            setNotificationConfig({
+                type: 'error',
+                title: 'CHECKOUT FAILED',
+                message: 'Failed to initialize payment. Please try again later.'
+            });
+            setShowNotification(true);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
-            // Prepare referral data if applicable
-            let referralData: {
-                code: string;
-                discountPercent: number;
-                signature?: `0x${string}`;
-                referralData?: ReferralDiscount;
-            } | undefined;
-
+    const handlePaymentSuccess = async (txHash: string) => {
+        setIsPaymentModalOpen(false);
+        try {
             const finalBusinessName = formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || "";
 
-            if (referralCode && referralCode.trim().length > 0) {
-                // Fetch valid signature and data from API
-                const tierValue = {
-                    'micro': 0,
-                    'builder': 1,
-                    'growth': 2,
-                    'enterprise': 3
-                }[selectedTier.id] || 0;
-
-                const apiResponse = await fetch('/api/bizfi/referral/validate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        referralCode,
-                        recipient: address,
-                        tier: tierValue,
-                        businessName: finalBusinessName,
-                        network: paymentNetwork
-                    })
-                });
-
-                const apiData = await apiResponse.json();
-
-                if (!apiData.valid || !apiData.signature) {
-                    throw new Error("Failed to verify referral code or generate signature. Please try again.");
-                }
-
-                referralData = {
-                    code: referralCode,
-                    discountPercent: apiData.discountPercent,
-                    signature: apiData.signature,
-                    referralData: {
-                        recipient: apiData.referralData.recipient,
-                        tier: apiData.referralData.tier,
-                        discountedPrice: BigInt(apiData.referralData.discountedPrice),
-                        businessName: apiData.referralData.businessName,
-                        nonce: BigInt(apiData.referralData.nonce),
-                        deadline: BigInt(apiData.referralData.deadline)
-                    }
-                };
-            }
-
-            const receipt = await registerBusiness(
-                finalBusinessName,
-                formData,
-                selectedTier.id,
-                referralData,
-                paymentNetwork
-            );
-
-            console.log("Registration successful!", receipt);
-
-            let businessId: string | null = null;
-            if (receipt && receipt.logs) {
-                for (const log of receipt.logs) {
-                    if (log.topics && log.topics.length >= 2) {
-                        if (log.address.toLowerCase() === "0x7c24a938e086d01d252f1cde36783c105784c770") {
-                            const topicOne = log.topics[1];
-                            if (topicOne) {
-                                businessId = BigInt(topicOne).toString();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
             // Save final business data to MongoDB
+            await fetch('/api/bizfi/business', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transactionHash: txHash,
+                    owner: address || 'unknown',
+                    businessName: finalBusinessName,
+                    metadata: formData,
+                    tier: selectedTier.id,
+                    feePaid: isReferralValid ? selectedTier.referralPrice : selectedTier.price,
+                    referralCode: referralCode || "",
+                    network: 'chainrails'
+                })
+            });
+
+            // Get a unique business ID
+            let businessId = 0;
             try {
-                await fetch('/api/bizfi/business', {
+                const counterRes = await fetch('/api/bizfi/counter');
+                const counterData = await counterRes.json();
+                businessId = counterData.count;
+            } catch (err) {
+                console.warn("Could not fetch business counter, generating fallback ID");
+                businessId = Math.floor(Math.random() * 100000) + 1000;
+            }
+
+            // Trigger Automated Server Attestation
+            let easUid = 'PENDING_ONCHAIN_ATTESTATION';
+            try {
+                const attestRes = await fetch('/api/bizfi/attest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        transactionHash: receipt.transactionHash,
-                        owner: address,
-                        businessName: formData.businessName || formData.name,
-                        metadata: formData,
-                        tier: selectedTier.id,
-                        feePaid: isReferralValid ? selectedTier.referralPrice : selectedTier.price,
-                        referralCode: referralCode || "",
-                        network: paymentNetwork
+                        businessId: businessId,
+                        recipient: address || '0x0000000000000000000000000000000000000000',
+                        verificationData: formData,
+                        transactionHash: txHash,
+                        network: attestationNetwork
                     })
                 });
-            } catch (saveErr) {
-                console.error("Failed to save business record to DB", saveErr);
-            }
-
-            if (businessId) {
-                try {
-                    const attestRes = await fetch('/api/bizfi/attest', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            businessId: businessId,
-                            recipient: address,
-                            verificationData: formData,
-                            transactionHash: receipt.transactionHash,
-                            network: paymentNetwork
-                        })
-                    });
-
-                    const attestData = await attestRes.json();
-
-                    if (attestData.success && attestData.easUid) {
-                        setAttestationData({
-                            easUid: attestData.easUid,
-                            transactionHash: attestData.transactionHash
-                        });
-                    }
-                } catch (attestErr) {
-                    console.error("Attestation failed during post-registration:", attestErr);
+                const attestData = await attestRes.json();
+                if (attestData.easUid) {
+                    easUid = attestData.easUid;
                 }
+            } catch (err) {
+                console.error("Attestation failed:", err);
+                // We proceed anyway since the payment and business record succeeded
             }
+
+            setAttestationData({
+                easUid: easUid,
+                transactionHash: txHash
+            });
 
             // Clear saved data
             if (address) {
@@ -334,33 +294,16 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             setIsRegistered(true);
 
         } catch (err: any) {
-            console.error("Submission failed:", err);
-
-            // Log to server
-            try {
-                await fetch('/api/bizfi/logs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        level: 'error',
-                        message: err.message || JSON.stringify(err),
-                        stack: err.stack,
-                        context: 'WizardForm.handleSubmit (Registration)',
-                        user: address
-                    })
-                });
-            } catch (logErr) {
-                console.error("Failed to send log to server", logErr);
-            }
-
+            console.error("Post-payment submission failed:", err);
             setNotificationConfig({
                 type: 'error',
-                title: 'Registration Failed',
-                message: err.message || 'An unknown error occurred. Please try again.'
+                title: 'REGISTRATION FAILED',
+                message: err.message || 'An error occurred while saving your data. Please contact support.'
             });
             setShowNotification(true);
         }
     };
+
     const updateFormData = (field: string, value: any) => {
         setFormData({ ...formData, [field]: value });
     };
@@ -374,60 +317,45 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
     if (isRegistered) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 text-center space-y-6">
-                <div className="w-20 h-20 bg-[#81D7B4]/10 rounded-full flex items-center justify-center mb-2">
-                    <Tick01Icon className="w-10 h-10 text-[#81D7B4]" />
-                </div>
-
+            <div className="flex flex-col items-center justify-center p-12 bg-[#0D1724] border border-[#81D7B4] text-center space-y-8">
                 <div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Registration Successful!</h2>
-                    <p className="text-gray-400 max-w-lg mx-auto">
-                        Welcome to BizFi. Your business has been successfully listed onchain and attested.
+                    <h2 className="text-[32px] md:text-[40px] font-extrabold text-[#F9F9FB] tracking-tight uppercase" style={{ fontFamily: "var(--font-display)" }}>REGISTRATION SUCCESSFUL</h2>
+                    <p className="text-[#7B8B9A] max-w-lg mx-auto mt-4">
+                        Welcome to BizFi. Your business has been successfully listed and attested.
                     </p>
                 </div>
 
                 {attestationData && (
-                    <div className="w-full max-w-md">
-                        <p className="text-sm text-gray-400 mb-2 text-left">View Attestation</p>
-                        <a
-                            href={`https://base.easscan.org/attestation/view/${attestationData.easUid}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-between gap-3 bg-gray-900 rounded-xl p-4 border border-gray-800 hover:border-[#81D7B4]/50 hover:bg-gray-800/80 transition-all group cursor-pointer"
-                        >
-                            <div className="flex-1 min-w-0 flex flex-col items-start">
-                                <code className="text-[#81D7B4] text-xs sm:text-sm font-mono truncate w-full text-left">
-                                    {attestationData.easUid}
-                                </code>
-                                <span className="text-[10px] text-gray-500 mt-1 group-hover:text-[#81D7B4] transition-colors flex items-center gap-1">
-                                    View on EAS Scan <LinkSquare01Icon className="w-3 h-3" />
-                                </span>
+                    <div className="w-full max-w-md bg-[#080E18] border border-[#1E2F45] p-6 text-left">
+                        <p className="text-xs font-bold tracking-widest uppercase text-[#7B8B9A] mb-4">ATTESTATION DETAILS</p>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-widest text-[#7B8B9A] mb-1">TRANSACTION HASH</p>
+                                <code className="text-[#81D7B4] text-sm font-mono break-all">{attestationData.transactionHash}</code>
                             </div>
-                            <div className="p-2 rounded-lg bg-[#81D7B4]/10 group-hover:bg-[#81D7B4]/20 transition-colors">
-                                <LinkSquare01Icon className="w-5 h-5 text-[#81D7B4]" />
+                            <div>
+                                <p className="text-[10px] uppercase tracking-widest text-[#7B8B9A] mb-1">EAS UID</p>
+                                <code className="text-[#F9F9FB] text-sm font-mono break-all">{attestationData.easUid}</code>
                             </div>
-                        </a>
+                        </div>
                     </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
                     <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("We’ve officially listed our business on BizMarket by @BitsaveProtocol. Taking the first step toward raising capital onchain and expanding globally. Build globally. Raise globally. Own globally.")}&url=${encodeURIComponent(attestationData ? `https://base.easscan.org/attestation/view/${attestationData.easUid}` : 'https://bizfi.io')}`}
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("We’ve officially listed our business on BizMarket by @BitsaveProtocol. Taking the first step toward raising capital onchain and expanding globally. Build globally. Raise globally. Own globally.")}&url=${encodeURIComponent('https://bizfi.io')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-100 transition-all"
+                        className="flex-1 py-4 font-bold text-sm tracking-wide uppercase bg-[#F9F9FB] text-[#0F1825] hover:bg-gray-200 transition-colors text-center"
                     >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
-                        Share to Cancel
+                        SHARE TO X
                     </a>
 
                     <button
                         onClick={() => window.location.reload()}
-                        className="flex-1 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all"
+                        className="flex-1 py-4 font-bold text-sm tracking-wide uppercase bg-[#81D7B4] text-[#0F1825] hover:bg-[#6BC4A0] transition-colors"
                     >
-                        Go to Dashboard
+                        DASHBOARD
                     </button>
                 </div>
             </div>
@@ -435,43 +363,26 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {/* Progress Indicator */}
-            <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white">Application Progress</h3>
-                    <span className="text-sm text-gray-400">
-                        Step {currentStep} of {steps.length}
+            <div className="bg-[#080E18] border border-[#1E2F45] p-8">
+                <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-lg font-bold tracking-wide uppercase text-[#F9F9FB]">APPLICATION PROGRESS</h3>
+                    <span className="text-sm font-mono text-[#81D7B4] font-bold">
+                        {currentStep.toString().padStart(2, '0')} / {steps.length.toString().padStart(2, '0')}
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
                     {steps.map((step, index) => (
                         <div key={step.id} className="flex items-center flex-1">
-                            <div className="flex flex-col items-center w-full">
+                            <div className="flex flex-col items-start w-full">
                                 <div
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${index + 1 < currentStep
-                                        ? 'bg-[#81D7B4] text-gray-900'
-                                        : index + 1 === currentStep
-                                            ? 'bg-[#81D7B4] text-gray-900 ring-4 ring-[#81D7B4]/20'
-                                            : 'bg-gray-800 text-gray-500'
-                                        }`}
-                                >
-                                    {index + 1 < currentStep ? (
-                                        <Tick01Icon className="w-5 h-5" />
-                                    ) : (
-                                        step.section
-                                    )}
-                                </div>
-                                <span className="text-xs text-gray-500 mt-2 hidden md:block text-center">
+                                    className={`w-full h-1 mb-3 transition-all ${index + 1 <= currentStep ? 'bg-[#81D7B4]' : 'bg-[#1E2F45]'}`}
+                                />
+                                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors ${index + 1 <= currentStep ? 'text-[#81D7B4]' : 'text-[#7B8B9A]'}`}>
                                     {step.title}
                                 </span>
                             </div>
-                            {index < steps.length - 1 && (
-                                <div
-                                    className={`h-1 flex-1 mx-2 rounded transition-all ${index + 1 < currentStep ? 'bg-[#81D7B4]' : 'bg-gray-800'
-                                        }`}
-                                />
-                            )}
                         </div>
                     ))}
                 </div>
@@ -481,11 +392,11 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             <AnimatePresence mode="wait">
                 <motion.div
                     key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-8"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-[#080E18] border border-[#1E2F45] p-8 md:p-10"
                 >
                     {renderFormSection(
                         selectedTier.id,
@@ -500,97 +411,87 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             </AnimatePresence>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                 <button
                     onClick={handlePrevious}
                     disabled={isFirstStep}
-                    className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1 whitespace-nowrap"
+                    className="flex-1 sm:flex-none px-8 py-4 bg-[#0D1724] text-[#F9F9FB] font-bold text-sm tracking-wide uppercase border border-[#1E2F45] hover:border-[#7B8B9A] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <Activity01Icon className="w-5 h-5" />
-                    <span>Previous</span>
+                    PREVIOUS
                 </button>
 
-                {isLastStep && (
-                    <button
-                        onClick={handleBuyCrypto}
-                        className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border-2 border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 hover:border-[#81D7B4] backdrop-blur-sm order-3 sm:order-2 whitespace-nowrap"
-                        style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
-                    >
-                        <Dollar01Icon className="w-5 h-5" />
-                        <span>Insufficient Funds? Buy Crypto</span>
-                    </button>
-                )}
-
                 {isLastStep ? (
-                    <div className="flex flex-col items-stretch sm:items-end gap-3 sm:gap-4 order-1 sm:order-3 w-full sm:w-auto">
-                        {/* Payment Network Selector */}
-                        <div className="flex bg-gray-900/50 p-1 rounded-xl border border-gray-800 backdrop-blur-sm self-stretch sm:self-end w-full sm:w-auto mt-2 sm:mt-0">
-                            <button
-                                onClick={() => setPaymentNetwork('base')}
-                                disabled={loading}
-                                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all ${paymentNetwork === 'base' ? 'bg-[#0052FF]/20 text-[#0052FF] border border-[#0052FF]/30' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-                            >
-                                Base (USDC)
-                            </button>
-                            <button
-                                onClick={() => setPaymentNetwork('celo')}
-                                disabled={loading}
-                                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all ${paymentNetwork === 'celo' ? 'bg-[#FCFF52]/20 text-[#FCFF52] border border-[#FCFF52]/30' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-                            >
-                                Celo (G$)
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={() => {
-                                if (!validateStep(currentStep)) return;
-                                setShowPaymentSummary(true);
-                            }}
-                            disabled={!agreedToTerms || loading}
-                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-gray-900 font-bold rounded-xl hover:shadow-lg hover:shadow-[#81D7B4]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto whitespace-nowrap"
-                        >
-                            {loading ? (
-                                <>Processing...</>
-                            ) : (
-                                <>
-                                    Review & Pay {paymentNetwork === 'celo' ? (isReferralValid ? 'Discounted G$' : 'G$ Fees') : `$${isReferralValid ? selectedTier.referralPrice : selectedTier.price}`}
-                                    <Activity01Icon className="w-5 h-5" />
-                                </>
-                            )}
-                        </button>
-
-                        {/* Mobile Buy Crypto Button */}
-                        <button
-                            onClick={handleBuyCrypto}
-                            className="md:hidden flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all border border-[#81D7B4]/30 text-[#81D7B4] hover:bg-[#81D7B4]/10 w-full whitespace-nowrap"
-                            style={{ backgroundColor: 'rgba(129, 215, 180, 0.05)' }}
-                        >
-                            <Dollar01Icon className="w-4 h-4" />
-                            <span>Need Crypto? Buy Instantly</span>
-                        </button>
-
-                        {error && (
-                            <div className="mt-2 p-4 rounded-xl border border-red-500/30 bg-red-500/5 backdrop-blur-sm max-w-md">
-                                <div className="flex items-start gap-3">
-                                    <Activity01Icon className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                    <div className="flex-1">
-                                        <p className="text-sm font-semibold text-red-400 mb-1">Transaction Error</p>
-                                        <p className="text-xs text-red-300/80 leading-relaxed break-words">{error}</p>
+                    <div className="flex-1 sm:flex-none flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                        <div className="flex items-center relative">
+                            <span className="text-[#7B8B9A] text-xs font-bold tracking-widest uppercase mr-3 hidden sm:inline-block">ATTEST ON:</span>
+                            <div className="relative">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
+                                    className="flex items-center gap-2 px-4 py-4 bg-[#0F1825] border border-[#1E2F45] text-[#F9F9FB] font-bold text-sm tracking-wide uppercase hover:border-[#81D7B4] transition-colors min-w-[140px] justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {attestationNetwork === 'base' ? (
+                                            <img src="/base-logo.svg" alt="Base" className="w-5 h-5 rounded-full" />
+                                        ) : (
+                                            <img src="/celo.png" alt="Celo" className="w-5 h-5 rounded-full" />
+                                        )}
+                                        <span>{attestationNetwork.toUpperCase()}</span>
                                     </div>
-                                </div>
+                                    <span className="text-[10px] ml-2 text-[#7B8B9A]">▼</span>
+                                </button>
+
+                                {isNetworkDropdownOpen && (
+                                    <div className="absolute bottom-full left-0 mb-2 w-full bg-[#0F1825] border border-[#1E2F45] z-50">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setAttestationNetwork('base'); setIsNetworkDropdownOpen(false); }}
+                                            className="flex items-center gap-2 w-full px-4 py-3 hover:bg-[#1E2F45] text-left transition-colors"
+                                        >
+                                            <img src="/base-logo.svg" alt="Base" className="w-5 h-5 rounded-full" />
+                                            <span className="text-[#F9F9FB] font-bold text-sm tracking-wide uppercase">BASE</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setAttestationNetwork('celo'); setIsNetworkDropdownOpen(false); }}
+                                            className="flex items-center gap-2 w-full px-4 py-3 hover:bg-[#1E2F45] text-left transition-colors"
+                                        >
+                                            <img src="/celo.png" alt="Celo" className="w-5 h-5 rounded-full" />
+                                            <span className="text-[#F9F9FB] font-bold text-sm tracking-wide uppercase">CELO</span>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                        <button
+                            onClick={handleCheckout}
+                            disabled={!agreedToTerms || isProcessing}
+                            className="w-full sm:w-auto px-10 py-4 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] font-bold text-sm tracking-wide uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isProcessing ? 'PROCESSING...' : `REVIEW & PAY $${isReferralValid ? selectedTier.referralPrice : selectedTier.price}`}
+                        </button>
                     </div>
                 ) : (
                     <button
                         onClick={handleNext}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#81D7B4] text-gray-900 font-bold rounded-xl hover:bg-[#6BC4A0] transition-all order-1 sm:order-3 whitespace-nowrap"
+                        className="flex-1 sm:flex-none px-10 py-4 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] font-bold text-sm tracking-wide uppercase transition-all"
                     >
-                        Next
-                        <Activity01Icon className="w-5 h-5" />
+                        NEXT STEP
                     </button>
                 )}
             </div>
+
+            {/* Chainrails Payment Modal */}
+            <PaymentModal
+                sessionToken={sessionToken || ""}
+                isOpen={isPaymentModalOpen}
+                amount={(isReferralValid ? selectedTier.referralPrice : selectedTier.price).toFixed(2)}
+                styles={{ theme: 'dark', accentColor: '#81D7B4' }}
+                open={() => setIsPaymentModalOpen(true)}
+                close={() => setIsPaymentModalOpen(false)}
+                onSuccess={(tx: any) => handlePaymentSuccess(tx.hash)}
+                onCancel={() => { setIsPaymentModalOpen(false); setNotificationConfig({ type: 'error', title: 'PAYMENT CANCELLED', message: 'You cancelled the checkout process.' }); setShowNotification(true); }}
+            />
 
             {/* Notification Modal */}
             <AnimatePresence>
@@ -604,93 +505,33 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                         onClick={() => setShowNotification(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
+                            initial={{ scale: 0.95, y: 10 }}
                             animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
+                            exit={{ scale: 0.95, y: 10 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="rounded-2xl border shadow-2xl w-full max-w-md mx-auto overflow-hidden"
-                            style={{
-                                backgroundColor: 'rgba(26, 37, 56, 0.98)',
-                                borderColor: notificationConfig.type === 'success' ? 'rgba(129, 215, 180, 0.3)' : 'rgba(239, 68, 68, 0.3)'
-                            }}
+                            className="bg-[#0D1724] border w-full max-w-md p-8"
+                            style={{ borderColor: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B' }}
                         >
-                            <div className="p-6 sm:p-8">
-                                <div className="flex items-start gap-3 sm:gap-4">
-                                    <div
-                                        className="p-2 sm:p-3 rounded-full flex-shrink-0"
-                                        style={{
-                                            backgroundColor: notificationConfig.type === 'success' ? 'rgba(129, 215, 180, 0.1)' : 'rgba(239, 68, 68, 0.1)'
-                                        }}
-                                    >
-                                        {notificationConfig.type === 'success' ? (
-                                            <Tick01Icon className="w-6 h-6 sm:w-8 sm:h-8 text-[#81D7B4]" />
-                                        ) : (
-                                            <Activity01Icon className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-lg sm:text-xl font-bold mb-2 pr-8" style={{ color: '#F9F9FB' }}>
-                                            {notificationConfig.title}
-                                        </h3>
-                                        <p
-                                            className="text-xs sm:text-sm leading-relaxed mb-6 break-words overflow-wrap-anywhere"
-                                            style={{
-                                                color: '#9BA8B5',
-                                                wordBreak: 'break-word',
-                                                overflowWrap: 'anywhere',
-                                                hyphens: 'auto'
-                                            }}
-                                        >
-                                            {notificationConfig.message}
-                                        </p>
-                                        <button
-                                            onClick={() => setShowNotification(false)}
-                                            className="w-full py-2.5 sm:py-3 rounded-xl font-bold transition-all text-sm sm:text-base"
-                                            style={{
-                                                backgroundColor: notificationConfig.type === 'success' ? '#81D7B4' : 'rgba(239, 68, 68, 0.8)',
-                                                color: notificationConfig.type === 'success' ? '#0F1825' : '#FFFFFF'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = notificationConfig.type === 'success' ? '#6BC4A0' : 'rgba(239, 68, 68, 1)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = notificationConfig.type === 'success' ? '#81D7B4' : 'rgba(239, 68, 68, 0.8)';
-                                            }}
-                                        >
-                                            {notificationConfig.type === 'success' ? 'Continue' : 'Close'}
-                                        </button>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowNotification(false)}
-                                        className="transition-colors flex-shrink-0 -mt-1 -mr-1"
-                                        style={{ color: '#7B8B9A' }}
-                                        onMouseEnter={(e) => e.currentTarget.style.color = '#F9F9FB'}
-                                        onMouseLeave={(e) => e.currentTarget.style.color = '#7B8B9A'}
-                                    >
-                                        <Cancel01Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                                    </button>
-                                </div>
-                            </div>
+                            <h3 className="text-xl font-bold mb-4 tracking-wide uppercase" style={{ color: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B' }}>
+                                {notificationConfig.title}
+                            </h3>
+                            <p className="text-sm leading-relaxed mb-8 text-[#7B8B9A]">
+                                {notificationConfig.message}
+                            </p>
+                            <button
+                                onClick={() => setShowNotification(false)}
+                                className="w-full py-4 font-bold text-sm tracking-wide uppercase transition-colors"
+                                style={{
+                                    backgroundColor: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B',
+                                    color: '#0F1825'
+                                }}
+                            >
+                                CONTINUE
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Payment Summary Modal */}
-            <PaymentSummaryModal
-                isOpen={showPaymentSummary}
-                onClose={() => setShowPaymentSummary(false)}
-                onConfirm={() => {
-                    setShowPaymentSummary(false);
-                    handleSubmit();
-                }}
-                isLoading={loading}
-                tier={selectedTier}
-                businessName={formData.businessName || formData.name || formData.startupName || formData.registeredBusinessName || formData.entRegisteredName || ''}
-                isReferralValid={isReferralValid}
-                referralCode={referralCode}
-                paymentNetwork={paymentNetwork}
-            />
         </div>
     );
 }
@@ -709,48 +550,48 @@ function renderFormSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Personal Information</h2>
-                    <p className="text-gray-400 text-sm">Let's start with some details about you.</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Personal Information</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's start with some details about you.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Name *</label>
                         <input
                             type="text"
                             value={formData.name || ''}
                             onChange={(e) => updateFormData('name', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Email *</label>
                         <input
                             type="email"
                             value={formData.email || ''}
                             onChange={(e) => updateFormData('email', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Country *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Country *</label>
                         <input
                             type="text"
                             value={formData.country || ''}
                             onChange={(e) => updateFormData('country', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Phone Number *</label>
                         <input
                             type="tel"
                             value={formData.phone || ''}
                             onChange={(e) => updateFormData('phone', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             required
                         />
                     </div>
@@ -758,90 +599,90 @@ function renderFormSection(
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Telegram Handle *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Telegram Handle *</label>
                         <input
                             type="text"
                             placeholder="@username"
                             value={formData.telegram || ''}
                             onChange={(e) => updateFormData('telegram', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Birthday (YY/MM/DD) *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Birthday (YY/MM/DD) *</label>
                         <input
                             type="date"
                             value={formData.birthday || ''}
                             onChange={(e) => updateFormData('birthday', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             required
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Social Handles <span className="text-gray-500 text-xs">(Optional but Important - 2 credible socials recommended)</span>
+                    <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        Social Handles <span className="text-[#7B8B9A] text-xs">(Optional but Important - 2 credible socials recommended)</span>
                     </label>
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Twitter</label>
+                            <label className="block text-xs text-[#7B8B9A] mb-1">Twitter</label>
                             <input
                                 type="url"
                                 placeholder="https://twitter.com/username"
                                 value={formData.twitter || ''}
                                 onChange={(e) => updateFormData('twitter', e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                className="w-full px-4 py-2 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">LinkedIn</label>
+                            <label className="block text-xs text-[#7B8B9A] mb-1">LinkedIn</label>
                             <input
                                 type="url"
                                 placeholder="https://linkedin.com/in/username"
                                 value={formData.linkedin || ''}
                                 onChange={(e) => updateFormData('linkedin', e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                className="w-full px-4 py-2 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Instagram</label>
+                            <label className="block text-xs text-[#7B8B9A] mb-1">Instagram</label>
                             <input
                                 type="url"
                                 placeholder="https://instagram.com/username"
                                 value={formData.instagram || ''}
                                 onChange={(e) => updateFormData('instagram', e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                className="w-full px-4 py-2 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Facebook</label>
+                            <label className="block text-xs text-[#7B8B9A] mb-1">Facebook</label>
                             <input
                                 type="url"
                                 placeholder="https://facebook.com/username"
                                 value={formData.facebook || ''}
                                 onChange={(e) => updateFormData('facebook', e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                className="w-full px-4 py-2 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             />
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Brief Professional Bio *</label>
+                    <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Brief Professional Bio *</label>
                     <textarea
                         rows={4}
                         value={formData.bio || ''}
                         onChange={(e) => updateFormData('bio', e.target.value)}
                         placeholder="Tell us about your professional background and experience..."
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none resize-none"
+                        className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none resize-none"
                         required
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Do you own the business/company you're listing? *</label>
+                    <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Do you own the business/company you're listing? *</label>
                     <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -852,7 +693,7 @@ function renderFormSection(
                                 onChange={(e) => updateFormData('ownsBusiness', e.target.value)}
                                 className="w-4 h-4"
                             />
-                            <span className="text-white">Yes</span>
+                            <span className="text-[#F9F9FB]">Yes</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -863,7 +704,7 @@ function renderFormSection(
                                 onChange={(e) => updateFormData('ownsBusiness', e.target.value)}
                                 className="w-4 h-4"
                             />
-                            <span className="text-white">No</span>
+                            <span className="text-[#F9F9FB]">No</span>
                         </label>
                     </div>
                 </div>
@@ -889,25 +730,25 @@ function renderFormSection(
 // Helper component for input fields
 const InputField = ({ label, required = false, ...props }: any) => (
     <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
             {label} {required && <span className="text-[#81D7B4]">*</span>}
         </label>
         <input
             {...props}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
         />
     </div>
 );
 
 const TextAreaField = ({ label, required = false, rows = 4, ...props }: any) => (
     <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
             {label} {required && <span className="text-[#81D7B4]">*</span>}
         </label>
         <textarea
             {...props}
             rows={rows}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none resize-none"
+            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none resize-none"
         />
     </div>
 );
@@ -926,8 +767,8 @@ function renderMicroBusinessSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Business Identity</h2>
-                    <p className="text-gray-400 text-sm">Let's get to know your business.</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Business Identity</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's get to know your business.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -940,7 +781,7 @@ function renderMicroBusinessSection(
                     />
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Is your business registered in your country? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -953,7 +794,7 @@ function renderMicroBusinessSection(
                                     onChange={(e) => updateFormData('isRegistered', e.target.value)}
                                     className="w-4 h-4"
                                 />
-                                <span className="text-white">Yes</span>
+                                <span className="text-[#F9F9FB]">Yes</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -964,7 +805,7 @@ function renderMicroBusinessSection(
                                     onChange={(e) => updateFormData('isRegistered', e.target.value)}
                                     className="w-4 h-4"
                                 />
-                                <span className="text-white">No</span>
+                                <span className="text-[#F9F9FB]">No</span>
                             </label>
                         </div>
                     </div>
@@ -987,7 +828,7 @@ function renderMicroBusinessSection(
                             onChange={(e: any) => updateFormData('businessDescription', e.target.value)}
                             maxLength={750}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-[#7B8B9A] mt-1">
                             {(formData.businessDescription || '').split(' ').filter((w: string) => w).length}/150 words
                         </p>
                     </div>
@@ -1067,7 +908,7 @@ function renderMicroBusinessSection(
                             value={formData.businessPicturesLink || ''}
                             onChange={(e: any) => updateFormData('businessPicturesLink', e.target.value)}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-[#7B8B9A] mt-1">
                             Include store fronts, logos, social media screenshots where applicable
                         </p>
                     </div>
@@ -1083,21 +924,21 @@ function renderMicroBusinessSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Operational Data</h2>
-                    <p className="text-gray-400 text-sm">Let's get to know your growth.</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Operational Data</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's get to know your growth.</p>
                 </div>
 
                 <div className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                                 Average Monthly Revenue <span className="text-[#81D7B4]">*</span>
                             </label>
                             <div className="flex gap-2">
                                 <select
                                     value={formData.revenueCurrency || 'USD'}
                                     onChange={(e) => updateFormData('revenueCurrency', e.target.value)}
-                                    className="px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                    className="px-3 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                                 >
                                     {CURRENCIES.map(curr => <option key={curr} value={curr}>{curr}</option>)}
                                 </select>
@@ -1107,20 +948,20 @@ function renderMicroBusinessSection(
                                     step="0.01"
                                     value={formData.monthlyRevenue || ''}
                                     onChange={(e) => updateFormData('monthlyRevenue', e.target.value)}
-                                    className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                    className="flex-1 px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                                 Average Monthly Expenses <span className="text-[#81D7B4]">*</span>
                             </label>
                             <div className="flex gap-2">
                                 <select
                                     value={formData.expensesCurrency || 'USD'}
                                     onChange={(e) => updateFormData('expensesCurrency', e.target.value)}
-                                    className="px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                    className="px-3 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                                 >
                                     {CURRENCIES.map(curr => <option key={curr} value={curr}>{curr}</option>)}
                                 </select>
@@ -1130,16 +971,16 @@ function renderMicroBusinessSection(
                                     step="0.01"
                                     value={formData.monthlyExpenses || ''}
                                     onChange={(e) => updateFormData('monthlyExpenses', e.target.value)}
-                                    className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                    className="flex-1 px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-4 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-lg">
+                    <div className="p-4 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-none">
                         <label className="block text-sm font-medium text-[#81D7B4] mb-2">Profit Margin Estimate (Auto-calculated)</label>
-                        <div className="text-3xl font-bold text-white">{profitMargin}%</div>
-                        <p className="text-xs text-gray-400 mt-1">Formula: (Revenue - Expenses) / Revenue × 100</p>
+                        <div className="text-3xl font-bold text-[#F9F9FB]">{profitMargin}%</div>
+                        <p className="text-xs text-[#7B8B9A] mt-1">Formula: (Revenue - Expenses) / Revenue × 100</p>
                     </div>
 
                     <InputField
@@ -1152,7 +993,7 @@ function renderMicroBusinessSection(
                     />
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Primary Sales Channels <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1166,14 +1007,14 @@ function renderMicroBusinessSection(
                                         onChange={(e) => updateFormData('salesChannels', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{channel}</span>
+                                    <span className="text-[#F9F9FB]">{channel}</span>
                                 </label>
                             ))}
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Do you have repeat customers? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1187,14 +1028,14 @@ function renderMicroBusinessSection(
                                         onChange={(e) => updateFormData('repeatCustomers', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{option}</span>
+                                    <span className="text-[#F9F9FB]">{option}</span>
                                 </label>
                             ))}
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Do you have any financial business records? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1208,11 +1049,11 @@ function renderMicroBusinessSection(
                                         onChange={(e) => updateFormData('hasFinancialRecords', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{option}</span>
+                                    <span className="text-[#F9F9FB]">{option}</span>
                                 </label>
                             ))}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">Receipts, notebooks, POS reports, etc.</p>
+                        <p className="text-xs text-[#7B8B9A] mt-1">Receipts, notebooks, POS reports, etc.</p>
                     </div>
                 </div>
             </div>
@@ -1227,8 +1068,8 @@ function renderMicroBusinessSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Growth Reflection</h2>
-                    <p className="text-gray-400 text-sm">Let's get to know your business needs.</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Growth Reflection</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's get to know your business needs.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1240,20 +1081,20 @@ function renderMicroBusinessSection(
                             value={formData.biggestChallenge || ''}
                             onChange={(e: any) => updateFormData('biggestChallenge', e.target.value)}
                         />
-                        <p className={`text-xs mt-1 ${challengeWordCount > 1000 ? 'text-red-400' : 'text-gray-500'}`}>
+                        <p className={`text-xs mt-1 ${challengeWordCount > 1000 ? 'text-red-400' : 'text-[#7B8B9A]'}`}>
                             {challengeWordCount}/1,000 words
                         </p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             How much do you want to raise? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-2">
                             <select
                                 value={formData.raiseCurrency || 'USD'}
                                 onChange={(e) => updateFormData('raiseCurrency', e.target.value)}
-                                className="px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                className="px-3 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             >
                                 {CURRENCIES.map(curr => <option key={curr} value={curr}>{curr}</option>)}
                             </select>
@@ -1263,10 +1104,10 @@ function renderMicroBusinessSection(
                                 step="0.01"
                                 value={formData.raiseAmount || ''}
                                 onChange={(e) => updateFormData('raiseAmount', e.target.value)}
-                                className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                                className="flex-1 px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">USD equivalent will be calculated</p>
+                        <p className="text-xs text-[#7B8B9A] mt-1">USD equivalent will be calculated</p>
                     </div>
 
                     <div>
@@ -1277,10 +1118,10 @@ function renderMicroBusinessSection(
                             value={formData.fundUsage || ''}
                             onChange={(e: any) => updateFormData('fundUsage', e.target.value)}
                         />
-                        <p className={`text-xs mt-1 ${fundUsageWordCount > 2000 ? 'text-red-400' : 'text-gray-500'}`}>
+                        <p className={`text-xs mt-1 ${fundUsageWordCount > 2000 ? 'text-red-400' : 'text-[#7B8B9A]'}`}>
                             {fundUsageWordCount}/2,000 words
                         </p>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-[#7B8B9A] mt-2">
                             Feel free to include your business records for the past 1 year if available. Upload them on Google Drive and add the link below.
                         </p>
                         <input
@@ -1288,7 +1129,7 @@ function renderMicroBusinessSection(
                             placeholder="https://drive.google.com/..."
                             value={formData.businessRecordsLink || ''}
                             onChange={(e) => updateFormData('businessRecordsLink', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none mt-2"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none mt-2"
                         />
                     </div>
 
@@ -1326,8 +1167,8 @@ function renderBuilderSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Startup Details</h2>
-                    <p className="text-gray-400 text-sm">Let's get to know your Start-Up</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Startup Details</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's get to know your Start-Up</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1340,7 +1181,7 @@ function renderBuilderSection(
                     />
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Is your business registered yet? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1354,11 +1195,11 @@ function renderBuilderSection(
                                         onChange={(e) => updateFormData('startupRegistered', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{option}</span>
+                                    <span className="text-[#F9F9FB]">{option}</span>
                                 </label>
                             ))}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">If it isn't you can contact Timog Services, but continue filing the form.</p>
+                        <p className="text-xs text-[#7B8B9A] mt-1">If it isn't you can contact Timog Services, but continue filing the form.</p>
                     </div>
 
                     <div>
@@ -1369,17 +1210,17 @@ function renderBuilderSection(
                             value={formData.ideaSummary || ''}
                             onChange={(e: any) => updateFormData('ideaSummary', e.target.value)}
                         />
-                        <p className="text-xs text-gray-500 mt-1">{ideaWordCount}/150 words</p>
+                        <p className="text-xs text-[#7B8B9A] mt-1">{ideaWordCount}/150 words</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Development Stage <span className="text-[#81D7B4]">*</span>
                         </label>
                         <select
                             value={formData.developmentStage || ''}
                             onChange={(e) => updateFormData('developmentStage', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                         >
                             <option value="">Select stage</option>
                             <option value="idea">Idea</option>
@@ -1430,8 +1271,8 @@ function renderBuilderSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Startup Potential</h2>
-                    <p className="text-gray-400 text-sm">Let's see your potential</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Startup Potential</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's see your potential</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1452,7 +1293,7 @@ function renderBuilderSection(
                     />
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Have you earned any revenue yet? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1466,7 +1307,7 @@ function renderBuilderSection(
                                         onChange={(e) => updateFormData('hasRevenue', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{option}</span>
+                                    <span className="text-[#F9F9FB]">{option}</span>
                                 </label>
                             ))}
                         </div>
@@ -1500,7 +1341,7 @@ function renderBuilderSection(
                             value={formData.capitalUsage || ''}
                             onChange={(e: any) => updateFormData('capitalUsage', e.target.value)}
                         />
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-[#7B8B9A] mt-2">
                             Feel free to include your business records for the past 1 year if available. Upload them on Google Drive and add the link below.
                         </p>
                         <input
@@ -1508,7 +1349,7 @@ function renderBuilderSection(
                             placeholder="https://drive.google.com/..."
                             value={formData.builderRecordsLink || ''}
                             onChange={(e) => updateFormData('builderRecordsLink', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none mt-2"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none mt-2"
                         />
                     </div>
                 </div>
@@ -1521,8 +1362,8 @@ function renderBuilderSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Commitment & Vision</h2>
-                    <p className="text-gray-400 text-sm">How big are you thinking?</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Commitment & Vision</h2>
+                    <p className="text-[#7B8B9A] text-sm">How big are you thinking?</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1566,8 +1407,8 @@ function renderGrowthSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Company Details</h2>
-                    <p className="text-gray-400 text-sm">Let's get to know your Brand</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Company Details</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's get to know your Brand</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1605,13 +1446,13 @@ function renderGrowthSection(
                     />
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Industry <span className="text-[#81D7B4]">*</span>
                         </label>
                         <select
                             value={formData.industry || ''}
                             onChange={(e) => updateFormData('industry', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                         >
                             <option value="">Select industry</option>
                             {INDUSTRIES.map(ind => <option key={ind} value={ind.toLowerCase()}>{ind}</option>)}
@@ -1702,8 +1543,8 @@ function renderGrowthSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Finance</h2>
-                    <p className="text-gray-400 text-sm">Give us estimates not exacts, we'll ask for exacts during KYC & KYB</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Finance</h2>
+                    <p className="text-[#7B8B9A] text-sm">Give us estimates not exacts, we'll ask for exacts during KYC & KYB</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1760,7 +1601,7 @@ function renderGrowthSection(
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Current Debts or Loans? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4 mb-2">
@@ -1774,7 +1615,7 @@ function renderGrowthSection(
                                         onChange={(e) => updateFormData('hasDebts', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{option}</span>
+                                    <span className="text-[#F9F9FB]">{option}</span>
                                 </label>
                             ))}
                         </div>
@@ -1784,13 +1625,13 @@ function renderGrowthSection(
                                 value={formData.debtsDetails || ''}
                                 onChange={(e) => updateFormData('debtsDetails', e.target.value)}
                                 rows={2}
-                                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none resize-none"
+                                className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none resize-none"
                             />
                         )}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
                             Any existing investors? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1804,7 +1645,7 @@ function renderGrowthSection(
                                         onChange={(e) => updateFormData('hasInvestors', e.target.value)}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-white">{option}</span>
+                                    <span className="text-[#F9F9FB]">{option}</span>
                                 </label>
                             ))}
                         </div>
@@ -1819,8 +1660,8 @@ function renderGrowthSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Operations & Business Growth Readiness</h2>
-                    <p className="text-gray-400 text-sm">Tell us about your operations</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Operations & Business Growth Readiness</h2>
+                    <p className="text-[#7B8B9A] text-sm">Tell us about your operations</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1911,7 +1752,7 @@ function renderGrowthSection(
                             value={formData.fundsUsage || ''}
                             onChange={(e: any) => updateFormData('fundsUsage', e.target.value)}
                         />
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-[#7B8B9A] mt-2">
                             Feel free to include your business records for the past 1 year if available. Upload them on Google Drive and add the link below.
                         </p>
                         <input
@@ -1919,7 +1760,7 @@ function renderGrowthSection(
                             placeholder="https://drive.google.com/..."
                             value={formData.growthRecordsLink || ''}
                             onChange={(e) => updateFormData('growthRecordsLink', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-[#81D7B4] focus:outline-none mt-2"
+                            className="w-full px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none mt-2"
                         />
                     </div>
 
@@ -1955,8 +1796,8 @@ function renderEnterpriseSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Company Details</h2>
-                    <p className="text-gray-400 text-sm">Let's get to know your Company</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Company Details</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's get to know your Company</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2094,8 +1935,8 @@ function renderEnterpriseSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Project Executive Summary</h2>
-                    <p className="text-gray-400 text-sm">Tell us about your project</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Project Executive Summary</h2>
+                    <p className="text-[#7B8B9A] text-sm">Tell us about your project</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2156,8 +1997,8 @@ function renderEnterpriseSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Financial Requirements</h2>
-                    <p className="text-gray-400 text-sm">Let's understand your financial needs</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Financial Requirements</h2>
+                    <p className="text-[#7B8B9A] text-sm">Let's understand your financial needs</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2241,8 +2082,8 @@ function renderEnterpriseSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Funding Expectations</h2>
-                    <p className="text-gray-400 text-sm">How will you use the funds?</p>
+                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Funding Expectations</h2>
+                    <p className="text-[#7B8B9A] text-sm">How will you use the funds?</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2279,7 +2120,7 @@ function renderEnterpriseSection(
                             value={formData.projectAssets || ''}
                             onChange={(e: any) => updateFormData('projectAssets', e.target.value)}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-[#7B8B9A] mt-1">
                             Verification will be done during KYC/KYB (e.g., Land documents, Machinery/equipment lists, Existing buildings or structures, Valuation documents, Film Scripts, Studio etc.)
                         </p>
                     </div>
@@ -2299,19 +2140,19 @@ function renderDeclarationSection(agreedToTerms: boolean, setAgreedToTerms: (val
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Declaration and Consent</h2>
-                <p className="text-gray-400 text-sm">Please review and confirm the following.</p>
+                <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Declaration and Consent</h2>
+                <p className="text-[#7B8B9A] text-sm">Please review and confirm the following.</p>
             </div>
 
-            <div className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer group p-4 sm:p-6 rounded-xl border border-gray-700 hover:border-[#81D7B4]/50 transition-all bg-gray-900/30">
+            <div className="p-6 bg-[#080E18] border border-[#1E2F45] rounded-none space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer group p-4 sm:p-6 rounded-none border border-[#1E2F45] hover:border-[#81D7B4]/50 transition-all bg-[#0D1724]/30">
                     <input
                         type="checkbox"
                         checked={agreedToTerms}
                         onChange={(e) => setAgreedToTerms(e.target.checked)}
                         className="mt-1 w-5 h-5 rounded border-gray-600 text-[#81D7B4] focus:ring-[#81D7B4] focus:ring-offset-0 flex-shrink-0"
                     />
-                    <span className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                    <span className="text-xs sm:text-sm text-[#9BA8B5] leading-relaxed">
                         I confirm that all the information provided in this application is accurate and truthful to the best of my knowledge.
                         I consent to Bitsave accessing, verifying, and processing all the details and information I have provided for the purpose
                         of evaluating my business listing application. I understand that providing false information may result in the rejection
@@ -2320,9 +2161,9 @@ function renderDeclarationSection(agreedToTerms: boolean, setAgreedToTerms: (val
                 </label>
             </div>
 
-            <div className="p-4 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-lg">
+            <div className="p-4 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-none">
                 <h3 className="text-lg font-bold text-[#81D7B4] mb-2">What happens next?</h3>
-                <ul className="space-y-2 text-sm text-gray-300">
+                <ul className="space-y-2 text-sm text-[#9BA8B5]">
                     <li className="flex items-start gap-2">
                         <span className="text-[#81D7B4] mt-1">•</span>
                         <span>Your application will be reviewed within 24-48 hours</span>

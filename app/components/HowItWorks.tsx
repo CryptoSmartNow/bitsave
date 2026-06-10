@@ -39,7 +39,7 @@ export default function HowItWorks() {
       <div className="container mx-auto max-w-7xl relative z-10">
 
         {/* Section Header */}
-        <div className="mb-24 md:mb-32">
+        <div className="mb-16 md:mb-24 flex flex-col items-center text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -59,19 +59,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps Grid / Carousel on Mobile */}
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 -mx-4 px-4 md:grid md:grid-cols-3 md:gap-12 lg:gap-24 relative md:pb-0 md:mx-0 md:px-0 md:overflow-visible md:snap-none">
-          {/* Connecting Line (desktop only) */}
-          <div className="hidden md:block absolute top-[4.5rem] left-[20%] right-[20%] h-[1px]">
-            <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
-              className="w-full h-full bg-gradient-to-r from-[#81D7B4]/30 via-[#81D7B4]/60 to-[#81D7B4]/30 origin-left"
-              style={{ transformOrigin: 'left center' }}
-            />
-          </div>
-
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 -mx-4 px-4 md:grid md:grid-cols-3 md:gap-8 lg:gap-12 relative md:pb-0 md:mx-0 md:px-0 md:overflow-visible md:snap-none">
           {steps.map((step, index) => (
             <motion.div
               key={index}
@@ -79,27 +67,26 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.2 }}
-              className="relative group pl-4 snap-center shrink-0 min-w-[280px] max-w-[320px] md:min-w-0 md:max-w-none md:shrink md:snap-align-none"
+              className="relative group p-8 sm:p-10 rounded-[2.5rem] bg-gray-50/50 hover:bg-white border border-transparent hover:border-gray-100 hover:shadow-2xl hover:shadow-[#81D7B4]/10 transition-all duration-500 snap-center shrink-0 min-w-[280px] max-w-[320px] md:min-w-0 md:max-w-none md:shrink md:snap-align-none flex flex-col items-center text-center"
             >
-              {/* Step Number - Gradient Text */}
-              <div className="text-[120px] leading-none font-extrabold absolute -top-16 -left-2 select-none -z-10 font-display text-gradient opacity-20 group-hover:opacity-40 transition-opacity duration-500">
-                {step.number}
+              {/* Step Number Badge */}
+              <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-[#81D7B4]/10 text-[#5fb392] text-xs font-bold tracking-widest uppercase mb-8 font-display group-hover:scale-105 transition-transform duration-300">
+                Step {step.number}
               </div>
 
-              {/* Icon & Content */}
-              <div className="flex flex-col gap-6 pt-8">
-                <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-[#81D7B4] transition-all duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-[#81D7B4]/20 group-hover:scale-105 group-hover:rotate-3">
-                  <step.Icon className="w-8 h-8 text-[#81D7B4] group-hover:text-white transition-colors duration-300" />
-                </div>
-                
-                <h3 className="font-display text-xl md:text-2xl font-bold text-gray-900">
-                  {step.title}
-                </h3>
-                
-                <p className="text-gray-500 text-base leading-relaxed">
-                  {step.description}
-                </p>
+              {/* Icon Container */}
+              <div className="w-20 h-20 rounded-full bg-white border border-gray-100 flex items-center justify-center mb-8 shadow-sm group-hover:bg-gradient-to-br group-hover:from-[#81D7B4] group-hover:to-[#5fb392] group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#81D7B4]/25 transition-all duration-500">
+                <step.Icon className="w-10 h-10 text-gray-400 group-hover:text-white transition-colors duration-500 stroke-[1.5]" />
               </div>
+
+              {/* Content */}
+              <h3 className="font-display text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#5fb392] transition-colors duration-300">
+                {step.title}
+              </h3>
+              
+              <p className="text-gray-500 text-base leading-relaxed">
+                {step.description}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -110,9 +97,9 @@ export default function HowItWorks() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.6 }}
-          className="mt-24"
+          className="mt-20 flex justify-center"
         >
-          <Link 
+          <Link
             href="/dashboard/create-savings"
             className="group inline-flex items-center gap-3 text-xl font-bold text-gray-900 hover:text-[#5fb392] transition-colors font-display"
           >

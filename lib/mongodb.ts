@@ -235,6 +235,54 @@ export async function getBizSwapCollection(): Promise<Collection | null> {
   }
 }
 
+export async function getBizSwapUsersCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('bizswap_users');
+  } catch (error) {
+    console.error('Failed to get bizswap_users collection:', error);
+    return null;
+  }
+}
+
+export async function getBizSwapWithdrawalsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('bizswap_withdrawals');
+  } catch (error) {
+    console.error('Failed to get bizswap_withdrawals collection:', error);
+    return null;
+  }
+}
+
+export async function getBizSwapPayoutsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('bizswap_payouts');
+  } catch (error) {
+    console.error('Failed to get bizswap_payouts collection:', error);
+    return null;
+  }
+}
+
 export interface UserInteraction {
   type: string;
   walletAddress?: string;

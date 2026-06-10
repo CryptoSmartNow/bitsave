@@ -2,13 +2,12 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon } from "hugeicons-react";
-import * as htmlToImage from 'html-to-image';
-import QRCode from 'react-qr-code';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { CertificateCard } from '@/components/CertificateCard';
+import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
 
 interface Holding {
   _id: string;
@@ -22,6 +21,15 @@ interface Holding {
   apr: string;
   payoutFrequency: string;
   purchaseDate: string;
+}
+
+interface Payment {
+  _id: string;
+  date: string;
+  instrument: string;
+  amount: number;
+  currency: string;
+  txHash: string;
 }
 
 export default function BizSwapStandaloneDashboard() {
@@ -39,34 +47,59 @@ export default function BizSwapStandaloneDashboard() {
     : (privySolanaWallet?.address || user?.wallet?.address);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCert, setSelectedCert] = useState<Holding | null>(null);
   const certificateRef = useRef<HTMLDivElement>(null);
 
   const program = useBizSwapProgram();
 
+  const { referralData, loading: refLoading, generateReferralCode, submitWithdrawal } = useBizSwapReferrals(walletAddress);
+  const [withdrawAmount, setWithdrawAmount] = useState<string>('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || isNaN(Number(withdrawAmount))) return;
+    try {
+      setIsWithdrawing(true);
+      await submitWithdrawal(Number(withdrawAmount));
+      toast.success('Withdrawal request submitted successfully');
+      setWithdrawAmount('');
+    } catch (e: any) {
+      toast.error(e.message || 'Withdrawal failed');
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+
+
   useEffect(() => {
     if (connected && walletAddress) {
-      fetchHoldings(walletAddress);
+      fetchHoldingsAndPayments(walletAddress);
     } else if (!connected && ready) {
       setHoldings([]);
+      setPayments([]);
       setLoading(false);
     }
   }, [connected, walletAddress, ready]);
 
-  const fetchHoldings = async (wallet: string) => {
+  const fetchHoldingsAndPayments = async (wallet: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/bizswap/holdings?wallet=${wallet}`);
-      const data = await res.json();
-      if (res.ok) {
-        setHoldings(data.data);
-      } else {
-        toast.error('Failed to load holdings');
-      }
+      const [holdingsRes, paymentsRes] = await Promise.all([
+        fetch(`/api/bizswap/holdings?wallet=${wallet}`),
+        fetch(`/api/bizswap/payments?wallet=${wallet}`)
+      ]);
+      
+      const holdingsData = await holdingsRes.json();
+      const paymentsData = await paymentsRes.json();
+
+      if (holdingsRes.ok) setHoldings(holdingsData.data || []);
+      if (paymentsRes.ok) setPayments(paymentsData.data || []);
     } catch (e) {
       console.error(e);
-      toast.error('Network error loading holdings');
+      toast.error('Network error loading data');
     } finally {
       setLoading(false);
     }
@@ -85,6 +118,7 @@ export default function BizSwapStandaloneDashboard() {
       if (actionBtns) actionBtns.style.display = 'none';
 
       // Use html-to-image to take a high quality snapshot
+      const htmlToImage = await import('html-to-image');
       const dataUrl = await htmlToImage.toPng(certificateRef.current, {
         backgroundColor: '#0F1825',
         pixelRatio: 2, // High resolution
@@ -111,12 +145,58 @@ export default function BizSwapStandaloneDashboard() {
 
   const totalValue = holdings.reduce((sum, h) => sum + h.investmentAmount, 0);
 
-  // Compute real figures based on holdings
-  const totalEarned = 0; // We haven't paid out anything yet in this MVP
-  const pendingYield = holdings.reduce((sum, h) => {
-    // Rough estimate: 5% of investment amount as pending yield
-    return sum + (h.investmentAmount * 0.05);
-  }, 0);
+  // Compute real figures based on holdings and payments
+  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0);
+  
+  const pendingYield = Math.max(0, holdings.reduce((sum, h) => {
+    if (!h.purchaseDate || !h.apr) return sum;
+    const purchaseDate = new Date(h.purchaseDate);
+    const now = new Date();
+    const msElapsed = now.getTime() - purchaseDate.getTime();
+    const daysElapsed = Math.max(0, msElapsed / (1000 * 60 * 60 * 24));
+    
+    const aprStr = h.apr.replace('%', '');
+    const aprNum = parseFloat(aprStr) || 0;
+    
+    const dailyRate = (aprNum / 100) / 365;
+    return sum + (h.investmentAmount * dailyRate * daysElapsed);
+  }, 0) - totalEarned);
+
+  const getNextPaymentDate = (purchaseDate: string, frequency: string) => {
+    if (!purchaseDate) return new Date();
+    const d = new Date(purchaseDate);
+    const now = new Date();
+    
+    while (d <= now) {
+      if (frequency.toLowerCase().includes('month')) d.setMonth(d.getMonth() + 1);
+      else if (frequency.toLowerCase().includes('quarter')) d.setMonth(d.getMonth() + 3);
+      else if (frequency.toLowerCase().includes('year') || frequency.toLowerCase().includes('annual')) d.setFullYear(d.getFullYear() + 1);
+      else d.setMonth(d.getMonth() + 1); // fallback to monthly
+    }
+    return d;
+  };
+
+  const upcomingHolding = holdings.length > 0 
+    ? holdings.reduce((earliest, h) => {
+        const earliestDate = getNextPaymentDate(earliest.purchaseDate, earliest.payoutFrequency);
+        const hDate = getNextPaymentDate(h.purchaseDate, h.payoutFrequency);
+        return hDate < earliestDate ? h : earliest;
+      }, holdings[0])
+    : null;
+
+  const nextPaymentDateStr = upcomingHolding 
+    ? getNextPaymentDate(upcomingHolding.purchaseDate, upcomingHolding.payoutFrequency).toISOString() 
+    : '';
+
+  const getExpectedPaymentAmount = (h: Holding) => {
+    const aprStr = h.apr.replace('%', '');
+    const aprNum = parseFloat(aprStr) || 0;
+    const yearlyReturn = h.investmentAmount * (aprNum / 100);
+    
+    if (h.payoutFrequency.toLowerCase().includes('month')) return yearlyReturn / 12;
+    if (h.payoutFrequency.toLowerCase().includes('quarter')) return yearlyReturn / 4;
+    return yearlyReturn;
+  };
   
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -173,9 +253,6 @@ export default function BizSwapStandaloneDashboard() {
               {totalValue > 0 ? `+${((totalEarned / totalValue) * 100).toFixed(2)}%` : '0.00%'} <span className="text-[#4B5A75]">All instruments</span>
             </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#81D7B4]/10 flex items-center justify-center border border-[#81D7B4]/20">
-            <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
-          </div>
         </div>
 
         <div className="bg-[#121A27] border border-[#1C2538] p-5 rounded-2xl flex justify-between items-center">
@@ -183,9 +260,6 @@ export default function BizSwapStandaloneDashboard() {
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-2">Total Earned To Date</p>
             <h2 className="text-3xl font-black text-[#F9F9FB]">${totalEarned.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
             <p className="text-xs text-[#4B5A75] mt-1 font-medium">Since you joined</p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-[#059669]/10 flex items-center justify-center border border-[#059669]/20">
-            <Activity01Icon className="w-6 h-6 text-[#059669]" />
           </div>
         </div>
 
@@ -195,21 +269,15 @@ export default function BizSwapStandaloneDashboard() {
             <h2 className="text-3xl font-black text-[#F9F9FB]">${pendingYield.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
             <p className="text-xs text-[#4B5A75] mt-1 font-medium">Across all instruments</p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#F5A623]/10 flex items-center justify-center border border-[#F5A623]/20">
-            <Activity01Icon className="w-6 h-6 text-[#F5A623]" />
-          </div>
         </div>
 
         <div className="bg-[#121A27] border border-[#1C2538] p-5 rounded-2xl flex justify-between items-center">
           <div>
             <p className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-2">Next Payment</p>
-            <h2 className="text-xl font-black text-[#F9F9FB]">{holdings.length > 0 ? formatDate(holdings[0].nextPayment) : 'No Upcoming'}</h2>
+            <h2 className="text-xl font-black text-[#F9F9FB]">{upcomingHolding ? formatDate(nextPaymentDateStr) : 'No Upcoming'}</h2>
             <p className="text-xs text-[#4B5A75] mt-1 font-medium">
-              {holdings.length > 0 ? `$${(holdings[0].investmentAmount * 0.05).toFixed(2)} from ${holdings[0].instrument}` : '-'}
+              {upcomingHolding ? `$${getExpectedPaymentAmount(upcomingHolding).toFixed(2)} from ${upcomingHolding.instrument}` : '-'}
             </p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-[#3B82F6]/10 flex items-center justify-center border border-[#3B82F6]/20">
-            <Calendar01Icon className="w-6 h-6 text-[#3B82F6]" />
           </div>
         </div>
       </div>
@@ -292,6 +360,74 @@ export default function BizSwapStandaloneDashboard() {
             )}
           </div>
 
+          {/* REFERRALS SECTION */}
+          <div className="bg-[#121A27] border border-[#1C2538] rounded-2xl overflow-hidden">
+            <div className="p-5 border-b border-[#1C2538]">
+              <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB]">Referral Program</h3>
+              <p className="text-xs text-[#7B8B9A] mt-1">Earn 0.1% of investments made using your code.</p>
+            </div>
+            <div className="p-5 sm:p-8 grid md:grid-cols-2 gap-8">
+              <div>
+                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-2">Your Referral Code</p>
+                {refLoading ? (
+                  <div className="h-12 bg-[#1C2538]/50 animate-pulse rounded-xl"></div>
+                ) : referralData?.bizswapReferralCode ? (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-[#0A0F17] border border-[#1C2538] rounded-xl px-5 py-3 text-lg font-black tracking-widest text-[#81D7B4] select-all">
+                      {referralData.bizswapReferralCode}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(referralData.bizswapReferralCode);
+                        toast.success('Code copied to clipboard!');
+                      }}
+                      className="text-xs font-bold text-[#F9F9FB] bg-[#1C2538] hover:bg-[#2C3E5D] transition-colors px-4 py-3 rounded-xl border border-[#2C3E5D]"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={generateReferralCode}
+                    className="text-xs font-bold text-[#0F1825] bg-[#81D7B4] hover:bg-[#6BC4A0] transition-colors px-6 py-3 rounded-xl shadow-lg"
+                  >
+                    Generate Code
+                  </button>
+                )}
+              </div>
+              
+              <div className="border-t md:border-t-0 md:border-l border-[#1C2538] pt-6 md:pt-0 md:pl-8">
+                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-2">Pending USDC Earnings</p>
+                <div className="flex items-end justify-between gap-4">
+                  <h2 className="text-3xl font-black text-[#F9F9FB]">
+                    ${(referralData?.bizswapPendingUsdcEarnings || 0).toFixed(2)}
+                  </h2>
+                  <div className="text-xs font-medium text-[#4B5A75] mb-1">
+                    Total Earned: ${(referralData?.bizswapTotalUsdcEarned || 0).toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex gap-3">
+                  <input 
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="Amount"
+                    max={referralData?.bizswapPendingUsdcEarnings || 0}
+                    className="w-full bg-[#0A0F17] border border-[#1C2538] rounded-xl px-4 py-2.5 text-sm font-bold text-[#F9F9FB] outline-none placeholder:text-[#2C3E5D] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button 
+                    onClick={handleWithdraw}
+                    disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (referralData?.bizswapPendingUsdcEarnings || 0)}
+                    className="text-xs font-bold text-[#F9F9FB] bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 disabled:hover:bg-[#3B82F6] transition-colors px-6 py-2.5 rounded-xl shadow-lg whitespace-nowrap"
+                  >
+                    {isWithdrawing ? '...' : 'Withdraw'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* PAYMENT HISTORY */}
           <div className="bg-[#121A27] border border-[#1C2538] rounded-2xl overflow-hidden">
             <div className="p-5 border-b border-[#1C2538] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -322,10 +458,37 @@ export default function BizSwapStandaloneDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1C2538]">
-                  {/* Empty state for real data */}
-                  <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-[#7B8B9A]">No payment history yet.</td>
-                  </tr>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-8 text-center text-[#7B8B9A]">Loading history...</td>
+                    </tr>
+                  ) : payments.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-8 text-center text-[#7B8B9A]">No payment history yet.</td>
+                    </tr>
+                  ) : (
+                    payments.map((p) => (
+                      <tr key={p._id} className="hover:bg-[#1C2538]/30 transition-colors">
+                        <td className="px-5 py-4 text-[#F9F9FB]">{formatDate(p.date)}</td>
+                        <td className="px-5 py-4 font-bold text-[#F9F9FB]">
+                          <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getInstrumentColorClass(p.instrument, 'bg').replace('/10', '')}`}></span>
+                          {p.instrument}
+                        </td>
+                        <td className="px-5 py-4 font-bold text-[#81D7B4]">+${p.amount.toFixed(2)}</td>
+                        <td className="px-5 py-4 text-[#7B8B9A]">{p.currency || 'USDC'}</td>
+                        <td className="px-5 py-4">
+                          <a 
+                            href={`https://explorer.solana.com/tx/${p.txHash}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[#3B82F6] hover:underline"
+                          >
+                            {p.txHash.slice(0, 4)}...{p.txHash.slice(-4)}
+                          </a>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
               <div className="p-4 text-center border-t border-[#1C2538] bg-[#0A0F17]">
@@ -403,29 +566,31 @@ export default function BizSwapStandaloneDashboard() {
               <a href="/bizswap/dashboard/certificates" className="text-xs font-bold text-[#81D7B4] hover:underline">View all →</a>
             </div>
             
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+            <div className="p-5">
               {holdings.length === 0 ? (
                 <div className="text-center text-[#7B8B9A] py-8">No certificates yet.</div>
               ) : (
-                holdings.map(h => (
-                  <div 
-                    key={h._id} 
-                    onClick={() => setSelectedCert(h)}
-                    className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden cursor-pointer group border border-[#1C2538] bg-[#0A0D10] flex justify-center items-center"
-                  >
-                    <div className="w-[1100px] flex-shrink-0 origin-center pointer-events-none scale-[0.28] sm:scale-[0.35]">
-                      <CertificateCard holding={{ ...h, wallet: walletAddress }} />
+                <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide">
+                  {holdings.map(h => (
+                    <div 
+                      key={h._id} 
+                      onClick={() => setSelectedCert(h)}
+                      className="relative flex-none w-[300px] sm:w-[400px] h-[200px] sm:h-[250px] snap-start rounded-xl overflow-hidden cursor-pointer group border border-[#1C2538] bg-[#0A0D10] flex justify-center items-center"
+                    >
+                      <div className="w-[1100px] flex-shrink-0 origin-center pointer-events-none scale-[0.25] sm:scale-[0.35]">
+                        <CertificateCard holding={{ ...h, wallet: walletAddress }} />
+                      </div>
+                      <div className="absolute inset-0 z-10 bg-black/0 group-hover:bg-white/5 transition-colors" />
+                      
+                      {/* Badge Overlay */}
+                      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                         <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/90 text-white shadow-lg' : 'bg-[#3B82F6]/90 text-white shadow-lg'}`}>
+                           {h.status.split('—')[0]}
+                         </span>
+                      </div>
                     </div>
-                    <div className="absolute inset-0 z-10 bg-black/0 group-hover:bg-white/5 transition-colors" />
-                    
-                    {/* Badge Overlay */}
-                    <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-                       <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/90 text-white shadow-lg' : 'bg-[#3B82F6]/90 text-white shadow-lg'}`}>
-                         {h.status.split('—')[0]}
-                       </span>
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
             
@@ -469,7 +634,7 @@ export default function BizSwapStandaloneDashboard() {
                 Download Certificate
               </button>
               <a 
-                href={`https://explorer.solana.com/address/${selectedCert.mintAddress}?cluster=devnet`}
+                href={`https://explorer.solana.com/address/${selectedCert.mintAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs font-bold text-[#81D7B4] hover:text-[#0F1825] transition-colors border border-[#81D7B4]/50 px-6 py-2.5 rounded-full hover:bg-[#81D7B4] inline-block shadow-lg bg-[#0F1825]"

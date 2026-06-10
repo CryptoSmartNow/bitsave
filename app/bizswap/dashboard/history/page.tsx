@@ -1,26 +1,52 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Activity01Icon, Download01Icon, LinkSquare01Icon, BarChartIcon, Dollar01Icon, Shield01Icon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
 
-// Mock data since we don't have a payout history API yet
-const MOCK_HISTORY = [
-  { id: 'tx1', date: '2026-05-15T10:30:00Z', instrument: 'BizYield', amount: 12.50, currency: 'USDC', txHash: '5K3y...9xP2', status: 'Completed' },
-  { id: 'tx2', date: '2026-05-08T14:15:00Z', instrument: 'BizCredit', amount: 8.00, currency: 'USDC', txHash: '3aBf...2cL1', status: 'Completed' },
-  { id: 'tx3', date: '2026-05-01T09:00:00Z', instrument: 'BizCredit', amount: 8.00, currency: 'USDC', txHash: '9mNp...4zR7', status: 'Completed' },
-  { id: 'tx4', date: '2026-04-15T11:45:00Z', instrument: 'BizYield', amount: 15.20, currency: 'USDC', txHash: '7vXq...1bM5', status: 'Completed' },
-  { id: 'tx5', date: '2026-04-01T10:00:00Z', instrument: 'BizBond', amount: 25.00, currency: 'USDC', txHash: '2cKw...8jH3', status: 'Completed' },
-];
+interface Payment {
+  _id: string;
+  date: string;
+  instrument: string;
+  amount: number;
+  currency: string;
+  txHash: string;
+}
 
 export default function HistoryPage() {
-  const { connected: isSolanaConnected } = useWallet();
-  const { ready, authenticated } = usePrivy();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
   const connected = ready && (authenticated || isSolanaConnected);
-  const [filter, setFilter] = useState('All');
+  const walletAddress = publicKey?.toBase58() || user?.wallet?.address;
 
-  const filteredHistory = filter === 'All' ? MOCK_HISTORY : MOCK_HISTORY.filter(h => h.instrument === filter);
+  const [filter, setFilter] = useState('All');
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (connected && walletAddress) {
+      fetchPayments(walletAddress);
+    } else if (!connected && ready) {
+      setPayments([]);
+      setLoading(false);
+    }
+  }, [connected, walletAddress, ready]);
+
+  const fetchPayments = async (wallet: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/bizswap/payments?wallet=${wallet}`);
+      const data = await res.json();
+      if (res.ok) setPayments(data.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredHistory = filter === 'All' ? payments : payments.filter(h => h.instrument === filter);
 
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
@@ -88,38 +114,50 @@ export default function HistoryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1C2538]">
-              {filteredHistory.map((h) => (
-                <tr key={h.id} className="hover:bg-[#1C2538]/30 transition-colors">
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-[#F9F9FB]">{formatDate(h.date)}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2 font-bold text-[#F9F9FB]">
-                      {getInstrumentIcon(h.instrument)}
-                      {h.instrument}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-black text-[#81D7B4]">+ {h.amount.toFixed(2)} {h.currency}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="px-2 py-1 text-[10px] font-bold rounded uppercase tracking-widest bg-[#059669]/20 text-[#059669] border border-[#059669]/30">
-                      {h.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button className="flex items-center gap-2 text-xs font-mono text-[#7B8B9A] hover:text-[#81D7B4] transition-colors">
-                      {h.txHash} <LinkSquare01Icon className="w-3 h-3" />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-12 text-center text-[#7B8B9A]">
+                    Loading payment history...
                   </td>
                 </tr>
-              ))}
-              {filteredHistory.length === 0 && (
+              ) : filteredHistory.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-[#7B8B9A]">
                     No payment history found.
                   </td>
                 </tr>
+              ) : (
+                filteredHistory.map((h) => (
+                  <tr key={h._id} className="hover:bg-[#1C2538]/30 transition-colors">
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-[#F9F9FB]">{formatDate(h.date)}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2 font-bold text-[#F9F9FB]">
+                        {getInstrumentIcon(h.instrument)}
+                        {h.instrument}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="font-black text-[#81D7B4]">+ {h.amount.toFixed(2)} {h.currency || 'USDC'}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="px-2 py-1 text-[10px] font-bold rounded uppercase tracking-widest bg-[#059669]/20 text-[#059669] border border-[#059669]/30">
+                        COMPLETED
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <a 
+                        href={`https://explorer.solana.com/tx/${h.txHash}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-xs font-mono text-[#7B8B9A] hover:text-[#81D7B4] transition-colors w-fit"
+                      >
+                        {h.txHash.slice(0, 4)}...{h.txHash.slice(-4)} <LinkSquare01Icon className="w-3 h-3" />
+                      </a>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

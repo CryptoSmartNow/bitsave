@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Home01Icon, Calendar01Icon, Notification01Icon, Cancel01Icon, Briefcase01Icon, TextIcon, Clock01Icon, CalculatorIcon, Settings01Icon, Add01Icon, GiftIcon, Menu01Icon } from "hugeicons-react";
+import React, { useState, useEffect } from 'react';
+import { Home01Icon, Calendar01Icon, Notification01Icon, Cancel01Icon, Briefcase01Icon, TextIcon, Clock01Icon, CalculatorIcon, Settings01Icon, Add01Icon, GiftIcon, Menu01Icon, Copy01Icon, CheckmarkCircle01Icon, Link01Icon } from "hugeicons-react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { usePrivy } from '@privy-io/react-auth';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 
 const NAV_LINKS = [
@@ -20,11 +21,81 @@ const NAV_LINKS = [
 
 export default function BizSwapDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { publicKey } = useWallet();
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { ready, authenticated, user } = usePrivy();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const connected = ready && (authenticated || isSolanaConnected);
+  const privySolanaWallet = user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && account.chainType === 'solana'
+  ) as { address: string } | undefined;
+  const walletAddress = isSolanaConnected
+    ? publicKey?.toBase58()
+    : (privySolanaWallet?.address || user?.wallet?.address);
+
+  useEffect(() => {
+    if (!connected || !walletAddress) { setUnreadCount(0); return; }
+    fetch(`/api/bizswap/alerts?wallet=${walletAddress}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.data) {
+          setUnreadCount(data.data.filter((a: any) => a.isNew).length);
+        }
+      })
+      .catch(() => setUnreadCount(0));
+  }, [connected, walletAddress]);
+
+  const openReferralModal = async () => {
+    setShowReferralModal(true);
+    if (referralCode || !walletAddress) return;
+    setReferralLoading(true);
+    try {
+      const res = await fetch('/api/bizswap/referrals/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress }),
+      });
+      const data = await res.json();
+      if (data.bizswapReferralCode) setReferralCode(data.bizswapReferralCode);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setReferralLoading(false);
+    }
+  };
+
+  const copyCode = () => {
+    if (!referralCode) return;
+    navigator.clipboard.writeText(referralCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyLink = () => {
+    if (!referralCode) return;
+    navigator.clipboard.writeText(`https://bitsave.io/bizswap/app?ref=${referralCode}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Listen for read events dispatched from the alerts page
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const count = (e as CustomEvent).detail?.count ?? 1;
+      setUnreadCount(prev => Math.max(0, prev - count));
+    };
+    window.addEventListener('bizswap:alertsRead', handler);
+    return () => window.removeEventListener('bizswap:alertsRead', handler);
+  }, []);
 
   return (
-    <div className="flex h-screen bg-[#070A0F] text-[#F9F9FB] font-sans overflow-hidden">
+    <>
+    <div className="flex h-[111.12vh] w-[111.12vw] bg-[#070A0F] text-[#F9F9FB] font-sans overflow-hidden" style={{ zoom: 0.9 }}>
       
       {/* OVERLAY FOR MOBILE */}
       {isMobileMenuOpen && (
@@ -37,10 +108,9 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
       {/* SIDEBAR */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0A0F17] border-r border-[#1C2538] flex flex-col h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 md:p-6 flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Image src="/bitsavelogo.png" alt="BizMarket" width={80} height={24} className="object-contain" />
-            <span className="text-[8px] font-black tracking-widest text-[#81D7B4] uppercase px-1 py-0.5 bg-[#81D7B4]/10 rounded">Market</span>
-          </div>
+            <Link href="/bizswap" className="flex items-center gap-2">
+              <span className="text-xl font-black text-[#81D7B4] tracking-tight">BizSwap</span>
+            </Link>
           <button className="md:hidden text-[#7B8B9A] hover:text-[#F9F9FB] p-1 shrink-0" onClick={() => setIsMobileMenuOpen(false)}>
             <Cancel01Icon className="w-6 h-6" />
           </button>
@@ -96,7 +166,10 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
               </div>
               <GiftIcon className="w-5 h-5 text-[#81D7B4]" />
             </div>
-            <button className="mt-3 text-xs font-bold text-white hover:text-[#81D7B4] transition-colors">Invite Now →</button>
+            <button 
+              onClick={openReferralModal}
+              className="mt-3 text-xs font-bold text-white hover:text-[#81D7B4] transition-colors"
+            >Invite Now →</button>
           </div>
         </div>
       </aside>
@@ -124,7 +197,11 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
             </div>
             <Link href="/bizswap/dashboard/alerts" className="hidden md:flex relative w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
               <Notification01Icon className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full text-[#0A0F17] text-[9px] font-bold flex items-center justify-center">3</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full text-[#0A0F17] text-[9px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Link>
             <Link href="/bizswap/dashboard/settings" className="hidden md:flex w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
               <Settings01Icon className="w-5 h-5" />
@@ -138,5 +215,98 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
         </div>
       </main>
     </div>
+
+      {/* REFERRAL MODAL */}
+      {showReferralModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowReferralModal(false)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-3xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(26,37,56,0.95) 0%, rgba(10,15,23,0.98) 100%)',
+              border: '1px solid rgba(129,215,180,0.2)',
+              boxShadow: '0 0 60px rgba(129,215,180,0.08), 0 24px 64px rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(20px)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Top glow bar */}
+            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, #81D7B450, transparent)' }} />
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-[60px]" style={{ backgroundColor: 'rgba(129,215,180,0.08)' }} />
+
+            <div className="relative p-7">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(129,215,180,0.12)', border: '1px solid rgba(129,215,180,0.2)' }}>
+                    <GiftIcon className="w-5 h-5 text-[#81D7B4]" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-[#F9F9FB]">Refer &amp; Earn</h2>
+                    <p className="text-xs text-[#7B8B9A]">Share your code, earn rewards</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowReferralModal(false)} className="text-[#4B5A75] hover:text-[#F9F9FB] transition-colors p-1 rounded-lg hover:bg-[#1C2538]">
+                  <Cancel01Icon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Referral Code Box */}
+              <div className="mb-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-2">Your Referral Code</p>
+                <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ backgroundColor: 'rgba(129,215,180,0.06)', border: '1px solid rgba(129,215,180,0.15)' }}>
+                  {referralLoading ? (
+                    <div className="flex-1 h-7 bg-[#1C2538] rounded-lg animate-pulse" />
+                  ) : (
+                    <span className="flex-1 text-2xl font-black text-[#81D7B4] tracking-[0.2em]">
+                      {referralCode || (connected ? 'Generating...' : '—')}
+                    </span>
+                  )}
+                </div>
+
+                {/* Copy Link */}
+                {referralCode && (
+                  <button
+                    onClick={copyLink}
+                    className={`mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                      copied ? 'text-[#81D7B4] bg-[#81D7B4]/10 border-[#81D7B4]/30' : 'text-[#7B8B9A] hover:text-[#81D7B4] bg-[#1C2538]/60 border-[#1C2538]'
+                    }`}
+                    style={!copied ? { backgroundColor: 'rgba(28,37,56,0.6)' } : {}}
+                  >
+                    {copied ? <CheckmarkCircle01Icon className="w-4 h-4" /> : <Link01Icon className="w-4 h-4" />}
+                    {copied ? 'Copied!' : 'Copy Invite Link'}
+                  </button>
+                )}
+              </div>
+
+              {/* How It Works */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-3">How It Works</p>
+                <div className="space-y-3">
+                  {[
+                    { step: '1', title: 'Share your code', desc: 'Send your referral code or invite link to friends.' },
+                    { step: '2', title: 'They invest', desc: 'Your friend buys any BizMarket instrument using your code.' },
+                    { step: '3', title: 'Claim your reward', desc: 'Your earnings appear in your BizSwap dashboard — claim them whenever you want.' },
+                  ].map(({ step, title, desc }) => (
+                    <div key={step} className="flex gap-3 items-start">
+                      <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[11px] font-black text-[#81D7B4]" style={{ backgroundColor: 'rgba(129,215,180,0.1)', border: '1px solid rgba(129,215,180,0.2)' }}>
+                        {step}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-[#F9F9FB]">{title}</p>
+                        <p className="text-xs text-[#7B8B9A] mt-0.5">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -1,13 +1,21 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Activity01Icon, BarChartIcon, Dollar01Icon, Shield01Icon } from "hugeicons-react";
 
 const INSTRUMENTS = [
-  { id: 'BizYield', name: 'BizYield', apr: 0, isVariable: true, type: 'Rev Share', icon: BarChartIcon, color: '#FF6B6B' },
-  { id: 'BizCredit', name: 'BizCredit', apr: 16, isVariable: false, type: 'Private Credit', icon: Dollar01Icon, color: '#3B82F6' },
-  { id: 'BizBond', name: 'BizBond', apr: 10, isVariable: false, type: 'Treasury', icon: Shield01Icon, color: '#81D7B4' },
+  { id: 'BizYield', name: 'BizYield', apr: 0, isVariable: true, type: 'Rev Share', color: '#FF6B6B', initials: 'BY' },
+  { id: 'BizCredit', name: 'BizCredit', apr: 16, isVariable: false, type: 'Private Credit', color: '#3B82F6', initials: 'BC' },
+  { id: 'BizBond', name: 'BizBond', apr: 10, isVariable: false, type: 'Treasury', color: '#81D7B4', initials: 'BB' },
 ];
+
+const InstrumentIcon = ({ initials, color, size = 24 }: { initials: string; color: string; size?: number }) => (
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width={size} height={size} style={{ color }}>
+    <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.12" />
+    <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="8" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
+      {initials}
+    </text>
+  </svg>
+);
 
 export default function CalculatorPage() {
   const [amount, setAmount] = useState<string>('1000');
@@ -57,7 +65,6 @@ export default function CalculatorPage() {
             <label className="block text-xs font-bold text-[#7B8B9A] uppercase tracking-wider mb-3">Select Instrument</label>
             <div className="grid grid-cols-3 gap-3">
               {INSTRUMENTS.map(inst => {
-                const Icon = inst.icon;
                 const isSelected = instrumentId === inst.id;
                 return (
                   <button
@@ -65,11 +72,12 @@ export default function CalculatorPage() {
                     onClick={() => setInstrumentId(inst.id)}
                     className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
                       isSelected 
-                        ? `bg-[${inst.color}]/10 border-[${inst.color}] shadow-[0_0_15px_rgba(0,0,0,0.1)] shadow-[${inst.color}]/20` 
+                        ? 'border-[#2C3E5D] shadow-sm' 
                         : 'bg-[#0A0F17] border-[#1C2538] hover:border-[#2C3E5D]'
                     }`}
+                    style={isSelected ? { backgroundColor: `${inst.color}12`, borderColor: `${inst.color}60` } : {}}
                   >
-                    <Icon className={`w-6 h-6 ${isSelected ? `text-[${inst.color}]` : 'text-[#7B8B9A]'}`} style={{ color: isSelected ? inst.color : undefined }} />
+                    <InstrumentIcon initials={inst.initials} color={isSelected ? inst.color : '#7B8B9A'} size={26} />
                     <span className={`text-xs font-bold ${isSelected ? 'text-[#F9F9FB]' : 'text-[#7B8B9A]'}`}>{inst.name}</span>
                   </button>
                 );
