@@ -195,9 +195,9 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
         try {
             const params = new URLSearchParams({
-                recipient: '6HPVCff7ist4ZNVUAakzuxq5sGekncdPHdvgNautx1D4',
+                recipient: '0x125629FAab442e459C1015FCBa50499D0aAB8EE0',
                 amount: priceToPay.toFixed(2),
-                chain: 'SOLANA',
+                chain: 'BASE',
                 token: 'USDC',
                 mode: 'buy',
                 source: 'bizfi'

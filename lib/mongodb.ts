@@ -283,6 +283,67 @@ export async function getBizSwapPayoutsCollection(): Promise<Collection | null> 
   }
 }
 
+// WC26 Vouchers Collections
+export async function getWc26PoolCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('wc26_pool');
+  } catch (error) {
+    console.error('Failed to get wc26_pool collection:', error);
+    return null;
+  }
+}
+
+export async function getWc26PositionsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('wc26_positions');
+  } catch (error) {
+    console.error('Failed to get wc26_positions collection:', error);
+    return null;
+  }
+}
+
+export async function getWc26TransactionsCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('wc26_transactions');
+  } catch (error) {
+    console.error('Failed to get wc26_transactions collection:', error);
+    return null;
+  }
+}
+
+export async function getWc26PriceHistoryCollection(): Promise<Collection | null> {
+  if (!MONGODB_ENABLED) {
+    console.warn('MongoDB is not enabled');
+    return null;
+  }
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return db.collection('wc26_price_history');
+  } catch (error) {
+    console.error('Failed to get wc26_price_history collection:', error);
+    return null;
+  }
+}
+
 export interface UserInteraction {
   type: string;
   walletAddress?: string;
