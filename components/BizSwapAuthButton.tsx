@@ -43,7 +43,7 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
         return (
             <div className={`flex items-center gap-2 ${className || ''}`} style={style ? { height: style.height } : undefined}>
                 <div 
-                    className="flex items-center gap-2 px-3 border border-[#2C3E5D] bg-[#1C2538]"
+                    className="flex items-center gap-2 px-3 border border-[#2C3E5D] bg-[#1C2538] rounded-xl"
                     style={{ ...style, width: 'auto', padding: '0 12px' }}
                 >
                     <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
@@ -51,7 +51,7 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
                 </div>
                 <button
                     onClick={handleSignOut}
-                    className="flex items-center justify-center border border-[#2C3E5D] bg-[#1C2538] text-[#7B8B9A] hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors flex-shrink-0"
+                    className="flex items-center justify-center border border-[#2C3E5D] bg-[#1C2538] text-[#7B8B9A] hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors flex-shrink-0 rounded-xl"
                     style={{ ...style, width: style?.height || '36px', padding: 0 }}
                     title="Disconnect Wallet"
                 >
@@ -64,7 +64,7 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
     return (
         <button
             onClick={login}
-            className={`flex items-center justify-center gap-2 font-bold transition-all ${className || 'bg-[#1C2538] border border-[#2C3E5D] hover:bg-[#2C3E5D] text-[#F9F9FB]'}`}
+            className={`flex items-center justify-center gap-2 font-bold transition-all rounded-xl ${className || 'bg-[#1C2538] border border-[#2C3E5D] hover:bg-[#2C3E5D] text-[#F9F9FB]'}`}
             style={{ padding: '0 16px', ...style }}
         >
             {connectText}

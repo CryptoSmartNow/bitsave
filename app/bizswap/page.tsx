@@ -158,7 +158,7 @@ export default function BizSwapLandingPage() {
       </div>
 
       {/* NAV */}
-      <div className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none">
+    <div className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none">
         <nav className="pointer-events-auto w-full max-w-5xl rounded-2xl border border-[#2C3E5D]/50 bg-[#0F1825]/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
           <div className="px-6 h-16 flex items-center justify-between">
             <Link href="/bizswap" className="flex items-center gap-3 group">
@@ -181,6 +181,32 @@ export default function BizSwapLandingPage() {
       </div>
 
       <main className="relative z-10">
+        
+        {/* WC26 BANNER */}
+        <div className="relative pt-32 px-6 max-w-7xl mx-auto z-20">
+          <Link href="/bizswap/wc26" className="block w-full">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0A3622] to-[#051A10] border border-[#D4AF37]/40 p-4 md:p-6 shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] transition-all group flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center shrink-0">
+                  <span className="text-black font-black text-xl">🏆</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">Live Now</span>
+                    <h3 className="text-xl md:text-2xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>WC26 Vouchers</h3>
+                  </div>
+                  <p className="text-sm text-gray-300 font-medium">Trade temporary instruments backed by World Cup revenue. Expires July 19.</p>
+                </div>
+              </div>
+              <div className="relative z-10 shrink-0">
+                <span className="inline-flex items-center justify-center px-6 py-3 font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-xl transition-transform group-hover:scale-105">
+                  Trade Now →
+                </span>
+              </div>
+            </div>
+          </Link>
+        </div>
         {/* SECTION 1 - HERO */}
         <section className="relative min-h-screen flex items-center overflow-hidden px-6">
 
