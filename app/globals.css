@@ -1829,3 +1829,10 @@ body.goog-te-hl {
   animation: pulse-delayed 2s ease-in-out infinite;
   animation-delay: 1s;
 }
+
+/* Global ChainRails Modal Override - Remove default black overlay */
+.payment-modal-wrapper {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

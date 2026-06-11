@@ -9,7 +9,6 @@ import { Exo } from 'next/font/google';
 import toast from 'react-hot-toast';
 import { PaymentModal } from '@chainrails/react';
 import { ShimmerLoader } from '@/components/ShimmerLoader';
-import './chainrails.css';
 
 const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
