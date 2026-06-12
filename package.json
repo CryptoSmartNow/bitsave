@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@chainrails/common": "^0.3.6",
-    "@chainrails/react": "^0.4.17",
+    "@chainrails/react": "^0.4.19",
     "@chainrails/sdk": "^0.4.2",
     "@coinbase/onchainkit": "^1.1.2",
     "@coral-xyz/anchor": "^0.32.1",

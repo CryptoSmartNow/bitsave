@@ -212,7 +212,7 @@ export default function WC26Page() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <BizSwapAuthButton />
+          <BizSwapAuthButton connectText="Login" />
         </div>
       </nav>
 
