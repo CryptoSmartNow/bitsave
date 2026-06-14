@@ -1,12 +1,58 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Activity01Icon, Dollar01Icon, Shield01Icon, BarChartIcon, Wallet01Icon, ArrowLeftRightIcon } from "hugeicons-react";
+import { Activity01Icon, Dollar01Icon, Shield01Icon, BarChartIcon, Wallet01Icon, ArrowLeftRightIcon, ChampionIcon } from "hugeicons-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import NewsletterEmbed from '@/app/components/NewsletterEmbed';
 
+function WC26Countdown() {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const targetDate = new Date('2026-07-19T00:00:00Z').getTime();
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        clearInterval(interval);
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-wrap justify-center sm:justify-start items-center gap-1 sm:gap-2 mt-3">
+      <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 text-xs font-bold text-[#D4AF37] tracking-wider min-w-[36px] text-center">
+        {timeLeft.days}D
+      </div>
+      <span className="text-[#D4AF37]/50 font-bold">:</span>
+      <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 text-xs font-bold text-[#D4AF37] tracking-wider min-w-[36px] text-center">
+        {timeLeft.hours.toString().padStart(2, '0')}H
+      </div>
+      <span className="text-[#D4AF37]/50 font-bold">:</span>
+      <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 text-xs font-bold text-[#D4AF37] tracking-wider min-w-[36px] text-center">
+        {timeLeft.minutes.toString().padStart(2, '0')}M
+      </div>
+      <span className="text-[#D4AF37]/50 font-bold">:</span>
+      <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 text-xs font-bold text-[#D4AF37] tracking-wider min-w-[36px] text-center">
+        {timeLeft.seconds.toString().padStart(2, '0')}S
+      </div>
+    </div>
+  );
+}
 
 const CARDS = [
   {
@@ -182,31 +228,6 @@ export default function BizSwapLandingPage() {
 
       <main className="relative z-10">
         
-        {/* WC26 BANNER */}
-        <div className="relative pt-32 px-6 max-w-7xl mx-auto z-20">
-          <Link href="/bizswap/wc26" className="block w-full">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0A3622] to-[#051A10] border border-[#D4AF37]/40 p-4 md:p-6 shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] transition-all group flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center shrink-0">
-                  <span className="text-black font-black text-xl">🏆</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">Live Now</span>
-                    <h3 className="text-xl md:text-2xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>WC26 Vouchers</h3>
-                  </div>
-                  <p className="text-sm text-gray-300 font-medium">Trade temporary instruments backed by World Cup revenue. Expires July 19.</p>
-                </div>
-              </div>
-              <div className="relative z-10 shrink-0">
-                <span className="inline-flex items-center justify-center px-6 py-3 font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-xl transition-transform group-hover:scale-105">
-                  Trade Now →
-                </span>
-              </div>
-            </div>
-          </Link>
-        </div>
         {/* SECTION 1 - HERO */}
         <section className="relative min-h-screen flex items-center overflow-hidden px-6">
 
@@ -237,6 +258,33 @@ export default function BizSwapLandingPage() {
           </div>
 
           <div className="max-w-7xl mx-auto relative z-10 w-full pt-32 pb-20">
+            {/* WC26 BANNER */}
+            <div className="mb-12 mt-6">
+              <Link href="/bizswap/wc26" className="block w-full">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0A3622] to-[#051A10] border border-[#D4AF37]/40 p-4 md:p-6 shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] transition-all group flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                  <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10 text-center sm:text-left">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center shrink-0">
+                      <ChampionIcon className="w-6 h-6 text-[#051A10]" />
+                    </div>
+                    <div>
+                      <div className="flex flex-col sm:flex-row items-center gap-2 mb-1 justify-center sm:justify-start">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">Live Now</span>
+                        <h3 className="text-xl md:text-2xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>WC26 Vouchers</h3>
+                      </div>
+                      <p className="text-sm text-gray-300 font-medium">Trade temporary instruments backed by World Cup revenue. Expires July 19.</p>
+                      <WC26Countdown />
+                    </div>
+                  </div>
+                  <div className="relative z-10 shrink-0">
+                    <span className="inline-flex items-center justify-center px-6 py-3 font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-xl transition-transform group-hover:scale-105">
+                      Trade Now →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+
             <div className="grid lg:grid-cols-2 gap-24 items-center">
 
               {/* ── LEFT: headline + cta ── */}

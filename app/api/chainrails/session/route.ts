@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const source = searchParams.get('source');
-        
+
         const CHAINRAILS_API_KEY = source === 'bizswap' ? BIZSWAP_API_KEY : DEFAULT_API_KEY;
 
         if (!CHAINRAILS_API_KEY) {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         const token = searchParams.get('token') || 'USDC';
         const mode = searchParams.get('mode') || 'buy';
 
-        // Pass exact amount to Chainrails so the UI matches what the user entered
+
         let finalAmount = parseFloat(amount);
         if (!isNaN(finalAmount)) {
             amount = finalAmount.toFixed(2);
@@ -47,13 +47,12 @@ export async function GET(request: Request) {
         return NextResponse.json(session);
     } catch (error: any) {
         console.error('ChainRails session error:', error);
-        
-        // Log more details if it's an Axios or API error
+
         if (error.response) {
             console.error('Response data:', error.response.data);
             return NextResponse.json({ error: 'Failed to create payment session', details: error.response.data }, { status: error.response.status });
         }
-        
+
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
