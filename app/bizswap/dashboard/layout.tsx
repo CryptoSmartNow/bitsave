@@ -193,7 +193,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             <div className="bizswap-wallet-wrapper">
-              <BizSwapAuthButton connectText="Connect Solana" style={{ height: '36px', fontSize: '13px', borderRadius: '0.75rem', fontWeight: 'bold' }} />
+              <BizSwapAuthButton connectText="Login" style={{ height: '36px', fontSize: '13px', borderRadius: '0.75rem', fontWeight: 'bold' }} />
             </div>
             <Link href="/bizswap/dashboard/alerts" className="hidden md:flex relative w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
               <Notification01Icon className="w-5 h-5" />

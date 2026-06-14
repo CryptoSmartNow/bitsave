@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
           total_usdc_held: grossAmount,
           collected_fees: feeAmount
         },
-        $set: { updated_at: now }
+        $set: { updated_at: now, sell_locked: false }
       }
     );
 

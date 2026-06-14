@@ -107,7 +107,7 @@ export default function CustomConnectButton() {
         onClick={() => login({ loginMethods: ['wallet'], walletChainType: 'solana-only' })}
         className="w-full justify-center bg-transparent hover:bg-[#81D7B4]/5 text-[#81D7B4] border-2 border-[#81D7B4] font-semibold py-3.5 px-8 rounded-[1.25rem] transition-all duration-300 min-h-[52px] flex items-center gap-2"
       >
-        <span className="text-[15px]">Connect Solana</span>
+        <span className="text-[15px]">Login</span>
       </button>
     </div>
   );

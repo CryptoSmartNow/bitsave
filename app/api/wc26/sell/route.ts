@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWc26PoolCollection, getWc26PositionsCollection, getWc26TransactionsCollection } from '@/lib/mongodb';
 import { randomUUID } from 'crypto';
+import { ethers } from 'ethers';
 
+const USDC_ADDRESS_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const SETTLEMENT_WALLET_PK = process.env.SETTLEMENT_WALLET_PK || '';
+
+const usdcAbi = [
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function decimals() view returns (uint8)"
+];
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, shares } = body;
+    const { userId, shares, walletAddress } = body;
 
     if (!userId || !shares || shares <= 0 || !Number.isInteger(shares)) {
       return NextResponse.json({ error: 'Invalid request: userId and a positive integer for shares are required' }, { status: 400 });
@@ -25,6 +33,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Trading is currently closed' }, { status: 403 });
     }
 
+    if (poolState.sell_locked) {
+      return NextResponse.json({ error: 'Selling is temporarily locked until new buyers enter at the current price.' }, { status: 403 });
+    }
+
     const currentPrice = poolState.current_price_usd;
     const feeRate = poolState.fee_rate || 0.01;
     const grossAmount = shares * currentPrice;
@@ -39,6 +51,23 @@ export async function POST(req: NextRequest) {
 
     if (poolState.total_usdc_held < netPayout) {
       return NextResponse.json({ error: 'Insufficient pool liquidity to process sell' }, { status: 400 });
+    }
+
+    if (!walletAddress) {
+      return NextResponse.json({ error: 'Wallet address required for payout' }, { status: 400 });
+    }
+
+    try {
+      const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
+      const wallet = new ethers.Wallet(SETTLEMENT_WALLET_PK, provider);
+      const usdcContract = new ethers.Contract(USDC_ADDRESS_BASE, usdcAbi, wallet);
+
+      const amountToSend = ethers.parseUnits(netPayout.toFixed(6), 6);
+      const transferTx = await usdcContract.transfer(walletAddress, amountToSend);
+      console.log('Sent USDC to user on Base:', transferTx.hash);
+    } catch (e) {
+      console.error('Failed to send USDC', e);
+      return NextResponse.json({ error: 'Failed to execute on-chain transfer. Please contact support.' }, { status: 500 });
     }
 
     const txId = randomUUID();
