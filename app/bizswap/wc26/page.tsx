@@ -167,13 +167,14 @@ export default function WC26Page() {
   };
 
   const handleDepositSuccess = async () => {
-    setShowChainrailsModal(false);
     const tx = pendingTxRef.current || pendingTx;
     if (tx && tx.type === 'buy') {
       await executeBuy(tx);
+      setShowChainrailsModal(false);
     } else {
       toast.success("Payment successful!");
       fetchData();
+      setShowChainrailsModal(false);
     }
   };
 
@@ -394,6 +395,9 @@ export default function WC26Page() {
                     >
                       {isProcessing ? 'Processing...' : 'Buy Vouchers'}
                     </button>
+                    <p className="text-center text-xs text-[#FF6B6B] font-medium mt-2">
+                      ⚠️ Do not close this page until payment confirms or your balance won't update.
+                    </p>
                   </div>
 
                   <div className="h-px w-full bg-[#1E2F45]" />
