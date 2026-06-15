@@ -83,7 +83,7 @@ export default function WC26Page() {
     const cost = shares * currentPrice * 1.01;
 
     setPendingTx({ type: 'buy', shares });
-    handleInitiateDeposit(cost.toFixed(2));
+    handleInitiateDeposit((Math.ceil(cost * 100) / 100).toFixed(2));
   };
 
   const executeBuy = async (tx?: { type: 'buy' | 'sell', shares: number }) => {
@@ -103,7 +103,8 @@ export default function WC26Page() {
       if (data.error) {
         if (data.error === 'Insufficient USDC balance') {
           const currentPrice = poolState?.current_price_usd;
-          handleInitiateDeposit((shares * currentPrice * 1.01).toFixed(2));
+          const cost = shares * currentPrice * 1.01;
+          handleInitiateDeposit((Math.ceil(cost * 100) / 100).toFixed(2));
         } else {
           toast.error(data.error);
         }
@@ -383,7 +384,7 @@ export default function WC26Page() {
                     {buyAmount && (
                       <div className="flex justify-between text-xs text-gray-400 px-1">
                         <span>Cost + 1% Fee:</span>
-                        <span className="text-white font-medium">${((parseInt(buyAmount) || 0) * currentPrice * 1.01).toFixed(2)}</span>
+                        <span className="text-white font-medium">${(Math.ceil((parseInt(buyAmount) || 0) * currentPrice * 1.01 * 100) / 100).toFixed(2)}</span>
                       </div>
                     )}
                     <button
@@ -493,7 +494,9 @@ export default function WC26Page() {
                   {pendingTx.type === 'buy' ? 'Total Cost' : 'You Receive'}
                 </span>
                 <span className="text-[#D4AF37] font-bold">
-                  ${(pendingTx.shares * currentPrice * (pendingTx.type === 'buy' ? 1.01 : 0.99)).toFixed(2)}
+                  ${(pendingTx.type === 'buy' 
+                    ? Math.ceil(pendingTx.shares * currentPrice * 1.01 * 100) / 100 
+                    : Math.floor(pendingTx.shares * currentPrice * 0.99 * 100) / 100).toFixed(2)}
                 </span>
               </div>
             </div>

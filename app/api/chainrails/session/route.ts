@@ -23,8 +23,9 @@ export async function GET(request: Request) {
 
 
         let finalAmount = parseFloat(amount);
+        let numericAmount = 0;
         if (!isNaN(finalAmount)) {
-            amount = finalAmount.toFixed(2);
+            numericAmount = parseFloat((Math.ceil(finalAmount * 100) / 100).toFixed(2));
         }
 
         if (!recipient) {
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
         });
 
         const session = await crapi.auth.getSessionToken({
-            amount: amount,
+            amount: numericAmount.toString(),
             recipient: recipient,
             destinationChain: destinationChain as any,
             token: token as any,
