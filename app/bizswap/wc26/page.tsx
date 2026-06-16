@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Award01Icon, ChartUpIcon, ArrowLeft01Icon, InformationCircleIcon, Coins01Icon, FootballIcon } from "hugeicons-react";
+import { Award01Icon, ChartUpIcon, ArrowLeft01Icon, InformationCircleIcon, Coins01Icon, FootballIcon, BankIcon, Bitcoin01Icon, Copy01Icon } from "hugeicons-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
@@ -30,6 +30,11 @@ export default function WC26Page() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState<string | undefined>();
+  const [showMethodModal, setShowMethodModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [bankDetails, setBankDetails] = useState<any>(null);
+  const [onswitchReference, setOnswitchReference] = useState<string | null>(null);
+
   const [pendingTx, setPendingTx] = useState<{ type: 'buy' | 'sell', shares: number } | null>(null);
   const pendingTxRef = React.useRef(pendingTx);
   useEffect(() => {
@@ -83,7 +88,7 @@ export default function WC26Page() {
     const cost = shares * currentPrice * 1.01;
 
     setPendingTx({ type: 'buy', shares });
-    handleInitiateDeposit((Math.ceil(cost * 100) / 100).toFixed(2));
+    setShowMethodModal(true);
   };
 
   const executeBuy = async (tx?: { type: 'buy' | 'sell', shares: number }) => {
@@ -201,6 +206,44 @@ export default function WC26Page() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleFiatPayment = async () => {
+    if (!pendingTx || pendingTx.type !== 'buy') return;
+    const shares = pendingTx.shares;
+    const currentPrice = poolState?.current_price_usd;
+    const cost = shares * currentPrice * 1.01;
+    const amount = (Math.ceil(cost * 100) / 100).toFixed(2);
+
+    setShowMethodModal(false);
+    setIsProcessing(true);
+    
+    try {
+      const res = await fetch('/api/onswitch/onramp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, shares, amount: parseFloat(amount) })
+      });
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to initiate fiat payment');
+      }
+      
+      setBankDetails(data.depositDetails);
+      setOnswitchReference(data.reference);
+      setShowBankModal(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Error initiating fiat payment');
+      setPendingTx(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
   };
 
   if (loading) {
@@ -537,6 +580,123 @@ export default function WC26Page() {
           styles={{ theme: 'dark', accentColor: '#D4AF37' }}
           onSuccess={handleDepositSuccess}
         />
+      )}
+
+      {/* Payment Method Modal */}
+      {showMethodModal && pendingTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-[#0A1019]/90 border border-[#D4AF37]/30 rounded-3xl p-8 w-full max-w-md shadow-[0_0_40px_rgba(212,175,55,0.1)] relative backdrop-blur-xl">
+            <h3 className="text-2xl font-display font-bold text-white mb-2">Select Payment Method</h3>
+            <p className="text-gray-400 mb-8">Choose how you want to pay for {pendingTx.shares} WC26 Vouchers.</p>
+
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  setShowMethodModal(false);
+                  const cost = pendingTx.shares * currentPrice * 1.01;
+                  handleInitiateDeposit((Math.ceil(cost * 100) / 100).toFixed(2));
+                }}
+                className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#D4AF37]/50 hover:bg-white/10 transition-all group flex items-center gap-4 text-left"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center shrink-0">
+                  <Bitcoin01Icon className="w-6 h-6 text-[#D4AF37]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-lg group-hover:text-[#D4AF37] transition-colors">Pay with Crypto</h4>
+                  <p className="text-sm text-gray-400">Instant deposit via ChainRails</p>
+                </div>
+              </button>
+
+              <button
+                onClick={handleFiatPayment}
+                className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#81D7B4]/50 hover:bg-white/10 transition-all group flex items-center gap-4 text-left"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#81D7B4]/20 flex items-center justify-center shrink-0">
+                  <BankIcon className="w-6 h-6 text-[#81D7B4]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-lg group-hover:text-[#81D7B4] transition-colors">Pay with Fiat</h4>
+                  <p className="text-sm text-gray-400">Bank Transfer in NGN</p>
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => { setShowMethodModal(false); setPendingTx(null); }}
+              className="mt-6 w-full py-3 rounded-xl border border-transparent text-gray-500 hover:text-white transition-colors font-semibold"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bank Deposit Modal */}
+      {showBankModal && bankDetails && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-[#0A1019]/90 border border-[#81D7B4]/30 rounded-3xl p-8 w-full max-w-md shadow-[0_0_40px_rgba(129,215,180,0.1)] relative backdrop-blur-xl">
+            <h3 className="text-2xl font-display font-bold text-white mb-2">Bank Transfer</h3>
+            <p className="text-gray-400 mb-6">Transfer the exact amount below. Your vouchers will be credited once the payment is received.</p>
+
+            <div className="bg-[#020611] rounded-2xl p-5 border border-[#1E2F45] space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1 font-medium">Bank Name</p>
+                <p className="text-white font-semibold">{bankDetails.bank_name}</p>
+              </div>
+              
+              <div className="flex justify-between items-center group">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Account Number</p>
+                  <p className="text-xl font-bold text-[#81D7B4] tracking-wider">{bankDetails.account_number}</p>
+                </div>
+                <button 
+                  onClick={() => copyToClipboard(bankDetails.account_number)}
+                  className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <Copy01Icon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500 mb-1 font-medium">Account Name</p>
+                <p className="text-white font-semibold">{bankDetails.account_name}</p>
+              </div>
+
+              <div className="h-px w-full bg-[#1E2F45]" />
+
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Amount to Send</p>
+                  <p className="text-2xl font-black text-white">₦{bankDetails.amount.toLocaleString()}</p>
+                </div>
+                <button 
+                  onClick={() => copyToClipboard(bankDetails.amount.toString())}
+                  className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <Copy01Icon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 bg-[#FF6B6B]/10 border border-[#FF6B6B]/20 rounded-xl p-3">
+              <p className="text-xs text-[#FF6B6B] font-medium text-center">
+                Send exactly ₦{bankDetails.amount.toLocaleString()} or the transaction will fail.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { 
+                setShowBankModal(false); 
+                setBankDetails(null); 
+                setPendingTx(null);
+                toast.success('We will credit your vouchers once the transfer is confirmed!');
+              }}
+              className="mt-6 w-full py-4 rounded-xl bg-[#81D7B4] text-black font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all"
+            >
+              I have paid
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
