@@ -10,7 +10,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    const ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
+    let ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
+    
+    // Force read from .env if Next.js hasn't hot-reloaded the env variables yet
+    if (!ONSWITCH_API_KEY) {
+      const fs = require('fs');
+      const path = require('path');
+      try {
+        const envFile = fs.readFileSync(path.resolve(process.cwd(), '.env'), 'utf8');
+        const match = envFile.match(/ONSWITCH_API_KEY=(.*)/);
+        if (match && match[1]) ONSWITCH_API_KEY = match[1].trim();
+      } catch (e) {
+        console.error("Could not read .env dynamically", e);
+      }
+    }
+
+    if (!ONSWITCH_API_KEY) {
+      return NextResponse.json({ error: 'ONSWITCH_API_KEY is missing' }, { status: 500 });
+    }
 
     // Generate a unique reference for tracking the transaction
     const reference = crypto.randomUUID();
@@ -38,40 +55,20 @@ export async function POST(req: NextRequest) {
 
     // If API key is present, actually call the API, otherwise simulate for testing if there's no key
     // The user mentioned they will add it later, but they want it fully implemented.
-    if (ONSWITCH_API_KEY && ONSWITCH_API_KEY !== '') {
-      const response = await fetch('https://api.onswitch.xyz/onramp/initiate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-service-key': ONSWITCH_API_KEY,
-        },
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch('https://api.onswitch.xyz/onramp/initiate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-service-key': ONSWITCH_API_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
 
-      onswitchResponseData = await response.json();
+    onswitchResponseData = await response.json();
 
-      if (!response.ok || !onswitchResponseData.success) {
-        console.error("ONSWITCH ERROR DATA:", JSON.stringify(onswitchResponseData, null, 2));
-        return NextResponse.json({ error: 'Failed to initiate onramp', details: onswitchResponseData }, { status: 500 });
-      }
-    } else {
-      // Simulation mock if API key is missing (helpful during dev so UI doesn't crash before they paste key)
-      onswitchResponseData = {
-        success: true,
-        data: {
-          reference: reference,
-          rate: 1500,
-          source: { amount: amount * 1500, currency: 'NGN' },
-          destination: { amount: amount, currency: 'USDC' },
-          deposit: {
-            amount: amount * 1500,
-            account_number: '1234567890',
-            account_name: 'BizSwap Escrow',
-            bank_name: 'Mock Bank PLC',
-            expires_at: new Date(Date.now() + 30 * 60000).toISOString()
-          }
-        }
-      };
+    if (!response.ok || !onswitchResponseData.success) {
+      console.error("ONSWITCH ERROR DATA:", JSON.stringify(onswitchResponseData, null, 2));
+      return NextResponse.json({ error: 'Failed to initiate onramp', details: onswitchResponseData }, { status: 500 });
     }
 
     // Save pending transaction in our DB
