@@ -10,6 +10,8 @@ import toast from 'react-hot-toast';
 import { PaymentModal } from '@chainrails/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useRouter } from 'next/navigation';
+import { ONSWITCH_COUNTRIES, CountryData } from './countries';
+import { Search01Icon } from 'hugeicons-react';
 
 export default function WC26Page() {
   const { ready, authenticated, user, login } = usePrivy();
@@ -31,6 +33,13 @@ export default function WC26Page() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState<string | undefined>();
   const [showMethodModal, setShowMethodModal] = useState(false);
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
+  const [kycName, setKycName] = useState('');
+  const [kycEmail, setKycEmail] = useState('');
+  const [kycPhone, setKycPhone] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<CountryData>(ONSWITCH_COUNTRIES.find(c => c.code === 'NG')!);
   const [showBankModal, setShowBankModal] = useState(false);
   const [bankDetails, setBankDetails] = useState<any>(null);
   const [onswitchReference, setOnswitchReference] = useState<string | null>(null);
@@ -40,6 +49,16 @@ export default function WC26Page() {
   useEffect(() => {
     pendingTxRef.current = pendingTx;
   }, [pendingTx]);
+
+  useEffect(() => {
+    // Attempt to pull the email from Privy in multiple ways
+    const emailAccount = user?.linkedAccounts?.find((account: any) => account.type === 'email') as any;
+    const emailAddr = user?.email?.address || emailAccount?.address;
+    
+    if (emailAddr && !kycEmail) {
+      setKycEmail(emailAddr);
+    }
+  }, [user, kycEmail]);
 
   useEffect(() => {
     fetchData();
@@ -215,14 +234,31 @@ export default function WC26Page() {
     const cost = shares * currentPrice * 1.01;
     const amount = (Math.ceil(cost * 100) / 100).toFixed(2);
 
-    setShowMethodModal(false);
+    setShowKycModal(false);
     setIsProcessing(true);
     
     try {
+      // If the user hasn't filled the form (e.g. they skipped because it's NG), we don't send the payer object.
+      const payload: any = { 
+        userId, 
+        shares, 
+        amount: parseFloat(amount),
+        country: selectedCountry.code,
+        currency: selectedCountry.currency
+      };
+
+      if (kycName && kycEmail) {
+        payload.payer = {
+          name: kycName,
+          email: kycEmail,
+          phone: kycPhone
+        };
+      }
+
       const res = await fetch('/api/onswitch/onramp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, shares, amount: parseFloat(amount) })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       
@@ -608,7 +644,10 @@ export default function WC26Page() {
               </button>
 
               <button
-                onClick={handleFiatPayment}
+                onClick={() => {
+                  setShowMethodModal(false);
+                  setShowCountryModal(true);
+                }}
                 className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#81D7B4]/50 hover:bg-white/10 transition-all group flex items-center gap-4 text-left"
               >
                 <div className="w-12 h-12 rounded-full bg-[#81D7B4]/20 flex items-center justify-center shrink-0">
@@ -627,6 +666,133 @@ export default function WC26Page() {
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Country Selector Modal */}
+      {showCountryModal && pendingTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-[#0A1019]/90 border border-[#81D7B4]/30 rounded-3xl p-6 md:p-8 w-full max-w-md shadow-[0_0_40px_rgba(129,215,180,0.1)] relative backdrop-blur-xl flex flex-col max-h-[85vh]">
+            <h3 className="text-2xl font-display font-bold text-white mb-2">Select Your Country</h3>
+            <p className="text-gray-400 mb-6">Where are you transferring from?</p>
+
+            <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500">
+                <Search01Icon className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search countries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#020611] border border-[#1E2F45] rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#81D7B4]/50 focus:ring-2 focus:ring-[#81D7B4]/10 transition-all"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-[250px] max-h-[400px] pr-2 space-y-2 scrollbar-thin scrollbar-thumb-[#1E2F45] scrollbar-track-transparent">
+              {ONSWITCH_COUNTRIES.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.currency.toLowerCase().includes(searchQuery.toLowerCase())).map((country) => (
+                <button
+                  key={country.code}
+                  onClick={() => setSelectedCountry(country)}
+                  className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all ${
+                    selectedCountry.code === country.code 
+                      ? 'bg-[#81D7B4]/10 border-[#81D7B4]/50 text-white' 
+                      : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10 hover:border-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{country.flag}</span>
+                    <span className="font-medium">{country.name}</span>
+                  </div>
+                  <div className="text-sm text-gray-500 font-medium bg-[#020611] px-2 py-1 rounded-md">
+                    {country.currency}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex gap-3 shrink-0">
+              <button
+                onClick={() => { setShowCountryModal(false); setShowMethodModal(true); }}
+                className="flex-1 py-3 rounded-xl border border-[#1E2F45] text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-semibold"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => { 
+                  setShowCountryModal(false); 
+                  if (selectedCountry.code === 'NG') {
+                    // Nigeria doesn't require the KYC form on Onswitch
+                    handleFiatPayment();
+                  } else {
+                    setShowKycModal(true); 
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl bg-[#81D7B4] text-black font-bold hover:brightness-110 active:scale-95 transition-all"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KYC Details Modal */}
+      {showKycModal && pendingTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-[#0A1019]/90 border border-[#81D7B4]/30 rounded-3xl p-6 md:p-8 w-full max-w-md shadow-[0_0_40px_rgba(129,215,180,0.1)] relative backdrop-blur-xl">
+            <h3 className="text-2xl font-display font-bold text-white mb-2">Banking Compliance</h3>
+            <p className="text-gray-400 mb-6 text-sm">To initiate a secure fiat transfer, Onswitch requires your verified contact details.</p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={kycName}
+                  onChange={(e) => setKycName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="w-full bg-[#020611] border border-[#1E2F45] rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#81D7B4]/50 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={kycEmail}
+                  onChange={(e) => setKycEmail(e.target.value)}
+                  placeholder="e.g. john@example.com"
+                  className="w-full bg-[#020611] border border-[#1E2F45] rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#81D7B4]/50 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={kycPhone}
+                  onChange={(e) => setKycPhone(e.target.value)}
+                  placeholder="e.g. +44 7911 123456"
+                  className="w-full bg-[#020611] border border-[#1E2F45] rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#81D7B4]/50 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 shrink-0">
+              <button
+                onClick={() => { setShowKycModal(false); setShowCountryModal(true); }}
+                className="flex-1 py-3 rounded-xl border border-[#1E2F45] text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-semibold"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleFiatPayment}
+                disabled={isProcessing || !kycName || !kycEmail || !kycPhone}
+                className="flex-1 py-3 rounded-xl bg-[#81D7B4] text-black font-bold hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isProcessing ? 'Processing...' : 'View Bank Details'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -667,7 +833,7 @@ export default function WC26Page() {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-xs text-gray-500 mb-1 font-medium">Amount to Send</p>
-                  <p className="text-2xl font-black text-white">₦{bankDetails.amount.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-white">{selectedCountry?.symbol}{bankDetails.amount.toLocaleString()}</p>
                 </div>
                 <button 
                   onClick={() => copyToClipboard(bankDetails.amount.toString())}
@@ -680,7 +846,7 @@ export default function WC26Page() {
 
             <div className="mt-4 bg-[#FF6B6B]/10 border border-[#FF6B6B]/20 rounded-xl p-3">
               <p className="text-xs text-[#FF6B6B] font-medium text-center">
-                Send exactly ₦{bankDetails.amount.toLocaleString()} or the transaction will fail.
+                Send exactly {selectedCountry?.symbol}{bankDetails.amount.toLocaleString()} or the transaction will fail.
               </p>
             </div>
 

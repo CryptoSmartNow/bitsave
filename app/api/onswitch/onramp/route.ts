@@ -4,9 +4,9 @@ import clientPromise from '@/lib/mongodb';
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, userId, shares } = await req.json();
+    const { amount, userId, shares, reference: explicitReference, country, currency, payer } = await req.json();
 
-    if (!amount || !userId || !shares) {
+    if (!amount || !userId || !shares || !country || !currency) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
@@ -30,26 +30,39 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate a unique reference for tracking the transaction
-    const reference = crypto.randomUUID();
+    const reference = explicitReference || crypto.randomUUID();
+
+    // Determine the callback URL based on the environment
+    const isLocalhost = req.headers.get('origin')?.startsWith('http://localhost') || req.headers.get('origin')?.includes('ngrok');
+    const callbackUrl = isLocalhost 
+      ? 'https://www.bizswap.com/api/onswitch/webhook' 
+      : `${req.headers.get('origin')}/api/onswitch/webhook`;
 
     // The payload for the Onswitch initiate endpoint
-    const payload = {
+    const payload: any = {
       amount: amount,
-      country: 'NG',
-      currency: 'NGN',
+      country: country,
+      currency: currency,
       asset: 'base:usdc',
       exact_output: true,
-      channel: 'BLOCKCHAIN',
       beneficiary: {
         holder_type: 'BUSINESS',
         holder_name: 'BizMarket Operations',
-        wallet_address: '0xe1896D56209581A05AEE4e34eE5316df0807BA76'
+        wallet_address: '0xe1896D5E7547D63e79861d53A3DaCb066769Dfb1',
+        channel: 'BLOCKCHAIN'
       },
       reference: reference,
-      // For local testing without ngrok, this will not be reachable by Onswitch,
-      // but we provide it based on the current origin if deployed.
-      callback_url: `${(req.headers.get('origin') && !req.headers.get('origin')?.startsWith('http://localhost')) ? req.headers.get('origin') : 'https://www.bizswap.com'}/api/onswitch/webhook`
+      callback_url: callbackUrl
     };
+
+    if (payer && payer.name && payer.email) {
+      payload.payer = {
+        email: payer.email,
+        name: payer.name,
+        mobile_number: payer.phone,
+        mobile_network: 'VODAFONE' // Required by Onswitch even for Open Banking compliance
+      };
+    }
 
     let onswitchResponseData;
 
@@ -68,7 +81,10 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok || !onswitchResponseData.success) {
       console.error("ONSWITCH ERROR DATA:", JSON.stringify(onswitchResponseData, null, 2));
-      return NextResponse.json({ error: 'Failed to initiate onramp', details: onswitchResponseData }, { status: 500 });
+      return NextResponse.json({ 
+        error: onswitchResponseData.message || 'Failed to initiate onramp', 
+        details: onswitchResponseData 
+      }, { status: 500 });
     }
 
     // Save pending transaction in our DB
