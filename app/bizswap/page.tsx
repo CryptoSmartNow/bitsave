@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Activity01Icon, Dollar01Icon, Shield01Icon, BarChartIcon, Wallet01Icon, ArrowLeftRightIcon, ChampionIcon } from "hugeicons-react";
+import { Activity01Icon, Dollar01Icon, Shield01Icon, BarChartIcon, Wallet01Icon, ArrowLeftRightIcon, ChampionIcon, Download01Icon } from "hugeicons-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -34,7 +34,7 @@ function WC26Countdown() {
   }, []);
 
   return (
-    <div className="flex flex-wrap justify-center sm:justify-start items-center gap-1 sm:gap-2 mt-3">
+    <div className="flex flex-wrap justify-start items-center gap-1 sm:gap-2 mt-3">
       <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded px-2 py-1 text-xs font-bold text-[#D4AF37] tracking-wider min-w-[36px] text-center">
         {timeLeft.days}D
       </div>
@@ -192,6 +192,37 @@ export default function BizSwapLandingPage() {
     }
   };
 
+  // PWA Install state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      alert('App is already installed or your browser does not support installation.');
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    }
+  };
+
+
+
   if (!mounted) return null;
 
   return (
@@ -214,14 +245,21 @@ export default function BizSwapLandingPage() {
               <a href="#about" className="text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors">About</a>
               <a href="#instruments" className="text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors">Instruments</a>
               <a href="#how-it-works" className="text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors">How it Works</a>
-              <a href="#why" className="text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors">Why Us</a>
               <a href="https://bizfi.mintlify.app/" target="_blank" rel="noopener noreferrer" className="text-[#9BA8B5] hover:text-[#F9F9FB] transition-colors">Docs</a>
             </div>
-            <Link href="/bizswap/app" className="group relative inline-flex items-center justify-center px-5 py-2 font-black text-[#0F1825] bg-[#81D7B4] rounded-xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_15px_rgba(129,215,180,0.2)] hover:shadow-[0_0_25px_rgba(129,215,180,0.4)]">
-              <span className="relative flex items-center text-sm">
-                Launch App
-              </span>
-            </Link>
+            <div className="flex items-center gap-3">
+              {isInstallable && (
+                <button onClick={handleInstallClick} className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-[#F9F9FB] border border-[#2C3E5D] hover:border-[#81D7B4]/40 bg-[#0F1825] rounded-xl transition-all hover:bg-[#81D7B4]/10 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                  <Download01Icon className="w-3.5 h-3.5 mr-1.5" />
+                  Install
+                </button>
+              )}
+              <Link href="/bizswap/app" className="group relative inline-flex items-center justify-center px-5 py-2 font-black text-[#0F1825] bg-[#81D7B4] rounded-xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_15px_rgba(129,215,180,0.2)] hover:shadow-[0_0_25px_rgba(129,215,180,0.4)]">
+                <span className="relative flex items-center text-sm">
+                  Launch App
+                </span>
+              </Link>
+            </div>
           </div>
         </nav>
       </div>
@@ -261,25 +299,27 @@ export default function BizSwapLandingPage() {
             {/* WC26 BANNER */}
             <div className="mb-12 mt-6">
               <Link href="/bizswap/wc26" className="block w-full">
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0A3622] to-[#051A10] border border-[#D4AF37]/40 p-4 md:p-6 shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] transition-all group flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0A3622] to-[#051A10] border border-[#D4AF37]/40 p-4 md:p-6 shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] transition-all group flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                  <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10 text-center sm:text-left">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center shrink-0">
-                      <ChampionIcon className="w-6 h-6 text-[#051A10]" />
+                  <div className="flex flex-row items-start sm:items-center gap-3 sm:gap-4 relative z-10 text-left">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 mt-1 sm:mt-0 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center shrink-0">
+                      <ChampionIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#051A10]" />
                     </div>
                     <div>
-                      <div className="flex flex-col sm:flex-row items-center gap-2 mb-1 justify-center sm:justify-start">
+                      <div className="flex flex-row items-center gap-2 mb-1 justify-start">
                         <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">Live Now</span>
-                        <h3 className="text-xl md:text-2xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>WC26 Vouchers</h3>
+                        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>WC26 Vouchers</h3>
                       </div>
-                      <p className="text-sm text-gray-300 font-medium">Trade temporary instruments backed by World Cup revenue. Expires July 19.</p>
+                      <p className="text-xs sm:text-sm text-gray-300 font-medium">Trade temporary instruments backed by World Cup revenue. Expires July 19.</p>
                       <WC26Countdown />
                     </div>
                   </div>
-                  <div className="relative z-10 shrink-0">
-                    <span className="inline-flex items-center justify-center px-6 py-3 font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-xl transition-transform group-hover:scale-105">
+                  <div className="relative z-10 shrink-0 w-full md:w-auto mt-2 md:mt-0 flex flex-col items-center md:items-end gap-1.5">
+                    <p className="hidden md:block text-[11px] text-[#D4AF37]/80 font-medium tracking-wide">Prices climbs by $2 as the World Cup advances.</p>
+                    <span className="w-full flex items-center justify-center px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-xl transition-transform group-hover:scale-105">
                       Trade Now →
                     </span>
+                    <p className="block md:hidden text-[10px] text-[#D4AF37]/80 font-medium tracking-wide text-center">Prices climbs by $2 as the World Cup advances.</p>
                   </div>
                 </div>
               </Link>
@@ -348,98 +388,40 @@ export default function BizSwapLandingPage() {
           </div>
         </section>
 
-        {/* SECTION 2 - WHAT IS BIZSWAP */}
-        <section id="about" className="py-36 relative overflow-hidden">
+        {/* SECTION 2 — YIELD OPPORTUNITY */}
+        <section id="about" className="py-32 md:py-40 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle, rgba(129,215,180,0.03) 1px, transparent 1px)", backgroundSize: "44px 44px" }} />
             <div className="absolute top-0 left-0 right-0 h-px bg-[#1E2F45]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#81D7B4]/[0.03] blur-[120px] rounded-full" />
           </div>
           <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-
-            {/* Top label row */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex items-center gap-2 mb-20">
-              <div className="h-px w-8 bg-[#81D7B4]" />
-              <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">About BizSwap</span>
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center max-w-5xl mx-auto">
+              <motion.h2
+                variants={fadeUp}
+                className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-[1.06] text-[#F9F9FB] tracking-tight mb-8"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Earn 2x more yield from<br className="hidden md:block" /> <span className="text-[#81D7B4]">Emerging Markets&apos;</span> Money Market.
+              </motion.h2>
+              <motion.p variants={fadeUp} className="text-[#7B8B9A] text-xl leading-relaxed max-w-3xl mx-auto">
+                BizSwap provides seamless access to high-quality Real World Assets (RWAs) with transparent, predictable yield schedules directly to your wallet.
+              </motion.p>
             </motion.div>
 
-            {/* Editorial two-column */}
-            <div className="grid lg:grid-cols-12 gap-16 items-start">
+            {/* Stats row */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-16 flex justify-center gap-10 md:gap-16 border-t border-b border-[#1E2F45] py-8 max-w-3xl mx-auto">
+              {[
+                { value: "100%", label: "On-Chain" },
+                { value: "3", label: "Instruments" },
+                { value: "USDC", label: "Stablecoin Payouts" },
+              ].map(({ value, label }) => (
+                <div key={label} className="text-center">
+                  <p className="text-2xl md:text-3xl font-extrabold text-[#F9F9FB] leading-none mb-1" style={{ fontFamily: "var(--font-display)" }}>{value}</p>
+                  <p className="text-xs text-[#7B8B9A] font-medium uppercase tracking-wider">{label}</p>
+                </div>
+              ))}
+            </motion.div>
 
-              {/* Left: large pull headline + body */}
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={staggerContainer} className="lg:col-span-5">
-                <motion.h2
-                  variants={fadeUp}
-                  className="text-6xl md:text-7xl font-extrabold leading-[1.04] text-[#F9F9FB] mb-10"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  Never run<br />out of<br /><span className="text-[#81D7B4]">yield.</span>
-                </motion.h2>
-
-                {/* Horizontal stat row */}
-                <motion.div variants={fadeUp} className="flex gap-10 mb-10 border-t border-b border-[#1E2F45] py-7">
-                  {[
-                    { value: "100%", label: "On-Chain" },
-                    { value: "3", label: "Instruments" },
-                    { value: "USDC", label: "Stablecoin Payouts" },
-                  ].map(({ value, label }) => (
-                    <div key={label}>
-                      <p className="text-2xl font-extrabold text-[#F9F9FB] leading-none mb-1" style={{ fontFamily: "var(--font-display)" }}>{value}</p>
-                      <p className="text-xs text-[#7B8B9A] font-medium uppercase tracking-wider">{label}</p>
-                    </div>
-                  ))}
-                </motion.div>
-
-                <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed">
-                  BizSwap is the decentralized exchange (DEX) for swapping your stablecoins into BizShares. It provides seamless access to high-quality Real World Assets (RWAs) with transparent, predictable yield schedules.
-                </motion.p>
-              </motion.div>
-
-              {/* Right: clean swap card + feature list */}
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="lg:col-span-7 flex flex-col gap-6">
-
-                {/* Swap card — icon-minimal */}
-                <motion.div variants={fadeUp} className="bg-[#0D1724] border border-[#1E2F45] rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-px bg-[#81D7B4]/15" />
-                  <div className="absolute -top-16 -right-16 w-40 h-40 bg-[#81D7B4]/4 blur-[60px] rounded-full" />
-
-                  {/* Swap row */}
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <p className="text-[#7B8B9A] text-[10px] font-bold uppercase tracking-[0.18em] mb-2">You Supply</p>
-                      <p className="font-extrabold text-3xl text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>1,000 USDC</p>
-                    </div>
-                    <div className="text-[#81D7B4]/40 text-2xl font-thin select-none px-4">→</div>
-                    <div className="text-right">
-                      <p className="text-[#7B8B9A] text-[10px] font-bold uppercase tracking-[0.18em] mb-2">You Receive</p>
-                      <p className="font-extrabold text-3xl text-[#81D7B4]" style={{ fontFamily: "var(--font-display)" }}>BizBond</p>
-                    </div>
-                  </div>
-
-                  {/* Yield callout */}
-                  <div className="bg-[#081018] rounded-2xl px-7 py-6 border border-[#1E2F45]">
-                    <p className="text-[#7B8B9A] text-[10px] font-bold uppercase tracking-[0.18em] mb-3">Yield Generated</p>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-5xl font-black text-[#81D7B4]" style={{ fontFamily: "var(--font-display)" }}>+10%</span>
-                      <span className="text-base font-semibold text-[#7B8B9A]">Annually · Paid quarterly to your wallet</span>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Feature list — text-only, no icon boxes */}
-                <motion.div variants={fadeUp} className="grid sm:grid-cols-2 gap-4">
-                  {[
-                    { label: "100% On-Chain", desc: "Every transaction is recorded immutably on-chain. No black boxes, no hidden counterparties." },
-                    { label: "Stablecoin Payouts", desc: "Receive yield in USDC or local stablecoins — never in volatile token emissions." },
-                  ].map(({ label, desc }) => (
-                    <div key={label} className="bg-[#0D1724] border border-[#1E2F45] hover:border-[#81D7B4]/25 rounded-2xl px-6 py-5 transition-colors">
-                      <p className="font-bold text-[#F9F9FB] text-sm mb-1.5" style={{ fontFamily: "var(--font-display)" }}>{label}</p>
-                      <p className="text-[#7B8B9A] text-sm leading-relaxed">{desc}</p>
-                    </div>
-                  ))}
-                </motion.div>
-
-              </motion.div>
-            </div>
           </div>
         </section>
 
@@ -583,57 +565,6 @@ export default function BizSwapLandingPage() {
               </div>
 
             </div>
-          </div>
-        </section>
-
-        {/* SECTION 5 - WHY BIZSWAP */}
-        <section id="why" className="py-36 bg-[#080E18] relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle, rgba(129,215,180,0.025) 1px, transparent 1px)", backgroundSize: "52px 52px" }} />
-            <div className="absolute top-0 left-0 right-0 h-px bg-[#1E2F45]" />
-          </div>
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-
-            {/* Header */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="mb-20">
-              <motion.div variants={fadeUp} className="flex items-center gap-2 mb-6">
-                <div className="h-px w-8 bg-[#81D7B4]" />
-                <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">Why Choose Us</span>
-              </motion.div>
-              <div className="grid lg:grid-cols-2 gap-10 items-end">
-                <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>
-                  Built on Transparency<br />& <span className="text-[#81D7B4]">Real Assets.</span>
-                </motion.h2>
-                <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed">
-                  We bridge the gap between DeFi liquidity and real-world economic value, offering a sustainable alternative to volatile tokenomics.
-                </motion.p>
-              </div>
-            </motion.div>
-
-            {/* Tiled feature grid — no icons */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid md:grid-cols-2 gap-px bg-[#1E2F45] border border-[#1E2F45] rounded-3xl overflow-hidden">
-              {[
-                { num: "01", title: "Stablecoin Yield Only", desc: "Every payment arrives in your chosen local stablecoin or USDC. No volatile token emissions." },
-                { num: "02", title: "Real Assets Underneath", desc: "Every instrument is backed by a real world yield generating activity — a business revenue, a loan book, or a government bond." },
-                { num: "03", title: "Direct Oversight", desc: "BizMarket's private equity arm holds a stake in the business for every BizYield listing. We have access to the books." },
-                { num: "04", title: "On-Chain Ownership", desc: "Every purchase issues a digital certificate to your wallet. Your ownership is immutable and transparent." },
-              ].map((item, i) => (
-                <motion.div key={i} variants={fadeUp} className="bg-[#0D1724] p-10 hover:bg-[#0F1A2A] transition-colors group">
-                  <p className="text-xs font-black tracking-[0.2em] text-[#81D7B4]/50 mb-5" style={{ fontFamily: "var(--font-display)" }}>{item.num}</p>
-                  <h4 className="text-2xl font-extrabold text-[#F9F9FB] mb-3 group-hover:text-[#81D7B4] transition-colors" style={{ fontFamily: "var(--font-display)" }}>{item.title}</h4>
-                  <p className="text-[#7B8B9A] text-base leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Bottom inline CTA */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-8 flex items-center justify-between bg-[#0D1724] border border-[#1E2F45] rounded-2xl px-8 py-6">
-              <p className="text-[#F9F9FB] font-semibold text-lg">Ready to start earning real yield?</p>
-              <Link href="/bizswap/app" className="px-7 py-3 bg-[#81D7B4] text-[#0F1825] font-black rounded-xl text-sm transition-all hover:opacity-90 hover:scale-105" style={{ fontFamily: "var(--font-display)" }}>
-                Start Earning
-              </Link>
-            </motion.div>
-
           </div>
         </section>
 

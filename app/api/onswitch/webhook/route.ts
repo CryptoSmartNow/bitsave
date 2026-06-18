@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       if (!client) {
         throw new Error('Database client is not available');
       }
-      const db = client.db('CryptoSmartNow');
+      const db = client.db('bitsave');
       const transactionsCollection = db.collection('wc26_transactions');
       const positionsCollection = db.collection('wc26_positions');
       const poolCollection = db.collection('wc26_pool');
@@ -37,11 +37,19 @@ export async function POST(req: NextRequest) {
           { $set: { status: 'completed', updated_at: new Date() } }
         );
 
+        // Calculate investment vs fees based on a fixed $10 share price
+        const pureInvestment = transaction.shares * 10;
+        const feePaid = transaction.usdcAmount - pureInvestment;
+
         // Update the user's position
         await positionsCollection.updateOne(
-          { userId: transaction.userId },
+          { user_id: transaction.userId },
           {
-            $inc: { shares: transaction.shares, totalInvestment: transaction.usdcAmount },
+            $inc: { 
+              shares_held: transaction.shares, 
+              total_invested_usd: pureInvestment,
+              total_fees_paid: feePaid > 0 ? feePaid : 0
+            },
             $set: { lastUpdated: new Date() },
             $setOnInsert: { createdAt: new Date() }
           },
@@ -50,14 +58,14 @@ export async function POST(req: NextRequest) {
 
         // Update the pool stats
         await poolCollection.updateOne(
-          { name: 'WC26' },
+          { _id: 'main_pool' as any },
           {
             $inc: { 
-              totalShares: transaction.shares, 
-              totalUSDC: transaction.usdcAmount 
+              current_supply: transaction.shares, 
+              current_tvl_usd: pureInvestment 
             },
-            $set: { lastUpdated: new Date() },
-            $setOnInsert: { createdAt: new Date() }
+            $set: { last_updated: new Date() },
+            $setOnInsert: { created_at: new Date() }
           },
           { upsert: true }
         );
