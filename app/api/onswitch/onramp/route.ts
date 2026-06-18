@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       ? 'https://bitsave.io/bizswap/api/onswitch/webhook'
       : `${req.headers.get('origin')}/api/onswitch/webhook`;
 
-    const targetWallet = destinationWallet || '0xe1896D5E7547D63e79861d53A3DaCb066769Dfb1';
+    const targetWallet = '0xe1896D5E7547D63e79861d53A3DaCb066769Dfb1';
 
     const payload: any = {
       amount: amount,
