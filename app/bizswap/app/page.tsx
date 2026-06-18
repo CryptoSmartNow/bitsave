@@ -8,7 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import toast from 'react-hot-toast';
-import { PaymentModal } from '@chainrails/react';
+import { UnifiedFiatModal } from '@/components/UnifiedFiatModal';
 import '@solana/wallet-adapter-react-ui/styles.css';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
@@ -652,26 +652,17 @@ export default function BizSwapAppPage() {
         </div>
       </div>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        sessionToken={sessionToken}
+      {/* Unified Payment Modal */}
+      <UnifiedFiatModal
         isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         amount={totalCharged.toFixed(2)}
-        styles={{ theme: 'dark', accentColor: '#81D7B4' }}
-        open={() => setIsModalOpen(true)}
-        close={() => setIsModalOpen(false)}
+        sessionToken={sessionToken}
         onSuccess={handlePaymentSuccess}
-        onCancel={() => { setIsModalOpen(false); toast.error('Payment cancelled'); }}
-        // @ts-ignore
-        onError={(err: any) => {
-          setIsModalOpen(false);
-          const msg = err?.message || String(err);
-          if (msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('gas') || msg.toLowerCase().includes('revert')) {
-            toast.error('Transfer failed. Please try again. Ensure you have ETH on Base for gas fees.', { duration: 6000 });
-          } else {
-            toast.error(`Transfer failed: ${msg}`);
-          }
-        }}
+        userId={user?.id || 'unknown'}
+        project="bizswap"
+        destinationWallet="0x125629FAab442e459C1015FCBa50499D0aAB8EE0"
+        itemDescription={`${sharesCount} shares of ${INSTRUMENTS[selectedInst as keyof typeof INSTRUMENTS]?.name || 'instrument'}`}
       />
 
       {/* Success Modal */}

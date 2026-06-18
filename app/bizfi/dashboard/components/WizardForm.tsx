@@ -3,7 +3,7 @@
 import { Cancel01Icon, LinkSquare01Icon } from "hugeicons-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PaymentModal } from "@chainrails/react";
+import { UnifiedFiatModal } from "@/components/UnifiedFiatModal";
 
 type TierType = 'micro' | 'builder' | 'growth' | 'enterprise';
 
@@ -481,16 +481,17 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 )}
             </div>
 
-            {/* Chainrails Payment Modal */}
-            <PaymentModal
-                sessionToken={sessionToken || ""}
+            {/* Unified Payment Modal */}
+            <UnifiedFiatModal
                 isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
                 amount={(isReferralValid ? selectedTier.referralPrice : selectedTier.price).toFixed(2)}
-                styles={{ theme: 'dark', accentColor: '#81D7B4' }}
-                open={() => setIsPaymentModalOpen(true)}
-                close={() => setIsPaymentModalOpen(false)}
-                onSuccess={(tx: any) => handlePaymentSuccess(tx.hash)}
-                onCancel={() => { setIsPaymentModalOpen(false); setNotificationConfig({ type: 'error', title: 'PAYMENT CANCELLED', message: 'You cancelled the checkout process.' }); setShowNotification(true); }}
+                sessionToken={sessionToken}
+                onSuccess={(txHash: string) => handlePaymentSuccess(txHash)}
+                userId={address || "unknown"}
+                project="bizfi"
+                destinationWallet="0x125629FAab442e459C1015FCBa50499D0aAB8EE0"
+                itemDescription={`${selectedTier.name} Business Tier`}
             />
 
             {/* Notification Modal */}

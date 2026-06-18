@@ -4,15 +4,14 @@ import clientPromise from '@/lib/mongodb';
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, userId, shares, reference: explicitReference, country, currency, payer } = await req.json();
+    const { amount, userId, shares, reference: explicitReference, country, currency, payer, project, destinationWallet } = await req.json();
 
-    if (!amount || !userId || !shares || !country || !currency) {
+    if (!amount || !userId || !country || !currency || !project) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
     let ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
-    
-    // Force read from .env if Next.js hasn't hot-reloaded the env variables yet
+
     if (!ONSWITCH_API_KEY) {
       const fs = require('fs');
       const path = require('path');
@@ -29,16 +28,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ONSWITCH_API_KEY is missing' }, { status: 500 });
     }
 
-    // Generate a unique reference for tracking the transaction
     const reference = explicitReference || crypto.randomUUID();
 
-    // Determine the callback URL based on the environment
     const isLocalhost = req.headers.get('origin')?.startsWith('http://localhost') || req.headers.get('origin')?.includes('ngrok');
-    const callbackUrl = isLocalhost 
-      ? 'https://www.bizswap.com/api/onswitch/webhook' 
+    const callbackUrl = isLocalhost
+      ? 'https://bitsave.io/bizswap/api/onswitch/webhook'
       : `${req.headers.get('origin')}/api/onswitch/webhook`;
 
-    // The payload for the Onswitch initiate endpoint
+    const targetWallet = destinationWallet || '0xe1896D5E7547D63e79861d53A3DaCb066769Dfb1';
+
     const payload: any = {
       amount: amount,
       country: country,
@@ -48,7 +46,7 @@ export async function POST(req: NextRequest) {
       beneficiary: {
         holder_type: 'BUSINESS',
         holder_name: 'BizMarket Operations',
-        wallet_address: '0xe1896D5E7547D63e79861d53A3DaCb066769Dfb1',
+        wallet_address: targetWallet,
         channel: 'BLOCKCHAIN'
       },
       reference: reference,
@@ -66,8 +64,6 @@ export async function POST(req: NextRequest) {
 
     let onswitchResponseData;
 
-    // If API key is present, actually call the API, otherwise simulate for testing if there's no key
-    // The user mentioned they will add it later, but they want it fully implemented.
     const response = await fetch('https://api.onswitch.xyz/onramp/initiate', {
       method: 'POST',
       headers: {
@@ -81,9 +77,9 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok || !onswitchResponseData.success) {
       console.error("ONSWITCH ERROR DATA:", JSON.stringify(onswitchResponseData, null, 2));
-      return NextResponse.json({ 
-        error: onswitchResponseData.message || 'Failed to initiate onramp', 
-        details: onswitchResponseData 
+      return NextResponse.json({
+        error: onswitchResponseData.message || 'Failed to initiate onramp',
+        details: onswitchResponseData
       }, { status: 500 });
     }
 
@@ -92,20 +88,28 @@ export async function POST(req: NextRequest) {
     if (!client) {
       throw new Error('Database client is not available');
     }
-    const db = client.db('CryptoSmartNow');
-    const transactionsCollection = db.collection('wc26_transactions');
+    const db = client.db('bitsave');
 
-    await transactionsCollection.insertOne({
+    // Dynamically save to a specific collection based on the project
+    const collectionName = project ? `${project}_transactions` : 'wc26_transactions';
+    const transactionsCollection = db.collection(collectionName);
+
+    const transactionRecord: any = {
       userId,
       type: 'buy',
       paymentMethod: 'fiat_onswitch',
-      shares,
       usdcAmount: amount,
       fiatAmount: onswitchResponseData.data.deposit.amount,
       reference,
       status: 'pending',
       timestamp: new Date()
-    });
+    };
+
+    if (shares) {
+      transactionRecord.shares = shares;
+    }
+
+    await transactionsCollection.insertOne(transactionRecord);
 
     return NextResponse.json({
       success: true,
