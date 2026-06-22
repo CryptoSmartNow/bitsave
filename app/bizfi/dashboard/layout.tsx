@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity01Icon, Home01Icon, BarChartIcon, SparklesIcon, BotIcon, Building04Icon, RocketIcon, Video01Icon, Message02Icon, InformationCircleIcon } from "hugeicons-react";
+import { Activity01Icon, Menu01Icon, Home01Icon, BarChartIcon, SparklesIcon, BotIcon, Building04Icon, RocketIcon, Video01Icon, Message02Icon, InformationCircleIcon } from "hugeicons-react";
 import { useState } from "react";
 import Link from 'next/link';
 import { usePathname } from "next/navigation";
@@ -37,7 +37,7 @@ export default function BizFiDashboardLayout({
     const isActive = (href: string) => pathname === href;
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen text-white relative overflow-x-hidden flex`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
+        <div className={`${exo.variable} font-sans min-h-screen text-white relative overflow-x-hidden flex w-full max-w-full`} style={{ background: 'linear-gradient(180deg, #0F1825 0%, #1A2538 100%)' }}>
             {/* Background Elements */}
             <div className="absolute inset-0 opacity-[0.04]" style={{
                 backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(123, 139, 154, 0.3) 1px, transparent 0)',
@@ -128,7 +128,7 @@ export default function BizFiDashboardLayout({
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+            <div className={`flex-1 min-w-0 overflow-x-hidden transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
                 {/* Header */}
                 <div className="relative z-10 border-b border-gray-800 backdrop-blur-md sticky top-0 bg-gray-900/80">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-4">
@@ -142,7 +142,7 @@ export default function BizFiDashboardLayout({
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(44, 62, 93, 0.5)'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                    <Activity01Icon className="w-6 h-6" />
+                                    <Menu01Icon className="w-6 h-6" />
                                 </button>
                             </div>
                         </div>
