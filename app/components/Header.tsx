@@ -4,19 +4,21 @@ import { Menu01Icon, Cancel01Icon, ArrowUpRight01Icon } from "hugeicons-react";
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import LanguageSelector from '@/components/LanguageSelector';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
   { name: 'Home', href: '/' },
-  { name: 'How It Works', href: '#how-it-works' },
-  { name: 'Features', href: '#features' },
-  { name: 'Blog', href: '#blog' },
-  { name: 'FAQ', href: '#faq' },
+  { name: 'How It Works', href: '/#how-it-works' },
+  { name: 'Features', href: '/#features' },
+  { name: 'Blog', href: '/#blog' },
+  { name: 'Team', href: '/team' },
+  { name: 'FAQ', href: '/#faq' },
 ];
 
 const Header = memo(function Header() {
-
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -63,15 +65,20 @@ const Header = memo(function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center space-x-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="nav-underline px-4 py-2 text-sm font-semibold text-gray-600 hover:text-[#5fb392] transition-colors rounded-full hover:bg-gray-50/80 whitespace-nowrap tracking-wide"
-              >
-                {link.name}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = (link.href === '/' || link.href.startsWith('/#')) 
+                ? pathname === '/' 
+                : pathname?.startsWith(link.href);
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`nav-underline px-4 py-2 text-sm font-semibold transition-colors rounded-full hover:bg-gray-50/80 whitespace-nowrap tracking-wide ${isActive ? 'text-[#5fb392] bg-[#81D7B4]/10' : 'text-gray-600 hover:text-[#5fb392]'}`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
 
             {/* Docs Dropdown */}
             <div className="relative group">
@@ -140,22 +147,27 @@ const Header = memo(function Header() {
             className="fixed inset-0 z-40 bg-white xl:hidden flex flex-col pt-24 px-6 pb-8 overflow-y-auto"
           >
             <div className="flex flex-col space-y-2 mt-4">
-              {navLinks.map((link, idx) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.08 + idx * 0.06, type: "spring", damping: 20 }}
-                >
-                  <Link
-                    href={link.href}
-                    className="block py-4 text-2xl font-bold text-gray-900 border-b border-gray-100 hover:text-[#81D7B4] transition-colors font-display"
-                    onClick={() => setMobileMenuOpen(false)}
+              {navLinks.map((link, idx) => {
+                const isActive = (link.href === '/' || link.href.startsWith('/#')) 
+                  ? pathname === '/' 
+                  : pathname?.startsWith(link.href);
+                return (
+                  <motion.div
+                    key={link.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.08 + idx * 0.06, type: "spring", damping: 20 }}
                   >
-                    {link.name}
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      href={link.href}
+                      className={`block py-4 text-2xl font-bold border-b border-gray-100 transition-colors font-display ${isActive ? 'text-[#81D7B4]' : 'text-gray-900 hover:text-[#81D7B4]'}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  </motion.div>
+                );
+              })}
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}

@@ -4,7 +4,6 @@ import HowItWorks from '../components/HowItWorks';
 import Security from '../components/Security';
 import Features from '../components/Features';
 import BlogSection from '../components/BlogSection';
-import Team from '../components/Team';
 import CredibilitySection from '../components/CredibilitySection';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
@@ -20,7 +19,6 @@ export default function Home() {
         <Security />
         <Features />
         <BlogSection />
-        <Team />
         <FAQ />
       </main>
       <Footer />

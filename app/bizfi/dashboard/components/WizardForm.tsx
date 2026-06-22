@@ -317,9 +317,9 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
     if (isRegistered) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 bg-[#0D1724] border border-[#81D7B4] text-center space-y-8">
+            <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-[#0D1724] border border-[#81D7B4] text-center space-y-6 sm:space-y-8">
                 <div>
-                    <h2 className="text-[32px] md:text-[40px] font-extrabold text-[#F9F9FB] tracking-tight uppercase" style={{ fontFamily: "var(--font-display)" }}>REGISTRATION SUCCESSFUL</h2>
+                    <h2 className="text-2xl sm:text-[32px] md:text-[40px] font-extrabold text-[#F9F9FB] tracking-tight uppercase" style={{ fontFamily: "var(--font-display)" }}>REGISTRATION SUCCESSFUL</h2>
                     <p className="text-[#7B8B9A] max-w-lg mx-auto mt-4">
                         Welcome to BizFi. Your business has been successfully listed and attested.
                     </p>
@@ -365,21 +365,21 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
     return (
         <div className="space-y-8">
             {/* Progress Indicator */}
-            <div className="bg-[#080E18] border border-[#1E2F45] p-8">
-                <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-lg font-bold tracking-wide uppercase text-[#F9F9FB]">APPLICATION PROGRESS</h3>
+            <div className="bg-[#080E18] border border-[#1E2F45] p-3 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
+                    <h3 className="text-base sm:text-lg font-bold tracking-wide uppercase text-[#F9F9FB]">APPLICATION PROGRESS</h3>
                     <span className="text-sm font-mono text-[#81D7B4] font-bold">
                         {currentStep.toString().padStart(2, '0')} / {steps.length.toString().padStart(2, '0')}
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
                     {steps.map((step, index) => (
-                        <div key={step.id} className="flex items-center flex-1">
-                            <div className="flex flex-col items-start w-full">
+                        <div key={step.id} className="flex items-center flex-1 min-w-0">
+                            <div className="flex flex-col items-start w-full min-w-0">
                                 <div
-                                    className={`w-full h-1 mb-3 transition-all ${index + 1 <= currentStep ? 'bg-[#81D7B4]' : 'bg-[#1E2F45]'}`}
+                                    className={`w-full h-1 mb-2 sm:mb-3 transition-all ${index + 1 <= currentStep ? 'bg-[#81D7B4]' : 'bg-[#1E2F45]'}`}
                                 />
-                                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors ${index + 1 <= currentStep ? 'text-[#81D7B4]' : 'text-[#7B8B9A]'}`}>
+                                <span className={`w-full text-[8px] sm:text-[10px] font-bold tracking-widest uppercase transition-colors truncate sm:whitespace-normal sm:break-words pr-1 sm:pr-0 ${index + 1 <= currentStep ? 'text-[#81D7B4]' : 'text-[#7B8B9A]'}`} title={step.title}>
                                     {step.title}
                                 </span>
                             </div>
@@ -396,7 +396,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-[#080E18] border border-[#1E2F45] p-8 md:p-10"
+                    className="bg-[#080E18] border border-[#1E2F45] p-3 sm:p-8 md:p-10"
                 >
                     {renderFormSection(
                         selectedTier.id,
@@ -510,10 +510,10 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 10 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-[#0D1724] border w-full max-w-md p-8"
+                            className="bg-[#0D1724] border w-full max-w-md p-6 sm:p-8"
                             style={{ borderColor: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B' }}
                         >
-                            <h3 className="text-xl font-bold mb-4 tracking-wide uppercase" style={{ color: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B' }}>
+                            <h3 className="text-lg sm:text-xl font-bold mb-4 tracking-wide uppercase" style={{ color: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B' }}>
                                 {notificationConfig.title}
                             </h3>
                             <p className="text-sm leading-relaxed mb-8 text-[#7B8B9A]">
@@ -551,8 +551,8 @@ function renderFormSection(
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Personal Information</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's start with some details about you.</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#F9F9FB] mb-2">Personal Information</h2>
+                    <p className="text-[#7B8B9A] text-xs sm:text-sm">Let's start with some details about you.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">

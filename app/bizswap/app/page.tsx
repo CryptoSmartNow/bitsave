@@ -375,7 +375,12 @@ export default function BizSwapAppPage() {
                         borderColor: isBusinessDropdownOpen ? '#81D7B4' : '#1E2F45',
                       }}
                     >
-                      <span>{businesses.find(b => b.id === selectedBusiness)?.name || 'Select Business'}</span>
+                      <div className="flex items-center gap-3">
+                        {selectedBusiness === 'shard' && (
+                          <Image src="/shard.png" alt="Shard Logo" width={24} height={24} className="rounded-full object-cover" />
+                        )}
+                        <span>{businesses.find(b => b.id === selectedBusiness)?.name || 'Select Business'}</span>
+                      </div>
                       <ArrowDown01Icon className={`w-4 h-4 text-[#7B8B9A] transition-transform ${isBusinessDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isBusinessDropdownOpen && (
@@ -388,13 +393,16 @@ export default function BizSwapAppPage() {
                             key={bus.id}
                             type="button"
                             onClick={() => { setSelectedBusiness(bus.id); setIsBusinessDropdownOpen(false); }}
-                            className="w-full text-left px-5 py-3.5 text-sm font-bold transition-colors"
+                            className="w-full flex items-center gap-3 text-left px-5 py-3.5 text-sm font-bold transition-colors"
                             style={{
                               color: selectedBusiness === bus.id ? '#81D7B4' : '#F9F9FB',
                               backgroundColor: selectedBusiness === bus.id ? '#81D7B410' : 'transparent',
                             }}
                           >
-                            {bus.name}
+                            {bus.id === 'shard' && (
+                              <Image src="/shard.png" alt="Shard Logo" width={20} height={20} className="rounded-full object-cover" />
+                            )}
+                            <span>{bus.name}</span>
                           </button>
                         ))}
                       </div>

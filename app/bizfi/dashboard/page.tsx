@@ -164,21 +164,21 @@ export default function BizFiDashboardPage() {
     }
 
     return (
-        <div className="font-sans bg-[#0F1825] min-h-screen text-[#F9F9FB]">
+        <div className="font-sans bg-[#0F1825] min-h-screen text-[#F9F9FB] w-full overflow-x-hidden">
             <style dangerouslySetInnerHTML={{ __html: `
                 @media (min-width: 1024px) {
                     html { font-size: 90% !important; }
                 }
             `}} />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-[#1E2F45] pb-8">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12 border-b border-[#1E2F45] pb-6 sm:pb-8">
                     <div className="space-y-2">
-                        <h1 className="text-[40px] md:text-[56px] font-extrabold tracking-tight leading-[1.1] text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>
+                        <h1 className="text-3xl sm:text-[40px] md:text-[56px] font-extrabold tracking-tight leading-[1.1] text-[#F9F9FB] break-words" style={{ fontFamily: "var(--font-display)" }}>
                             BUSINESS <span className="text-[#81D7B4]">DASHBOARD</span>
                         </h1>
                         <p className="text-base md:text-lg font-medium text-[#7B8B9A]">Manage your business listing and track performance.</p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-end gap-4">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-start md:justify-end gap-3 sm:gap-4">
                         <button
                             onClick={() => setShowConsultancyModal(true)}
                             className="px-6 py-3 font-bold text-sm tracking-wide uppercase bg-[#0D1724] border border-[#81D7B4] text-[#81D7B4] hover:bg-[#81D7B4] hover:text-[#0F1825] transition-all"
@@ -186,13 +186,13 @@ export default function BizFiDashboardPage() {
                             BOOK CONSULTANCY
                         </button>
                         {authenticated && address && (
-                            <div className="flex items-center gap-4">
-                                <span className="px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-xs font-bold text-gray-300 uppercase tracking-widest">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                                <span className="px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-xs font-bold text-gray-300 uppercase tracking-widest text-center truncate max-w-[200px] sm:max-w-none">
                                     {user?.email?.address || 'AUTHENTICATED'}
                                 </span>
                                 <button
                                     onClick={() => handleLogout()}
-                                    className="px-4 py-3 bg-transparent text-[#7B8B9A] hover:text-red-400 font-bold text-sm tracking-wide uppercase transition-colors"
+                                    className="px-4 py-3 bg-transparent text-[#7B8B9A] hover:text-red-400 font-bold text-sm tracking-wide uppercase transition-colors text-center border sm:border-none border-[#1E2F45] sm:bg-transparent bg-[#0D1724]"
                                 >
                                     LOGOUT
                                 </button>
@@ -206,19 +206,19 @@ export default function BizFiDashboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-12"
                 >
-                    <div className="inline-block px-6 py-4 bg-[#0D1724] border border-[#1E2F45]">
-                        <p className="text-sm md:text-base font-medium tracking-wide uppercase text-[#7B8B9A]">
-                            <span className="text-[#81D7B4] font-bold text-lg mr-2">{(1000 + businessCount).toLocaleString()}</span> 
+                    <div className="inline-block w-full sm:w-auto px-4 sm:px-6 py-4 bg-[#0D1724] border border-[#1E2F45]">
+                        <p className="text-xs sm:text-sm md:text-base font-medium tracking-wide uppercase text-[#7B8B9A] text-center sm:text-left">
+                            <span className="text-[#81D7B4] font-bold text-lg mr-2 inline-block">{(1000 + businessCount).toLocaleString()}</span> 
                             REAL WORLD BUSINESSES LISTED ONCHAIN
                         </p>
                     </div>
                 </motion.div>
 
                 {!authenticated ? (
-                    <div className="flex flex-col items-center justify-center py-20 px-4">
-                        <div className="bg-[#0D1724] border border-[#1E2F45] p-12 max-w-xl w-full text-center">
-                            <h2 className="text-[32px] font-extrabold mb-4 tracking-tight" style={{ fontFamily: "var(--font-display)" }}>ACCESS BIZFI</h2>
-                            <p className="mb-10 text-[#7B8B9A] leading-relaxed">
+                    <div className="flex flex-col items-center justify-center py-12 sm:py-20 px-0 sm:px-4">
+                        <div className="bg-[#0D1724] border border-[#1E2F45] p-6 sm:p-12 max-w-xl w-full text-center">
+                            <h2 className="text-2xl sm:text-[32px] font-extrabold mb-4 tracking-tight" style={{ fontFamily: "var(--font-display)" }}>ACCESS BIZFI</h2>
+                            <p className="mb-8 sm:mb-10 text-[#7B8B9A] leading-relaxed text-sm sm:text-base">
                                 Log in with your email or social accounts to list your business and access the dashboard features.
                             </p>
                             <div className="flex justify-center w-full">
@@ -227,31 +227,31 @@ export default function BizFiDashboardPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid lg:grid-cols-12 gap-8">
-                        <div className="lg:col-span-8 space-y-8">
-                            <div className="bg-[#0D1724] border border-[#1E2F45] p-8 md:p-10">
-                                <div className="mb-8">
-                                    <h2 className="text-[32px] font-extrabold tracking-tight mb-2" style={{ fontFamily: "var(--font-display)" }}>LIST YOUR BUSINESS</h2>
+                    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+                        <div className="lg:col-span-8 space-y-6 sm:space-y-8 min-w-0">
+                            <div className="bg-[#0D1724] border border-[#1E2F45] p-3 sm:p-8 md:p-10">
+                                <div className="mb-6 sm:mb-8">
+                                    <h2 className="text-2xl sm:text-[32px] font-extrabold tracking-tight mb-2" style={{ fontFamily: "var(--font-display)" }}>LIST YOUR BUSINESS</h2>
                                     <p className="text-[#7B8B9A]">Fill the form to bring your business onchain, raise capital, and expand globally.</p>
                                 </div>
 
                                 <div className="mb-10">
                                     <label className="block text-xs font-bold tracking-widest uppercase mb-4 text-[#7B8B9A]">SELECT YOUR BUSINESS TIER</label>
-                                    <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                         {TIERS.map((tier) => (
                                             <button
                                                 key={tier.id}
                                                 onClick={() => setSelectedTier(tier)}
-                                                className={`text-left p-6 border transition-all duration-300 ${selectedTier.id === tier.id
+                                                className={`text-left p-3 sm:p-6 border transition-all duration-300 ${selectedTier.id === tier.id
                                                     ? 'bg-[#1E2F45]/30 border-[#81D7B4]'
                                                     : 'bg-[#080E18] border-[#1E2F45] hover:border-[#7B8B9A]'
                                                     }`}
                                             >
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <span className="font-bold text-lg tracking-wide uppercase" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB', fontFamily: "var(--font-display)" }}>
+                                                <div className="flex justify-between items-start mb-2 sm:mb-4 gap-2">
+                                                    <span className="font-bold text-sm sm:text-lg tracking-wide uppercase" style={{ color: selectedTier.id === tier.id ? '#81D7B4' : '#F9F9FB', fontFamily: "var(--font-display)" }}>
                                                         {tier.name}
                                                     </span>
-                                                    <span className="text-lg font-mono font-bold text-[#F9F9FB]">${tier.price}</span>
+                                                    <span className="text-base sm:text-lg font-mono font-bold text-[#F9F9FB] flex-shrink-0">${tier.price}</span>
                                                 </div>
                                                 <p className="text-sm leading-relaxed text-[#7B8B9A]">{tier.description}</p>
                                             </button>
@@ -259,8 +259,8 @@ export default function BizFiDashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="mb-12 p-6 bg-[#080E18] border border-[#1E2F45]">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                                <div className="mb-8 sm:mb-12 p-3 sm:p-6 bg-[#080E18] border border-[#1E2F45]">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3 sm:gap-4">
                                         <label className="text-sm font-bold tracking-wide uppercase text-[#81D7B4]">
                                             HAVE A REFERRAL CODE?
                                         </label>
@@ -274,13 +274,13 @@ export default function BizFiDashboardPage() {
                                             GET ONE HERE
                                         </Link>
                                     </p>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
                                         <input
                                             type="text"
                                             placeholder="ENTER CODE"
                                             value={referralCode}
                                             onChange={(e) => handleReferralCheck(e.target.value)}
-                                            className="flex-1 px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-white focus:border-[#81D7B4] focus:outline-none font-mono uppercase"
+                                            className="flex-1 min-w-0 px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-white focus:border-[#81D7B4] focus:outline-none font-mono uppercase text-sm sm:text-base"
                                         />
                                         {validatingReferral && (
                                             <div className="flex items-center gap-2 px-4 text-[#7B8B9A] uppercase tracking-widest text-xs font-bold">
@@ -314,9 +314,9 @@ export default function BizFiDashboardPage() {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-4 space-y-8">
-                            <div className="bg-[#0D1724] border border-[#1E2F45] p-8">
-                                <h3 className="text-lg font-bold mb-6 tracking-wide uppercase text-[#F9F9FB]">WHY LIST ON BIZFI?</h3>
+                        <div className="lg:col-span-4 space-y-6 sm:space-y-8 min-w-0">
+                            <div className="bg-[#0D1724] border border-[#1E2F45] p-3 sm:p-8">
+                                <h3 className="text-base sm:text-lg font-bold mb-6 tracking-wide uppercase text-[#F9F9FB]">WHY LIST ON BIZFI?</h3>
                                 <div className="space-y-6">
                                     <div className="border-l-2 border-[#81D7B4] pl-4">
                                         <h4 className="font-bold text-[#F9F9FB] mb-1">GLOBAL ACCESS</h4>
@@ -333,8 +333,8 @@ export default function BizFiDashboardPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-[#0D1724] border border-[#1E2F45] p-8">
-                                <h3 className="text-lg font-bold mb-4 tracking-wide uppercase text-[#F9F9FB]">NEED HELP?</h3>
+                            <div className="bg-[#0D1724] border border-[#1E2F45] p-3 sm:p-8">
+                                <h3 className="text-base sm:text-lg font-bold mb-4 tracking-wide uppercase text-[#F9F9FB]">NEED HELP?</h3>
                                 <p className="text-sm text-[#7B8B9A] mb-8 leading-relaxed">
                                     Not sure which tier fits you? Book a free consultancy session with our experts.
                                 </p>
@@ -388,10 +388,10 @@ export default function BizFiDashboardPage() {
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 10 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-[#0D1724] border border-[#1E2F45] w-full max-w-md p-8"
+                            className="bg-[#0D1724] border border-[#1E2F45] w-full max-w-md p-5 sm:p-8"
                         >
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-xl font-bold tracking-wide uppercase text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>BOOK CONSULTANCY</h2>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+                                <h2 className="text-lg sm:text-xl font-bold tracking-wide uppercase text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>BOOK CONSULTANCY</h2>
                                 <button
                                     onClick={() => setShowConsultancyModal(false)}
                                     className="text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors text-sm font-bold tracking-widest uppercase"
