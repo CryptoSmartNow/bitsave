@@ -183,7 +183,7 @@ export default function BizSwapAppPage() {
   const inputAmount = sharesCount * inst.min;
   const effectiveFeePercent = (inst.feePercent === 0.5 && isReferralValid) ? 0.4 : inst.feePercent;
   const feeAmount = effectiveFeePercent > 0 ? (inputAmount * effectiveFeePercent) / 100 : 0;
-  const totalCharged = inputAmount + feeAmount;
+  const totalCharged = Number(Math.ceil(Number((inputAmount + feeAmount) + 'e2')) + 'e-2');
 
   const handlePurchase = async () => {
     if (!connected) { toast.error('Please connect your wallet first'); return; }

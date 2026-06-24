@@ -25,7 +25,7 @@ export async function GET(request: Request) {
         let finalAmount = parseFloat(amount);
         let numericAmount = 0;
         if (!isNaN(finalAmount)) {
-            numericAmount = parseFloat((Math.ceil(finalAmount * 100) / 100).toFixed(2));
+            numericAmount = Number(Math.ceil(Number(finalAmount + 'e2')) + 'e-2');
         }
 
         if (!recipient) {
