@@ -109,8 +109,8 @@ export default function BizSwapAppPage() {
   const [remainingCap, setRemainingCap] = useState<number | null>(null);
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
 
-  useEffect(() => { 
-    setMounted(true); 
+  useEffect(() => {
+    setMounted(true);
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('ref') || localStorage.getItem('bizswapPendingReferralCode');
     if (code) {
@@ -155,25 +155,47 @@ export default function BizSwapAppPage() {
       // Auto-validate on mount if loaded from storage
       validateReferral(referralCode);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   useEffect(() => {
     async function fetchInstrument() {
-      if (!program) return;
-      let instrumentId = 0;
-      if (selectedInst === 'bizcredit') instrumentId = 1;
-      if (selectedInst === 'bizbond') instrumentId = 2;
-      const pda = getInstrumentConfigPda(instrumentId);
+      let cap = 1000;
+      let dbSupply = 0;
+
+      // 1. Fetch sold units from database analytics
       try {
-        const config = await (program as any).account.instrumentConfig.fetch(pda);
-        const supply = config.currentSupply.toNumber();
-        const cap = config.supplyCap.toNumber();
-        setCurrentSupply(supply);
-        setRemainingCap(cap - supply);
+        const res = await fetch('/api/bizswap/analytics');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data?.globalStats?.instrumentBreakdown) {
+            const instName = INSTRUMENTS[selectedInst].name;
+            const investedAmount = data.data.globalStats.instrumentBreakdown[instName] || 0;
+            dbSupply = Math.floor(investedAmount / INSTRUMENTS[selectedInst].min);
+          }
+        }
       } catch (e) {
-        setRemainingCap(null);
+        console.error("Failed to fetch analytics for supply", e);
       }
+
+      // 2. Fetch cap (and chain supply) from Program
+      if (program) {
+        let instrumentId = 0;
+        if (selectedInst === 'bizcredit') instrumentId = 1;
+        if (selectedInst === 'bizbond') instrumentId = 2;
+        const pda = getInstrumentConfigPda(instrumentId);
+        try {
+          const config = await (program as any).account.instrumentConfig.fetch(pda);
+          cap = config.supplyCap.toNumber();
+          const chainSupply = config.currentSupply.toNumber();
+          dbSupply = Math.max(dbSupply, chainSupply);
+        } catch (e) {
+          // Fallback to default cap if chain fetch fails
+        }
+      }
+
+      setCurrentSupply(dbSupply);
+      setRemainingCap(Math.max(0, cap - dbSupply));
     }
     fetchInstrument();
   }, [program, selectedInst]);
@@ -191,7 +213,7 @@ export default function BizSwapAppPage() {
     setIsProcessing(true);
     try {
       const params = new URLSearchParams({
-        recipient: '6HPVCff7ist4ZNVUAakzuxq5sGekncdPHdvgNautx1D4',
+        recipient: process.env.NEXT_PUBLIC_BIZSWAP_SOLANA_REVENUE_WALLET!,
         amount: totalCharged.toFixed(2),
         chain: 'SOLANA',
         token: 'USDC',
@@ -212,7 +234,7 @@ export default function BizSwapAppPage() {
 
   const handlePaymentSuccess = async () => {
     setIsModalOpen(false);
-    toast.loading('Minting your certificate on Solana...', { id: 'mint' });
+    toast.loading('Generating your certificate...', { id: 'mint' });
     try {
       const res = await fetch('/api/bizswap/mint', {
         method: 'POST',
@@ -234,7 +256,7 @@ export default function BizSwapAppPage() {
       setAmountStr('');
       setShowSuccessModal(true);
     } catch (e: any) {
-      toast.error(e.message || 'Minting failed, contact support', { id: 'mint' });
+      toast.error(e.message || 'Generation failed, contact support', { id: 'mint' });
     }
   };
 
@@ -655,8 +677,15 @@ export default function BizSwapAppPage() {
             </p>
           </div>
 
-
-
+          {/* Support note */}
+          <div
+            className="rounded-2xl border px-6 py-5"
+            style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}
+          >
+            <p className="text-xs text-[#7B8B9A] leading-relaxed">
+              For support, please join our <a href="https://t.me/KarlaGod" target="_blank" rel="noopener noreferrer" className="text-[#81D7B4] hover:underline transition-colors font-semibold">Telegram channel</a>. If you encounter any issues, you can reach out there and tag <span className="text-[#F9F9FB] font-semibold">@KarlaGod</span>.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -669,7 +698,7 @@ export default function BizSwapAppPage() {
         onSuccess={handlePaymentSuccess}
         userId={user?.id || 'unknown'}
         project="bizswap"
-        destinationWallet="0x125629FAab442e459C1015FCBa50499D0aAB8EE0"
+        destinationWallet={process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET}
         itemDescription={`${sharesCount} shares of ${INSTRUMENTS[selectedInst as keyof typeof INSTRUMENTS]?.name || 'instrument'}`}
       />
 
@@ -703,7 +732,7 @@ export default function BizSwapAppPage() {
 
             <div className="flex flex-col gap-3 relative z-10">
               <a
-                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me, backed by real business revenue, private credit, or government treasuries.\n\nhttps://www.bitsave.io/bizswap`)}`}
+                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me.\n\nhttps://www.bitsave.io/bizswap`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3.5 px-5 font-bold rounded-xl transition-colors text-sm border text-[#F9F9FB] flex items-center justify-center gap-2"

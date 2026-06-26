@@ -43,32 +43,36 @@ export function CertificateCard({ holding }: CertificateCardProps) {
   let highlightText = '';
   let detailedText = '';
   
+  const baseDate = purchaseDate ? new Date(purchaseDate) : new Date();
+  const vestEndDate = new Date(baseDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+  const vestEndStr = vestEndDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  
   if (isBizBond) {
     title = 'FIXED INCOME CERTIFICATE';
     centralTitle = 'BIZBOND';
     // Dummy values for demonstration if exact calculations aren't available
     const quarterly = (investmentAmount * 0.10) / 4;
     highlightText = `Fixed Annual Yield: 10% . $${quarterly.toFixed(2)} per quarter`;
-    detailedText = `Entitled to $${quarterly.toFixed(2)} quarterly, paid in stablecoins. Fixed 10% annual return on $${investmentAmount.toFixed(2)} principal. Backed by government treasury instruments. Vesting period ends September 1, 2026. This certificate is irrefutably recorded and secured on the Solana blockchain.`;
+    detailedText = `Entitled to $${quarterly.toFixed(2)} quarterly, paid in stablecoins. Fixed 10% annual return on $${investmentAmount.toFixed(2)} principal. Backed by government treasury instruments. Vesting period ends ${vestEndStr}. This certificate is digitally signed and secured.`;
   } else if (isBizCredit) {
     title = 'CREDIT YIELD CERTIFICATE';
     centralTitle = 'BIZCREDIT';
     const weekly = (investmentAmount * 0.16) / 52; // 16% APR approximation
     highlightText = `Weekly Yield: $${weekly.toFixed(2)} per week . 12 weeks`;
     const totalReturn = investmentAmount + (weekly * 12);
-    detailedText = `Entitled to $${weekly.toFixed(2)} weekly for 12 consecutive weeks beginning July 20, 2026. Principal of $${investmentAmount.toFixed(2)} returned at Week 12. Total return: $${totalReturn.toFixed(2)}. Paid in USDC. This certificate is irrefutably recorded and secured on the Solana blockchain.`;
+    detailedText = `Entitled to $${weekly.toFixed(2)} weekly for 12 consecutive weeks beginning July 20, 2026. Principal of $${investmentAmount.toFixed(2)} returned at Week 12. Total return: $${totalReturn.toFixed(2)}. Paid in USDC. This certificate is digitally signed and secured.`;
   } else if (isBizYield) {
     title = 'REVENUE SHARE CERTIFICATE';
     const bizName = business ? business.toUpperCase() : 'SHARD';
     centralTitle = `BIZYIELD - ${bizName}`;
     const sharePercent = (units * 0.1).toFixed(1); // Mock 0.1% per unit
     highlightText = `Revenue Share: ${sharePercent}% of ${bizName}'s monthly revenue pool`;
-    detailedText = `Entitled to ${sharePercent}% of ${bizName}'s monthly revenue, paid monthly in stablecoins for 24 months. Yield begins September 1, 2026. This certificate is irrefutably recorded and secured on the Solana blockchain.`;
+    detailedText = `Entitled to ${sharePercent}% of ${bizName}'s monthly revenue, paid monthly in stablecoins for 24 months. Yield begins ${vestEndStr}. This certificate is digitally signed and secured.`;
   } else {
     title = 'DIGITAL CERTIFICATE';
     centralTitle = instrument.toUpperCase();
     highlightText = `APR: ${apr}`;
-    detailedText = `This certificate is irrefutably recorded and secured on the Solana blockchain.`;
+    detailedText = `This certificate is digitally signed and secured.`;
   }
 
   const dateStr = purchaseDate 
