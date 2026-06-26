@@ -272,23 +272,23 @@ export default function BizSwapAppPage() {
         className="sticky top-0 z-40 border-b"
         style={{ backgroundColor: '#080E18', borderColor: '#1E2F45' }}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-5">
             <Link href="/bizswap" className="text-[#4A5568] hover:text-[#81D7B4] transition-colors">
               <ArrowLeft01Icon className="w-4 h-4" />
             </Link>
-            <div className="h-5 w-px bg-[#1E2F45]" />
+            <div className="hidden sm:block h-5 w-px bg-[#1E2F45]" />
             <span
-              className="text-lg font-extrabold text-[#81D7B4] tracking-tight"
+              className="text-base sm:text-lg font-extrabold text-[#81D7B4] tracking-tight"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               BizSwap
             </span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 sm:gap-5">
             <Link
               href="/bizswap/dashboard"
-              className="hidden sm:block text-sm font-semibold text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
+              className="text-[11px] sm:text-sm font-semibold text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
             >
               Dashboard
             </Link>
@@ -336,7 +336,7 @@ export default function BizSwapAppPage() {
                 <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
                   Select Instrument
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {(Object.keys(INSTRUMENTS) as Array<keyof typeof INSTRUMENTS>).map((key) => {
                     const i = INSTRUMENTS[key];
                     const active = selectedInst === key;
