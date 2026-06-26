@@ -633,14 +633,11 @@ export default function BizSwapStandaloneDashboard() {
                 <Download01Icon className="w-4 h-4" />
                 Download Certificate
               </button>
-              <a 
-                href={`https://explorer.solana.com/address/${selectedCert.mintAddress}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-bold text-[#81D7B4] hover:text-[#0F1825] transition-colors border border-[#81D7B4]/50 px-6 py-2.5 rounded-full hover:bg-[#81D7B4] inline-block shadow-lg bg-[#0F1825]"
+              <div 
+                className="text-xs font-bold text-[#81D7B4] border border-[#81D7B4]/50 px-6 py-2.5 rounded-full inline-block shadow-lg bg-[#0F1825]"
               >
-                Verify on Solana Explorer →
-              </a>
+                ID: {selectedCert.mintAddress.split('_')[1] || selectedCert.mintAddress}
+              </div>
             </div>
 
           </div>

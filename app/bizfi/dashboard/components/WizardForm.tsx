@@ -195,7 +195,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
 
         try {
             const params = new URLSearchParams({
-                recipient: '0x125629FAab442e459C1015FCBa50499D0aAB8EE0',
+                recipient: process.env.NEXT_PUBLIC_BIZFI_EVM_REVENUE_WALLET!,
                 amount: priceToPay.toFixed(2),
                 chain: 'BASE',
                 token: 'USDC',
@@ -490,7 +490,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 onSuccess={(txHash: string) => handlePaymentSuccess(txHash)}
                 userId={address || "unknown"}
                 project="bizfi"
-                destinationWallet="0x125629FAab442e459C1015FCBa50499D0aAB8EE0"
+                destinationWallet={process.env.NEXT_PUBLIC_BIZFI_EVM_REVENUE_WALLET}
                 itemDescription={`${selectedTier.name} Business Tier`}
             />
 
