@@ -1,6 +1,6 @@
 'use client';
 
-import { Logout01Icon } from "hugeicons-react";
+import { Logout01Icon, Copy01Icon, Tick01Icon } from "hugeicons-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState, useEffect } from "react";
@@ -10,6 +10,7 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
     const { publicKey, connected: isSolanaConnected, disconnect: solanaDisconnect } = useWallet();
 
     const [isDisconnecting, setIsDisconnecting] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const isSignedIn = ready && (authenticated || isSolanaConnected) && !isDisconnecting;
 
@@ -40,14 +41,31 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
             await logout();
         };
 
+        const handleCopy = () => {
+            if (address) {
+                navigator.clipboard.writeText(address);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }
+        };
+
         return (
             <div className={`flex items-center gap-2 ${className || ''}`} style={style ? { height: style.height } : undefined}>
                 <div 
-                    className="flex items-center gap-3 border border-[#2C3E5D] bg-[#1C2538] rounded-xl shadow-sm"
-                    style={{ ...style, width: 'auto', padding: '0 16px', minHeight: style?.height || '44px' }}
+                    className="flex items-center gap-2 md:gap-3 border border-[#2C3E5D] bg-[#1C2538] rounded-xl shadow-sm px-2.5 sm:px-4"
+                    style={{ ...style, width: 'auto', padding: undefined, minHeight: style?.height || '44px' }}
                 >
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#81D7B4] animate-pulse shadow-[0_0_8px_#81D7B4]" />
-                    <span className="font-mono font-bold text-sm md:text-base text-[#F9F9FB] whitespace-nowrap tracking-wide">{displayAddress}</span>
+                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#81D7B4] animate-pulse shadow-[0_0_8px_#81D7B4] flex-shrink-0" />
+                    <span className="font-mono font-bold text-[11px] sm:text-sm md:text-base text-[#F9F9FB] whitespace-nowrap tracking-wide">{displayAddress}</span>
+                    {address && (
+                        <button
+                            onClick={handleCopy}
+                            className="p-1 hover:bg-[#2C3E5D] rounded-lg transition-colors text-[#7B8B9A] hover:text-[#F9F9FB] flex-shrink-0 ml-0.5 sm:ml-1"
+                            title="Copy Address"
+                        >
+                            {copied ? <Tick01Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81D7B4]" /> : <Copy01Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                        </button>
+                    )}
                 </div>
                 <button
                     onClick={handleSignOut}
@@ -55,7 +73,7 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
                     style={{ ...style, width: style?.height || '44px', minHeight: style?.height || '44px', padding: 0 }}
                     title="Disconnect Wallet"
                 >
-                    <Logout01Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={2} />
+                    <Logout01Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" strokeWidth={2} />
                 </button>
             </div>
         );
