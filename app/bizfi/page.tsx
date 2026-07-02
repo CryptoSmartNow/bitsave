@@ -138,10 +138,10 @@ export default function BizFiLandingPage() {
                             
                             {isConnected && address ? (
                                 <div className="flex items-center gap-2">
-                                    <div className="px-3 py-1.5 rounded-full border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5]">
+                                    <div className="hidden sm:block px-3 py-1.5 rounded-full border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5]">
                                         {address.slice(0, 6)}...{address.slice(-4)}
                                     </div>
-                                    <button onClick={() => disconnect()} className="text-xs text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors font-bold">
+                                    <button onClick={() => disconnect()} className="hidden sm:block text-xs text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors font-bold">
                                         Logout
                                     </button>
                                 </div>
@@ -150,8 +150,61 @@ export default function BizFiLandingPage() {
                                     <BizFiAuthButton />
                                 </div>
                             )}
+
+                            {/* Mobile Hamburger Button */}
+                            <button
+                                className="md:hidden p-2 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors rounded-lg bg-[#1A2538]/50 border border-[#2C3E5D]/50"
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            >
+                                {isMobileMenuOpen ? (
+                                    <Cancel01Icon className="w-5 h-5" />
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                    </svg>
+                                )}
+                            </button>
                         </div>
                     </div>
+
+                    {/* Mobile Menu Dropdown */}
+                    <AnimatePresence>
+                        {isMobileMenuOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="md:hidden border-t border-[#2C3E5D]/50 overflow-hidden bg-[#0D1724]/95 backdrop-blur-3xl rounded-b-2xl pointer-events-auto"
+                            >
+                                <div className="p-6 flex flex-col gap-6">
+                                    <div className="flex flex-col gap-4 text-sm font-bold">
+                                        <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F9F9FB] hover:text-[#81D7B4] transition-colors">How it Works</a>
+                                        <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F9F9FB] hover:text-[#81D7B4] transition-colors">Ecosystem</a>
+                                        <a href="#products" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F9F9FB] hover:text-[#81D7B4] transition-colors">Products</a>
+                                        <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F9F9FB] hover:text-[#81D7B4] transition-colors">Back to SaveFi</Link>
+                                    </div>
+                                    <div className="pt-4 border-t border-[#2C3E5D]/50 flex justify-center">
+                                        {isConnected && address ? (
+                                            <div className="flex flex-col gap-4 w-full">
+                                                <div className="px-3 py-2 rounded-lg border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5] text-center">
+                                                    {address.slice(0, 6)}...{address.slice(-4)}
+                                                </div>
+                                                <button onClick={() => { disconnect(); setIsMobileMenuOpen(false); }} className="w-full py-2 rounded-lg border border-[#2C3E5D] text-sm text-[#F9F9FB] font-bold">
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full">
+                                                <BizFiAuthButton />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </nav>
             </div>
 
@@ -187,7 +240,7 @@ export default function BizFiLandingPage() {
                                     </AnimatePresence>
                                 </span>
                                 <br />
-                                and raise capital.
+                                and access capital.
                             </motion.h1>
 
                             <motion.p variants={fadeUp} className="text-[#7B8B9A] text-xl leading-relaxed max-w-2xl mb-12">
@@ -285,14 +338,44 @@ export default function BizFiLandingPage() {
                                 <div>
                                     <div className="flex justify-between items-start mb-6">
                                         <p className="text-xs font-black tracking-[0.2em] text-[#81D7B4]/50" style={{ fontFamily: "var(--font-display)" }}>INVESTORS</p>
-                                        <span className="px-3 py-1 bg-[#7B8B9A]/10 text-[#7B8B9A] text-xs font-bold rounded-full">Coming Feb 2026</span>
                                     </div>
                                     <h4 className="text-4xl font-extrabold text-[#F9F9FB] mb-4" style={{ fontFamily: "var(--font-display)" }}>For Investors</h4>
                                     <p className="text-[#7B8B9A] text-lg leading-relaxed mb-8">Own equity or revenue of Real World Businesses curated from our portfolio. Backed by solid metrics.</p>
                                 </div>
-                                <span className="text-[#7B8B9A] font-bold text-lg">
-                                    Join Waitlist
-                                </span>
+                                <Link href="/bizswap" className="text-[#81D7B4] font-bold text-lg inline-flex items-center gap-2 hover:gap-4 transition-all">
+                                    Start Investing →
+                                </Link>
+                            </motion.div>
+                        </motion.div>
+
+                        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={staggerContainer} className="mt-8 bg-[#1E2F45] border border-[#1E2F45] rounded-3xl overflow-hidden relative grid grid-cols-1 lg:grid-cols-12 gap-px">
+                            {/* Texture background for the whole container */}
+                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}></div>
+
+                            <motion.div variants={fadeUp} className="bg-[#0D1724] p-8 md:p-12 lg:col-span-5 relative z-10 flex flex-col justify-center">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-[#81D7B4]/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                                <div className="flex items-center gap-2 mb-6">
+                                    <div className="h-px w-6 bg-[#81D7B4]" />
+                                    <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">Learn</span>
+                                </div>
+                                <h4 className="text-3xl md:text-4xl font-extrabold text-[#F9F9FB] mb-4" style={{ fontFamily: "var(--font-display)" }}>Investing in BizShares</h4>
+                                <p className="text-[#7B8B9A] text-lg leading-relaxed">
+                                    Master the mechanics of onchain business financing. Explore our curated series to understand how to build and manage a powerful portfolio of real-world assets.
+                                </p>
+                            </motion.div>
+                            
+                            <motion.div variants={fadeUp} className="bg-[#05090F] p-4 md:p-8 lg:col-span-7 relative z-10 flex items-center justify-center">
+                                <div className="w-full aspect-video rounded-2xl overflow-hidden border border-[#1E2F45]/50 shadow-[0_0_40px_rgba(129,215,180,0.05)] relative group">
+                                    <div className="absolute inset-0 bg-[#81D7B4]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+                                    <iframe 
+                                        className="w-full h-full relative z-10"
+                                        src="https://www.youtube.com/embed/videoseries?list=PLGeDjvoeld0g" 
+                                        title="Investing in BizShares" 
+                                        frameBorder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
                             </motion.div>
                         </motion.div>
                     </div>
@@ -327,9 +410,9 @@ export default function BizFiLandingPage() {
 
                         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={staggerContainer} className="flex flex-col gap-4">
                             {[
-                                { title: "BizFun", desc: "Create Your Promo Tokens in minutes, raise Liquidity, build Your Movement, reward your community.", status: "Coming Jan 2026" },
-                                { title: "BizSwap", desc: "Provide liquidity for the top 1% projects on BizMarket; earn a Savvy 10% markup.", status: "Coming Apr 2026" },
-                                { title: "Bitloans", desc: "Use your BizShares or ETH as collateral and borrow Local StableCoins seamlessly.", status: "Coming Mar 2026" }
+                                { title: "BizFun", desc: "Create Your Promo Tokens in minutes, raise Liquidity, build Your Movement, reward your community.", status: "Live", link: "/bizfun" },
+                                { title: "BizSwap", desc: "Provide liquidity for the top 1% projects on BizMarket; earn a Savvy 10% markup.", status: "Live", link: "/bizswap" },
+                                { title: "Bitloans", desc: "Use your BizShares or ETH as collateral and borrow Local StableCoins seamlessly.", status: "Coming Soon" }
                             ].map((p, i) => (
                                 <motion.div key={i} variants={fadeUp} className="group grid grid-cols-12 gap-6 items-center bg-[#0D1724] border border-[#1E2F45] rounded-2xl px-8 py-8 transition-all hover:-translate-y-0.5 hover:border-[#2C3E5D]">
                                     <div className="col-span-12 md:col-span-3">
@@ -338,8 +421,14 @@ export default function BizFiLandingPage() {
                                     <div className="col-span-12 md:col-span-6">
                                         <p className="text-[#7B8B9A] text-lg leading-relaxed">{p.desc}</p>
                                     </div>
-                                    <div className="col-span-12 md:col-span-3 md:text-right">
-                                        <span className="text-xs font-bold tracking-widest uppercase text-[#81D7B4]/50">{p.status}</span>
+                                    <div className="col-span-12 md:col-span-3 md:text-right flex justify-start md:justify-end">
+                                        {p.link ? (
+                                            <Link href={p.link} className="text-sm font-bold tracking-widest uppercase text-[#81D7B4] hover:text-white transition-colors inline-flex items-center gap-1">
+                                                {p.status} <span>→</span>
+                                            </Link>
+                                        ) : (
+                                            <span className="text-xs font-bold tracking-widest uppercase text-[#81D7B4]/50">{p.status}</span>
+                                        )}
                                     </div>
                                 </motion.div>
                             ))}

@@ -104,6 +104,7 @@ export default function BizSwapAppPage() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [mintedCertId, setMintedCertId] = useState<string | null>(null);
 
   const program = useBizSwapProgram();
   const [remainingCap, setRemainingCap] = useState<number | null>(null);
@@ -254,6 +255,9 @@ export default function BizSwapAppPage() {
       if (!res.ok) throw new Error(data.error);
       toast.success(`${inst.name} Certificate Minted Successfully!`, { id: 'mint' });
       setAmountStr('');
+      if (data.data && data.data._id) {
+        setMintedCertId(data.data._id);
+      }
       setShowSuccessModal(true);
     } catch (e: any) {
       toast.error(e.message || 'Generation failed, contact support', { id: 'mint' });
@@ -732,7 +736,7 @@ export default function BizSwapAppPage() {
 
             <div className="flex flex-col gap-3 relative z-10">
               <a
-                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me.\n\nhttps://www.bitsave.io/bizswap`)}`}
+                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me.\n\nhttps://www.bitsave.io/bizswap${mintedCertId ? `/certificate/${mintedCertId}` : ''}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3.5 px-5 font-bold rounded-xl transition-colors text-sm border text-[#F9F9FB] flex items-center justify-center gap-2"
