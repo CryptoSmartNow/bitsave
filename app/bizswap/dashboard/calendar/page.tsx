@@ -98,7 +98,7 @@ export default function CalendarPage() {
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-[#1C2538] pb-6">
         <div>
-          <h1 className="text-2xl font-black text-[#F9F9FB]">Payment Calendar</h1>
+          <h1 className="text-3xl font-black bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">Payment Calendar</h1>
           <p className="text-sm text-[#7B8B9A] mt-1">Your upcoming scheduled yield distributions.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -124,18 +124,23 @@ export default function CalendarPage() {
                 </div>
 
                 {/* Event Card */}
-                <div className={`bg-[#121A27] border ${isFirst ? getInstrumentColorClass(ev.instrument, 'border').replace('border-', 'border-') + ' shadow-[0_0_20px_rgba(0,0,0,0.2)]' : 'border-[#1C2538]'} p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:-translate-y-1 hover:border-[#3A4F73]`}>
-                  <div className="flex items-center gap-5">
-                    <div className="text-center w-12 flex-shrink-0">
+                <div className={`relative overflow-hidden bg-gradient-to-r ${isFirst ? getInstrumentColorClass(ev.instrument, 'bg').replace('/10', '/5') + ' to-[#121A27]' : 'from-[#121A27] to-[#0A0F17]'} border ${isFirst ? getInstrumentColorClass(ev.instrument, 'border') + ' shadow-[0_0_30px_rgba(0,0,0,0.3)] backdrop-blur-md z-10 scale-[1.02]' : 'border-[#1C2538]'} p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${!isFirst && 'hover:border-[#3A4F73]'}`}>
+                  
+                  {isFirst && (
+                    <div className={`absolute top-0 left-0 w-1 h-full ${getInstrumentColorClass(ev.instrument, 'bg').replace('/10', '')}`} />
+                  )}
+
+                  <div className="flex items-center gap-6">
+                    <div className="text-center w-14 flex-shrink-0 bg-[#0A0F17] py-2 px-3 rounded-xl border border-[#1C2538] shadow-inner">
                       <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-widest">{ev.date.toLocaleString('default', { month: 'short' })}</p>
                       <p className={`text-2xl font-black ${isFirst ? 'text-[#F9F9FB]' : 'text-[#7B8B9A]'}`}>{ev.date.getDate()}</p>
                     </div>
                     <div>
-                      <p className={`text-sm font-bold ${getInstrumentColorClass(ev.instrument, 'text')} flex items-center gap-2 mb-0.5`}>
+                      <p className={`text-base font-bold ${getInstrumentColorClass(ev.instrument, 'text')} flex items-center gap-2 mb-1`}>
                         {ev.instrument} 
-                        {isFirst && <span className="px-2 py-0.5 bg-[#1C2538] text-[#F9F9FB] text-[9px] rounded uppercase tracking-widest border border-[#2C3E5D]">Next</span>}
+                        {isFirst && <span className={`px-2 py-0.5 ${getInstrumentColorClass(ev.instrument, 'bg')} ${getInstrumentColorClass(ev.instrument, 'text')} text-[9px] rounded uppercase tracking-widest border ${getInstrumentColorClass(ev.instrument, 'border')} opacity-80`}>Next Payment</span>}
                       </p>
-                      <p className="text-xs text-[#7B8B9A]">Estimated yield distribution</p>
+                      <p className="text-xs text-[#7B8B9A] font-medium">Estimated yield distribution</p>
                     </div>
                   </div>
                   

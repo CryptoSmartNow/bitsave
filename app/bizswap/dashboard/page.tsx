@@ -298,7 +298,9 @@ export default function BizSwapStandaloneDashboard() {
             ) : holdings.length === 0 ? (
               <div className="p-8 text-center text-[#7B8B9A]">No active holdings.</div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-[#0A0F17]">
                     <tr>
@@ -357,6 +359,48 @@ export default function BizSwapStandaloneDashboard() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden flex flex-col divide-y divide-[#1C2538]">
+                {holdings.map((h) => (
+                  <div key={h._id} className="p-5 flex flex-col gap-4 hover:bg-[#1C2538]/30 transition-colors cursor-pointer" onClick={() => setSelectedCert(h)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getInstrumentColorClass(h.instrument, 'bg')}`}>
+                          {getInstrumentIcon(h.instrument)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#F9F9FB] text-base">{h.instrument}</p>
+                          <p className="text-[10px] text-[#7B8B9A] uppercase tracking-wider">{h.instrument === 'BizYield' ? 'Revenue Share' : h.instrument === 'BizCredit' ? 'Private Credit Pool' : 'Treasury Backed'}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 text-[9px] font-bold rounded uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/20 text-[#059669] border border-[#059669]/30' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/30'}`}>
+                        {h.status.split('—')[0]}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 bg-[#0A0F17] rounded-xl p-4 border border-[#1C2538]">
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Total Invested</p>
+                        <p className="font-black text-[#F9F9FB] text-lg">${h.investmentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Est. Next Payment</p>
+                        <p className="font-black text-[#81D7B4] text-lg">~${(h.investmentAmount * 0.05).toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Entitlement</p>
+                        <p className="text-sm font-bold text-[#F9F9FB]">{h.apr}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Next Date</p>
+                        <p className="text-sm font-bold text-[#F9F9FB]">{formatDate(h.nextPayment)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
 
