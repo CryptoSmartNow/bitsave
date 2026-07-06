@@ -105,6 +105,7 @@ export default function BizSwapAppPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [mintedCertId, setMintedCertId] = useState<string | null>(null);
+  const [showPendingModal, setShowPendingModal] = useState(false);
 
   const program = useBizSwapProgram();
   const [remainingCap, setRemainingCap] = useState<number | null>(null);
@@ -290,6 +291,17 @@ export default function BizSwapAppPage() {
     } catch (e: any) {
       toast.error(e.message || 'Generation failed, contact support', { id: 'mint' });
     }
+  };
+
+  const handlePendingPayment = () => {
+    setIsModalOpen(false);
+    setShowPendingModal(true);
+    // Clear persistent storage to give a fresh start after payment
+    localStorage.removeItem('bizswap_amountStr');
+    localStorage.removeItem('bizswap_selectedInst');
+    localStorage.removeItem('bizswapPendingReferralCode');
+    localStorage.removeItem('bizswap_emailInput');
+    setAmountStr('');
   };
 
   if (!mounted) return null;
@@ -728,6 +740,7 @@ export default function BizSwapAppPage() {
         amount={totalCharged.toFixed(2)}
         sessionToken={sessionToken}
         onSuccess={handlePaymentSuccess}
+        onPending={handlePendingPayment}
         userId={user?.id || 'unknown'}
         project="bizswap"
         destinationWallet={process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET}
@@ -743,6 +756,44 @@ export default function BizSwapAppPage() {
           wallet: walletAddress
         }}
       />
+
+      {/* Pending Modal */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div
+            className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl p-8 w-full max-w-md relative flex flex-col items-center text-center"
+          >
+            <div className="w-20 h-20 rounded-full bg-[#3B82F6]/10 flex items-center justify-center mb-6 border border-[#3B82F6]/30">
+              <InformationCircleIcon className="w-10 h-10 text-[#3B82F6]" />
+            </div>
+            
+            <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+              Payment Pending
+            </h3>
+            
+            <p className="text-gray-400 mb-8 text-sm">
+              Your fiat payment is currently processing. As soon as the bank transfer clears, your certificate will be automatically minted and will appear in your dashboard as a success!
+            </p>
+
+            <button
+              onClick={() => {
+                setShowPendingModal(false);
+                router.push('/bizswap/dashboard');
+              }}
+              className="w-full py-4 rounded-xl bg-[#3B82F6] text-white font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+            >
+              Go to Dashboard
+            </button>
+
+            <button
+              onClick={() => setShowPendingModal(false)}
+              className="mt-4 w-full py-3 rounded-xl border border-transparent text-gray-500 hover:text-white transition-colors font-semibold"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {showSuccessModal && (

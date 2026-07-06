@@ -44,7 +44,7 @@ export default function BizSwapStandaloneDashboard() {
   
   const walletAddress = isSolanaConnected 
     ? publicKey?.toBase58() 
-    : (privySolanaWallet?.address || user?.wallet?.address);
+    : (privySolanaWallet?.address || user?.wallet?.address || user?.id);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
