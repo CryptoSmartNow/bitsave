@@ -15,6 +15,7 @@ export interface UnifiedFiatModalProps {
   destinationWallet?: string;
   shares?: number;
   itemDescription?: string;
+  metadata?: any;
 }
 
 export function UnifiedFiatModal({
@@ -27,7 +28,8 @@ export function UnifiedFiatModal({
   project,
   destinationWallet,
   shares,
-  itemDescription = "your items"
+  itemDescription = "your items",
+  metadata
 }: UnifiedFiatModalProps) {
   const [currentStep, setCurrentStep] = useState<'method' | 'chainrails' | 'country' | 'kyc' | 'bank'>('method');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -68,6 +70,7 @@ export function UnifiedFiatModal({
 
       if (shares) payload.shares = shares;
       if (destinationWallet) payload.destinationWallet = destinationWallet;
+      if (metadata) payload.metadata = metadata;
 
       if (kycName && kycEmail) {
         payload.payer = {
@@ -171,6 +174,7 @@ export function UnifiedFiatModal({
           toast.success("Payment successful!");
           onSuccess(tx?.hash || tx?.signature || "crypto_tx");
         }}
+        closeOnOutsideClick={false}
       />
     );
   }
@@ -360,10 +364,7 @@ export function UnifiedFiatModal({
 
           <button
             onClick={() => {
-              toast.success('We will credit your account once the transfer is confirmed!');
-              if (onswitchReference) {
-                onSuccess(onswitchReference);
-              }
+              toast.success('Your fiat payment is pending. We will issue your certificate once the bank transfer clears!');
               onClose();
             }}
             className="mt-6 w-full py-4 rounded-xl bg-[#81D7B4] text-black font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all"

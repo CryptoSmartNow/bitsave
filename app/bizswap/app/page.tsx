@@ -117,7 +117,29 @@ export default function BizSwapAppPage() {
     if (code) {
       setReferralCode(code);
     }
+
+    // Restore saved form state
+    const savedInst = localStorage.getItem('bizswap_selectedInst');
+    if (savedInst) setSelectedInst(savedInst as any);
+    
+    const savedAmount = localStorage.getItem('bizswap_amountStr');
+    if (savedAmount) setAmountStr(savedAmount);
+    
+    const savedEmail = localStorage.getItem('bizswap_emailInput');
+    if (savedEmail) setEmailInput(savedEmail);
   }, []);
+
+  // Save to local storage on change
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('bizswap_selectedInst', selectedInst);
+      localStorage.setItem('bizswap_amountStr', amountStr);
+      localStorage.setItem('bizswap_emailInput', emailInput);
+      if (referralCode) {
+        localStorage.setItem('bizswapPendingReferralCode', referralCode);
+      }
+    }
+  }, [selectedInst, amountStr, emailInput, referralCode, mounted]);
 
   useEffect(() => {
     if (user?.email?.address && !emailInput) {
@@ -255,6 +277,12 @@ export default function BizSwapAppPage() {
       if (!res.ok) throw new Error(data.error);
       toast.success(`${inst.name} Certificate Minted Successfully!`, { id: 'mint' });
       setAmountStr('');
+      // Clear persistent storage
+      localStorage.removeItem('bizswap_amountStr');
+      localStorage.removeItem('bizswap_selectedInst');
+      localStorage.removeItem('bizswapPendingReferralCode');
+      localStorage.removeItem('bizswap_emailInput');
+      
       if (data.data && data.data._id) {
         setMintedCertId(data.data._id);
       }
@@ -326,7 +354,7 @@ export default function BizSwapAppPage() {
                 className="text-2xl font-extrabold text-[#F9F9FB]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Swap Stablecoins
+                Buy Bizshares
               </h1>
               <p className="text-sm text-[#7B8B9A] mt-1">
                 Select an instrument, choose your share count, and earn real-world yield.
@@ -704,6 +732,16 @@ export default function BizSwapAppPage() {
         project="bizswap"
         destinationWallet={process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET}
         itemDescription={`${sharesCount} shares of ${INSTRUMENTS[selectedInst as keyof typeof INSTRUMENTS]?.name || 'instrument'}`}
+        metadata={{
+          instrument: inst.name,
+          business: selectedInst === 'bizyield' ? selectedBusiness : null,
+          investmentAmount: inputAmount,
+          feeAmount,
+          totalCharged,
+          bizswapReferralCode: isReferralValid ? referralCode : null,
+          email: emailInput || user?.email?.address,
+          wallet: walletAddress
+        }}
       />
 
       {/* Success Modal */}
