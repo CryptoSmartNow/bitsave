@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb';
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, userId, shares, reference: explicitReference, country, currency, payer, project, destinationWallet } = await req.json();
+    const { amount, userId, shares, reference: explicitReference, country, currency, payer, project, destinationWallet, metadata } = await req.json();
 
     if (!amount || !userId || !country || !currency || !project) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -30,10 +30,11 @@ export async function POST(req: NextRequest) {
 
     const reference = explicitReference || crypto.randomUUID();
 
-    const isLocalhost = req.headers.get('origin')?.startsWith('http://localhost') || req.headers.get('origin')?.includes('ngrok');
+    const origin = req.headers.get('origin') || req.nextUrl.origin;
+    const isLocalhost = origin.startsWith('http://localhost') || origin.includes('ngrok');
     const callbackUrl = isLocalhost
-      ? 'https://bitsave.io/bizswap/api/onswitch/webhook'
-      : `${req.headers.get('origin')}/api/onswitch/webhook`;
+      ? 'https://bitsave.io/api/onswitch/webhook'
+      : `${origin}/api/onswitch/webhook`;
 
     const targetWallet = destinationWallet || process.env.ONSWITCH_REVENUE_WALLET;
 
@@ -107,6 +108,10 @@ export async function POST(req: NextRequest) {
 
     if (shares) {
       transactionRecord.shares = shares;
+    }
+
+    if (metadata) {
+      transactionRecord.metadata = metadata;
     }
 
     await transactionsCollection.insertOne(transactionRecord);

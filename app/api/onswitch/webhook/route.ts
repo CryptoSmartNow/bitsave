@@ -20,15 +20,26 @@ export async function POST(req: NextRequest) {
         throw new Error('Database client is not available');
       }
       const db = client.db('bitsave');
-      const transactionsCollection = db.collection('wc26_transactions');
+
       const positionsCollection = db.collection('wc26_positions');
       const poolCollection = db.collection('wc26_pool');
 
-      // Find the pending transaction
-      const transaction = await transactionsCollection.findOne({
+      // Find the pending transaction in either wc26 or bizswap
+      let project = 'wc26';
+      let transactionsCollection = db.collection('wc26_transactions');
+      let transaction = await transactionsCollection.findOne({
         reference: transactionData.reference,
         status: 'pending'
       });
+
+      if (!transaction) {
+        project = 'bizswap';
+        transactionsCollection = db.collection('bizswap_transactions');
+        transaction = await transactionsCollection.findOne({
+          reference: transactionData.reference,
+          status: 'pending'
+        });
+      }
 
       if (transaction) {
         // Complete the transaction in DB
@@ -37,40 +48,58 @@ export async function POST(req: NextRequest) {
           { $set: { status: 'completed', updated_at: new Date() } }
         );
 
-        // Calculate investment vs fees based on a fixed $10 share price
-        const pureInvestment = transaction.shares * 10;
-        const feePaid = transaction.usdcAmount - pureInvestment;
+        if (project === 'wc26') {
+          // Calculate investment vs fees based on a fixed $10 share price
+          const pureInvestment = transaction.shares * 10;
+          const feePaid = transaction.usdcAmount - pureInvestment;
 
-        // Update the user's position
-        await positionsCollection.updateOne(
-          { user_id: transaction.userId },
-          {
-            $inc: { 
-              shares_held: transaction.shares, 
-              total_invested_usd: pureInvestment,
-              total_fees_paid: feePaid > 0 ? feePaid : 0
+          // Update the user's position
+          await positionsCollection.updateOne(
+            { user_id: transaction.userId },
+            {
+              $inc: { 
+                shares_held: transaction.shares, 
+                total_invested_usd: pureInvestment,
+                total_fees_paid: feePaid > 0 ? feePaid : 0
+              },
+              $set: { lastUpdated: new Date() },
+              $setOnInsert: { createdAt: new Date() }
             },
-            $set: { lastUpdated: new Date() },
-            $setOnInsert: { createdAt: new Date() }
-          },
-          { upsert: true }
-        );
+            { upsert: true }
+          );
 
-        // Update the pool stats
-        await poolCollection.updateOne(
-          { _id: 'main_pool' as any },
-          {
-            $inc: { 
-              current_supply: transaction.shares, 
-              current_tvl_usd: pureInvestment 
+          // Update the pool stats
+          await poolCollection.updateOne(
+            { _id: 'main_pool' as any },
+            {
+              $inc: { 
+                current_supply: transaction.shares, 
+                current_tvl_usd: pureInvestment 
+              },
+              $set: { last_updated: new Date() },
+              $setOnInsert: { created_at: new Date() }
             },
-            $set: { last_updated: new Date() },
-            $setOnInsert: { created_at: new Date() }
-          },
-          { upsert: true }
-        );
-        
-        console.log(`Successfully credited user ${transaction.userId} with ${transaction.shares} shares from Onswitch webhook.`);
+            { upsert: true }
+          );
+          
+          console.log(`Successfully credited user ${transaction.userId} with ${transaction.shares} shares from Onswitch webhook.`);
+        } else if (project === 'bizswap') {
+          if (transaction.metadata) {
+            const baseUrl = req.nextUrl.origin || 'https://bitsave.io';
+            const mintResponse = await fetch(`${baseUrl}/api/bizswap/mint`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(transaction.metadata)
+            });
+            if (!mintResponse.ok) {
+              console.error('Failed to mint bizswap certificate from webhook:', await mintResponse.text());
+            } else {
+              console.log(`Successfully minted bizswap certificate for ${transaction.userId} from webhook.`);
+            }
+          } else {
+            console.error(`No metadata found for bizswap transaction ${transaction.reference}`);
+          }
+        }
       } else {
         console.warn(`Transaction reference ${transactionData.reference} not found or already processed.`);
       }
