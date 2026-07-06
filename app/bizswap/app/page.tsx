@@ -763,8 +763,8 @@ export default function BizSwapAppPage() {
           <div
             className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl p-8 w-full max-w-md relative flex flex-col items-center text-center"
           >
-            <div className="w-20 h-20 rounded-full bg-[#3B82F6]/10 flex items-center justify-center mb-6 border border-[#3B82F6]/30">
-              <InformationCircleIcon className="w-10 h-10 text-[#3B82F6]" />
+            <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 border border-[#81D7B4]/30">
+              <InformationCircleIcon className="w-10 h-10 text-[#81D7B4]" />
             </div>
             
             <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
@@ -780,7 +780,7 @@ export default function BizSwapAppPage() {
                 setShowPendingModal(false);
                 router.push('/bizswap/dashboard');
               }}
-              className="w-full py-4 rounded-xl bg-[#3B82F6] text-white font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+              className="w-full py-4 rounded-xl bg-[#81D7B4] text-black font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(129,215,180,0.3)]"
             >
               Go to Dashboard
             </button>
