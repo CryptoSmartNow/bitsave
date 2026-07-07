@@ -193,8 +193,18 @@ export function CertificateCard({ holding }: CertificateCardProps) {
     };
   }
 
+  const isPending = holding.status?.toLowerCase().includes('pending');
+
   return (
-    <div className={`relative w-full max-w-[1100px] mx-auto rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-center items-center py-16 px-8 md:px-16 font-sans ${exo.className} ${themeConfig.containerBg} ${themeConfig.textPrimary}`}>
+    <div className={`relative w-full max-w-[1100px] mx-auto rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-center items-center py-10 px-4 sm:py-16 sm:px-8 md:px-16 font-sans ${exo.className} ${themeConfig.containerBg} ${themeConfig.textPrimary}`}>
+      
+      {isPending && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none overflow-hidden">
+          <div className="transform -rotate-45 text-4xl sm:text-6xl md:text-8xl font-black text-black/10 uppercase tracking-[0.5em] whitespace-nowrap">
+            Pending Payment
+          </div>
+        </div>
+      )}
       
       {/* Universal gradient borders based on theme */}
       <>
@@ -230,24 +240,24 @@ export function CertificateCard({ holding }: CertificateCardProps) {
         <p className={`text-[10px] md:text-xs mb-3 font-light ${themeConfig.textSecondary}`}>
           This certifies that the wallet address
         </p>
-        <div className={`px-10 py-2 rounded-full font-mono text-sm tracking-widest mb-4 border shadow-inner ${themeConfig.walletInputClasses}`}>
+        <div className={`px-4 sm:px-10 py-2 rounded-full font-mono text-[10px] sm:text-sm tracking-widest mb-4 border shadow-inner max-w-full overflow-hidden text-ellipsis ${themeConfig.walletInputClasses}`}>
           {wallet || '7xKzQ2mJ9v1Fz3gYbWq8rTnL5sH9dP3mQeR7cJ3mPq'}
         </div>
         <p className={`text-[10px] md:text-xs mb-5 font-light ${themeConfig.textSecondary}`}>
           is the registered holder of
         </p>
 
-        <div className={`w-64 mx-auto h-px bg-gradient-to-r from-transparent ${themeConfig.divider} to-transparent mb-6`}></div>
+        <div className={`w-3/4 md:w-64 mx-auto h-px bg-gradient-to-r from-transparent ${themeConfig.divider} to-transparent mb-6`}></div>
 
         {/* Central Information Block */}
-        <div className={`w-full max-w-3xl py-8 px-10 rounded-xl mb-6 ${themeConfig.innerContainerClasses}`}>
+        <div className={`w-full max-w-3xl py-6 px-4 sm:py-8 sm:px-10 rounded-xl mb-6 ${themeConfig.innerContainerClasses}`}>
           
           <div className={`absolute inset-0 rounded-xl border border-transparent bg-gradient-to-br ${themeConfig.borderFrom} via-transparent to-transparent [mask-composite:exclude]`} style={{ mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', padding: '1px' }} />
 
           <p className={`text-base md:text-lg mb-2 tracking-widest ${themeConfig.textFaded} font-light`}>
             - {units} Unit{units !== 1 ? 's' : ''} -
           </p>
-          <h2 className={`text-4xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-md ${themeConfig.textMain}`}>
+          <h2 className={`text-2xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-md ${themeConfig.textMain} break-words`}>
             {centralTitle}
           </h2>
           <p className={`text-base md:text-lg ${themeConfig.textMuted} font-light mb-6`}>
@@ -261,7 +271,7 @@ export function CertificateCard({ holding }: CertificateCardProps) {
           </p>
 
           {/* Certificate Stamp / Seal Mock */}
-          <div className={`absolute -right-16 top-1/2 -translate-y-1/2 w-36 h-36 flex items-center justify-center filter ${themeConfig.dropShadow}`}>
+          <div className={`absolute -right-8 opacity-20 md:opacity-100 md:-right-16 top-1/2 -translate-y-1/2 w-24 h-24 md:w-36 md:h-36 flex items-center justify-center filter ${themeConfig.dropShadow}`}>
              <svg viewBox="0 0 100 100" className={`w-full h-full fill-current drop-shadow-lg ${themeConfig.sealColor}`}>
                <path d="M50 2.5 L56 12 L66.5 9 L69 19.5 L80 20 L79 31 L88 35.5 L83 45 L90 53 L83 60 L85 70.5 L75 73.5 L73 84 L62.5 83 L57 92 L47 88.5 L38.5 96 L31.5 88.5 L21 91.5 L20 81 L9 78.5 L12 68 L3.5 61 L9 52 L3 42.5 L12 37 L11.5 26.5 L22 24.5 L25 14 L35.5 16 L42 7 Z" />
              </svg>
@@ -282,14 +292,14 @@ export function CertificateCard({ holding }: CertificateCardProps) {
         </p>
 
         {/* Footer Area */}
-        <div className="w-full max-w-4xl flex justify-between items-end px-4 mt-auto">
-          <div className="text-left w-1/3">
-            <p className={`text-xs font-bold mb-1 ${themeConfig.textMain}`}>Certificate No.</p>
-            <p className="font-mono text-sm md:text-base font-bold">{certNo}</p>
+        <div className="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center sm:items-end px-2 sm:px-4 mt-auto gap-4 sm:gap-0">
+          <div className="text-center sm:text-left w-full sm:w-1/3">
+            <p className={`text-[10px] sm:text-xs font-bold mb-1 ${themeConfig.textMain}`}>Certificate No.</p>
+            <p className="font-mono text-xs sm:text-sm md:text-base font-bold">{certNo}</p>
           </div>
           
-          <div className="flex flex-col items-center w-1/3 pb-1">
-             <div className="flex items-center justify-center mb-1 w-32 md:w-40">
+          <div className="flex flex-col items-center w-full sm:w-1/3 pb-1 order-first sm:order-none">
+             <div className="flex items-center justify-center mb-1 w-24 sm:w-32 md:w-40">
                <Image 
                  src="/bizmarket.png" 
                  alt="BizMarket" 
@@ -299,12 +309,12 @@ export function CertificateCard({ holding }: CertificateCardProps) {
                  style={{ filter: 'brightness(1.1)' }}
                />
              </div>
-             <p className={`text-[10px] uppercase tracking-widest font-semibold ${themeConfig.textSecondary}`}>Authorized Issuer</p>
+             <p className={`text-[8px] sm:text-[10px] uppercase tracking-widest font-semibold ${themeConfig.textSecondary}`}>Authorized Issuer</p>
           </div>
 
-          <div className="text-right w-1/3">
-            <p className={`text-xs font-bold mb-1 ${themeConfig.textMain}`}>Issue Date</p>
-            <p className="font-mono text-sm md:text-base font-bold">{dateStr}</p>
+          <div className="text-center sm:text-right w-full sm:w-1/3">
+            <p className={`text-[10px] sm:text-xs font-bold mb-1 ${themeConfig.textMain}`}>Issue Date</p>
+            <p className="font-mono text-xs sm:text-sm md:text-base font-bold">{dateStr}</p>
           </div>
         </div>
 

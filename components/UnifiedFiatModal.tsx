@@ -10,6 +10,7 @@ export interface UnifiedFiatModalProps {
   amount: string | number;
   sessionToken?: string | null;
   onSuccess: (txHashOrReference: string) => void;
+  onPending?: () => void;
   userId: string;
   project: 'wc26' | 'bizfi' | 'bizswap';
   destinationWallet?: string;
@@ -24,6 +25,7 @@ export function UnifiedFiatModal({
   amount,
   sessionToken,
   onSuccess,
+  onPending,
   userId,
   project,
   destinationWallet,
@@ -364,8 +366,12 @@ export function UnifiedFiatModal({
 
           <button
             onClick={() => {
-              toast.success('Your fiat payment is pending. We will issue your certificate once the bank transfer clears!');
-              onClose();
+              if (onPending) {
+                onPending();
+              } else {
+                toast.success('Your fiat payment is pending. We will issue your certificate once the bank transfer clears!');
+                onClose();
+              }
             }}
             className="mt-6 w-full py-4 rounded-xl bg-[#81D7B4] text-black font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all"
           >
