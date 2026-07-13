@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getBizSwapCollection } from '@/lib/mongodb';
-
+import { redis } from '@/lib/redis';
 export async function GET() {
   try {
+    const cacheKey = 'bizswap:analytics:global';
+    if (redis) {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(JSON.parse(cached));
+      }
+    }
+
     const collection = await getBizSwapCollection();
     if (!collection) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
@@ -68,13 +76,19 @@ export async function GET() {
 
     const usersList = Object.values(usersMap).sort((a, b) => b.totalInvested - a.totalInvested);
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         globalStats,
         users: usersList
       }
-    });
+    };
+
+    if (redis) {
+      await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 120); // cache for 2 minutes
+    }
+
+    return NextResponse.json(responseData);
 
   } catch (error: any) {
     console.error('Fetch bizswap analytics error:', error);

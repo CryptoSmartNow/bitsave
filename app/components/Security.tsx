@@ -201,7 +201,7 @@ export default function Security() {
               // Create an asymmetric zig-zag bento layout
               const isLarge = index === 1 || index === 2;
               const isPrimary = index === 2; // Make the "Earn Tokens" card pop with green
-              
+
               return (
                 <motion.div
                   key={index}
@@ -209,13 +209,11 @@ export default function Security() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1, duration: 0.5 }}
-                  className={`group relative overflow-hidden p-8 sm:p-10 rounded-[2.5rem] transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#81D7B4]/15 ${
-                    isLarge ? 'lg:col-span-2' : 'lg:col-span-1'
-                  } ${
-                    isPrimary 
-                      ? 'bg-[#5fb392] border border-[#81D7B4]/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[#5fb392]/40' 
+                  className={`group relative overflow-hidden p-8 sm:p-10 rounded-[2.5rem] transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#81D7B4]/15 ${isLarge ? 'lg:col-span-2' : 'lg:col-span-1'
+                    } ${isPrimary
+                      ? 'bg-[#5fb392] border border-[#81D7B4]/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[#5fb392]/40'
                       : 'bg-gray-50/80 border border-gray-100 shadow-[inset_0_1px_0_rgba(255,255,255,1)] hover:border-[#81D7B4]/40 hover:bg-white'
-                  }`}
+                    }`}
                 >
                   {/* Subtle Background Textures & Glows */}
                   {!isPrimary && (
@@ -236,11 +234,10 @@ export default function Security() {
 
                   <div className={`flex flex-col h-full relative z-10 ${isLarge ? 'lg:flex-row lg:items-center gap-8 lg:gap-12' : 'gap-8'}`}>
                     {/* Icon Box */}
-                    <div className={`inline-flex items-center justify-center rounded-3xl shrink-0 transition-all duration-500 shadow-sm group-hover:scale-110 ${
-                      isPrimary 
-                        ? 'w-20 h-20 bg-white/20 backdrop-blur-md text-white shadow-[0_8px_32px_rgba(255,255,255,0.15)] border border-white/20' 
+                    <div className={`inline-flex items-center justify-center rounded-3xl shrink-0 transition-all duration-500 shadow-sm group-hover:scale-110 ${isPrimary
+                        ? 'w-20 h-20 bg-white/20 backdrop-blur-md text-white shadow-[0_8px_32px_rgba(255,255,255,0.15)] border border-white/20'
                         : 'w-16 h-16 bg-white border border-gray-100 text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-white group-hover:border-transparent group-hover:shadow-[0_8px_24px_rgba(129,215,180,0.3)]'
-                    }`}>
+                      }`}>
                       <div className="[&>svg]:w-8 [&>svg]:h-8 [&>svg]:stroke-[1.5]">
                         {sol.icon}
                       </div>
@@ -248,26 +245,24 @@ export default function Security() {
 
                     {/* Content */}
                     <div className={`flex flex-col ${isLarge ? 'flex-grow justify-center' : ''}`}>
-                      <h3 className={`font-display text-2xl lg:text-3xl font-extrabold mb-4 transition-colors tracking-tight ${
-                        isPrimary ? 'text-white' : 'text-gray-900 group-hover:text-[#2D5A4A]'
-                      }`}>
+                      <h3 className={`font-display text-2xl lg:text-3xl font-extrabold mb-4 transition-colors tracking-tight ${isPrimary ? 'text-white' : 'text-gray-900 group-hover:text-[#2D5A4A]'
+                        }`}>
                         {sol.title}
                       </h3>
 
-                      <p className={`text-[15px] leading-relaxed ${
-                        isPrimary ? 'text-white/90 font-medium' : 'text-gray-500 font-medium'
-                      }`}>
+                      <p className={`text-[15px] leading-relaxed ${isPrimary ? 'text-white/90 font-medium' : 'text-gray-500 font-medium'
+                        }`}>
                         {sol.desc}
                       </p>
                     </div>
-                    
+
                     {/* Decorative Elements for Large Cards */}
                     {isLarge && !isPrimary && (
                       <div className="hidden lg:block absolute -right-12 -bottom-12 w-64 h-64 bg-[#81D7B4]/5 rounded-full border-[1px] border-[#81D7B4]/10 group-hover:scale-150 transition-transform duration-1000 ease-out pointer-events-none" />
                     )}
                     {isLarge && isPrimary && (
                       <div className="hidden lg:flex absolute right-4 bottom-4 w-32 h-32 opacity-10 pointer-events-none items-center justify-center">
-                         {sol.icon}
+                        {sol.icon}
                       </div>
                     )}
                   </div>
@@ -303,7 +298,7 @@ export default function Security() {
 
             {/* Asymmetric Stats Layout */}
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8 mt-16 relative z-10">
-              
+
               {/* Primary Stat (Left) */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -315,20 +310,20 @@ export default function Security() {
                 {/* Background decorative */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#81D7B4]/10 blur-[80px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none group-hover:bg-[#81D7B4]/20 transition-colors duration-700" />
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none mix-blend-multiply" />
-                
+
                 <div className="mb-8 w-16 h-16 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#5fb392] group-hover:scale-110 group-hover:bg-[#81D7B4] group-hover:text-white transition-all duration-300 relative z-10">
                   {marketStats[0].icon}
                 </div>
-                
+
                 <div className="font-display text-8xl lg:text-[8rem] font-black tracking-tighter leading-none mb-6 text-[#2D5A4A] relative z-10">
                   {/* Note: We aren't using useCountUp here as it's complex to re-init dynamically without breaking layout, hardcoding the value string from marketStats for aesthetic stability */}
                   <span className="tabular-nums">70</span><span className="text-[#81D7B4] text-6xl lg:text-[6rem] ml-1">{marketStats[0].suffix}</span>
                 </div>
-                
+
                 <div className="font-display text-2xl lg:text-3xl font-extrabold text-gray-900 mb-4 relative z-10">
                   {marketStats[0].label}
                 </div>
-                
+
                 <p className="text-gray-600 text-lg leading-relaxed font-medium max-w-sm relative z-10">
                   {marketStats[0].desc}
                 </p>
@@ -345,25 +340,25 @@ export default function Security() {
                     transition={{ delay: 0.2 + (idx * 0.2), duration: 0.6 }}
                     className="group relative p-8 lg:p-10 rounded-[2.5rem] bg-white/60 backdrop-blur-md border border-white hover:bg-white hover:shadow-2xl hover:shadow-[#81D7B4]/15 transition-all duration-500 flex flex-col sm:flex-row items-start sm:items-center gap-8 overflow-hidden h-full flex-1"
                   >
-                     <div className="absolute inset-0 bg-[#81D7B4]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                     
-                     <div className="flex-grow relative z-10">
-                       <div className="flex items-center gap-4 mb-4">
-                         <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[#5fb392] group-hover:scale-110 group-hover:bg-[#81D7B4]/10 transition-all duration-300">
-                           {stat.icon}
-                         </div>
-                         <div className="font-display text-xl font-bold text-gray-900 group-hover:text-[#2D5A4A] transition-colors">
-                           {stat.label}
-                         </div>
-                       </div>
-                       <p className="text-gray-500 leading-relaxed text-[15px] font-medium max-w-[280px]">
-                         {stat.desc}
-                       </p>
-                     </div>
+                    <div className="absolute inset-0 bg-[#81D7B4]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                     <div className="font-display text-5xl lg:text-6xl font-extrabold tracking-tighter text-[#5fb392] shrink-0 relative z-10">
-                       <span className="tabular-nums">{stat.value}</span><span className="text-[#81D7B4] text-4xl">{stat.suffix}</span>
-                     </div>
+                    <div className="flex-grow relative z-10">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[#5fb392] group-hover:scale-110 group-hover:bg-[#81D7B4]/10 transition-all duration-300">
+                          {stat.icon}
+                        </div>
+                        <div className="font-display text-xl font-bold text-gray-900 group-hover:text-[#2D5A4A] transition-colors">
+                          {stat.label}
+                        </div>
+                      </div>
+                      <p className="text-gray-500 leading-relaxed text-[15px] font-medium max-w-[280px]">
+                        {stat.desc}
+                      </p>
+                    </div>
+
+                    <div className="font-display text-5xl lg:text-6xl font-extrabold tracking-tighter text-[#5fb392] shrink-0 relative z-10">
+                      <span className="tabular-nums">{stat.value}</span><span className="text-[#81D7B4] text-4xl">{stat.suffix}</span>
+                    </div>
                   </motion.div>
                 ))}
               </div>

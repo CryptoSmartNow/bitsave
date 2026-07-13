@@ -1,855 +1,824 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft01Icon, InformationCircleIcon, Shield01Icon, BarChartIcon, Dollar01Icon, ArrowDown01Icon, Tick01Icon } from "hugeicons-react";
-import Image from 'next/image';
-import Link from 'next/link';
+import React, { useEffect, useState, useRef } from 'react';
+import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon, Clock01Icon, GiftIcon } from "hugeicons-react";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
-import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import toast from 'react-hot-toast';
-import { UnifiedFiatModal } from '@/components/UnifiedFiatModal';
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
-import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
-import { useRouter } from 'next/navigation';
-import { useConfig } from 'wagmi';
+import { CertificateCard } from '@/components/CertificateCard';
+import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 
-const INSTRUMENTS = {
-  bizyield: {
-    id: 'bizyield',
-    name: 'BizYield',
-    risk: 'High Risk',
-    icon: BarChartIcon,
-    color: '#FF6B6B',
-    min: 10,
-    feePercent: 0.5,
-    apr: 'Variable (Revenue Share)',
-    payout: 'Monthly',
-    cap: 1000
-  },
-  bizcredit: {
-    id: 'bizcredit',
-    name: 'BizCredit',
-    risk: 'Medium Risk',
-    icon: Dollar01Icon,
-    color: '#F5A623',
-    min: 100,
-    feePercent: 0,
-    apr: '16% Annualised',
-    payout: 'Weekly',
-    cap: 1000
-  },
-  bizbond: {
-    id: 'bizbond',
-    name: 'BizBond',
-    risk: 'Low Risk',
-    icon: Shield01Icon,
-    color: '#81D7B4',
-    min: 1000,
-    feePercent: 0.5,
-    apr: '10% Fixed',
-    payout: 'Quarterly',
-    cap: 1000
-  }
-};
+interface Holding {
+  _id: string;
+  instrument: string;
+  investmentAmount: number;
+  entitlement: string;
+  status: string;
+  nextPayment: string;
+  mintAddress: string;
+  serialNumber: string;
+  apr: string;
+  payoutFrequency: string;
+  purchaseDate: string;
+}
 
-const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5", activeStyleColor?: string) => {
-  let initials = 'BZ';
-  let defaultColorClass = 'text-[#7B8B9A]';
-  if (name === 'BizYield') { initials = 'BY'; defaultColorClass = 'text-[#FF6B6B]'; }
-  if (name === 'BizCredit') { initials = 'BC'; defaultColorClass = 'text-[#3B82F6]'; }
-  if (name === 'BizBond') { initials = 'BB'; defaultColorClass = 'text-[#81D7B4]'; }
+interface Payment {
+  _id: string;
+  date: string;
+  instrument: string;
+  amount: number;
+  currency: string;
+  txHash: string;
+}
 
-  return (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${sizeClass} ${!activeStyleColor ? defaultColorClass : ''}`} style={activeStyleColor ? { color: activeStyleColor } : undefined}>
-      <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1" />
-      <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="9" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
-        {initials}
-      </text>
-    </svg>
-  );
-};
-
-export default function BizSwapAppPage() {
+export default function BizSwapStandaloneDashboard() {
   const { publicKey, connected: isSolanaConnected } = useWallet();
   const { ready, authenticated, user } = usePrivy();
-  const router = useRouter();
-  const wagmiConfig = useConfig();
-
+  
   const connected = ready && (authenticated || isSolanaConnected);
-
+  
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
+  
+  const walletAddress = isSolanaConnected 
+    ? publicKey?.toBase58() 
+    : (privySolanaWallet?.address || user?.wallet?.address || user?.id);
 
-  const walletAddress = isSolanaConnected
-    ? publicKey?.toBase58()
-    : (privySolanaWallet?.address || user?.wallet?.address);
-
-  const [mounted, setMounted] = useState(false);
-  const [selectedInst, setSelectedInst] = useState<keyof typeof INSTRUMENTS>('bizyield');
-  const [selectedBusiness, setSelectedBusiness] = useState('shard');
-  const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false);
-  const businesses = [{ id: 'shard', name: 'Shard' }];
-  const [amountStr, setAmountStr] = useState('');
-  const [referralCode, setReferralCode] = useState('');
-  const [isReferralValid, setIsReferralValid] = useState(false);
-  const [validatingReferral, setValidatingReferral] = useState(false);
-  const [referralError, setReferralError] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [mintedCertId, setMintedCertId] = useState<string | null>(null);
-  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCert, setSelectedCert] = useState<Holding | null>(null);
+  const certificateRef = useRef<HTMLDivElement>(null);
 
   const program = useBizSwapProgram();
-  const [remainingCap, setRemainingCap] = useState<number | null>(null);
-  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
+  const { width, height } = useWindowSize();
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('ref') || localStorage.getItem('bizswapPendingReferralCode');
-    if (code) {
-      setReferralCode(code);
-    }
+  const { referralData, loading: refLoading, generateReferralCode, submitWithdrawal } = useBizSwapReferrals(walletAddress);
+  const [withdrawAmount, setWithdrawAmount] = useState<string>('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-    // Restore saved form state
-    const savedInst = localStorage.getItem('bizswap_selectedInst');
-    if (savedInst) setSelectedInst(savedInst as any);
-    
-    const savedAmount = localStorage.getItem('bizswap_amountStr');
-    if (savedAmount) setAmountStr(savedAmount);
-    
-    const savedEmail = localStorage.getItem('bizswap_emailInput');
-    if (savedEmail) setEmailInput(savedEmail);
-  }, []);
-
-  // Save to local storage on change
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem('bizswap_selectedInst', selectedInst);
-      localStorage.setItem('bizswap_amountStr', amountStr);
-      localStorage.setItem('bizswap_emailInput', emailInput);
-      if (referralCode) {
-        localStorage.setItem('bizswapPendingReferralCode', referralCode);
-      }
-    }
-  }, [selectedInst, amountStr, emailInput, referralCode, mounted]);
-
-  useEffect(() => {
-    if (user?.email?.address && !emailInput) {
-      setEmailInput(user.email.address);
-    }
-  }, [user?.email?.address]);
-
-  const validateReferral = async (code: string) => {
-    if (!code) return;
-    setValidatingReferral(true);
-    setReferralError('');
-    setIsReferralValid(false);
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || isNaN(Number(withdrawAmount))) return;
     try {
-      const res = await fetch('/api/bizswap/referrals/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bizswapReferralCode: code, buyerWalletAddress: walletAddress })
-      });
-      const data = await res.json();
-      if (data.valid) {
-        setIsReferralValid(true);
-        localStorage.setItem('bizswapPendingReferralCode', code);
-      } else {
-        setReferralError(data.error || 'Invalid code');
-        localStorage.removeItem('bizswapPendingReferralCode');
-      }
-    } catch (e) {
-      setReferralError('Validation failed');
-    } finally {
-      setValidatingReferral(false);
-    }
-  };
-
-  useEffect(() => {
-    if (referralCode && mounted && !isReferralValid && !referralError && !validatingReferral) {
-      // Auto-validate on mount if loaded from storage
-      validateReferral(referralCode);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
-
-  useEffect(() => {
-    async function fetchInstrument() {
-      let cap = 1000;
-      let dbSupply = 0;
-
-      // 1. Fetch sold units from database analytics
-      try {
-        const res = await fetch('/api/bizswap/analytics');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.data?.globalStats?.instrumentBreakdown) {
-            const instName = INSTRUMENTS[selectedInst].name;
-            const investedAmount = data.data.globalStats.instrumentBreakdown[instName] || 0;
-            dbSupply = Math.floor(investedAmount / INSTRUMENTS[selectedInst].min);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to fetch analytics for supply", e);
-      }
-
-      // 2. Fetch cap (and chain supply) from Program
-      if (program) {
-        let instrumentId = 0;
-        if (selectedInst === 'bizcredit') instrumentId = 1;
-        if (selectedInst === 'bizbond') instrumentId = 2;
-        const pda = getInstrumentConfigPda(instrumentId);
-        try {
-          const config = await (program as any).account.instrumentConfig.fetch(pda);
-          cap = config.supplyCap.toNumber();
-          const chainSupply = config.currentSupply.toNumber();
-          dbSupply = Math.max(dbSupply, chainSupply);
-        } catch (e) {
-          // Fallback to default cap if chain fetch fails
-        }
-      }
-
-      setCurrentSupply(dbSupply);
-      setRemainingCap(Math.max(0, cap - dbSupply));
-    }
-    fetchInstrument();
-  }, [program, selectedInst]);
-
-  const inst = INSTRUMENTS[selectedInst];
-  const sharesCount = parseInt(amountStr) || 0;
-  const inputAmount = sharesCount * inst.min;
-  const effectiveFeePercent = (inst.feePercent === 0.5 && isReferralValid) ? 0.4 : inst.feePercent;
-  const feeAmount = effectiveFeePercent > 0 ? (inputAmount * effectiveFeePercent) / 100 : 0;
-  const totalCharged = Number(Math.ceil(Number((inputAmount + feeAmount) + 'e2')) + 'e-2');
-
-  const handlePurchase = async () => {
-    if (!connected) { toast.error('Please connect your wallet first'); return; }
-    if (inputAmount < inst.min) { toast.error(`Minimum buy-in for ${inst.name} is $${inst.min}`); return; }
-    setIsProcessing(true);
-    try {
-      const params = new URLSearchParams({
-        recipient: process.env.NEXT_PUBLIC_BIZSWAP_SOLANA_REVENUE_WALLET!,
-        amount: totalCharged.toFixed(2),
-        chain: 'SOLANA',
-        token: 'USDC',
-        mode: 'buy',
-        source: 'bizswap'
-      });
-      const res = await fetch(`/api/chainrails/session?${params}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
-      setSessionToken(data.sessionToken || data.token || data.session_token);
-      setIsModalOpen(true);
+      setIsWithdrawing(true);
+      await submitWithdrawal(Number(withdrawAmount));
+      toast.success('Withdrawal request submitted successfully');
+      setWithdrawAmount('');
     } catch (e: any) {
-      toast.error(e.message || 'Payment initialization failed');
+      toast.error(e.message || 'Withdrawal failed');
     } finally {
-      setIsProcessing(false);
+      setIsWithdrawing(false);
     }
   };
 
-  const handlePaymentSuccess = async () => {
-    setIsModalOpen(false);
-    toast.loading('Generating your certificate...', { id: 'mint' });
+
+
+  useEffect(() => {
+    if (connected && walletAddress) {
+      fetchHoldingsAndPayments(walletAddress);
+    } else if (!connected && ready) {
+      setHoldings([]);
+      setPayments([]);
+      setLoading(false);
+    }
+  }, [connected, walletAddress, ready]);
+
+  const fetchHoldingsAndPayments = async (wallet: string) => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/bizswap/mint', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wallet: walletAddress,
-          instrument: inst.name,
-          business: selectedInst === 'bizyield' ? selectedBusiness : null,
-          investmentAmount: inputAmount,
-          feeAmount: feeAmount,
-          totalCharged: totalCharged,
-          bizswapReferralCode: isReferralValid ? referralCode : null,
-          email: emailInput || user?.email?.address
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success(`${inst.name} Certificate Minted Successfully!`, { id: 'mint' });
-      setAmountStr('');
-      // Clear persistent storage
-      localStorage.removeItem('bizswap_amountStr');
-      localStorage.removeItem('bizswap_selectedInst');
-      localStorage.removeItem('bizswapPendingReferralCode');
-      localStorage.removeItem('bizswap_emailInput');
+      const [holdingsRes, paymentsRes] = await Promise.all([
+        fetch(`/api/bizswap/holdings?wallet=${wallet}`),
+        fetch(`/api/bizswap/payments?wallet=${wallet}`)
+      ]);
       
-      if (data.data && data.data._id) {
-        setMintedCertId(data.data._id);
+      const holdingsData = await holdingsRes.json();
+      const paymentsData = await paymentsRes.json();
+
+      if (holdingsRes.ok) {
+        const fetchedHoldings = holdingsData.data || [];
+        setHoldings(fetchedHoldings);
+        
+        // Check for delayed fiat confetti
+        try {
+          const ackCerts = JSON.parse(localStorage.getItem('bizswap_ack_certs') || '[]');
+          let foundNew = false;
+          
+          fetchedHoldings.forEach((h: Holding) => {
+            if (h.status.includes('Active') && !ackCerts.includes(h._id)) {
+              const pDate = new Date(h.purchaseDate);
+              const now = new Date();
+              // If purchased in the last 7 days and unacknowledged
+              if (now.getTime() - pDate.getTime() < 7 * 24 * 60 * 60 * 1000) {
+                foundNew = true;
+                ackCerts.push(h._id);
+              }
+            }
+          });
+          
+          if (foundNew) {
+            localStorage.setItem('bizswap_ack_certs', JSON.stringify(ackCerts));
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 8000);
+          }
+        } catch(e) {}
       }
-      setShowSuccessModal(true);
-    } catch (e: any) {
-      toast.error(e.message || 'Generation failed, contact support', { id: 'mint' });
+      if (paymentsRes.ok) setPayments(paymentsData.data || []);
+    } catch (e) {
+      console.error(e);
+      toast.error('Network error loading data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePendingPayment = () => {
-    setIsModalOpen(false);
-    setShowPendingModal(true);
-    // Clear persistent storage to give a fresh start after payment
-    localStorage.removeItem('bizswap_amountStr');
-    localStorage.removeItem('bizswap_selectedInst');
-    localStorage.removeItem('bizswapPendingReferralCode');
-    localStorage.removeItem('bizswap_emailInput');
-    setAmountStr('');
+  const downloadCertificate = async () => {
+    if (!certificateRef.current || !selectedCert) return;
+    
+    try {
+      const toastId = toast.loading('Generating certificate image...', { id: 'download-cert' });
+      
+      // Temporarily hide the close and download buttons for the snapshot
+      const closeBtn = document.getElementById('cert-close-btn');
+      const actionBtns = document.getElementById('cert-action-btns');
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (actionBtns) actionBtns.style.display = 'none';
+
+      // Use html-to-image to take a high quality snapshot
+      const htmlToImage = await import('html-to-image');
+      const dataUrl = await htmlToImage.toPng(certificateRef.current, {
+        backgroundColor: '#0F1825',
+        pixelRatio: 2, // High resolution
+        style: {
+          margin: '0',
+        }
+      });
+      
+      // Restore buttons
+      if (closeBtn) closeBtn.style.display = 'block';
+      if (actionBtns) actionBtns.style.display = 'flex';
+
+      const link = document.createElement('a');
+      link.download = `BizMarket-Certificate-${selectedCert.serialNumber}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast.success('Certificate downloaded successfully!', { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download certificate', { id: 'download-cert' });
+    }
   };
 
-  if (!mounted) return null;
+  const totalValue = holdings.reduce((sum, h) => sum + h.investmentAmount, 0);
+
+  // Compute real figures based on holdings and payments
+  const totalEarned = payments
+    .filter(p => !p.txHash.includes('Pending'))
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  const pendingOrdersValue = payments
+    .filter(p => p.txHash.includes('Pending'))
+    .reduce((sum, p) => sum + p.amount, 0);
+  
+  const pendingYield = Math.max(0, holdings.reduce((sum, h) => {
+    if (!h.purchaseDate || !h.apr) return sum;
+    const purchaseDate = new Date(h.purchaseDate);
+    const now = new Date();
+    const msElapsed = now.getTime() - purchaseDate.getTime();
+    const daysElapsed = Math.max(0, msElapsed / (1000 * 60 * 60 * 24));
+    
+    const aprStr = h.apr.replace('%', '');
+    const aprNum = parseFloat(aprStr) || 0;
+    
+    const dailyRate = (aprNum / 100) / 365;
+    return sum + (h.investmentAmount * dailyRate * daysElapsed);
+  }, 0) - totalEarned);
+
+  const getNextPaymentDate = (purchaseDate: string, frequency: string) => {
+    if (!purchaseDate) return new Date();
+    const d = new Date(purchaseDate);
+    const now = new Date();
+    
+    while (d <= now) {
+      if (frequency.toLowerCase().includes('month')) d.setMonth(d.getMonth() + 1);
+      else if (frequency.toLowerCase().includes('quarter')) d.setMonth(d.getMonth() + 3);
+      else if (frequency.toLowerCase().includes('year') || frequency.toLowerCase().includes('annual')) d.setFullYear(d.getFullYear() + 1);
+      else d.setMonth(d.getMonth() + 1); // fallback to monthly
+    }
+    return d;
+  };
+
+  const upcomingHolding = holdings.length > 0 
+    ? holdings.reduce((earliest, h) => {
+        const earliestDate = getNextPaymentDate(earliest.purchaseDate, earliest.payoutFrequency);
+        const hDate = getNextPaymentDate(h.purchaseDate, h.payoutFrequency);
+        return hDate < earliestDate ? h : earliest;
+      }, holdings[0])
+    : null;
+
+  const nextPaymentDateStr = upcomingHolding 
+    ? getNextPaymentDate(upcomingHolding.purchaseDate, upcomingHolding.payoutFrequency).toISOString() 
+    : '';
+
+  const getExpectedPaymentAmount = (h: Holding) => {
+    const aprStr = h.apr.replace('%', '');
+    const aprNum = parseFloat(aprStr) || 0;
+    const yearlyReturn = h.investmentAmount * (aprNum / 100);
+    
+    if (h.payoutFrequency.toLowerCase().includes('month')) return yearlyReturn / 12;
+    if (h.payoutFrequency.toLowerCase().includes('quarter')) return yearlyReturn / 4;
+    return yearlyReturn;
+  };
+  
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5") => {
+    let initials = 'BZ';
+    let colorClass = 'text-[#7B8B9A]';
+    if (name === 'BizYield') { initials = 'BY'; colorClass = 'text-[#FF6B6B]'; }
+    if (name === 'BizCredit') { initials = 'BC'; colorClass = 'text-[#3B82F6]'; }
+    if (name === 'BizBond') { initials = 'BB'; colorClass = 'text-[#81D7B4]'; }
+
+    return (
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${sizeClass} ${colorClass}`}>
+        <path d="M12 2L20.6603 7V17L12 22L3.33975 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1"/>
+        <text x="12" y="13.5" dominantBaseline="central" textAnchor="middle" fill="currentColor" fontSize="9" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">
+          {initials}
+        </text>
+      </svg>
+    );
+  };
+
+  const getInstrumentColorClass = (name: string, type: 'bg' | 'border' | 'text' | 'gradientFrom') => {
+    switch(name) {
+      case 'BizYield': return type === 'bg' ? 'bg-[#FF6B6B]/10' : type === 'border' ? 'border-[#FF6B6B]/30' : type === 'text' ? 'text-[#FF6B6B]' : 'from-[#FF6B6B]/5';
+      case 'BizCredit': return type === 'bg' ? 'bg-[#3B82F6]/10' : type === 'border' ? 'border-[#3B82F6]/30' : type === 'text' ? 'text-[#3B82F6]' : 'from-[#3B82F6]/5';
+      case 'BizBond': return type === 'bg' ? 'bg-[#81D7B4]/10' : type === 'border' ? 'border-[#81D7B4]/30' : type === 'text' ? 'text-[#81D7B4]' : 'from-[#81D7B4]/5';
+      default: return type === 'bg' ? 'bg-gray-800' : type === 'border' ? 'border-gray-700' : type === 'text' ? 'text-gray-400' : 'from-gray-800/5';
+    }
+  };
+
+  if (!connected) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-4 text-center">
+        <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
+        <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
+        <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet in the top right to view your portfolio.</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen text-[#F9F9FB]"
-      style={{ backgroundColor: '#080E18', fontFamily: 'var(--font-inter), system-ui, sans-serif', zoom: 0.9 }}
-    >
-      {/* NAV */}
-      <nav
-        className="sticky top-0 z-40 border-b"
-        style={{ backgroundColor: '#080E18', borderColor: '#1E2F45' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-5">
-            <Link href="/bizswap" className="text-[#4A5568] hover:text-[#81D7B4] transition-colors">
-              <ArrowLeft01Icon className="w-4 h-4" />
-            </Link>
-            <div className="hidden sm:block h-5 w-px bg-[#1E2F45]" />
-            <span
-              className="text-base sm:text-lg font-extrabold text-[#81D7B4] tracking-tight"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              BizSwap
-            </span>
-          </div>
-          <div className="flex items-center gap-3 sm:gap-5">
-            <Link
-              href="/bizswap/dashboard"
-              className="text-[11px] sm:text-sm font-semibold text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors"
-            >
-              Dashboard
-            </Link>
-            <BizSwapAuthButton
-              connectText="Login"
-              style={{
-                backgroundColor: '#0D1724',
-                border: '1px solid #1E2F45',
-                height: '36px',
-                fontSize: '13px',
-                borderRadius: '10px',
-                fontWeight: '700',
-              }}
-            />
-          </div>
-        </div>
-      </nav>
+    <div className="relative p-4 md:p-8 w-full max-w-[1600px] mx-auto space-y-6 md:space-y-8 min-w-0 font-sans min-h-screen overflow-hidden" style={{ backgroundColor: '#080E18', color: '#F9F9FB' }}>
+      
+      {/* Background Texture & Glow */}
+      <div className="absolute inset-0 pointer-events-none z-0" style={{ 
+        backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(129, 215, 180, 0.05) 0%, transparent 60%), url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%220.03%22/%3E%3C/svg%3E")',
+        backgroundSize: '100% auto, 200px 200px',
+        backgroundRepeat: 'no-repeat, repeat'
+      }}></div>
 
-      {/* PAGE BODY */}
-      <div className="max-w-7xl mx-auto px-6 py-12 grid lg:grid-cols-12 gap-8 items-start">
+      <div className="relative z-10 space-y-6 md:space-y-8">
+        {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={600} gravity={0.12} />}
 
-        {/* ── LEFT: SWAP PANEL ── */}
-        <div className="lg:col-span-7">
-          <div
-            className="rounded-3xl border overflow-hidden"
-            style={{ backgroundColor: '#0D1724', borderColor: '#1E2F45' }}
+        {/* DASHBOARD HEADER */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#1C2538] pb-6">
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight text-[#F9F9FB] drop-shadow-md" style={{ fontFamily: 'var(--font-display)' }}>Your Dashboard</h1>
+            <p className="text-[#7B8B9A] mt-2 font-medium">Manage your BizShares portfolio and track real-world yields.</p>
+          </div>
+          <a 
+            href="/bizswap/buy"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] text-[#0F1825] font-black rounded-xl transition-all shadow-[0_0_30px_rgba(129,215,180,0.2)] hover:shadow-[0_0_40px_rgba(129,215,180,0.4)]"
           >
-            {/* Panel header */}
-            <div className="px-8 py-6 border-b" style={{ borderColor: '#1E2F45' }}>
-              <h1
-                className="text-2xl font-extrabold text-[#F9F9FB]"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                Buy Bizshares
-              </h1>
-              <p className="text-sm text-[#7B8B9A] mt-1">
-                Select an instrument, choose your share count, and earn real-world yield.
+            Buy BizShares
+          </a>
+        </div>
+
+        {/* STAT CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+          <div className="bg-gradient-to-br from-[#0D1724]/90 to-[#0A1019]/90 backdrop-blur-md border border-[#1E2F45] p-6 rounded-3xl flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:border-[#81D7B4]/30 transition-colors">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#81D7B4]/10 blur-[30px] group-hover:bg-[#81D7B4]/20 transition-all"></div>
+            <div className="relative z-10 w-full">
+              <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-2 flex items-center gap-2"><Dollar01Icon className="w-4 h-4"/> Total Invested</p>
+              <h2 className="text-3xl xl:text-4xl font-black text-[#F9F9FB] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+              <p className="text-xs text-[#81D7B4] mt-3 font-bold flex items-center gap-1 bg-[#81D7B4]/10 px-2 py-1 rounded-md inline-flex border border-[#81D7B4]/20">
+                {totalValue > 0 ? `+${((totalEarned / totalValue) * 100).toFixed(2)}%` : '0.00%'} Return
               </p>
             </div>
+          </div>
 
-            <div className="p-8 space-y-8">
+          <div className="bg-gradient-to-br from-[#0D1724]/90 to-[#0A1019]/90 backdrop-blur-md border border-[#1E2F45] p-6 rounded-3xl flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:border-[#3B82F6]/30 transition-colors">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#3B82F6]/10 blur-[30px] group-hover:bg-[#3B82F6]/20 transition-all"></div>
+            <div className="relative z-10 w-full">
+              <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-2 flex items-center gap-2"><Activity01Icon className="w-4 h-4"/> Total Earned</p>
+              <h2 className="text-3xl xl:text-4xl font-black text-[#F9F9FB] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>${totalEarned.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+              <p className="text-xs text-[#4B5A75] mt-3 font-medium">Since you joined</p>
+            </div>
+          </div>
 
-              {/* ── Instrument selector ── */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
-                  Select Instrument
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {(Object.keys(INSTRUMENTS) as Array<keyof typeof INSTRUMENTS>).map((key) => {
-                    const i = INSTRUMENTS[key];
-                    const active = selectedInst === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => { setSelectedInst(key); setAmountStr(''); }}
-                        className="relative flex flex-col items-start gap-1.5 p-4 rounded-2xl border transition-all text-left overflow-hidden"
-                        style={{
-                          backgroundColor: active ? `${i.color}10` : '#0A1019',
-                          borderColor: active ? `${i.color}50` : '#1E2F45',
-                        }}
-                      >
-                        {active && (
-                          <div
-                            className="absolute top-0 left-0 right-0 h-px"
-                            style={{ background: `linear-gradient(to right, transparent, ${i.color}80, transparent)` }}
-                          />
-                        )}
-                        <div className="flex items-center justify-between w-full">
-                          {getInstrumentIcon(i.name, "w-5 h-5", active ? i.color : '#3A4F73')}
-                          <span
-                            className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full"
-                            style={{
-                              color: i.color,
-                              backgroundColor: `${i.color}15`,
-                            }}
-                          >
-                            {i.risk.split(' ')[0]}
-                          </span>
-                        </div>
-                        <span
-                          className="text-sm font-extrabold mt-1"
-                          style={{ color: active ? i.color : '#9BA8B5', fontFamily: 'var(--font-display)' }}
-                        >
-                          {i.name}
-                        </span>
-                        <span className="text-[10px] text-[#7B8B9A]">{i.apr}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          <div className="bg-gradient-to-br from-[#0D1724]/90 to-[#0A1019]/90 backdrop-blur-md border border-[#1E2F45] p-6 rounded-3xl flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:border-[#F5A623]/30 transition-colors">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#F5A623]/10 blur-[30px] group-hover:bg-[#F5A623]/20 transition-all"></div>
+            <div className="relative z-10 w-full">
+              <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-2 flex items-center gap-2"><ChartAverageIcon className="w-4 h-4"/> Pending Yield</p>
+              <h2 className="text-3xl xl:text-4xl font-black text-[#F9F9FB] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>${pendingYield.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+              <p className="text-xs text-[#4B5A75] mt-3 font-medium">Across active instruments</p>
+            </div>
+          </div>
 
-              {/* ── Business selector (BizYield only) ── */}
-              {selectedInst === 'bizyield' && (
-                <div className="relative z-10">
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
-                    Select Business
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setIsBusinessDropdownOpen(!isBusinessDropdownOpen)}
-                      className="w-full rounded-xl border px-5 py-4 text-base font-bold text-[#F9F9FB] flex justify-between items-center transition-colors focus:outline-none"
-                      style={{
-                        backgroundColor: '#0A1019',
-                        borderColor: isBusinessDropdownOpen ? '#81D7B4' : '#1E2F45',
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        {selectedBusiness === 'shard' && (
-                          <Image src="/shard.png" alt="Shard Logo" width={24} height={24} className="rounded-full object-cover" />
-                        )}
-                        <span>{businesses.find(b => b.id === selectedBusiness)?.name || 'Select Business'}</span>
-                      </div>
-                      <ArrowDown01Icon className={`w-4 h-4 text-[#7B8B9A] transition-transform ${isBusinessDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {isBusinessDropdownOpen && (
-                      <div
-                        className="absolute top-full left-0 right-0 mt-2 rounded-xl border overflow-hidden shadow-2xl z-20"
-                        style={{ backgroundColor: '#0D1724', borderColor: '#1E2F45' }}
-                      >
-                        {businesses.map((bus) => (
-                          <button
-                            key={bus.id}
-                            type="button"
-                            onClick={() => { setSelectedBusiness(bus.id); setIsBusinessDropdownOpen(false); }}
-                            className="w-full flex items-center gap-3 text-left px-5 py-3.5 text-sm font-bold transition-colors"
-                            style={{
-                              color: selectedBusiness === bus.id ? '#81D7B4' : '#F9F9FB',
-                              backgroundColor: selectedBusiness === bus.id ? '#81D7B410' : 'transparent',
-                            }}
-                          >
-                            {bus.id === 'shard' && (
-                              <Image src="/shard.png" alt="Shard Logo" width={20} height={20} className="rounded-full object-cover" />
-                            )}
-                            <span>{bus.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+          <div className="bg-gradient-to-br from-[#0D1724]/90 to-[#0A1019]/90 backdrop-blur-md border border-[#1E2F45] p-6 rounded-3xl flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:border-[#A855F7]/30 transition-colors">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#A855F7]/10 blur-[30px] group-hover:bg-[#A855F7]/20 transition-all"></div>
+            <div className="relative z-10 w-full">
+              <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-2 flex items-center gap-2"><Clock01Icon className="w-4 h-4"/> Pending Orders</p>
+              <h2 className="text-3xl xl:text-4xl font-black text-[#F9F9FB] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>${pendingOrdersValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+              <p className="text-xs text-[#A855F7] mt-3 font-bold flex items-center gap-1 bg-[#A855F7]/10 px-2 py-1 rounded-md inline-flex border border-[#A855F7]/20">
+                Awaiting Fiat Clearance
+              </p>
+            </div>
+          </div>
 
-              {/* ── Share count input ── */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A]">
-                    Number of BizShares
-                  </label>
-                  <span className="text-xs text-[#7B8B9A] font-medium">
-                    1 Share = <span className="text-[#F9F9FB] font-bold">${inst.min.toLocaleString()}</span>
-                  </span>
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={amountStr}
-                    onChange={(e) => setAmountStr(e.target.value)}
-                    placeholder="0"
-                    className="w-full rounded-xl border px-5 py-4 text-3xl font-extrabold text-[#F9F9FB] outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#2C3E5D]"
-                    style={{
-                      backgroundColor: '#0A1019',
-                      borderColor: '#1E2F45',
-                      fontFamily: 'var(--font-display)',
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = '#81D7B4')}
-                    onBlur={(e) => (e.target.style.borderColor = '#1E2F45')}
-                  />
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-[#3A4F73]">
-                    Shares
-                  </div>
-                </div>
-                {sharesCount > 0 && (
-                  <p className="mt-2.5 text-sm font-semibold" style={{ color: inst.color }}>
-                    ≈ ${inputAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                  </p>
-                )}
-              </div>
-
-              {/* ── Referral Code ── */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
-                  Referral Code (Optional)
-                </label>
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    value={referralCode}
-                    onChange={(e) => {
-                      setReferralCode(e.target.value.toUpperCase());
-                      setIsReferralValid(false);
-                      setReferralError('');
-                    }}
-                    placeholder="Enter code"
-                    className="w-full rounded-xl border px-4 py-3 text-sm font-bold text-[#F9F9FB] outline-none transition-colors placeholder:text-[#2C3E5D]"
-                    style={{
-                      backgroundColor: '#0A1019',
-                      borderColor: isReferralValid ? '#81D7B4' : referralError ? '#FF6B6B' : '#1E2F45',
-                    }}
-                    onBlur={() => referralCode && validateReferral(referralCode)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => validateReferral(referralCode)}
-                    disabled={validatingReferral || !referralCode || isReferralValid}
-                    className="px-5 rounded-xl text-xs font-bold transition-colors border disabled:opacity-50"
-                    style={{
-                      backgroundColor: isReferralValid ? '#81D7B410' : '#0A1019',
-                      borderColor: isReferralValid ? '#81D7B450' : '#1E2F45',
-                      color: isReferralValid ? '#81D7B4' : '#F9F9FB'
-                    }}
-                  >
-                    {validatingReferral ? '...' : isReferralValid ? 'Applied' : 'Apply'}
-                  </button>
-                </div>
-                {referralError && <p className="mt-2 text-[10px] font-bold text-[#FF6B6B]">{referralError}</p>}
-                {isReferralValid && <p className="mt-2 text-[10px] font-bold text-[#81D7B4]">Referral applied! Platform fee reduced to 0.4%.</p>}
-              </div>
-
-              {/* ── Receipt Email ── */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A] mb-4">
-                  Receipt Email (Optional)
-                </label>
-                <input
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="Where should we send your receipt?"
-                  className="w-full rounded-xl border px-4 py-3 text-sm font-bold text-[#F9F9FB] outline-none transition-colors placeholder:text-[#2C3E5D]"
-                  style={{
-                    backgroundColor: '#0A1019',
-                    borderColor: '#1E2F45',
-                  }}
-                />
-              </div>
-
-              {/* ── Order summary ── */}
-              <div className="rounded-2xl border" style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}>
-                <div className="px-6 py-4 border-b" style={{ borderColor: '#1E2F45' }}>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B8B9A]">Order Summary</span>
-                </div>
-                <div className="px-6 py-5 space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#7B8B9A]">Investment Amount</span>
-                    <span className="font-semibold text-[#F9F9FB]">${inputAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#7B8B9A] flex items-center gap-1.5">
-                      Platform Fee ({effectiveFeePercent}%)
-                      {effectiveFeePercent > 0 && <InformationCircleIcon className="w-3.5 h-3.5 text-[#3A4F73]" />}
-                    </span>
-                    <span className="font-semibold text-[#F9F9FB]">${feeAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="h-px w-full" style={{ backgroundColor: '#1E2F45' }} />
-                  <div className="flex justify-between items-center pt-1">
-                    <span className="text-sm font-bold text-[#F9F9FB]">Total You Pay</span>
-                    <span
-                      className="text-2xl font-black"
-                      style={{ color: '#81D7B4', fontFamily: 'var(--font-display)' }}
-                    >
-                      ${totalCharged.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs text-[#7B8B9A]">
-                    <span>BizShares you receive</span>
-                    <span className="font-bold text-[#F9F9FB]">
-                      {sharesCount} Share{sharesCount !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Terms & Conditions ── */}
-              <div className="flex items-start gap-3 px-1 py-2">
-                <input
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 bg-[#0A1019] border-[#1E2F45] text-[#81D7B4] rounded focus:ring-[#81D7B4] focus:ring-offset-[#020611] cursor-pointer"
-                  id="terms-checkbox"
-                />
-                <label htmlFor="terms-checkbox" className="text-xs text-[#7B8B9A] leading-relaxed cursor-pointer select-none">
-                  I have read and agree to the <Link href="/terms" className="text-[#81D7B4] hover:underline transition-colors" target="_blank">BizMarket Protocol Terms & Conditions</Link>. I understand the risks involved in purchasing BizShares instruments.
-                </label>
-              </div>
-
-              {/* ── Action ── */}
-              {!connected ? (
-                <BizSwapAuthButton
-                  connectText="Login to Buy"
-                  style={{
-                    width: '100%',
-                    justifyContent: 'center',
-                    backgroundColor: '#0D1724',
-                    border: '1px solid #1E2F45',
-                    borderRadius: '14px',
-                    height: '56px',
-                    fontSize: '15px',
-                    fontWeight: '700',
-                  }}
-                />
-              ) : (
-                <button
-                  onClick={handlePurchase}
-                  disabled={isProcessing || inputAmount < inst.min || !agreedToTerms}
-                  className="w-full h-14 font-black rounded-2xl transition-all text-base disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 hover:scale-[1.01]"
-                  style={{
-                    backgroundColor: '#81D7B4',
-                    color: '#080E18',
-                    fontFamily: 'var(--font-display)',
-                    boxShadow: '0 8px 32px rgba(129,215,180,0.18)',
-                  }}
-                >
-                  {isProcessing ? 'Processing...' : `Purchase ${inst.name}`}
-                </button>
-              )}
-
+          <div className="bg-gradient-to-br from-[#0D1724]/90 to-[#0A1019]/90 backdrop-blur-md border border-[#1E2F45] p-6 rounded-3xl flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.4)] relative overflow-hidden group hover:border-[#FF6B6B]/30 transition-colors">
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#FF6B6B]/10 blur-[30px] group-hover:bg-[#FF6B6B]/20 transition-all"></div>
+            <div className="relative z-10 w-full">
+              <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-2 flex items-center gap-2"><Calendar01Icon className="w-4 h-4"/> Next Payment</p>
+              <h2 className="text-xl xl:text-2xl font-black text-[#F9F9FB] mt-1 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>{upcomingHolding ? formatDate(nextPaymentDateStr) : 'No Upcoming'}</h2>
+              <p className="text-xs text-[#4B5A75] mt-3 font-medium">
+                {upcomingHolding ? `$${getExpectedPaymentAmount(upcomingHolding).toFixed(2)} from ${upcomingHolding.instrument}` : '-'}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* ── RIGHT: INSTRUMENT DETAIL ── */}
-        <div className="lg:col-span-5 flex flex-col gap-5">
-
-          {/* Instrument header card */}
-          <div
-            className="rounded-3xl border p-7 relative overflow-hidden"
-            style={{ backgroundColor: '#0D1724', borderColor: `${inst.color}30` }}
-          >
-            <div
-              className="absolute top-0 left-0 right-0 h-px"
-              style={{ background: `linear-gradient(to right, transparent, ${inst.color}40, transparent)` }}
-            />
-            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[50px] opacity-15"
-              style={{ backgroundColor: inst.color }} />
-
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h2
-                  className="text-3xl font-extrabold text-[#F9F9FB] leading-none mb-2"
-                  style={{ fontFamily: 'var(--font-display)', color: inst.color }}
-                >
-                  {inst.name}
-                </h2>
-                <span
-                  className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full"
-                  style={{ backgroundColor: `${inst.color}15`, color: inst.color, border: `1px solid ${inst.color}30` }}
-                >
-                  {inst.risk}
-                </span>
+      <div className="grid lg:grid-cols-3 gap-6 w-full">
+        
+        {/* MAIN LEFT COLUMN */}
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          
+          {/* HOLDINGS OVERVIEW */}
+          <div className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-xl">
+            <div className="p-6 border-b border-[#1E2F45] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 bg-gradient-to-r from-[#0D1724] to-[#0A1019]">
+              <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB] flex items-center gap-2">Active Holdings Overview</h3>
+              <button className="text-xs font-bold text-[#81D7B4] hover:underline">View all holdings details →</button>
+            </div>
+            {loading ? (
+              <div className="p-8 text-center text-[#7B8B9A]">Loading holdings...</div>
+            ) : holdings.length === 0 ? (
+              <div className="p-8 text-center text-[#7B8B9A]">No active holdings.</div>
+            ) : (
+              <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-[#0A0F17]">
+                    <tr>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Instrument</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Units Held</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Total Invested</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Entitlement / Yield</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Status</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Next Payment</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Est. Next Payment</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1C2538]">
+                    {holdings.map((h) => (
+                      <tr key={h._id} className="hover:bg-[#1C2538]/30 transition-colors">
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getInstrumentColorClass(h.instrument, 'bg')}`}>
+                              {getInstrumentIcon(h.instrument)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-[#F9F9FB]">{h.instrument}</p>
+                              <p className="text-xs text-[#7B8B9A]">{h.instrument === 'BizYield' ? 'Revenue Share' : h.instrument === 'BizCredit' ? 'Private Credit Pool' : 'Treasury Backed'}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 font-medium text-[#F9F9FB]">
+                          {h.instrument === 'BizYield' ? `${Math.floor(h.investmentAmount / 10)} Shares` : 
+                           h.instrument === 'BizCredit' ? `${Math.floor(h.investmentAmount / 100)} Shares` : 
+                           h.instrument === 'BizBond' ? `${Math.floor(h.investmentAmount / 1000)} Shares` : '1 Share'}
+                        </td>
+                        <td className="px-5 py-4 font-bold text-[#F9F9FB]">${h.investmentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td className="px-5 py-4">
+                          <p className="font-bold text-[#F9F9FB]">{h.apr}</p>
+                          <p className="text-xs text-[#7B8B9A]">{h.payoutFrequency}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`px-2 py-1 text-[10px] font-bold rounded uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/20 text-[#059669] border border-[#059669]/30' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/30'}`}>
+                            {h.status.split('—')[0]}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 font-medium text-[#F9F9FB]">
+                          {formatDate(h.nextPayment)}
+                        </td>
+                        <td className="px-5 py-4 font-bold text-[#81D7B4]">
+                          ~${(h.investmentAmount * 0.05).toFixed(2)}
+                        </td>
+                        <td className="px-5 py-4">
+                          <button className="w-8 h-8 rounded-lg bg-[#1C2538] hover:bg-[#2C3E5D] flex items-center justify-center text-[#7B8B9A] transition-colors border border-[#2C3E5D]">
+                            <ArrowDown01Icon className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              {getInstrumentIcon(inst.name, "w-10 h-10", inst.color)}
-            </div>
 
-            {/* Spec rows */}
-            <div className="space-y-0">
-              {[
-                { label: 'Return Profile', value: inst.apr },
-                { label: 'Payout Frequency', value: inst.payout },
-                { label: 'Transferability', value: inst.id === 'bizcredit' ? 'Immediate' : 'Locked · 3 months' },
-                { label: 'Supply Cap', value: remainingCap !== null ? `${remainingCap} Units Remaining` : '1,000 Units / Cycle' },
-              ].map(({ label, value }, i, arr) => (
-                <div
-                  key={label}
-                  className="flex justify-between items-center py-4"
-                  style={{ borderBottom: i < arr.length - 1 ? '1px solid #1E2F45' : 'none' }}
-                >
-                  <span className="text-sm text-[#7B8B9A]">{label}</span>
-                  <span className="text-sm font-bold text-[#F9F9FB]">{value}</span>
+              {/* Mobile Card View */}
+              <div className="md:hidden flex flex-col divide-y divide-[#1C2538]">
+                {holdings.map((h) => (
+                  <div key={h._id} className="p-5 flex flex-col gap-4 hover:bg-[#1C2538]/30 transition-colors cursor-pointer" onClick={() => setSelectedCert(h)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getInstrumentColorClass(h.instrument, 'bg')}`}>
+                          {getInstrumentIcon(h.instrument)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#F9F9FB] text-base">{h.instrument}</p>
+                          <p className="text-[10px] text-[#7B8B9A] uppercase tracking-wider">{h.instrument === 'BizYield' ? 'Revenue Share' : h.instrument === 'BizCredit' ? 'Private Credit Pool' : 'Treasury Backed'}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 text-[9px] font-bold rounded uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/20 text-[#059669] border border-[#059669]/30' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/30'}`}>
+                        {h.status.split('—')[0]}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 bg-[#0A0F17] rounded-xl p-4 border border-[#1C2538]">
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Total Invested</p>
+                        <p className="font-black text-[#F9F9FB] text-lg">${h.investmentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Est. Next Payment</p>
+                        <p className="font-black text-[#81D7B4] text-lg">~${(h.investmentAmount * 0.05).toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Entitlement</p>
+                        <p className="text-sm font-bold text-[#F9F9FB]">{h.apr}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Next Date</p>
+                        <p className="text-sm font-bold text-[#F9F9FB]">{formatDate(h.nextPayment)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
+
+          {/* REFERRALS SECTION - PREMIUM BANNER */}
+          <div className="bg-gradient-to-br from-[#121D2C] via-[#0D1724] to-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative group">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#81D7B4]/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-[#81D7B4]/10 transition-colors duration-500"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#3B82F6]/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-[#3B82F6]/10 transition-colors duration-500"></div>
+
+            <div className="p-6 sm:p-8 relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
+              
+              {/* Left text section */}
+              <div className="md:col-span-2 xl:col-span-1 flex flex-col justify-center text-center xl:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-4 mx-auto xl:mx-0 w-max">
+                  <GiftIcon className="w-4 h-4 text-[#81D7B4]" />
+                  <span className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-widest whitespace-nowrap">Refer & Earn</span>
                 </div>
-              ))}
+                <h3 className="text-2xl sm:text-3xl font-black text-[#F9F9FB] tracking-tight mb-3">Invite Friends, Earn Passive Yield</h3>
+                <p className="text-sm text-[#7B8B9A] leading-relaxed max-w-xl mx-auto xl:mx-0">
+                  Get <strong className="text-[#F9F9FB]">0.1%</strong> of all investments made using your unique code, paid directly to your pending balance.
+                </p>
+              </div>
+              
+              {/* Center Code Generation */}
+              <div className="md:col-span-1 xl:col-span-1 bg-[#0A0F17]/50 backdrop-blur-md rounded-2xl p-6 border border-[#1C2538] shadow-inner flex flex-col justify-center h-full">
+                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-3 text-center sm:text-left">Your Unique Code</p>
+                {refLoading ? (
+                  <div className="h-14 bg-[#1C2538]/50 animate-pulse rounded-xl"></div>
+                ) : referralData?.bizswapReferralCode ? (
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="flex-1 bg-[#0A1019] border border-[#1C2538] rounded-xl px-4 py-3 sm:py-4 text-xl font-black tracking-[0.2em] text-[#81D7B4] select-all shadow-inner text-center overflow-hidden text-ellipsis">
+                      {referralData.bizswapReferralCode}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(referralData.bizswapReferralCode);
+                        toast.success('Code copied to clipboard!');
+                      }}
+                      className="text-sm font-bold text-[#F9F9FB] bg-gradient-to-br from-[#2C3E5D] to-[#1C2538] hover:from-[#3B527A] hover:to-[#2C3E5D] transition-all px-6 py-4 rounded-xl border border-[#3B527A] shadow-lg active:scale-95 shrink-0"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={generateReferralCode}
+                    className="w-full text-sm font-bold text-[#0F1825] bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] hover:brightness-110 transition-all px-6 py-4 rounded-xl shadow-[0_4px_20px_rgba(129,215,180,0.2)]"
+                  >
+                    Generate Invite Code
+                  </button>
+                )}
+              </div>
+              
+              {/* Right Earnings Section */}
+              <div className="md:col-span-1 xl:col-span-1 flex flex-col justify-center h-full border-t md:border-t-0 md:border-l border-[#1C2538] pt-8 md:pt-0 md:pl-8">
+                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-2 text-center sm:text-left">Available to Withdraw</p>
+                <div className="flex items-baseline justify-center sm:justify-start gap-1 mb-5">
+                  <span className="text-4xl font-black text-[#F9F9FB]">${(referralData?.bizswapPendingUsdcEarnings || 0).toFixed(2)}</span>
+                  <span className="text-xs text-[#4B5A75] font-bold">USDC</span>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <input 
+                      type="number"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      placeholder="Amt"
+                      max={referralData?.bizswapPendingUsdcEarnings || 0}
+                      className="w-full min-w-[80px] flex-1 bg-[#0A0F17] border border-[#1C2538] rounded-lg px-4 py-3 text-sm font-bold text-[#F9F9FB] outline-none placeholder:text-[#2C3E5D] focus:border-[#81D7B4]/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-inner"
+                    />
+                    <button 
+                      onClick={handleWithdraw}
+                      disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (referralData?.bizswapPendingUsdcEarnings || 0)}
+                      className="text-sm font-bold text-[#F9F9FB] bg-gradient-to-r from-[#3B82F6] to-[#2563EB] hover:brightness-110 disabled:opacity-50 disabled:grayscale transition-all px-6 py-3 rounded-lg shadow-lg whitespace-nowrap active:scale-95 shrink-0"
+                    >
+                      {isWithdrawing ? '...' : 'Withdraw'}
+                    </button>
+                  </div>
+                  <div className="text-[10px] font-medium text-[#4B5A75] text-center sm:text-left mt-1">
+                    Total Lifetime: ${(referralData?.bizswapTotalUsdcEarned || 0).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          {/* Trust note — minimal, no icon */}
-          <div
-            className="rounded-2xl border px-6 py-5"
-            style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}
-          >
-            <p className="text-xs text-[#7B8B9A] leading-relaxed">
-              Your ownership is recorded on the <span className="text-[#F9F9FB] font-semibold">Solana blockchain</span> immediately. You will receive a digital certificate in your wallet upon successful purchase.
-            </p>
+          {/* PAYMENT HISTORY */}
+          <div className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-xl">
+            <div className="p-6 border-b border-[#1E2F45] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0D1724]">
+              <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB]">Payment History</h3>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <select className="bg-[#0A0F17] border border-[#1E2F45] rounded-xl px-3 py-2 text-xs text-[#F9F9FB] outline-none">
+                  <option>All Instruments</option>
+                </select>
+                <div className="bg-[#0A0F17] border border-[#1E2F45] rounded-xl px-3 py-2 text-xs text-[#F9F9FB]">
+                  Apr 1, 2026 - May 20, 2026
+                </div>
+                <button className="flex items-center gap-2 text-xs font-bold text-[#F9F9FB] hover:text-[#81D7B4] border border-[#1E2F45] bg-[#0A0F17] px-3 py-2 rounded-xl transition-colors shadow-sm">
+                  <Download01Icon className="w-4 h-4" />
+                  Export CSV
+                </button>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-[#0A0F17]">
+                  <tr>
+                    <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Date</th>
+                    <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Instrument</th>
+                    <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Amount Received</th>
+                    <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Currency</th>
+                    <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Status</th>
+                    <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Transaction Hash</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1C2538]">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-8 text-center text-[#7B8B9A]">Loading history...</td>
+                    </tr>
+                  ) : payments.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-8 text-center text-[#7B8B9A]">No payment history yet.</td>
+                    </tr>
+                  ) : (
+                    payments.map((p) => (
+                      <tr key={p._id} className="hover:bg-[#1C2538]/30 transition-colors">
+                        <td className="px-5 py-4 text-[#F9F9FB]">{formatDate(p.date)}</td>
+                        <td className="px-5 py-4 font-bold text-[#F9F9FB]">
+                          <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getInstrumentColorClass(p.instrument, 'bg').replace('/10', '')} ${p.instrument.includes('Pending') ? 'bg-[#F5A623]' : ''}`}></span>
+                          {p.instrument}
+                        </td>
+                        <td className={`px-5 py-4 font-bold ${p.txHash.includes('Pending') ? 'text-[#F5A623]' : 'text-[#81D7B4]'}`}>+${p.amount.toFixed(2)}</td>
+                        <td className="px-5 py-4 text-[#7B8B9A]">{p.currency?.includes('Fiat') ? 'Fiat' : (p.currency || 'USDC')}</td>
+                        <td className="px-5 py-4 font-bold">
+                          {p.txHash.includes('Pending') ? (
+                            <span className="text-[#F5A623]">Pending</span>
+                          ) : (
+                            <span className="text-[#81D7B4]">Success</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4">
+                          {p.txHash.includes('Pending') ? (
+                            <span className="text-[#7B8B9A]">N/A</span>
+                          ) : (
+                            <a 
+                              href={`https://explorer.solana.com/tx/${p.txHash}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-[#3B82F6] hover:underline"
+                            >
+                              {p.txHash.slice(0, 4)}...{p.txHash.slice(-4)}
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+              <div className="p-4 text-center border-t border-[#1C2538] bg-[#0A0F17]">
+                <button className="text-xs font-bold text-[#81D7B4] hover:underline">View full payment history →</button>
+              </div>
+            </div>
           </div>
 
-          {/* Support note */}
-          <div
-            className="rounded-2xl border px-6 py-5"
-            style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}
-          >
-            <p className="text-xs text-[#7B8B9A] leading-relaxed">
-              For support, please join our <a href="https://t.me/KarlaGod" target="_blank" rel="noopener noreferrer" className="text-[#81D7B4] hover:underline transition-colors font-semibold">Telegram channel</a>. If you encounter any issues, you can reach out there and tag <span className="text-[#F9F9FB] font-semibold">@KarlaGod</span>.
-            </p>
+          {/* ALERTS & NOTIFICATIONS */}
+          <div className="bg-[#121A27] border border-[#1C2538] rounded-2xl overflow-hidden">
+            <div className="p-5 border-b border-[#1C2538] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+              <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB]">Alerts & Notifications</h3>
+              <button className="text-xs font-bold text-[#81D7B4] hover:underline">View all alerts →</button>
+            </div>
+            <div className="p-8 text-center text-[#7B8B9A]">
+              No new alerts.
+            </div>
           </div>
+
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6 min-w-0">
+          
+          {/* PAYMENT CALENDAR */}
+          <div className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-xl">
+            <div className="p-6 border-b border-[#1E2F45] flex justify-between items-center bg-[#0D1724]">
+              <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB]">Payment Calendar</h3>
+            </div>
+            <div className="divide-y divide-[#1C2538]">
+              {holdings.length === 0 ? (
+                <div className="p-8 text-center text-[#7B8B9A]">No upcoming payments.</div>
+              ) : (
+                holdings.map((h, i) => {
+                  const d = new Date(h.nextPayment);
+                  const month = d.toLocaleString('default', { month: 'short' });
+                  const day = d.getDate();
+                  const estPayment = h.investmentAmount * 0.05;
+                  
+                  return (
+                    <div key={i} className="p-5 flex items-center justify-between hover:bg-[#1C2538]/30 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="text-center w-10">
+                          <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-widest">{month}</p>
+                          <p className="text-xl font-black text-[#F9F9FB]">{day}</p>
+                        </div>
+                        <div>
+                          <p className="flex items-center gap-2 text-sm font-bold text-[#F9F9FB]">
+                            <span className={`w-2 h-2 rounded-full ${getInstrumentColorClass(h.instrument, 'bg').replace('/10', '')}`}></span> {h.instrument}
+                          </p>
+                          <p className="text-xs text-[#7B8B9A]">{h.payoutFrequency}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex items-center gap-3">
+                        <div>
+                          <p className="font-bold text-[#F9F9FB]">${estPayment.toFixed(2)}</p>
+                          <p className="text-[10px] text-[#7B8B9A]">≈ ₦{(estPayment * 1450).toLocaleString()}</p>
+                        </div>
+                        <span className="px-2 py-1 text-[10px] font-bold bg-[#3B82F6]/20 text-[#3B82F6] rounded">Upcoming</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div className="p-4 text-center bg-[#0A0F17]">
+                <button className="text-xs font-bold text-[#81D7B4] hover:underline">View full payment calendar →</button>
+              </div>
+            </div>
+          </div>
+
+          {/* MY CERTIFICATES - THE VAULT */}
+          <div className="bg-gradient-to-b from-[#0A1019] to-[#05080C] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.6)] flex flex-col relative">
+            {/* Vault Ambient Glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1E2F45]/20 via-transparent to-transparent pointer-events-none"></div>
+
+            <div className="p-6 border-b border-[#1E2F45] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 bg-gradient-to-r from-[#0D1724] to-transparent relative z-10">
+              <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB] flex items-center gap-2">
+                <Tick01Icon className="w-5 h-5 text-[#81D7B4]" /> Certificate Vault
+              </h3>
+              <a href="/bizswap/dashboard/certificates" className="text-xs font-bold text-[#81D7B4] hover:text-[#F9F9FB] transition-colors hover:underline">View Gallery →</a>
+            </div>
+            
+            <div className="p-6 sm:p-8 relative z-10 flex-1 flex flex-col">
+              {holdings.length === 0 ? (
+                <div className="text-center text-[#7B8B9A] py-12 bg-[#0A0F17]/50 rounded-2xl border border-[#1C2538] border-dashed">
+                  <div className="w-12 h-12 rounded-full bg-[#1C2538] flex items-center justify-center mx-auto mb-3">
+                    <InformationCircleIcon className="w-6 h-6 text-[#4B5A75]" />
+                  </div>
+                  <p className="font-bold text-[#F9F9FB] mb-1">Your Vault is Empty</p>
+                  <p className="text-xs">Purchase BizShares to unlock digital certificates.</p>
+                </div>
+              ) : (
+                <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 pt-4 px-2 -mx-2 scrollbar-hide" style={{ scrollPaddingLeft: '0.5rem' }}>
+                  {holdings.map((h, i) => (
+                    <div 
+                      key={h._id} 
+                      onClick={() => setSelectedCert(h)}
+                      className="relative flex-none w-[320px] sm:w-[380px] h-[210px] sm:h-[240px] snap-start rounded-2xl overflow-hidden cursor-pointer group shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#2C3E5D] transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.03] hover:shadow-[0_20px_40px_rgba(129,215,180,0.15)] hover:border-[#81D7B4]/50 hover:z-20"
+                      style={{ transform: `rotate(${i % 2 === 0 ? '-1deg' : '1deg'})`, transformOrigin: 'bottom center' }}
+                    >
+                      {/* Interactive glare effect */}
+                      <div className="absolute inset-0 z-30 bg-gradient-to-tr from-white/0 via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none transform -translate-x-full group-hover:translate-x-full transition-transform ease-in-out"></div>
+                      
+                      <div className="w-[1100px] flex-shrink-0 origin-center pointer-events-none scale-[0.29] sm:scale-[0.345] bg-[#0A0F17] flex justify-center items-center h-[730px] -mt-[250px] -ml-[390px] sm:-ml-[360px]">
+                        <CertificateCard holding={{ ...h, wallet: walletAddress }} />
+                      </div>
+                      
+                      <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#05080C]/80 via-transparent to-transparent pointer-events-none" />
+                      
+                      {/* Status Badge */}
+                      <div className="absolute top-4 left-4 z-20">
+                         <span className={`px-3 py-1 text-[9px] font-black rounded-md uppercase tracking-widest backdrop-blur-md border ${h.status.includes('Active') ? 'bg-[#059669]/80 text-white border-[#059669]/50 shadow-[0_0_15px_rgba(5,150,105,0.5)]' : 'bg-[#3B82F6]/80 text-white border-[#3B82F6]/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]'}`}>
+                           {h.status.split('—')[0]}
+                         </span>
+                      </div>
+
+                      {/* Info overlay */}
+                      <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-between items-end opacity-90 group-hover:opacity-100 transition-opacity">
+                        <div>
+                          <p className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-widest drop-shadow-md">{h.instrument}</p>
+                          <p className="text-xl font-black text-white drop-shadow-md">${h.investmentAmount.toLocaleString()}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                          <Tick01Icon className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {holdings.length > 0 && (
+              <div className="p-4 text-center border-t border-[#1C2538] bg-[#0A0F17] mt-auto">
+                <p className="text-[10px] text-[#7B8B9A] uppercase tracking-widest font-bold">Total Certificates: {holdings.length}</p>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* Unified Payment Modal */}
-      <UnifiedFiatModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        amount={totalCharged.toFixed(2)}
-        sessionToken={sessionToken}
-        onSuccess={handlePaymentSuccess}
-        onPending={handlePendingPayment}
-        userId={user?.id || 'unknown'}
-        project="bizswap"
-        destinationWallet={process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET}
-        itemDescription={`${sharesCount} shares of ${INSTRUMENTS[selectedInst as keyof typeof INSTRUMENTS]?.name || 'instrument'}`}
-        metadata={{
-          instrument: inst.name,
-          business: selectedInst === 'bizyield' ? selectedBusiness : null,
-          investmentAmount: inputAmount,
-          feeAmount,
-          totalCharged,
-          bizswapReferralCode: isReferralValid ? referralCode : null,
-          email: emailInput || user?.email?.address,
-          wallet: walletAddress
-        }}
-      />
-
-      {/* Pending Modal */}
-      {showPendingModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div
-            className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl p-8 w-full max-w-md relative flex flex-col items-center text-center"
+      {/* CERTIFICATE MODAL */}
+      {selectedCert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={() => setSelectedCert(null)}>
+          <div 
+            className="relative w-full max-w-[1100px] my-8 animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 border border-[#81D7B4]/30">
-              <InformationCircleIcon className="w-10 h-10 text-[#81D7B4]" />
-            </div>
-            
-            <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-              Payment Pending
-            </h3>
-            
-            <p className="text-gray-400 mb-8 text-sm">
-              Your fiat payment is currently processing. As soon as the bank transfer clears, your certificate will be automatically minted and will appear in your dashboard as a success!
-            </p>
-
-            <button
-              onClick={() => {
-                setShowPendingModal(false);
-                router.push('/bizswap/dashboard');
-              }}
-              className="w-full py-4 rounded-xl bg-[#81D7B4] text-black font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(129,215,180,0.3)]"
+            {/* Close Button */}
+            <button 
+              id="cert-close-btn"
+              onClick={() => setSelectedCert(null)}
+              className="absolute -top-4 -right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-50 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D] shadow-lg"
             >
-              Go to Dashboard
+              <Cancel01Icon className="w-5 h-5" />
             </button>
 
-            <button
-              onClick={() => setShowPendingModal(false)}
-              className="mt-4 w-full py-3 rounded-xl border border-transparent text-gray-500 hover:text-white transition-colors font-semibold"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div
-            className="rounded-3xl border p-10 max-w-md w-full text-center relative overflow-hidden"
-            style={{ backgroundColor: '#0D1724', borderColor: '#81D7B430' }}
-          >
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, #81D7B450, transparent)' }} />
-            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full blur-[60px] bg-[#81D7B4]/10" />
-
-            {/* Check mark — text-based to avoid icon clutter */}
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-8 text-2xl font-black"
-              style={{ backgroundColor: '#81D7B415', border: '1px solid #81D7B430', color: '#81D7B4' }}
-            >
-              ✓
+            <div ref={certificateRef} className="bg-[#0F1825] rounded-xl">
+              <CertificateCard holding={{ ...selectedCert, wallet: walletAddress }} />
             </div>
 
-            <h2
-              className="text-3xl font-extrabold text-[#F9F9FB] mb-3"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Mint Successful!
-            </h2>
-            <p className="text-[#7B8B9A] text-sm leading-relaxed mb-10">
-              Your certificate has been successfully minted to your wallet and recorded on the Solana blockchain.
-            </p>
-
-            <div className="flex flex-col gap-3 relative z-10">
-              <a
-                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just bought a ${businesses.find(b => b.id === selectedBusiness)?.name || 'Business'} RWA BizShare on @BitsaveProtocol's BizMarket. Now I earn from their revenue, weekly, monthly, or quarterly. My stable coins work for me.\n\nhttps://www.bitsave.io/bizswap${mintedCertId ? `/certificate/${mintedCertId}` : ''}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-5 font-bold rounded-xl transition-colors text-sm border text-[#F9F9FB] flex items-center justify-center gap-2"
-                style={{ backgroundColor: '#0A1019', borderColor: '#1E2F45' }}
+            {/* Action Buttons */}
+            <div id="cert-action-btns" className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+              <button 
+                onClick={downloadCertificate}
+                className="text-xs font-bold text-[#0F1825] bg-[#81D7B4] hover:bg-[#6BC4A0] transition-colors px-6 py-2.5 rounded-full shadow-lg flex items-center gap-2"
               >
-                Post to X
-              </a>
-              <button
-                onClick={() => router.push('/bizswap/dashboard')}
-                className="w-full py-3.5 px-5 font-black rounded-xl transition-all text-sm hover:opacity-90"
-                style={{ backgroundColor: '#81D7B4', color: '#080E18', fontFamily: 'var(--font-display)' }}
-              >
-                Go to Dashboard
+                <Download01Icon className="w-4 h-4" />
+                Download Certificate
               </button>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full py-3.5 px-5 font-semibold rounded-xl transition-colors text-sm text-[#7B8B9A] hover:text-[#F9F9FB]"
+              <div 
+                className="text-xs font-bold text-[#81D7B4] border border-[#81D7B4]/50 px-6 py-2.5 rounded-full inline-block shadow-lg bg-[#0F1825]"
               >
-                Purchase Another
-              </button>
+                ID: {selectedCert.mintAddress.split('_')[1] || selectedCert.mintAddress}
+              </div>
             </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

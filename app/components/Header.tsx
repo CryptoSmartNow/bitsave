@@ -10,8 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
   { name: 'Home', href: '/' },
-  { name: 'How It Works', href: '/#how-it-works' },
-  { name: 'Features', href: '/#features' },
+  { name: 'BizSwap', href: '/bizswap' },
+  { name: 'BizFi', href: '/bizfi' },
   { name: 'Blog', href: '/#blog' },
   { name: 'Team', href: '/team' },
   { name: 'FAQ', href: '/#faq' },
@@ -42,13 +42,13 @@ const Header = memo(function Header() {
 
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
-          ? 'bg-white/70 backdrop-blur-2xl backdrop-saturate-[180%] border-b border-gray-100/50 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-          : 'bg-transparent py-5'
-          }`}
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex justify-between items-center">
+      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pointer-events-none">
+        <header
+          className={`pointer-events-auto transition-all duration-500 rounded-full border ${scrolled
+            ? 'bg-white/80 backdrop-blur-2xl backdrop-saturate-[180%] border-white/60 py-2.5 px-6 sm:px-8 shadow-[0_8px_30px_rgba(0,0,0,0.08)]'
+            : 'bg-white/40 backdrop-blur-md border-white/40 py-3.5 px-6 sm:px-8 shadow-sm'
+            } w-full max-w-7xl flex justify-between items-center`}
+        >
           {/* Logo */}
           <Link href="/" className="relative z-50 flex items-center group">
             <div className="relative">
@@ -133,8 +133,8 @@ const Header = memo(function Header() {
               <Menu01Icon className="w-7 h-7" />
             )}
           </button>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Full Screen Mobile Menu Overlay */}
       <AnimatePresence>
