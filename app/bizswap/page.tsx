@@ -430,7 +430,7 @@ export default function BizSwapLandingPage() {
 
                   {/* CTA */}
                   <div className="col-span-12 md:col-span-1 flex justify-end">
-                    <Link href="/bizswap/app" className="text-xs font-bold text-[#81D7B4] hover:text-[#F9F9FB] transition-colors whitespace-nowrap">
+                    <Link href="/bizswap/buy" className="text-xs font-bold text-[#81D7B4] hover:text-[#F9F9FB] transition-colors whitespace-nowrap">
                       Buy in →
                     </Link>
                   </div>
@@ -520,7 +520,7 @@ export default function BizSwapLandingPage() {
                 Pick an instrument. Swap in minutes.<br />Start earning real-world yield today.
               </motion.p>
               <motion.div variants={fadeUp}>
-                <Link href="/bizswap/app" className="inline-flex items-center gap-3 px-12 py-5 bg-[#81D7B4] hover:opacity-90 hover:scale-105 text-[#0F1825] font-black rounded-2xl text-xl transition-all shadow-[0_10px_40px_rgba(129,215,180,0.2)] hover:shadow-[0_15px_60px_rgba(129,215,180,0.35)]" style={{ fontFamily: "var(--font-display)" }}>
+                <Link href="/bizswap/buy" className="inline-flex items-center gap-3 px-12 py-5 bg-[#81D7B4] hover:opacity-90 hover:scale-105 text-[#0F1825] font-black rounded-2xl text-xl transition-all shadow-[0_10px_40px_rgba(129,215,180,0.2)] hover:shadow-[0_15px_60px_rgba(129,215,180,0.35)]" style={{ fontFamily: "var(--font-display)" }}>
                   Access Swap Market
                 </Link>
               </motion.div>
@@ -600,8 +600,8 @@ export default function BizSwapLandingPage() {
           </div>
           <p className="text-[#7B8B9A] text-sm">© 2026 BizMarket Protocol. All rights reserved.</p>
           <div className="flex gap-6 text-sm font-medium">
-            <Link href="/bizswap/dashboard" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Dashboard</Link>
-            <Link href="/bizswap/app" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Market</Link>
+            <Link href="/bizswap/app" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Dashboard</Link>
+            <Link href="/bizswap/buy" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Market</Link>
             <a href="https://bizfi.mintlify.app/" target="_blank" rel="noopener noreferrer" className="text-[#9BA8B5] hover:text-[#81D7B4] transition-colors">Docs</a>
           </div>
         </div>

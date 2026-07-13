@@ -83,7 +83,7 @@ export default function HowItWorks() {
               <h3 className="font-display text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#5fb392] transition-colors duration-300">
                 {step.title}
               </h3>
-              
+
               <p className="text-gray-500 text-base leading-relaxed">
                 {step.description}
               </p>

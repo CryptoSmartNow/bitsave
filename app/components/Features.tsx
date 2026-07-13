@@ -32,7 +32,7 @@ export default function Features() {
 
       <div className="container mx-auto max-w-[1440px] relative z-10">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-20">
-          
+
           {/* Left Column - Sticky Header */}
           <div className="lg:col-span-5 relative">
             <div className="sticky top-32 lg:pr-8">
@@ -57,7 +57,7 @@ export default function Features() {
                 Built for Growth & <span className="text-[#5fb392]">Peace of Mind</span>
               </motion.h2>
 
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -95,7 +95,7 @@ export default function Features() {
                   <h3 className="font-display text-2xl lg:text-3xl font-extrabold text-gray-900 group-hover:text-[#2D5A4A] transition-colors duration-300 mb-4">
                     {feature.title}
                   </h3>
-                  
+
                   <p className="text-gray-500 text-[17px] leading-relaxed mb-8 font-medium">
                     {feature.description}
                   </p>
