@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import { Inter, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import Script from 'next/script'
 
@@ -11,12 +11,12 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
-// PlusSign Jakarta Sans: geometric display font for headings — premium, modern feel
-const plusJakarta = Plus_Jakarta_Sans({
+// Instrument Serif: elegant, modern serif font requested for the hero
+const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
   display: 'swap',
-  weight: ['500', '600', '700', '800'],
-  variable: '--font-display',
+  weight: ['400'], // Instrument Serif only supports 400 weight (and italic)
+  variable: '--font-instrument',
 })
 
 import { Providers } from './providers';
@@ -81,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${instrumentSerif.variable}`} suppressHydrationWarning>
       <head>
         <Script
           id="disable-console"

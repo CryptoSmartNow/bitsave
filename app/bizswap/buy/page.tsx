@@ -477,6 +477,15 @@ export default function BizSwapAppPage() {
                   <p className="text-sm sm:text-base font-bold text-[#4B5A75]">$0.00</p>
                 )}
               </div>
+              
+              {inst.id === 'bizyield' && selectedBusiness === 'shard' && (
+                <div className="mt-4 px-4 py-3 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-xl flex items-start sm:items-center gap-3">
+                  <InformationCircleIcon className="w-4 h-4 text-[#81D7B4] shrink-0 mt-0.5 sm:mt-0" />
+                  <p className="text-[10px] sm:text-xs font-medium text-[#81D7B4]">
+                    <span className="font-bold text-[#F9F9FB]">Shard Terms:</span> 1 share = $10 = 0.1% of Shard's monthly revenue for 2 years.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* ── STEP 3: Review & Checkout ── */}
