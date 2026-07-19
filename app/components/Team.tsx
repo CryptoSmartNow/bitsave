@@ -83,35 +83,58 @@ const teamMembers = [
       farcaster: "https://farcaster.xyz/emmo00",
       github: "https://gitHub.com/emmo00",
     }
+  },
+  {
+    name: "Godday",
+    role: "Graphic Designer",
+    avatar: "/images/og.png",
+    socials: {}
   }
 ];
 
 export default function Team() {
   return (
-    <section id="team" className="section-lazy py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white">
-      <div className="container mx-auto max-w-7xl">
+    <section id="team" className="section-lazy py-24 md:py-32 relative bg-[#f8fafc] overflow-hidden">
+      {/* Background Texture */}
+      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.5 }}></div>
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white to-transparent opacity-80" />
+      <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-[#f8fafc] to-transparent z-10" />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[85rem] relative z-20">
 
         {/* Header */}
-        <div className="mb-24 md:mb-32">
+        <div className="mb-20 text-center max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 mb-8"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/60 backdrop-blur-md mb-8"
           >
-            <span className="w-12 h-[1px] bg-[#81D7B4]"></span>
-            <span className="text-sm font-bold text-[#81D7B4] tracking-widest uppercase">The Team</span>
+            <span className="w-2 h-2 rounded-full bg-[#81D7B4] shadow-[0_0_8px_#81D7B4]"></span>
+            <span className="text-xs font-bold text-slate-700 tracking-wider uppercase">The Team</span>
           </motion.div>
-          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-tight max-w-4xl mb-6">
-            Built by <span className="text-gradient-animated">Builders</span>
-          </h2>
-          <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="font-instrument text-5xl md:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-6"
+          >
+            Meet the minds behind <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5fb392] to-[#81D7B4]">Bitsave</span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-lg md:text-xl text-slate-500 font-medium"
+          >
             Passionate experts from across the globe, united by a mission to make onchain savings accessible, secure, and rewarding for everyone.
-          </p>
+          </motion.p>
         </div>
 
         {/* Grid / Carousel on Mobile */}
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 -mx-4 px-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-x-8 sm:gap-y-16 md:gap-y-24 sm:pb-0 sm:mx-0 sm:px-0 sm:overflow-visible sm:snap-none">
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 -mx-4 px-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-8 lg:gap-10 sm:pb-0 sm:mx-0 sm:px-0 sm:overflow-visible sm:snap-none no-scrollbar">
           {teamMembers.map((member, index) => (
             <motion.div
               key={member.name}
@@ -119,51 +142,53 @@ export default function Team() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group snap-center shrink-0 min-w-[260px] max-w-[300px] sm:min-w-0 sm:max-w-none sm:shrink sm:snap-align-none"
+              className="group snap-center shrink-0 w-[280px] sm:w-auto sm:shrink sm:snap-align-none"
             >
-              <div className="flex flex-col">
+              <div className="bg-white/70 backdrop-blur-xl border border-slate-200/80 rounded-[2.5rem] p-4 flex flex-col hover:bg-white hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)] hover:border-slate-300 transition-all duration-500 hover:-translate-y-2 h-full">
 
                 {/* Avatar Container */}
-                <div className="relative mb-8 overflow-hidden rounded-2xl aspect-[4/5] bg-gray-100 group-hover:shadow-xl group-hover:shadow-[#81D7B4]/10 transition-all duration-500">
+                <div className="relative mb-6 overflow-hidden rounded-[2rem] aspect-square bg-slate-100">
                   <Image
                     src={member.avatar}
                     alt={member.name}
                     fill
-                    className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   
                   {/* Overlay Socials */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                    <div className="flex gap-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                      {member.socials.twitter && (
-                        <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <TwitterIcon className="w-5 h-5" />
-                        </a>
-                      )}
-                      {member.socials.farcaster && (
-                        <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <FarcasterIcon className="w-5 h-5" />
-                        </a>
-                      )}
-                      {member.socials.github && (
-                        <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <GithubIcon className="w-5 h-5" />
-                        </a>
-                      )}
-                      {member.socials.linkedin && (
-                        <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white transition-colors">
-                          <Linkedin01Icon className="w-5 h-5" />
-                        </a>
-                      )}
+                  {Object.keys(member.socials).length > 0 && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                      <div className="flex gap-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                        {member.socials.twitter && (
+                          <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors">
+                            <TwitterIcon className="w-5 h-5" />
+                          </a>
+                        )}
+                        {member.socials.farcaster && (
+                          <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors">
+                            <FarcasterIcon className="w-5 h-5" />
+                          </a>
+                        )}
+                        {member.socials.github && (
+                          <a href={member.socials.github} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors">
+                            <GithubIcon className="w-5 h-5" />
+                          </a>
+                        )}
+                        {member.socials.linkedin && (
+                          <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors">
+                            <Linkedin01Icon className="w-5 h-5" />
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Info */}
-                <div>
-                  <h3 className="font-display text-xl font-bold text-gray-900 mb-1 group-hover:text-[#5fb392] transition-colors">{member.name}</h3>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{member.role}</p>
+                <div className="px-4 pb-4 text-center">
+                  <h3 className="font-instrument text-2xl lg:text-3xl font-bold text-slate-900 mb-2">{member.name}</h3>
+                  <p className="text-sm font-bold text-[#5fb392] uppercase tracking-wider">{member.role}</p>
                 </div>
 
               </div>

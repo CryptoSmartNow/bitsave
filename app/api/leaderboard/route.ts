@@ -27,16 +27,35 @@ export async function GET(request: NextRequest) {
     const db = client.db('bitsave');
     const usersCollection = db.collection('users');
 
-    const enhancedLeaderboard = await Promise.all(leaderboard.map(async (user: any) => {
-      const u = await usersCollection.findOne({ walletAddress: user.useraddress?.toLowerCase() || '' });
+    // Extract all wallet addresses
+    const walletAddresses = leaderboard
+      .map((user: any) => user.useraddress?.toLowerCase())
+      .filter(Boolean);
+
+    // Fetch all related users in a single query
+    const users = await usersCollection
+      .find({ walletAddress: { $in: walletAddresses } })
+      .project({ walletAddress: 1, savvyName: 1 })
+      .toArray();
+
+    // Map walletAddress to savvyName for O(1) lookups
+    const userMap = users.reduce((acc: Record<string, string>, u) => {
+      if (u.walletAddress && u.savvyName) {
+        acc[u.walletAddress] = u.savvyName;
+      }
+      return acc;
+    }, {});
+
+    const enhancedLeaderboard = leaderboard.map((user: any) => {
+      const address = user.useraddress?.toLowerCase() || '';
       return {
         useraddress: user.useraddress,
-        savvyName: u?.savvyName || null,
+        savvyName: userMap[address] || null,
         totalamount: parseFloat(user.totalamount) || 0, // Ensure number
         chain: user.chain,
         id: user.id || user._id.toString()
       };
-    }));
+    });
 
     // Return extended array
     return NextResponse.json(enhancedLeaderboard);

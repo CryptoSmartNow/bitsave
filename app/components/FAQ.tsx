@@ -39,123 +39,141 @@ export default function FAQ() {
   };
 
   return (
-    <section id="faq" className="section-lazy py-16 md:py-24 lg:py-32 px-4 md:px-8 relative bg-white overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-[#81D7B4]/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-[30%] h-[30%] bg-[#81D7B4]/5 rounded-full blur-[100px]" />
-      </div>
+    <section id="faq" className="section-lazy py-24 md:py-32 lg:py-40 px-4 md:px-8 bg-[#f8fafc] relative overflow-hidden">
+      {/* Background Texture */}
+      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '40px 40px', opacity: 0.5 }}></div>
 
-      <div className="container mx-auto max-w-4xl relative z-10">
+      <div className="container mx-auto max-w-7xl relative z-10">
         
-        {/* Header */}
-        <div className="mb-24 md:mb-32">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 mb-8"
-          >
-            <span className="w-12 h-[1px] bg-[#81D7B4]"></span>
-            <span className="text-sm font-bold text-[#81D7B4] tracking-widest uppercase">Support</span>
-          </motion.div>
+        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
           
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight"
-          >
-            Common <span className="text-gradient-animated">Questions</span>
-          </motion.h2>
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="space-y-4">
-          {faqData.map((item, index) => (
+          {/* Left Column: Sticky Header & Contact */}
+          <div className="lg:w-5/12 lg:sticky lg:top-32">
             <motion.div
-              key={item.id}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-[0.25em] mb-8 shadow-sm"
+            >
+              Support & FAQ
+            </motion.div>
+            
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="font-instrument text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-6"
+            >
+              Common <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5fb392] to-[#81D7B4] drop-shadow-sm">Questions</span>
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-slate-500 text-lg md:text-xl font-medium leading-relaxed mb-12 max-w-md"
+            >
+              Everything you need to know about decentralized savings, security, and how to maximize your growth on Bitsave.
+            </motion.p>
+
+            {/* Contact Support Card */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="border-b border-gray-100 last:border-0"
+              transition={{ delay: 0.3 }}
+              className="p-8 rounded-[2rem] bg-white/70 backdrop-blur-xl border border-slate-200 shadow-sm"
             >
-              <button
-                onClick={() => setOpenId(openId === item.id ? null : item.id)}
-                className="w-full py-8 flex items-start justify-between text-left group"
-              >
-                <div className="flex gap-6 md:gap-8">
-                  <span className={`text-xl md:text-2xl font-bold transition-colors duration-300 ${openId === item.id ? 'text-[#81D7B4]' : 'text-gray-300 group-hover:text-gray-400'}`}>
-                    {item.id}
-                  </span>
-                  <h3 className={`font-display text-2xl md:text-3xl font-bold transition-colors duration-300 ${openId === item.id ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>
-                    {item.question}
-                  </h3>
-                </div>
-                <div className={`mt-1 ml-4 p-2 rounded-full transition-all duration-300 ${openId === item.id ? 'bg-gradient-to-br from-[#81D7B4] to-[#5fb392] text-white shadow-lg shadow-[#81D7B4]/20 rotate-0' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 rotate-0'}`}>
-                  {openId === item.id ? <MinusSignIcon className="w-6 h-6" /> : <PlusSignIcon className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />}
-                </div>
-              </button>
-
-              <AnimatePresence>
-                {openId === item.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="pl-[calc(2.5rem+1.5rem)] md:pl-[calc(3rem+2rem)] pb-8 pr-4 md:pr-16">
-                      <p className="text-lg text-gray-500 leading-relaxed">
-                        {item.answer}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Contact Footer */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-24 pt-16 border-t border-gray-100"
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div>
-              <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Still have questions?</h3>
-              <p className="text-gray-500 text-base">We're here to help you with your savings journey.</p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <button 
-                onClick={handleEmailClick}
-                className="flex items-center justify-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-white border border-gray-200 text-gray-900 rounded-full hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors font-medium shadow-sm hover:shadow-md cursor-pointer text-sm sm:text-base w-full sm:w-auto"
-              >
-                <Mail01Icon className="w-5 h-5" />
-                <span>Email Support</span>
-              </button>
+              <h3 className="font-instrument text-2xl font-bold mb-2 text-slate-900">Still have questions?</h3>
+              <p className="text-slate-500 text-base mb-8">We're here to help you with your decentralized savings journey.</p>
               
-              <a 
-                href="https://t.me/+YimKRR7wAkVmZGRk" 
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 bg-[#81D7B4] text-white rounded-full hover:bg-[#6bcb9f] transition-colors font-medium shadow-lg shadow-[#81D7B4]/20 text-sm sm:text-base w-full sm:w-auto"
-              >
-                <TelegramIcon className="w-5 h-5" />
-                <span>Join Telegram</span>
-              </a>
-            </div>
+              <div className="flex flex-col gap-4">
+                <button 
+                  onClick={handleEmailClick}
+                  className="flex items-center justify-center gap-3 w-full py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-colors font-bold text-sm shadow-sm group"
+                >
+                  <Mail01Icon className="w-5 h-5 text-slate-400 group-hover:text-[#5fb392] transition-colors" />
+                  <span>Email Support</span>
+                </button>
+                
+                <a 
+                  href="https://t.me/+YimKRR7wAkVmZGRk" 
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-[#81D7B4] to-[#5fb392] text-white rounded-2xl hover:shadow-lg transition-all font-bold text-sm group"
+                >
+                  <TelegramIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span>Join Telegram</span>
+                </a>
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
 
+          {/* Right Column: Accordion Items */}
+          <div className="lg:w-7/12 w-full space-y-4">
+            {faqData.map((item, index) => {
+              const isOpen = openId === item.id;
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.5, type: "spring", stiffness: 40 }}
+                  className={`bg-white/70 backdrop-blur-xl border rounded-[2rem] overflow-hidden transition-all duration-500 ${
+                    isOpen 
+                    ? 'border-[#81D7B4]/50 shadow-[0_15px_40px_rgba(129,215,180,0.1)]' 
+                    : 'border-slate-200 hover:border-[#81D7B4]/30 hover:shadow-md'
+                  }`}
+                >
+                  <button
+                    onClick={() => setOpenId(isOpen ? null : item.id)}
+                    className="w-full p-6 md:p-8 flex items-start md:items-center justify-between text-left group gap-6"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 flex-1">
+                      <span className={`text-xl font-instrument font-bold transition-colors duration-500 ${isOpen ? 'text-[#5fb392]' : 'text-slate-300 group-hover:text-[#5fb392]'}`}>
+                        {item.id}
+                      </span>
+                      <h3 className={`font-instrument text-2xl lg:text-3xl font-bold transition-colors duration-500 ${isOpen ? 'text-slate-900' : 'text-slate-700 group-hover:text-slate-900'}`}>
+                        {item.question}
+                      </h3>
+                    </div>
+                    
+                    <div className={`shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl border transition-all duration-500 mt-1 md:mt-0 ${
+                      isOpen 
+                      ? 'bg-[#81D7B4]/10 border-[#81D7B4]/20 text-[#5fb392] rotate-180' 
+                      : 'bg-white border-slate-100 text-slate-400 group-hover:bg-slate-50 group-hover:border-slate-200 group-hover:text-slate-600 rotate-0 shadow-sm'
+                    }`}>
+                      {isOpen ? <MinusSignIcon className="w-6 h-6" /> : <PlusSignIcon className="w-6 h-6" />}
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-6 md:px-8 pb-8 pt-2 md:pl-[calc(2rem+48px)]">
+                          <p className="text-lg text-slate-500 leading-relaxed font-medium">
+                            {item.answer}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+
+        </div>
       </div>
     </section>
   );

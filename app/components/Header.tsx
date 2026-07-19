@@ -44,9 +44,9 @@ const Header = memo(function Header() {
     <>
       <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pointer-events-none">
         <header
-          className={`pointer-events-auto transition-all duration-500 rounded-full border ${scrolled
-            ? 'bg-white/80 backdrop-blur-2xl backdrop-saturate-[180%] border-white/60 py-2.5 px-6 sm:px-8 shadow-[0_8px_30px_rgba(0,0,0,0.08)]'
-            : 'bg-white/40 backdrop-blur-md border-white/40 py-3.5 px-6 sm:px-8 shadow-sm'
+          className={`pointer-events-auto transition-all duration-500 rounded-2xl border ${scrolled
+            ? 'bg-white/90 backdrop-blur-3xl backdrop-saturate-[200%] border-white/80 py-3 px-6 sm:px-8 shadow-[0_8px_30px_rgba(0,0,0,0.06)]'
+            : 'bg-white/50 backdrop-blur-xl border-white/60 py-4 px-6 sm:px-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)]'
             } w-full max-w-7xl flex justify-between items-center`}
         >
           {/* Logo */}
@@ -73,7 +73,7 @@ const Header = memo(function Header() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`nav-underline px-4 py-2 text-sm font-semibold transition-colors rounded-full hover:bg-gray-50/80 whitespace-nowrap tracking-wide ${isActive ? 'text-[#5fb392] bg-[#81D7B4]/10' : 'text-gray-600 hover:text-[#5fb392]'}`}
+                  className={`nav-underline px-3.5 py-1.5 text-[13px] font-bold transition-all rounded-lg whitespace-nowrap tracking-wide ${isActive ? 'text-slate-900 bg-slate-100/80' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50/80'}`}
                 >
                   {link.name}
                 </Link>
@@ -83,27 +83,27 @@ const Header = memo(function Header() {
             {/* Docs Dropdown */}
             <div className="relative group">
               <button
-                className="nav-underline px-4 py-2 text-sm font-semibold text-gray-600 hover:text-[#5fb392] transition-colors rounded-full hover:bg-gray-50/80 flex items-center gap-1 whitespace-nowrap tracking-wide"
+                className="nav-underline px-3.5 py-1.5 text-[13px] font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50/80 transition-all rounded-xl flex items-center gap-1 whitespace-nowrap tracking-wide"
               >
                 Docs
               </button>
               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-[150px]">
                 <div className="glass-card bg-white/90 rounded-xl shadow-xl shadow-gray-200/30 p-2 flex flex-col gap-1">
-                  <Link
-                    href="/docs"
-                    className="flex justify-between items-center px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-[#5fb392] hover:bg-[#81D7B4]/8 rounded-lg transition-all"
-                  >
-                    SaveFi
-                  </Link>
-                  <a
-                    href="https://bizfi.mintlify.app/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex justify-between items-center px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-[#5fb392] hover:bg-[#81D7B4]/8 rounded-lg transition-all"
-                  >
-                    BizFi
-                    <ArrowUpRight01Icon className="w-3 h-3" />
-                  </a>
+                    <Link
+                      href="/docs"
+                      className="flex justify-between items-center px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
+                    >
+                      SaveFi
+                    </Link>
+                    <a
+                      href="https://bizfi.mintlify.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex justify-between items-center px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
+                    >
+                      BizFi
+                      <ArrowUpRight01Icon className="w-3 h-3" />
+                    </a>
                 </div>
               </div>
             </div>
@@ -115,7 +115,7 @@ const Header = memo(function Header() {
             <Link
               href="/dashboard"
               prefetch={false}
-              className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#5fb392] text-white px-6 py-2.5 rounded-full font-bold transition-all duration-300 shadow-lg shadow-[#81D7B4]/20 hover:shadow-[#81D7B4]/40 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shimmer-btn tracking-wide"
+              className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#5fb392] text-white px-5 py-2 text-[13px] rounded-xl font-bold transition-all duration-300 shadow-[0_4px_14px_rgba(129,215,180,0.4)] hover:shadow-[0_6px_20px_rgba(129,215,180,0.5)] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shimmer-btn tracking-wide"
             >
               Launch App
             </Link>

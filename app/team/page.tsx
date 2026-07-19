@@ -4,7 +4,7 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ScrollToTop from '../components/ScrollToTop';
-import { GithubIcon, Linkedin01Icon, TwitterIcon } from "hugeicons-react";
+import { GithubIcon, Linkedin01Icon, TwitterIcon, Mail01Icon } from "hugeicons-react";
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
@@ -95,6 +95,13 @@ const teamMembers = [
       farcaster: "https://farcaster.xyz/emmo00",
       github: "https://gitHub.com/emmo00",
     }
+  },
+  {
+    name: "Godday",
+    role: "Graphic Designer",
+    avatar: "/images/og.png",
+    bio: "Bringing creative vision to life with pixel-perfect design and modern aesthetics.",
+    socials: {}
   }
 ];
 
@@ -115,40 +122,47 @@ export default function TeamsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 selection:bg-[#81D7B4] selection:text-white">
+    <div className="min-h-screen bg-[#f8fafc] text-gray-900 selection:bg-[#81D7B4] selection:text-white relative">
       <Header />
       
-      <main className="pt-24 md:pt-32 pb-20 md:pb-32 overflow-hidden">
+      {/* Background Texture */}
+      <div className="fixed inset-0 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.4 }}></div>
+      <div className="fixed top-0 inset-x-0 h-48 bg-gradient-to-b from-white to-transparent opacity-80 pointer-events-none z-0" />
+      
+      <main className="pt-32 md:pt-40 pb-20 md:pb-32 overflow-hidden relative z-10">
+        
         {/* HERO SECTION */}
-        <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-24 md:mb-32">
+        <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-24 md:mb-32 text-center">
           {/* Ambient Glow Orbs */}
-          <div className="absolute top-[-10%] right-[10%] w-[400px] h-[400px] bg-[#81D7B4]/8 rounded-full blur-[120px] -z-10 pointer-events-none" />
-          <div className="absolute bottom-[-10%] left-[0%] w-[300px] h-[300px] bg-[#5fb392]/8 rounded-full blur-[100px] -z-10 pointer-events-none" />
+          <div className="absolute top-[-20%] right-[20%] w-[400px] h-[400px] bg-[#81D7B4]/20 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-multiply" />
+          <div className="absolute bottom-[-10%] left-[10%] w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none mix-blend-multiply" />
 
           <motion.div 
             initial="hidden" 
             animate="visible" 
             variants={staggerContainer}
-            className="max-w-4xl"
+            className="max-w-4xl mx-auto flex flex-col items-center relative"
           >
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 mb-8">
-              <span className="w-12 h-[1px] bg-[#81D7B4]"></span>
-              <span className="text-sm font-bold text-[#81D7B4] tracking-widest uppercase">The Team</span>
+            {/* Large Shadow Text */}
+            <motion.div variants={fadeUp} className="absolute -top-10 md:-top-16 left-1/2 -translate-x-1/2 w-full text-center pointer-events-none select-none z-0">
+              <span className="text-7xl sm:text-8xl md:text-[9rem] font-black text-slate-900/[0.03] tracking-widest uppercase font-instrument whitespace-nowrap">
+                OUR TEAM
+              </span>
             </motion.div>
             
             <motion.h1 
               variants={fadeUp} 
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-extrabold tracking-tight leading-[1.05] text-gray-900 mb-6 md:mb-8 font-display"
+              className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05] text-slate-900 mb-8 font-instrument relative z-10 mt-8 md:mt-12"
             >
               The minds behind <br />
-              <span className="text-gradient-animated">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5fb392] to-[#81D7B4]">
                 Bitsave
               </span>
             </motion.h1>
             
             <motion.p 
               variants={fadeUp}
-              className="text-lg md:text-xl lg:text-2xl text-gray-500 leading-relaxed max-w-2xl font-medium"
+              className="text-lg md:text-xl lg:text-2xl text-slate-500 leading-relaxed max-w-3xl font-medium"
             >
               We are a collective of dreamers, builders, and innovators dedicated to redefining on-chain finance. Passionate experts from across the globe united by a singular mission.
             </motion.p>
@@ -156,13 +170,13 @@ export default function TeamsPage() {
         </section>
 
         {/* TEAM GRID */}
-        <section className="px-0 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <section className="px-4 sm:px-6 lg:px-8 max-w-[85rem] mx-auto">
           <motion.div 
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 px-4 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-x-8 sm:gap-y-16 sm:pb-0 sm:overflow-visible sm:snap-none no-scrollbar"
+            className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 -mx-4 px-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-8 lg:gap-10 sm:pb-0 sm:mx-0 sm:px-0 sm:overflow-visible sm:snap-none no-scrollbar"
           >
             {teamMembers.map((member, idx) => (
               <motion.div 
@@ -170,56 +184,64 @@ export default function TeamsPage() {
                 variants={fadeUp}
                 className="group relative snap-center shrink-0 w-[280px] sm:w-auto sm:shrink sm:snap-align-none"
               >
-                {/* Image Container */}
-                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden mb-6 bg-gray-100 group-hover:shadow-xl group-hover:shadow-[#81D7B4]/10 transition-all duration-500">
-                  <Image
-                    src={member.avatar}
-                    alt={member.name}
-                    fill
-                    priority={idx < 4}
-                    className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  />
+                <div className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] p-5 flex flex-col hover:bg-white hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)] hover:border-slate-300 transition-all duration-500 hover:-translate-y-2 h-full relative overflow-hidden">
                   
-                  {/* Overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Social Links on Hover */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 flex items-center justify-center gap-4 translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
-                    {member.socials.twitter && (
-                      <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-[#0F1825] transition-colors">
-                        <TwitterIcon className="w-5 h-5" />
-                      </a>
-                    )}
-                    {member.socials.farcaster && (
-                      <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-[#855DCD] transition-colors">
-                        <FarcasterIcon className="w-5 h-5" />
-                      </a>
-                    )}
-                    {member.socials.github && (
-                      <a href={member.socials.github} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors">
-                        <GithubIcon className="w-5 h-5" />
-                      </a>
-                    )}
-                    {member.socials.linkedin && (
-                      <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-[#0A66C2] transition-colors">
-                        <Linkedin01Icon className="w-5 h-5" />
-                      </a>
+                  {/* Wavy line texture background */}
+                  <div className="absolute inset-0 pointer-events-none opacity-[0.15]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6c10 0 10-6 20-6s10 6 20 6v6H0z' fill='%2394a3b8' fill-rule='evenodd'/%3E%3C/svg%3E\")", backgroundSize: '40px 12px' }}></div>
+
+                  {/* Image Container */}
+                  <div className="relative aspect-square rounded-xl overflow-hidden mb-6 bg-slate-100 z-10">
+                    <Image
+                      src={member.avatar}
+                      alt={member.name}
+                      fill
+                      priority={idx < 4}
+                      className="object-cover grayscale transition-transform duration-700 ease-out group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    
+                    {/* Social Links on Hover */}
+                    {Object.keys(member.socials).length > 0 && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                        <div className="flex gap-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                          {member.socials.twitter && (
+                            <a href={member.socials.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors shadow-sm">
+                              <TwitterIcon className="w-5 h-5" />
+                            </a>
+                          )}
+                          {member.socials.farcaster && (
+                            <a href={member.socials.farcaster} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors shadow-sm">
+                              <FarcasterIcon className="w-5 h-5" />
+                            </a>
+                          )}
+                          {member.socials.github && (
+                            <a href={member.socials.github} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors shadow-sm">
+                              <GithubIcon className="w-5 h-5" />
+                            </a>
+                          )}
+                          {member.socials.linkedin && (
+                            <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#81D7B4] hover:text-white transition-colors shadow-sm">
+                              <Linkedin01Icon className="w-5 h-5" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
 
-                {/* Details */}
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 font-display mb-1 group-hover:text-[#5fb392] transition-colors">
-                    {member.name}
-                  </h3>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1 mb-3">
-                    {member.role}
-                  </p>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    {member.bio}
-                  </p>
+                  {/* Details */}
+                  <div className="px-2 text-center flex-1 flex flex-col z-10 relative">
+                    <h3 className="text-2xl lg:text-3xl font-bold text-slate-900 font-instrument mb-1 group-hover:text-[#5fb392] transition-colors">
+                      {member.name}
+                    </h3>
+                    <p className="text-[11px] lg:text-xs font-bold uppercase tracking-widest text-[#5fb392] mt-1 mb-4">
+                      {member.role}
+                    </p>
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium mt-auto">
+                      {member.bio}
+                    </p>
+                  </div>
+
                 </div>
               </motion.div>
             ))}
@@ -227,30 +249,36 @@ export default function TeamsPage() {
         </section>
         
         {/* JOIN US SECTION */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto mt-24 md:mt-32 text-center relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[300px] bg-[#81D7B4]/8 rounded-[100%] blur-[80px] -z-10 pointer-events-none" />
+        <section className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto mt-32 md:mt-40 text-center relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[#81D7B4]/10 rounded-[100%] blur-[100px] -z-10 pointer-events-none mix-blend-multiply" />
+          
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={staggerContainer}
+            className="bg-white/60 backdrop-blur-2xl border border-slate-200/80 rounded-[2rem] p-12 md:p-16 shadow-[0_20px_60px_rgba(0,0,0,0.03)]"
           >
+            <motion.div variants={fadeUp} className="w-16 h-16 mx-auto bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-[#81D7B4] mb-8 shadow-inner">
+              <Mail01Icon className="w-8 h-8" strokeWidth={1.5} />
+            </motion.div>
+
             <motion.h2 
               variants={fadeUp} 
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 md:mb-6 font-display"
+              className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 mb-6 font-instrument"
             >
               Want to join the mission?
             </motion.h2>
             <motion.p 
               variants={fadeUp}
-              className="text-lg md:text-xl text-gray-500 mb-8 md:mb-10 max-w-2xl mx-auto"
+              className="text-lg md:text-xl text-slate-500 mb-10 max-w-xl mx-auto font-medium leading-relaxed"
             >
-              We're always looking for brilliant minds to help build the future of decentralised savings.
+              We're always looking for brilliant minds to help build the future of decentralised savings. Let's create something amazing together.
             </motion.p>
             <motion.div variants={fadeUp}>
               <a 
                 href="mailto:support@bitsave.io" 
-                className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white font-bold text-lg rounded-full hover:from-[#6BC5A0] hover:to-[#5fb392] transition-all hover:-translate-y-1 shimmer-btn glow-pulse shadow-lg shadow-[#81D7B4]/20"
+                className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white font-bold text-base rounded-xl hover:from-[#6BC5A0] hover:to-[#5fb392] transition-all hover:-translate-y-1 shadow-lg hover:shadow-[0_15px_30px_rgba(129,215,180,0.3)] gap-2 group"
               >
                 Reach Out to Us
               </a>

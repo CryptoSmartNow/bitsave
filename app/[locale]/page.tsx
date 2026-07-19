@@ -1,5 +1,6 @@
 import Header from '../components/Header';
 import Hero from '../components/Hero';
+import LandingStats from '../components/LandingStats';
 import HowItWorks from '../components/HowItWorks';
 import Security from '../components/Security';
 import Features from '../components/Features';
@@ -14,6 +15,7 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
+        <LandingStats />
         <HowItWorks />
         <CredibilitySection />
         <Security />

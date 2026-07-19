@@ -1,141 +1,121 @@
 'use client';
 
-import { LinkSquare01Icon } from "hugeicons-react";
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { ArrowRight01Icon } from "hugeicons-react";
+import { motion } from 'framer-motion';
 
 const CREDENTIALS = [
     {
         month: "July",
         title: "Finished 3rd Place in Base Batch 3",
         link: "https://x.com/BitsaveProtocol/status/1947312149342146604?s=20",
-        linkText: "Tick Out the Base Tweet here"
+        linkText: "View Base Tweet"
     },
     {
         month: "September",
         title: "Launched our MiniApp on Farcaster and TBA",
         link: "https://x.com/BitsaveProtocol/status/1970191674459783434?s=20",
-        linkText: "View the Farcaster Launch"
+        linkText: "View Farcaster Launch"
     },
     {
         month: "October",
         title: "Came 2nd Place with our MiniApp on Onchain Summer as Top New MiniApp",
         link: "https://x.com/base/status/1975593334333911144?s=20",
-        linkText: "View Onchain Summer Results"
+        linkText: "View Results"
     },
     {
         month: "November",
-        title: "Made it to Top 50 Finalist in Base Batch 2, sponsored by Base to DevCon to pitch Bitsave",
+        title: "Made it to Top 50 Finalist in Base Batch 2, sponsored by Base to DevCon",
         link: "https://x.com/base/status/1986191402037084294?s=20",
-        linkText: "View Base Batch Announcement"
+        linkText: "View Announcement"
     }
 ];
 
 export default function CredibilitySection() {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start center", "end center"]
-    });
-    
-    const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-
     return (
-        <section className="section-lazy py-24 bg-gray-50/50 border-t border-b border-gray-100/80 relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 right-[-10%] w-96 h-96 bg-[#81D7B4]/5 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-[-5%] w-72 h-72 bg-[#5fb392]/4 blur-[100px] rounded-full pointer-events-none" />
+        <section className="py-24 md:py-32 bg-[#f8fafc] relative overflow-hidden">
+            {/* Subtle Tech Dot Pattern Background */}
+            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.5 }}></div>
+
+            {/* Glowing Accent Orbs in Light Mode */}
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#81D7B4]/20 blur-[150px] rounded-full pointer-events-none mix-blend-multiply" />
+            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-200/20 blur-[150px] rounded-full pointer-events-none mix-blend-multiply" />
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
-                <div className="text-center mb-16">
+                
+                {/* Section Header */}
+                <div className="text-center mb-16 md:mb-24 relative flex flex-col items-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#81D7B4]/15 text-[#2D5A4A] text-xs font-bold uppercase tracking-wider mb-6 font-display"
+                        transition={{ duration: 0.4 }}
+                        className="inline-block px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-[#5fb392] text-xs font-bold uppercase tracking-[0.25em] mb-6"
                     >
                         Our Journey
                     </motion.div>
 
                     <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight"
+                        className="font-instrument text-5xl md:text-7xl lg:text-8xl tracking-tight text-slate-900"
                     >
-                        Built with Trust <span className="text-gradient">and Credibility</span>
+                        Built with Trust <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5fb392] to-[#81D7B4]">and Credibility</span>
                     </motion.h2>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="mt-6 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto font-medium"
-                    >
-                        We have been consistently recognized by leading ecosystem partners for our innovative approach to decentralized savings.
-                    </motion.p>
                 </div>
 
-                {/* Vertical Timeline Journey */}
-                <div ref={containerRef} className="relative max-w-4xl mx-auto py-10 md:py-20 mt-10">
-                    {/* Animated Center Line (Desktop) */}
-                    <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[2px] bg-gray-100 -translate-x-1/2">
-                        <motion.div 
-                            style={{ height: lineHeight }} 
-                            className="w-full bg-gradient-to-b from-[#81D7B4] via-[#5fb392] to-transparent"
-                        />
-                    </div>
+                {/* 4-Column Bento Card Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                    {CREDENTIALS.map((cred, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-50px" }}
+                            transition={{ duration: 0.6, delay: i * 0.15, type: "spring", stiffness: 40 }}
+                            className="group relative flex flex-col h-full bg-white/70 backdrop-blur-xl border border-slate-200/80 rounded-[2rem] p-8 hover:bg-white transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_40px_rgba(129,215,180,0.15)] overflow-hidden"
+                        >
+                            {/* Decorative Top Accent Line */}
+                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#81D7B4] to-[#5fb392] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            
+                            {/* Faint massive month watermark inside the card */}
+                            <div className="absolute -bottom-4 -right-4 text-8xl font-instrument font-bold text-slate-100 pointer-events-none select-none z-0 transition-transform duration-500 group-hover:scale-110">
+                                {cred.month.slice(0,3)}
+                            </div>
 
-                    <div className="space-y-16 md:space-y-24 relative">
-                        {CREDENTIALS.map((cred, i) => {
-                            const isEven = i % 2 === 0;
-                            return (
-                                <div key={i} className="relative flex flex-col md:flex-row items-center w-full">
-                                    
-                                    {/* Timeline Dot (Desktop) */}
-                                    <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center z-10 transition-all duration-500 hover:scale-110 hover:border-[#81D7B4] group">
-                                        <div className="w-4 h-4 rounded-full bg-gray-200 group-hover:bg-[#81D7B4] transition-colors" />
-                                    </div>
-
-                                    {/* Content Container */}
-                                    <div className={`w-full md:w-1/2 flex ${isEven ? 'md:pr-16 md:justify-end text-left md:text-right' : 'md:pl-16 md:ml-auto md:justify-start text-left'}`}>
-                                        <motion.div
-                                            initial={{ opacity: 0, x: isEven ? -40 : 40, y: 20 }}
-                                            whileInView={{ opacity: 1, x: 0, y: 0 }}
-                                            viewport={{ once: true, margin: "-100px" }}
-                                            transition={{ duration: 0.7, ease: "easeOut" }}
-                                            className="group relative"
-                                        >
-                                            <div className={`flex flex-col ${isEven ? 'md:items-end' : 'md:items-start'} items-start`}>
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <span className="text-4xl font-black text-gray-100 font-display -mt-1 group-hover:text-[#81D7B4]/20 transition-colors">0{i + 1}</span>
-                                                    <span className="text-sm font-bold text-[#5fb392] uppercase tracking-widest bg-[#81D7B4]/10 px-3 py-1.5 rounded-full border border-[#81D7B4]/20">
-                                                        {cred.month}
-                                                    </span>
-                                                </div>
-
-                                                <h3 className="font-display text-2xl md:text-3xl font-bold text-gray-900 mb-6 group-hover:text-[#5fb392] transition-colors max-w-sm">
-                                                    {cred.title}
-                                                </h3>
-
-                                                <a
-                                                    href={cred.link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 text-[15px] font-bold text-[#81D7B4] hover:text-[#5fb392] transition-colors group-hover:translate-x-1 duration-300"
-                                                >
-                                                    {cred.linkText} <LinkSquare01Icon className="w-5 h-5" />
-                                                </a>
-                                            </div>
-                                        </motion.div>
-                                    </div>
+                            <div className="relative z-10 flex flex-col h-full">
+                                {/* Month/Date Heading */}
+                                <div className="mb-8">
+                                    <h3 className="font-instrument text-4xl lg:text-5xl text-slate-900 tracking-tight">
+                                        {cred.month}
+                                    </h3>
+                                    <div className="w-8 h-1 bg-[#81D7B4] mt-4 rounded-full" />
                                 </div>
-                            );
-                        })}
-                    </div>
+
+                                {/* Content */}
+                                <div className="flex-grow">
+                                    <p className="font-display text-lg font-bold text-slate-700 leading-snug mb-8">
+                                        {cred.title}
+                                    </p>
+                                </div>
+
+                                {/* Action Link */}
+                                <a
+                                    href={cred.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm font-display font-bold text-[#5fb392] group-hover:text-[#3d8367] transition-colors mt-auto"
+                                >
+                                    {cred.linkText} 
+                                    <ArrowRight01Icon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                </a>
+                            </div>
+                        </motion.div>
+                    ))}
                 </div>
+
             </div>
         </section>
     );
