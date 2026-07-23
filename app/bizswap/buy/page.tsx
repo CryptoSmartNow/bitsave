@@ -658,7 +658,7 @@ export default function BizSwapAppPage() {
             <div className="flex gap-3">
               <Shield01Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4] shrink-0 mt-0.5" />
               <p className="text-[10px] sm:text-xs font-medium text-[#7B8B9A] leading-relaxed">
-                Your ownership is recorded on the <span className="text-[#F9F9FB] font-black">Solana blockchain</span> immediately. You will receive a digital certificate in your wallet upon successful purchase.
+                Your ownership is recorded on the <span className="text-[#F9F9FB] font-black">Blockchain</span> immediately. You will receive a digital certificate in your wallet upon successful purchase.
               </p>
             </div>
           </div>
@@ -754,7 +754,7 @@ export default function BizSwapAppPage() {
               Mint Successful!
             </h2>
             <p className="text-[#7B8B9A] text-xs sm:text-sm font-medium leading-relaxed mb-8 relative z-10">
-              Your certificate has been successfully minted to your wallet and recorded on the Solana blockchain.
+              Your certificate has been successfully minted to your wallet and recorded on the Blockchain.
             </p>
 
             <div className="flex flex-col gap-3 w-full relative z-10">

@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       <!-- Tx Hash Section -->
       <div style="background-color: rgba(28, 37, 56, 0.4); border-left: 3px solid #81D7B4; padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 32px;">
         <p style="margin: 0 0 4px 0; font-size: 13px; color: #7B8B9A; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">🔗 Transaction Hash</p>
-        <a href="https://explorer.solana.com/tx/${txSig}" style="color: #81D7B4; text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; word-break: break-all;">
+        <a href="#" style="color: #81D7B4; text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; word-break: break-all;">
           view on block explorer
         </a>
       </div>

@@ -76,7 +76,7 @@ export default function HistoryPage() {
           <Activity01Icon className="w-10 h-10 text-[#4B5A75] relative z-10" />
         </div>
         <h2 className="text-3xl font-black text-[#F9F9FB] mb-3 tracking-tight">Wallet Not Connected</h2>
-        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your Solana wallet to view your complete payment history and ledger.</p>
+        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your wallet to view your complete payment history and ledger.</p>
       </div>
     );
   }
@@ -211,7 +211,7 @@ export default function HistoryPage() {
                         <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#7B8B9A] bg-[#1C2538] px-2.5 py-1 rounded-md border border-[#2C3E5D]">N/A</span>
                       ) : (
                         <a 
-                          href={`https://explorer.solana.com/tx/${h.txHash}`} 
+                          href="#" 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#7B8B9A] bg-[#1C2538] px-2.5 py-1 rounded-md border border-[#2C3E5D]"
@@ -242,7 +242,7 @@ export default function HistoryPage() {
                     <tr key={h._id} className="hover:bg-[#1C2538]/30 transition-colors group">
                       <td className="px-6 py-5">
                         <p className="font-bold text-[#F9F9FB]">{formatDate(h.date)}</p>
-                        <p className="text-[10px] text-[#7B8B9A] uppercase tracking-widest mt-1">Solana Network</p>
+                        <p className="text-[10px] text-[#7B8B9A] uppercase tracking-widest mt-1">Blockchain Network</p>
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
@@ -278,7 +278,7 @@ export default function HistoryPage() {
                           </span>
                         ) : (
                           <a 
-                            href={`https://explorer.solana.com/tx/${h.txHash}`} 
+                            href="#" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#7B8B9A] hover:text-[#81D7B4] bg-[#0A0F17] px-3 py-1.5 rounded-lg border border-[#1C2538] transition-colors shadow-inner"
