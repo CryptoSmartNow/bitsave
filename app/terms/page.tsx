@@ -34,7 +34,7 @@ export default function TermsAndConditions() {
                         <div className="space-y-4">
                             <p>These Terms and Conditions ("Terms") govern your access to and use of the BizMarket protocol, BizSwap exchange, BizLend lending platform, and all associated products, services, smart contracts, dashboards, and digital interfaces (collectively, the "Platform") operated by BizMarket and its affiliated entities ("BizMarket", "we", "us", or "our").</p>
                             <p>By accessing or using the Platform in any way, including but not limited to connecting a digital wallet, purchasing BizShares instruments, viewing your dashboard, or receiving yield payments, you ("User", "you", or "your") agree to these Terms in full. These Terms constitute a legally binding agreement between you and BizMarket.</p>
-                            <p>BizMarket is a real-world asset (RWA) protocol that enables users to purchase on-chain instruments backed by the revenue of real businesses, private credit pools, and sovereign government securities. The Platform operates on the Solana blockchain network.</p>
+                            <p>BizMarket is a real-world asset (RWA) protocol that enables users to purchase on-chain instruments backed by the revenue of real businesses, private credit pools, and sovereign government securities. The Platform operates on a blockchain network.</p>
                             
                             <h4 className="text-[#F9F9FB] font-bold mt-8 mb-3">1.1 Scope of These Terms</h4>
                             <p>These Terms apply to all products and services offered by BizMarket, including:</p>
@@ -106,7 +106,7 @@ export default function TermsAndConditions() {
                                 <li><strong className="text-[#F9F9FB]">BizBond:</strong> 3-month vesting period from date of purchase. Yield earning and trading commence on August 1, 2026 for the inaugural cycle.</li>
                                 <li><strong className="text-[#F9F9FB]">BizCredit:</strong> No vesting period. Weekly payments commence June 15, 2026 for the inaugural cycle, regardless of purchase date prior to that date.</li>
                             </ul>
-                            <p className="mt-4">During the vesting period, you may not transfer, sell, or trade your certificates. BizMarket enforces vesting lock-ups via Solana's Metaplex Token Auth Rules. Attempting to circumvent the vesting lock is a breach of these Terms.</p>
+                            <p className="mt-4">During the vesting period, you may not transfer, sell, or trade your certificates. BizMarket enforces vesting lock-ups via on-chain token auth rules. Attempting to circumvent the vesting lock is a breach of these Terms.</p>
                         </div>
                     </section>
 
@@ -141,7 +141,7 @@ export default function TermsAndConditions() {
                             <p className="italic text-sm mt-2">Example: A purchase of $400 worth of BizYield results in a total charge of $404. The user receives BizYield entitlement calculated on $400.</p>
 
                             <h4 className="text-[#F9F9FB] font-bold mt-8 mb-3">4.4 Payment Finality</h4>
-                            <p>All payments made on the BizMarket Platform are final and non-refundable once the transaction is confirmed on the Solana blockchain. BizMarket does not offer refunds, chargebacks, or cancellations after a purchase is completed. By confirming a purchase, you acknowledge that blockchain transactions are irreversible and accept full responsibility for the transaction.</p>
+                            <p>All payments made on the BizMarket Platform are final and non-refundable once the transaction is confirmed on the blockchain. BizMarket does not offer refunds, chargebacks, or cancellations after a purchase is completed. By confirming a purchase, you acknowledge that blockchain transactions are irreversible and accept full responsibility for the transaction.</p>
 
                             <h4 className="text-[#F9F9FB] font-bold mt-8 mb-3">4.5 Price Calculations and Exchange Rates</h4>
                             <p>Where payment is made in a currency other than USD, the USD equivalent is calculated at the prevailing exchange rate at the time of transaction using BizMarket's oracle infrastructure. Exchange rates are sourced from Chainlink price feeds and ChainRails. BizMarket is not responsible for any losses arising from exchange rate fluctuations between the time you initiate a transaction and the time it is confirmed on-chain.</p>
@@ -154,7 +154,7 @@ export default function TermsAndConditions() {
                             <h4 className="text-[#F9F9FB] font-bold mt-6 mb-3">5.1 Payment Schedule</h4>
                             <p>Yield payments are made according to the following schedules:</p>
                             <ul className="list-disc pl-5 space-y-2 mt-2">
-                                <li><strong className="text-[#F9F9FB]">BizYield:</strong> Monthly distributions. Paid in cNGN or USDC to the holder's registered Solana wallet. Distributions are made within 5 business days of month close following BizMarket's monthly revenue verification process.</li>
+                                <li><strong className="text-[#F9F9FB]">BizYield:</strong> Monthly distributions. Paid in cNGN or USDC to the holder's registered wallet. Distributions are made within 5 business days of month close following BizMarket's monthly revenue verification process.</li>
                                 <li><strong className="text-[#F9F9FB]">BizCredit:</strong> Weekly payments every 7 days from June 15, 2026 for the inaugural cycle. Payment of $8.67 per unit per week for 12 consecutive weeks. Principal of $100 per unit returned at Week 12 alongside the final interest payment.</li>
                                 <li><strong className="text-[#F9F9FB]">BizBond:</strong> Quarterly distributions. Four payments per year from August 1, 2026. Fixed payment of $25 per $1,000 unit per quarter.</li>
                             </ul>
@@ -187,7 +187,7 @@ export default function TermsAndConditions() {
                         <h3 className="text-2xl font-bold text-[#F9F9FB] mb-6">6. BizShare Certificates</h3>
                         <div className="space-y-4">
                             <h4 className="text-[#F9F9FB] font-bold mt-6 mb-3">6.1 Nature of Certificates</h4>
-                            <p>Upon purchase, BizMarket issues you a BizShare Certificate on the Solana blockchain. This certificate is an on-chain digital record that documents your economic entitlement to yield payments. BizShare Certificates are issued as Metaplex NFTs (for BizYield and BizBond) or Solana SPL tokens (for BizCredit) depending on the instrument class.</p>
+                            <p>Upon purchase, BizMarket issues you a BizShare Certificate on the blockchain. This certificate is an on-chain digital record that documents your economic entitlement to yield payments. BizShare Certificates are issued as NFTs (for BizYield and BizBond) or digital tokens (for BizCredit) depending on the instrument class.</p>
                             <p>Your BizShare Certificate is not a security, a share, an equity instrument, or a debt instrument issued by any listed business. It is a record of your contractual entitlement to distributions managed by BizMarket. The legal agreement underlying your entitlement is the Revenue Participation Agreement, Credit Participation Agreement, or Bond Participation Agreement held between BizMarket and the relevant counterparty.</p>
 
                             <h4 className="text-[#F9F9FB] font-bold mt-8 mb-3">6.2 Certificate Naming</h4>
@@ -203,7 +203,7 @@ export default function TermsAndConditions() {
                             <p>Subject to vesting restrictions set out in Section 3.4, BizShare Certificates may be transferred between wallets within the BizMarket ecosystem via BizSwap. Certificates may not be transferred to external platforms, listed on third-party exchanges, or used as collateral outside of BizMarket's own BizLend protocol without BizMarket's prior written consent.</p>
 
                             <h4 className="text-[#F9F9FB] font-bold mt-8 mb-3">6.4 Lost or Inaccessible Wallets</h4>
-                            <p>BizMarket has no ability to recover certificates from lost, stolen, or inaccessible wallets. You are solely responsible for the security of your Solana wallet and private keys. BizMarket will not reissue certificates under any circumstances where the original certificate remains on-chain in a wallet you cannot access.</p>
+                            <p>BizMarket has no ability to recover certificates from lost, stolen, or inaccessible wallets. You are solely responsible for the security of your blockchain wallet and private keys. BizMarket will not reissue certificates under any circumstances where the original certificate remains on-chain in a wallet you cannot access.</p>
                         </div>
                     </section>
 
@@ -356,7 +356,7 @@ export default function TermsAndConditions() {
 
                     <section>
                         <h3 className="text-2xl font-bold text-[#F9F9FB] mb-6">13. Privacy and Data</h3>
-                        <p>BizMarket collects and processes data in connection with your use of the Platform including wallet addresses, transaction data, and any personal information you voluntarily provide. Because BizMarket operates on a public blockchain, transaction data including wallet addresses, certificate mints, and distribution records are publicly visible on the Solana blockchain. You acknowledge and accept this inherent characteristic of public blockchain technology.</p>
+                        <p>BizMarket collects and processes data in connection with your use of the Platform including wallet addresses, transaction data, and any personal information you voluntarily provide. Because BizMarket operates on a public blockchain, transaction data including wallet addresses, certificate mints, and distribution records are publicly visible on the blockchain. You acknowledge and accept this inherent characteristic of public blockchain technology.</p>
                         <p className="mt-4">BizMarket's Privacy Policy, available at <span className="text-[#F9F9FB]">bizmarket.io/privacy</span>, governs the collection, use, storage, and disclosure of any personal data you provide off-chain. By using the Platform, you consent to the data practices described in the Privacy Policy.</p>
                     </section>
 

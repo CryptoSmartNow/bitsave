@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
         id: `holding-${holding._id}`,
         type: 'success',
         title: 'Certificate Minted Successfully',
-        message: `Your ${holding.instrument} certificate (#${holding.serialNumber ? holding.serialNumber.slice(0, 8).toUpperCase() : 'N/A'}) has been minted and recorded on the Solana blockchain.`,
+        message: `Your ${holding.instrument} certificate (#${holding.serialNumber ? holding.serialNumber.slice(0, 8).toUpperCase() : 'N/A'}) has been minted and recorded on the Blockchain.`,
         time: timeAgo(purchaseDate),
         timestamp: purchaseDate.toISOString(),
         isNew,

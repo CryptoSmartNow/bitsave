@@ -106,7 +106,7 @@ export default function CertificatesPage() {
           <Certificate01Icon className="w-10 h-10 text-[#4B5A75] relative z-10" />
         </div>
         <h2 className="text-3xl font-black text-[#F9F9FB] mb-3 tracking-tight">Wallet Not Connected</h2>
-        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your Solana wallet to view your digital certificates.</p>
+        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your wallet to view your digital certificates.</p>
       </div>
     );
   }
@@ -238,7 +238,7 @@ export default function CertificatesPage() {
                 Download Certificate
               </button>
               <a 
-                href={`https://explorer.solana.com/address/${selectedCert.mintAddress}`}
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto text-sm font-bold text-[#F9F9FB] bg-[#0A0F17] hover:bg-[#1C2538] transition-colors border border-[#2C3E5D] px-8 py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"

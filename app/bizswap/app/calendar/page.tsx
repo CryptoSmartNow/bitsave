@@ -91,7 +91,7 @@ export default function CalendarPage() {
           <Calendar01Icon className="w-10 h-10 text-[#4B5A75] relative z-10" />
         </div>
         <h2 className="text-3xl font-black text-[#F9F9FB] mb-3 tracking-tight">Wallet Not Connected</h2>
-        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your Solana wallet to view your scheduled yield distributions and payout calendar.</p>
+        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your wallet to view your scheduled yield distributions and payout calendar.</p>
       </div>
     );
   }

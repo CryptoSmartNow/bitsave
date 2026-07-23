@@ -272,7 +272,7 @@ export default function BizSwapStandaloneDashboard() {
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
         <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
         <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
-        <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your Solana wallet in the top right to view your portfolio.</p>
+        <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your wallet in the top right to view your portfolio.</p>
       </div>
     );
   }
@@ -626,7 +626,7 @@ export default function BizSwapStandaloneDashboard() {
                             <span className="text-[#7B8B9A]">N/A</span>
                           ) : (
                             <a 
-                              href={`https://explorer.solana.com/tx/${p.txHash}`} 
+                              href="#" 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-[#3B82F6] hover:underline"
