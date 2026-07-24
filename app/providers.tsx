@@ -125,7 +125,7 @@ function InnerProviders({ children }: { children: ReactNode }) {
           theme: effectiveTheme as 'light' | 'dark',
           accentColor: '#81D7B4',
           logo: "/bitsavelogo.png",
-          showWalletLoginFirst: true,
+          showWalletLoginFirst: !isBizSwap,
         },
         embeddedWallets: isBizSwap ? {
           solana: {

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import NewsletterEmbed from '@/app/components/NewsletterEmbed';
+import BizswapChatBot from '@/components/BizswapChatBot';
 
 
 const CARDS = [
@@ -606,6 +607,7 @@ export default function BizSwapLandingPage() {
           </div>
         </div>
       </footer>
+      <BizswapChatBot />
     </div>
   );
 }
