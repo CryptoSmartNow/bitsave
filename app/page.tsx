@@ -9,6 +9,7 @@ import CredibilitySection from './components/CredibilitySection';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import BizswapChatBot from '../components/BizswapChatBot';
 
 export default function Home() {
   return (
@@ -32,6 +33,7 @@ export default function Home() {
       </main>
       <Footer />
       <ScrollToTop />
+      <BizswapChatBot />
     </div>
   );
 }

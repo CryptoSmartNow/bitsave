@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
-
+import BizswapChatBot from '@/components/BizswapChatBot';
 const NAV_LINKS = [
   { name: 'Dashboard', href: '/bizswap/app', icon: Home01Icon },
   { name: 'Holdings', href: '/bizswap/app/holdings', icon: Briefcase01Icon },
@@ -307,6 +307,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
           </div>
         </div>
       )}
+      <BizswapChatBot />
     </>
   );
 }

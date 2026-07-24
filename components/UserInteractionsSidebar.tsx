@@ -105,7 +105,8 @@ export default function UserInteractionsSidebar({
                   <Image 
                     src="/bitsavelogo.png" 
                     alt="Bitsave" 
-                    fill
+                    width={40}
+                    height={40}
                     className="object-contain p-1"
                   />
                 </div>
@@ -123,7 +124,8 @@ export default function UserInteractionsSidebar({
                     <Image 
                       src="/bitsavelogo.png" 
                       alt="Bitsave" 
-                      fill
+                      width={32}
+                      height={32}
                       className="object-contain p-1"
                     />
                   </div>

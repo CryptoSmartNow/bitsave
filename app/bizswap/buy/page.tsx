@@ -12,6 +12,7 @@ import { UnifiedFiatModal } from '@/components/UnifiedFiatModal';
 import '@solana/wallet-adapter-react-ui/styles.css';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
+import BizswapChatBot from '@/components/BizswapChatBot';
 import { useRouter } from 'next/navigation';
 import { useConfig } from 'wagmi';
 import Confetti from 'react-confetti';
@@ -240,9 +241,9 @@ export default function BizSwapAppPage() {
     setIsProcessing(true);
     try {
       const params = new URLSearchParams({
-        recipient: process.env.NEXT_PUBLIC_BIZSWAP_SOLANA_REVENUE_WALLET!,
+        recipient: process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET!,
         amount: totalCharged.toFixed(2),
-        chain: 'SOLANA',
+        chain: 'BASE',
         token: 'USDC',
         mode: 'buy',
         source: 'bizswap'
@@ -782,6 +783,7 @@ export default function BizSwapAppPage() {
           </div>
         </div>
       )}
+      <BizswapChatBot />
     </div>
   );
 }
