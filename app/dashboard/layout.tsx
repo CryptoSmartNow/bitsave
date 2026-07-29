@@ -9,7 +9,6 @@ import { useOptimizedDisconnect } from '../../lib/useOptimizedDisconnect';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import BizswapChatBot from '@/components/BizswapChatBot';
 import { Exo } from 'next/font/google';
 import CustomConnectButton from '@/components/CustomConnectButton';
 import SavvyBotWidget from '@/components/SavvyBotWidget';
@@ -382,7 +381,6 @@ export default function DashboardLayout({
           </div>
         )}
       </div>
-      <BizswapChatBot />
     </div>
   );
 }
