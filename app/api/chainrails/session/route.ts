@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         });
 
         const session = await crapi.auth.getSessionToken({
-            amount: numericAmount.toFixed(2),
+            amount: numericAmount.toString(),
             recipient: recipient,
             destinationChain: destinationChain as any,
             token: token as any,
