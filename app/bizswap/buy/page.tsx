@@ -242,7 +242,7 @@ export default function BizSwapAppPage() {
     try {
       const params = new URLSearchParams({
         recipient: process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET!,
-        amount: totalCharged.toFixed(2),
+        amount: totalCharged.toString(),
         chain: 'BASE',
         token: 'USDC',
         mode: 'buy',
@@ -680,7 +680,7 @@ export default function BizSwapAppPage() {
       <UnifiedFiatModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        amount={totalCharged.toFixed(2)}
+        amount={totalCharged.toString()}
         sessionToken={sessionToken}
         onSuccess={handlePaymentSuccess}
         onPending={handlePendingPayment}
