@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import NewsletterEmbed from '@/app/components/NewsletterEmbed';
 import BizswapChatBot from '@/components/BizswapChatBot';
+import { usePrivy } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
 
 
 const CARDS = [
@@ -130,7 +132,16 @@ function ShufflingCards() {
 
 export default function BizSwapLandingPage() {
   const [mounted, setMounted] = useState(false);
+  const { login, authenticated } = usePrivy();
+  const router = useRouter();
+
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (authenticated) {
+      router.push('/bizswap/app');
+    }
+  }, [authenticated, router]);
 
   const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -209,11 +220,11 @@ export default function BizSwapLandingPage() {
                   Install
                 </button>
               )}
-              <Link href="/bizswap/app" className="group relative inline-flex items-center justify-center px-5 py-2 font-black text-[#0F1825] bg-[#81D7B4] rounded-xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_15px_rgba(129,215,180,0.2)] hover:shadow-[0_0_25px_rgba(129,215,180,0.4)]">
+              <button onClick={login} className="group relative inline-flex items-center justify-center px-5 py-2 font-black text-[#0F1825] bg-[#81D7B4] rounded-xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_15px_rgba(129,215,180,0.2)] hover:shadow-[0_0_25px_rgba(129,215,180,0.4)]">
                 <span className="relative flex items-center text-sm">
                   Login
                 </span>
-              </Link>
+              </button>
             </div>
           </div>
         </nav>
@@ -283,13 +294,13 @@ export default function BizSwapLandingPage() {
 
                 {/* CTA */}
                 <motion.div variants={fadeUp} className="flex items-center gap-4">
-                  <Link
-                    href="/bizswap/app"
+                  <button
+                    onClick={login}
                     className="px-8 py-3.5 bg-[#81D7B4] text-[#0F1825] font-black rounded-xl text-base transition-all hover:opacity-90 hover:scale-105 hover:shadow-[0_8px_24px_rgba(129,215,180,0.25)]"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     Login
-                  </Link>
+                  </button>
                   <a
                     href="#about"
                     className="px-8 py-3.5 text-[#9BA8B5] font-semibold text-base border border-[#2C3E5D] rounded-xl transition-all hover:border-[#81D7B4]/40 hover:text-[#F9F9FB]"
