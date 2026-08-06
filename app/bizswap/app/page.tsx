@@ -7,6 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { CertificateCard } from '@/components/CertificateCard';
+import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
@@ -269,10 +270,36 @@ export default function BizSwapStandaloneDashboard() {
 
   if (!connected) {
     return (
-      <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-        <Activity01Icon className="w-16 h-16 text-[#2C3E5D] mb-6" />
-        <h2 className="text-2xl font-black text-[#F9F9FB] mb-2">Wallet Not Connected</h2>
-        <p className="text-[#7B8B9A] mb-8 max-w-sm">Please connect your wallet in the top right to view your portfolio.</p>
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+        <div className="relative group">
+          {/* Ambient glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#81D7B4]/20 to-[#3B82F6]/20 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+          
+          <div className="relative bg-[#0A1019]/80 backdrop-blur-xl border border-[#1E2F45] rounded-[2rem] p-10 md:p-14 text-center max-w-md w-full shadow-2xl flex flex-col items-center">
+            
+            {/* Icon Container with rings */}
+            <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
+              <div className="absolute inset-0 border border-[#81D7B4]/20 rounded-full animate-[spin_10s_linear_infinite]" style={{ borderStyle: 'dashed' }}></div>
+              <div className="absolute inset-2 border border-[#3B82F6]/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+              <div className="absolute inset-4 bg-gradient-to-br from-[#1C2538] to-[#0A1019] border border-[#2C3E5D] rounded-full flex items-center justify-center shadow-inner">
+                <Shield01Icon className="w-8 h-8 text-[#81D7B4]" />
+              </div>
+            </div>
+
+            <h2 className="text-3xl font-black text-[#F9F9FB] mb-3 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Please Login</h2>
+            <p className="text-[#7B8B9A] text-sm leading-relaxed mb-10 px-4">
+              Authenticate to view your BizShares portfolio, claim yields, and manage your real-world assets securely.
+            </p>
+
+            <div className="w-full flex justify-center">
+               <BizSwapAuthButton 
+                 connectText="Login to Dashboard" 
+                 style={{ padding: '16px 32px', borderRadius: '1rem', width: '100%' }} 
+                 className="bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] hover:brightness-110 text-[#0F1825] font-black border-none shadow-[0_8px_30px_rgba(129,215,180,0.3)] transition-all text-base" 
+               />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -480,42 +507,44 @@ export default function BizSwapStandaloneDashboard() {
             )}
           </div>
 
-          {/* REFERRALS SECTION - PREMIUM BANNER */}
-          <div className="bg-gradient-to-br from-[#121D2C] via-[#0D1724] to-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative group">
-            {/* Ambient Background Glows */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#81D7B4]/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-[#81D7B4]/10 transition-colors duration-500"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#3B82F6]/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-[#3B82F6]/10 transition-colors duration-500"></div>
+          {/* REFERRALS SECTION - PATTERNED & CONCISE */}
+          <div className="relative bg-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-xl">
+            {/* Pattern Background */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#81D7B4 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}></div>
+            
+            {/* Gradient Overlay to fade pattern appropriately */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1019]/40 via-[#0A1019]/80 to-[#0A1019] pointer-events-none"></div>
 
-            <div className="p-6 sm:p-8 relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
+            <div className="relative z-10 p-6 md:p-8 flex flex-col xl:flex-row items-center justify-between gap-8">
               
-              {/* Left text section */}
-              <div className="md:col-span-2 xl:col-span-1 flex flex-col justify-center text-center xl:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-4 mx-auto xl:mx-0 w-max">
+              {/* Left: Info */}
+              <div className="flex-1 text-center xl:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-3">
                   <GiftIcon className="w-4 h-4 text-[#81D7B4]" />
-                  <span className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-widest whitespace-nowrap">Refer & Earn</span>
+                  <span className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-widest">Refer & Earn</span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#F9F9FB] tracking-tight mb-3">Invite Friends, Earn Passive Yield</h3>
-                <p className="text-sm text-[#7B8B9A] leading-relaxed max-w-xl mx-auto xl:mx-0">
-                  Get <strong className="text-[#F9F9FB]">0.1%</strong> of all investments made using your unique code, paid directly to your pending balance.
+                <h3 className="text-2xl font-black text-[#F9F9FB] mb-2" style={{ fontFamily: 'var(--font-display)' }}>Earn 0.1% Forever</h3>
+                <p className="text-sm text-[#7B8B9A] max-w-sm mx-auto xl:mx-0">
+                  Share your code. Earn instantly when they invest.
                 </p>
               </div>
-              
-              {/* Center Code Generation */}
-              <div className="md:col-span-1 xl:col-span-1 bg-[#0A0F17]/50 backdrop-blur-md rounded-2xl p-6 border border-[#1C2538] shadow-inner flex flex-col justify-center h-full">
-                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-3 text-center sm:text-left">Your Unique Code</p>
+
+              {/* Center: Code */}
+              <div className="flex-1 w-full xl:w-auto flex flex-col items-center xl:items-start">
+                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-3">Your Code</p>
                 {refLoading ? (
-                  <div className="h-14 bg-[#1C2538]/50 animate-pulse rounded-xl"></div>
+                  <div className="h-12 bg-[#1C2538]/50 animate-pulse rounded-xl w-full max-w-xs"></div>
                 ) : referralData?.bizswapReferralCode ? (
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <div className="flex-1 bg-[#0A1019] border border-[#1C2538] rounded-xl px-4 py-3 sm:py-4 text-xl font-black tracking-[0.2em] text-[#81D7B4] select-all shadow-inner text-center overflow-hidden text-ellipsis">
+                  <div className="flex items-stretch gap-2 w-full max-w-xs">
+                    <div className="flex-1 bg-[#121A27]/80 backdrop-blur-sm border border-[#1C2538] rounded-xl px-4 py-3 text-lg font-black tracking-[0.2em] text-[#81D7B4] text-center overflow-hidden text-ellipsis shadow-inner">
                       {referralData.bizswapReferralCode}
                     </div>
                     <button 
                       onClick={() => {
                         navigator.clipboard.writeText(referralData.bizswapReferralCode);
-                        toast.success('Code copied to clipboard!');
+                        toast.success('Copied!');
                       }}
-                      className="text-sm font-bold text-[#F9F9FB] bg-gradient-to-br from-[#2C3E5D] to-[#1C2538] hover:from-[#3B527A] hover:to-[#2C3E5D] transition-all px-6 py-4 rounded-xl border border-[#3B527A] shadow-lg active:scale-95 shrink-0"
+                      className="px-5 py-3 bg-[#1C2538] hover:bg-[#2C3E5D] text-[#F9F9FB] text-sm font-bold rounded-xl transition-colors border border-[#2C3E5D] shadow-sm active:scale-95"
                     >
                       Copy
                     </button>
@@ -523,43 +552,41 @@ export default function BizSwapStandaloneDashboard() {
                 ) : (
                   <button 
                     onClick={generateReferralCode}
-                    className="w-full text-sm font-bold text-[#0F1825] bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] hover:brightness-110 transition-all px-6 py-4 rounded-xl shadow-[0_4px_20px_rgba(129,215,180,0.2)]"
+                    className="w-full max-w-xs px-6 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] text-sm font-bold rounded-xl transition-colors shadow-sm"
                   >
-                    Generate Invite Code
+                    Generate Code
                   </button>
                 )}
               </div>
-              
-              {/* Right Earnings Section */}
-              <div className="md:col-span-1 xl:col-span-1 flex flex-col justify-center h-full border-t md:border-t-0 md:border-l border-[#1C2538] pt-8 md:pt-0 md:pl-8">
-                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-2 text-center sm:text-left">Available to Withdraw</p>
-                <div className="flex items-baseline justify-center sm:justify-start gap-1 mb-5">
-                  <span className="text-4xl font-black text-[#F9F9FB]">${(referralData?.bizswapPendingUsdcEarnings || 0).toFixed(2)}</span>
-                  <span className="text-xs text-[#4B5A75] font-bold">USDC</span>
-                </div>
-                
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <input 
-                      type="number"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      placeholder="Amt"
-                      max={referralData?.bizswapPendingUsdcEarnings || 0}
-                      className="w-full min-w-[80px] flex-1 bg-[#0A0F17] border border-[#1C2538] rounded-lg px-4 py-3 text-sm font-bold text-[#F9F9FB] outline-none placeholder:text-[#2C3E5D] focus:border-[#81D7B4]/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-inner"
-                    />
-                    <button 
-                      onClick={handleWithdraw}
-                      disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (referralData?.bizswapPendingUsdcEarnings || 0)}
-                      className="text-sm font-bold text-[#F9F9FB] bg-gradient-to-r from-[#3B82F6] to-[#2563EB] hover:brightness-110 disabled:opacity-50 disabled:grayscale transition-all px-6 py-3 rounded-lg shadow-lg whitespace-nowrap active:scale-95 shrink-0"
-                    >
-                      {isWithdrawing ? '...' : 'Withdraw'}
-                    </button>
-                  </div>
-                  <div className="text-[10px] font-medium text-[#4B5A75] text-center sm:text-left mt-1">
-                    Total Lifetime: ${(referralData?.bizswapTotalUsdcEarned || 0).toFixed(2)}
-                  </div>
-                </div>
+
+              {/* Right: Earnings */}
+              <div className="flex-1 w-full xl:w-auto xl:border-l border-t xl:border-t-0 border-[#1E2F45] pt-6 xl:pt-0 xl:pl-8 flex flex-col items-center xl:items-start">
+                 <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-1">Available</p>
+                 <div className="flex items-baseline gap-1 mb-4">
+                   <span className="text-3xl font-black text-[#F9F9FB]">${(referralData?.bizswapPendingUsdcEarnings || 0).toFixed(2)}</span>
+                   <span className="text-xs text-[#4B5A75] font-bold">USDC</span>
+                 </div>
+                 
+                 <div className="flex items-center gap-2 w-full max-w-xs">
+                   <input 
+                     type="number"
+                     value={withdrawAmount}
+                     onChange={(e) => setWithdrawAmount(e.target.value)}
+                     placeholder="Amt"
+                     max={referralData?.bizswapPendingUsdcEarnings || 0}
+                     className="w-full min-w-[70px] flex-1 bg-[#121A27]/80 backdrop-blur-sm border border-[#1C2538] rounded-xl px-3 py-2 text-sm font-bold text-[#F9F9FB] outline-none placeholder:text-[#4B5A75] focus:border-[#81D7B4]/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-inner"
+                   />
+                   <button 
+                     onClick={handleWithdraw}
+                     disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (referralData?.bizswapPendingUsdcEarnings || 0)}
+                     className="px-5 py-2 bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 disabled:grayscale text-[#F9F9FB] text-sm font-bold rounded-xl transition-colors shadow-sm active:scale-95"
+                   >
+                     {isWithdrawing ? '...' : 'Withdraw'}
+                   </button>
+                 </div>
+                 <p className="text-[10px] font-medium text-[#4B5A75] mt-2">
+                   Lifetime: ${(referralData?.bizswapTotalUsdcEarned || 0).toFixed(2)}
+                 </p>
               </div>
 
             </div>
