@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Instrument_Serif } from 'next/font/google'
 import './globals.css'
-import Script from 'next/script'
 
 // Inter: excellent readability at all sizes, modern body font
 const inter = Inter({
@@ -83,9 +82,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${instrumentSerif.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <Script
-          id="disable-console"
-          strategy="beforeInteractive"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               if (typeof window !== 'undefined') {

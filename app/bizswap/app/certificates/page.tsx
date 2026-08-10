@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Certificate01Icon, Activity01Icon, LinkSquare01Icon, Download01Icon, Cancel01Icon, Search01Icon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 import { CertificateCard } from '@/components/CertificateCard';
@@ -19,16 +19,16 @@ interface Holding {
 }
 
 export default function CertificatesPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
 
-  const connected = ready && (authenticated || isSolanaConnected);
+  const connected = ready && (authenticated || isWagmiConnected);
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
   
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
+  const walletAddress = isWagmiConnected 
+    ? wagmiAddress 
     : (privySolanaWallet?.address || user?.wallet?.address);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);

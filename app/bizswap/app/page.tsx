@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon, Clock01Icon, GiftIcon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
-import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { CertificateCard } from '@/components/CertificateCard';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
@@ -36,18 +35,12 @@ interface Payment {
 }
 
 export default function BizSwapStandaloneDashboard() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
   
-  const connected = ready && (authenticated || isSolanaConnected);
+  const connected = ready && (authenticated || isWagmiConnected);
   
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
-  
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
-    : (privySolanaWallet?.address || user?.wallet?.address || user?.id);
+  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -55,7 +48,6 @@ export default function BizSwapStandaloneDashboard() {
   const [selectedCert, setSelectedCert] = useState<Holding | null>(null);
   const certificateRef = useRef<HTMLDivElement>(null);
 
-  const program = useBizSwapProgram();
   const { width, height } = useWindowSize();
   const [showConfetti, setShowConfetti] = useState(false);
 

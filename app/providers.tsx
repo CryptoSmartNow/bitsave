@@ -127,13 +127,9 @@ function InnerProviders({ children }: { children: ReactNode }) {
           logo: "/bitsavelogo.png",
           showWalletLoginFirst: !isBizSwap,
         },
-        embeddedWallets: isBizSwap ? {
-          solana: {
-            createOnLogin: "all-users",
-          },
-        } : {
+        embeddedWallets: {
           ethereum: {
-            createOnLogin: "users-without-wallets",
+            createOnLogin: isBizSwap ? "all-users" : "users-without-wallets",
           },
         },
         loginMethods: isBizSwap 

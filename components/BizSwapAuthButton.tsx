@@ -2,42 +2,39 @@
 
 import { Logout01Icon, Copy01Icon, Tick01Icon } from "hugeicons-react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 
 export function BizSwapAuthButton({ className, style, connectText = "Connect Wallet" }: { className?: string, style?: React.CSSProperties, connectText?: string }) {
     const { login, ready, authenticated, user, logout } = usePrivy();
-    const { publicKey, connected: isSolanaConnected, disconnect: solanaDisconnect } = useWallet();
+    const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
 
     const [isDisconnecting, setIsDisconnecting] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const isSignedIn = ready && (authenticated || isSolanaConnected) && !isDisconnecting;
+    const isSignedIn = ready && (authenticated || isWagmiConnected) && !isDisconnecting;
 
     useEffect(() => {
-        if (!authenticated && !isSolanaConnected) {
+        if (!authenticated && !isWagmiConnected) {
             setIsDisconnecting(false);
         }
-    }, [authenticated, isSolanaConnected]);
+    }, [authenticated, isWagmiConnected]);
 
     if (isSignedIn) {
-        const privySolanaWallet = user?.linkedAccounts?.find(
-            (account) => account.type === 'wallet' && account.chainType === 'solana'
+        // Find the EVM wallet if they use Privy embedded
+        const privyEvmWallet = user?.linkedAccounts?.find(
+            (account) => account.type === 'wallet' && account.chainType === 'ethereum'
         ) as { address: string } | undefined;
-        
-        const address = isSolanaConnected 
-            ? publicKey?.toBase58() 
-            : (privySolanaWallet?.address || user?.wallet?.address);
+
+        // Prefer wagmi address (external wallets), then Privy EVM, then user.wallet
+        const address = wagmiAddress || privyEvmWallet?.address || user?.wallet?.address || user?.id;
             
-        const displayAddress = address
+        const displayAddress = (address && address.startsWith('0x'))
             ? `${address.slice(0, 4)}...${address.slice(-4)}`
-            : user?.email?.address || "Connected";
+            : "Connected";
 
         const handleSignOut = async () => {
             setIsDisconnecting(true);
-            if (isSolanaConnected) {
-                solanaDisconnect();
-            }
             await logout();
         };
 

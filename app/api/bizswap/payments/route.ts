@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       _id: tx._id.toString(),
       date: tx.timestamp || new Date().toISOString(),
       instrument: tx.metadata?.instrument || 'BizSwap Instrument',
-      amount: tx.metadata?.totalCharged || tx.fiatAmount || 0,
+      amount: tx.usdcAmount || tx.metadata?.totalCharged || tx.fiatAmount || 0,
       currency: tx.currency || 'USD (Fiat Pending)',
       txHash: 'Pending Transfer'
     }));

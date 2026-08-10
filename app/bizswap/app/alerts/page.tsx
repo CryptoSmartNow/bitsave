@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Notification01Icon, Tick01Icon, InformationCircleIcon, Cancel01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 
 interface Alert {
@@ -16,17 +16,17 @@ interface Alert {
 }
 
 export default function AlertsPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
 
-  const connected = ready && (authenticated || isSolanaConnected);
+  const connected = ready && (authenticated || isWagmiConnected);
 
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
 
-  const walletAddress = isSolanaConnected
-    ? publicKey?.toBase58()
+  const walletAddress = isWagmiConnected
+    ? wagmiAddress
     : (privySolanaWallet?.address || user?.wallet?.address);
 
   const [alerts, setAlerts] = useState<Alert[]>([]);
