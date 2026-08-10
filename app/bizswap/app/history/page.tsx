@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Activity01Icon, Download01Icon, LinkSquare01Icon, BarChartIcon, Dollar01Icon, Shield01Icon, Search01Icon, FilterIcon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 
 interface Payment {
@@ -15,15 +15,15 @@ interface Payment {
 }
 
 export default function HistoryPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
-  const connected = ready && (authenticated || isSolanaConnected);
+  const connected = ready && (authenticated || isWagmiConnected);
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
   
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
+  const walletAddress = isWagmiConnected 
+    ? wagmiAddress 
     : (privySolanaWallet?.address || user?.wallet?.address);
 
   const [filter, setFilter] = useState('All');

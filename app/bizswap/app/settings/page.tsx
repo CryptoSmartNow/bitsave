@@ -4,7 +4,6 @@ import { Wallet01Icon, Money01Icon, Shield01Icon, UserIcon, File01Icon, Refresh0
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { Exo } from 'next/font/google';
 import toast from 'react-hot-toast';
 
@@ -15,15 +14,14 @@ const exo = Exo({
 });
 
 export default function BizSwapSettings() {
-  const { address: wagmiAddress } = useAccount();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { user } = usePrivy();
-  const { publicKey } = useWallet();
   
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
   
-  const address = publicKey?.toBase58() || privySolanaWallet?.address || wagmiAddress || user?.wallet?.address;
+  const address = privySolanaWallet?.address || wagmiAddress || user?.wallet?.address || user?.id;
 
   const [mounted, setMounted] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'Investor Profile' | 'Payouts' | 'Auto-Invest' | 'Notifications'>('Investor Profile');

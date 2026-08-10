@@ -92,7 +92,14 @@ export default function BizswapChatBot() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch response');
+        // Instead of throwing an error which triggers the Next.js dev overlay,
+        // we gracefully show the error message in the chat.
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: data.error || 'Sorry, I encountered a network error. Please try again.' 
+        }]);
+        playSound('received');
+        return;
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);

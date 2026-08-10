@@ -4,12 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft01Icon, InformationCircleIcon, Shield01Icon, BarChartIcon, Dollar01Icon, ArrowDown01Icon, Tick01Icon, ArrowRight01Icon } from "hugeicons-react";
 import Image from 'next/image';
 import Link from 'next/link';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import toast from 'react-hot-toast';
 import { UnifiedFiatModal } from '@/components/UnifiedFiatModal';
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { getInstrumentConfigPda } from '@/lib/bizswap-solana';
 import BizswapChatBot from '@/components/BizswapChatBot';
@@ -75,21 +74,15 @@ const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5", activeStyleColor
 };
 
 export default function BizSwapAppPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
   const router = useRouter();
   const wagmiConfig = useConfig();
   const { width, height } = useWindowSize();
 
-  const connected = ready && (authenticated || isSolanaConnected);
+  const connected = ready && (authenticated || isWagmiConnected);
 
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
-
-  const walletAddress = isSolanaConnected
-    ? publicKey?.toBase58()
-    : (privySolanaWallet?.address || user?.wallet?.address);
+  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
 
   const [mounted, setMounted] = useState(false);
   const [selectedInst, setSelectedInst] = useState<keyof typeof INSTRUMENTS>('bizyield');

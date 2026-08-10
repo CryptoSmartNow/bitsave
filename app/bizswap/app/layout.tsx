@@ -5,7 +5,7 @@ import { Home01Icon, Calendar01Icon, Notification01Icon, Cancel01Icon, Briefcase
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import BizswapChatBot from '@/components/BizswapChatBot';
@@ -21,7 +21,7 @@ const NAV_LINKS = [
 
 export default function BizSwapDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -30,13 +30,8 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
   const [referralLoading, setReferralLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const connected = ready && (authenticated || isSolanaConnected);
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
-  const walletAddress = isSolanaConnected
-    ? publicKey?.toBase58()
-    : (privySolanaWallet?.address || user?.wallet?.address);
+  const connected = ready && (authenticated || isWagmiConnected);
+  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
 
   useEffect(() => {
     if (!connected || !walletAddress) { setUnreadCount(0); return; }
