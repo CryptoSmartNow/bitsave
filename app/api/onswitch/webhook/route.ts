@@ -139,19 +139,14 @@ export async function POST(req: NextRequest) {
         console.log(`Successfully credited user ${transaction.userId} with ${transaction.shares} shares from Onswitch webhook.`);
       } else if (project === 'bizswap') {
         if (transaction.metadata) {
-          const baseUrl = req.nextUrl.origin || 'https://bitsave.io';
-          const mintResponse = await fetch(`${baseUrl}/api/bizswap/mint`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(transaction.metadata)
-          });
-          if (!mintResponse.ok) {
-            const errorText = await mintResponse.text();
-            console.error('Failed to mint bizswap certificate from webhook:', errorText);
-            // Throw error to trigger a 500 response and force Onswitch to retry later
-            throw new Error(`Minting failed: ${errorText}`);
-          } else {
+          try {
+            const { handleMint } = await import('@/lib/handleMint');
+            await handleMint(transaction.metadata);
             console.log(`Successfully minted bizswap certificate for ${transaction.userId} from webhook.`);
+          } catch (error: any) {
+            console.error('Failed to mint bizswap certificate from webhook:', error.message);
+            // Throw error to trigger a 500 response and force Onswitch to retry later
+            throw new Error(`Minting failed: ${error.message}`);
           }
         } else {
           console.error(`No metadata found for bizswap transaction ${transaction.reference}`);
