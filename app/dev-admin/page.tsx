@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Award01Icon, ArrowLeftRightIcon, Notification01Icon, Logout01Icon, Edit02Icon, Delete02Icon, LegalHammerIcon, ArrowDown01Icon, ArrowUp01Icon, FlashIcon, PlusSignIcon } from "hugeicons-react";
+import { Award01Icon, ArrowLeftRightIcon, Notification01Icon, Logout01Icon, Edit02Icon, Delete02Icon, LegalHammerIcon, ArrowDown01Icon, ArrowUp01Icon, FlashIcon, PlusSignIcon, CheckmarkCircle02Icon, ViewIcon, SearchAreaIcon } from "hugeicons-react";
 import { AuthProvider, useAuth } from '@/lib/adminAuth';
 
 // --- MAIN PAGE COMPONENT ---
@@ -18,7 +18,7 @@ function AdminContent() {
   const { user, loading, login, logout } = useAuth();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'transactions' | 'updates'>('transactions');
+  const [activeTab, setActiveTab] = useState<'leaderboard' | 'transactions' | 'updates' | 'bizswap'>('transactions');
 
   if (loading) {
     return (
@@ -98,6 +98,16 @@ function AdminContent() {
             icon={<Notification01Icon className="w-5 h-5" />}
             label="Updates"
           />
+
+          <div className="mt-6 mb-2 px-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">BizSwap</span>
+          </div>
+          <SidebarItem
+            active={activeTab === 'bizswap'}
+            onClick={() => setActiveTab('bizswap')}
+            icon={<FlashIcon className="w-5 h-5" />}
+            label="Fulfillment"
+          />
         </nav>
 
         <div className="p-4 border-t border-gray-100">
@@ -130,6 +140,7 @@ function AdminContent() {
             {activeTab === 'leaderboard' && <LeaderboardPanel />}
             {activeTab === 'transactions' && <TransactionsPanel />}
             {activeTab === 'updates' && <UpdatesPanel />}
+            {activeTab === 'bizswap' && <BizSwapFulfillmentPanel />}
           </div>
         </div>
       </main>
@@ -838,6 +849,376 @@ function UpdatesPanel() {
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// --- BIZSWAP FULFILLMENT PANEL ---
+function BizSwapFulfillmentPanel() {
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [mintingId, setMintingId] = useState<string | null>(null);
+  const [selectedTx, setSelectedTx] = useState<any | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '20',
+        status: statusFilter,
+      });
+      if (search) params.set('search', search);
+      const res = await fetch(`/api/dev-admin/bizswap-transactions?${params}`);
+      const data = await res.json();
+      if (data.transactions) {
+        setTransactions(data.transactions);
+        setTotalPages(data.totalPages);
+        setTotal(data.total);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [currentPage, statusFilter]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchTransactions();
+  };
+
+  const handleMintAndComplete = async (txId: string) => {
+    if (!confirm('This will mint a certificate and mark the transaction as completed. Continue?')) return;
+    setMintingId(txId);
+    setSuccessMessage('');
+    setErrorMessage('');
+    try {
+      const res = await fetch('/api/dev-admin/mint-transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: txId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMessage(`✅ Certificate minted for transaction ${txId.slice(-6)}`);
+        fetchTransactions();
+      } else {
+        setErrorMessage(data.error || 'Failed to mint');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message);
+    } finally {
+      setMintingId(null);
+    }
+  };
+
+  const pendingCount = transactions.filter(tx => tx.status === 'pending').length;
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">BizSwap Fulfillment</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Manually mint certificates and complete stuck transactions
+          </p>
+        </div>
+        <button
+          onClick={fetchTransactions}
+          className="text-sm text-[#0f766e] font-medium hover:underline"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <div className="text-xs font-semibold text-gray-400 uppercase">Total</div>
+          <div className="text-2xl font-bold text-gray-900 mt-1">{total}</div>
+        </div>
+        <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+          <div className="text-xs font-semibold text-amber-500 uppercase">Pending</div>
+          <div className="text-2xl font-bold text-amber-700 mt-1">{pendingCount}</div>
+        </div>
+      </div>
+
+      {/* Alerts */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 flex items-center gap-2">
+          <CheckmarkCircle02Icon className="w-5 h-5 text-green-600 flex-shrink-0" />
+          {successMessage}
+          <button onClick={() => setSuccessMessage('')} className="ml-auto text-green-600 hover:text-green-800">&times;</button>
+        </div>
+      )}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-800">
+          ❌ {errorMessage}
+          <button onClick={() => setErrorMessage('')} className="ml-2 text-red-600 hover:text-red-800">&times;</button>
+        </div>
+      )}
+
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <SearchAreaIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#81D7B4] focus:border-[#81D7B4] outline-none text-sm text-gray-900"
+              placeholder="Search by email, wallet, reference, business..."
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2.5 bg-[#81D7B4] hover:bg-[#6BC6A3] text-white font-bold rounded-xl transition-colors text-sm"
+          >
+            Search
+          </button>
+        </form>
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#81D7B4] outline-none text-sm text-gray-900 min-w-[140px]"
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <table className="w-full text-left text-sm min-w-[900px]">
+          <thead className="bg-gray-50/80 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3.5 font-semibold text-gray-600">Email</th>
+              <th className="px-4 py-3.5 font-semibold text-gray-600">Business</th>
+              <th className="px-4 py-3.5 font-semibold text-gray-600">Instrument</th>
+              <th className="px-4 py-3.5 font-semibold text-gray-600 text-right">Amount</th>
+              <th className="px-4 py-3.5 font-semibold text-gray-600">Status</th>
+              <th className="px-4 py-3.5 font-semibold text-gray-600">Date</th>
+              <th className="px-4 py-3.5 font-semibold text-gray-600 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#81D7B4]"></div>
+                    Loading transactions...
+                  </div>
+                </td>
+              </tr>
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  No transactions found
+                </td>
+              </tr>
+            ) : (
+              transactions.map((tx) => (
+                <tr key={tx._id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-900 text-xs">{tx.metadata?.email || '—'}</div>
+                    <div className="text-[11px] text-gray-400 font-mono truncate max-w-[180px]">{tx.userId}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-medium capitalize">
+                      {tx.metadata?.business || '—'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs font-medium text-gray-700">{tx.metadata?.instrument || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="font-bold text-gray-900">${tx.metadata?.investmentAmount || tx.usdcAmount}</div>
+                    <div className="text-[11px] text-gray-400">₦{tx.fiatAmount?.toLocaleString()}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                        tx.status === 'completed'
+                          ? 'bg-green-50 text-green-700 border border-green-200'
+                          : tx.status === 'pending'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-gray-50 text-gray-600 border border-gray-200'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        tx.status === 'completed' ? 'bg-green-500' : tx.status === 'pending' ? 'bg-amber-500' : 'bg-gray-400'
+                      }`}></span>
+                      {tx.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {tx.timestamp ? new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setSelectedTx(selectedTx?._id === tx._id ? null : tx)}
+                        className="p-1.5 text-gray-400 hover:text-[#0f766e] hover:bg-[#81D7B4]/10 rounded-lg transition-colors"
+                        title="View details"
+                      >
+                        <ViewIcon className="w-4 h-4" />
+                      </button>
+                      {tx.status === 'pending' && (
+                        <button
+                          onClick={() => handleMintAndComplete(tx._id)}
+                          disabled={mintingId === tx._id}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#81D7B4] hover:bg-[#6BC6A3] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold rounded-lg transition-colors text-xs"
+                          title="Mint certificate & mark completed"
+                        >
+                          {mintingId === tx._id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              Minting...
+                            </>
+                          ) : (
+                            <>
+                              <CheckmarkCircle02Icon className="w-3.5 h-3.5" />
+                              Mint & Complete
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {!loading && total > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
+          <div className="text-sm text-gray-500">
+            Showing <span className="font-medium">{(currentPage - 1) * 20 + 1}</span> to{' '}
+            <span className="font-medium">{Math.min(currentPage * 20, total)}</span> of{' '}
+            <span className="font-medium">{total}</span> results
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Drawer */}
+      {selectedTx && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelectedTx(null)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-md bg-white h-full shadow-2xl overflow-y-auto animate-slide-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <h4 className="font-bold text-gray-900">Transaction Details</h4>
+              <button
+                onClick={() => setSelectedTx(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ${
+                    selectedTx.status === 'completed'
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-amber-50 text-amber-700'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${
+                    selectedTx.status === 'completed' ? 'bg-green-500' : 'bg-amber-500'
+                  }`}></span>
+                  {selectedTx.status}
+                </span>
+              </div>
+
+              <DetailRow label="Transaction ID" value={selectedTx._id} mono />
+              <DetailRow label="User ID" value={selectedTx.userId} mono />
+              <DetailRow label="Email" value={selectedTx.metadata?.email || '—'} />
+              <DetailRow label="Wallet" value={selectedTx.metadata?.wallet || '—'} mono />
+              <DetailRow label="Business" value={selectedTx.metadata?.business || '—'} />
+              <DetailRow label="Instrument" value={selectedTx.metadata?.instrument || '—'} />
+              <DetailRow label="Investment" value={`$${selectedTx.metadata?.investmentAmount || 0}`} />
+              <DetailRow label="Fee" value={`$${selectedTx.metadata?.feeAmount || 0}`} />
+              <DetailRow label="Total Charged" value={`$${selectedTx.metadata?.totalCharged || 0}`} />
+              <DetailRow label="Fiat Amount" value={`₦${selectedTx.fiatAmount?.toLocaleString() || 0}`} />
+              <DetailRow label="Reference" value={selectedTx.reference || '—'} mono />
+              <DetailRow label="Payment Method" value={selectedTx.paymentMethod || '—'} />
+              <DetailRow label="Created" value={selectedTx.timestamp ? new Date(selectedTx.timestamp).toLocaleString() : '—'} />
+              {selectedTx.updated_at && (
+                <DetailRow label="Updated" value={new Date(selectedTx.updated_at).toLocaleString()} />
+              )}
+              <DetailRow label="Referral Code" value={selectedTx.metadata?.bizswapReferralCode || 'None'} />
+
+              {selectedTx.status === 'pending' && (
+                <div className="pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => handleMintAndComplete(selectedTx._id)}
+                    disabled={mintingId === selectedTx._id}
+                    className="w-full py-3 bg-[#81D7B4] hover:bg-[#6BC6A3] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    {mintingId === selectedTx._id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Minting Certificate...
+                      </>
+                    ) : (
+                      <>
+                        <CheckmarkCircle02Icon className="w-5 h-5" />
+                        Mint Certificate & Complete
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DetailRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</div>
+      <div className={`text-sm text-gray-900 break-all ${mono ? 'font-mono text-xs' : ''}`}>{value}</div>
     </div>
   );
 }

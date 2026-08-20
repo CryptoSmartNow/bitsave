@@ -33,8 +33,8 @@ export function CertificateCard({ holding }: CertificateCardProps) {
   const units = Math.floor(investmentAmount / unitPrice);
 
   const displayAddress = wallet 
-    ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}`
-    : '7xKz...3mPq';
+    ? wallet
+    : 'System Vault';
 
   // Specific Strings
   let title = '';
@@ -240,8 +240,8 @@ export function CertificateCard({ holding }: CertificateCardProps) {
         <p className={`text-[10px] md:text-xs mb-3 font-light ${themeConfig.textSecondary}`}>
           This certifies that the wallet address
         </p>
-        <div className={`px-4 sm:px-10 py-2 rounded-full font-mono text-[10px] sm:text-sm tracking-widest mb-4 border shadow-inner max-w-full overflow-hidden text-ellipsis ${themeConfig.walletInputClasses}`}>
-          {wallet || '7xKzQ2mJ9v1Fz3gYbWq8rTnL5sH9dP3mQeR7cJ3mPq'}
+        <div className={`px-4 sm:px-10 py-2 rounded-full font-mono text-[10px] sm:text-sm tracking-widest mb-4 border shadow-inner max-w-[90%] overflow-hidden text-ellipsis whitespace-nowrap ${themeConfig.walletInputClasses}`}>
+          {displayAddress}
         </div>
         <p className={`text-[10px] md:text-xs mb-5 font-light ${themeConfig.textSecondary}`}>
           is the registered holder of

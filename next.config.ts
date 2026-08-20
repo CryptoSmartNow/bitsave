@@ -12,6 +12,7 @@ const withPWA = require("next-pwa")({
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['8460-105-116-13-202.ngrok-free.app'],
   experimental: {
     optimizePackageImports: [
       "framer-motion",
