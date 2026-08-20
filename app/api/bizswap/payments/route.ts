@@ -27,12 +27,17 @@ export async function GET(req: NextRequest) {
     // Fetch pending/processing transactions using the proper getDatabase() helper
     const db = await getDatabase();
     let pendingTransactions: any[] = [];
+    const isDid = wallet.startsWith('did:privy:');
+    const walletRegex = { $regex: new RegExp(`^${wallet}$`, 'i') };
+
     if (db) {
       const transactionsCollection = db.collection('bizswap_transactions');
       pendingTransactions = await transactionsCollection.find({
         $or: [
+          { 'metadata.wallet': walletRegex },
           { 'metadata.wallet': wallet },
-          { userId: wallet }
+          { userId: wallet },
+          { userId: walletRegex }
         ],
         status: { $ne: 'completed' }
       }).sort({ timestamp: -1 }).toArray();
@@ -51,8 +56,13 @@ export async function GET(req: NextRequest) {
       status: tx.status,
     }));
 
-    // Fetch payment history for the user, sorted by date descending
-    const payments = await collection.find({ wallet }).sort({ date: -1 }).toArray();
+    // Fetch payment history for the user, sorted by date descending (case-insensitive)
+    const payments = await collection.find({
+      $or: [
+        { wallet: walletRegex },
+        { wallet: wallet }
+      ]
+    }).sort({ date: -1 }).toArray();
 
     const combinedPayments = [...formattedPending, ...payments];
 

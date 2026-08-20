@@ -18,9 +18,12 @@ export default function BizSwapSettings() {
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { user } = usePrivy();
   
-  const address = wagmiAddress || user?.wallet?.address || user?.id;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account: any) => account.type === 'wallet' && account.chainType !== 'solana'
+  ) as any)?.address;
 
-  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
+  const address = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id);
+  const walletAddress = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const { referralData } = useBizSwapReferrals(walletAddress);
   const referralCode = referralData?.bizswapReferralCode;

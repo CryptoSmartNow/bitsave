@@ -42,8 +42,12 @@ export default function BizSwapStandaloneDashboard() {
   const { ready, authenticated, user } = usePrivy();
     const connected = authenticated || isWagmiConnected;
   
-  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
-  const displayEvmWallet = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
+
+  const displayEvmWallet = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address);
+  const walletAddress = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
