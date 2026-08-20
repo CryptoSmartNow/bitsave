@@ -27,8 +27,12 @@ export default function CertificatesPage() {
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
   
-  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
-  const displayEvmWallet = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
+
+  const displayEvmWallet = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address);
+  const walletAddress = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);

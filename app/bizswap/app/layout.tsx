@@ -31,7 +31,10 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
   const [copied, setCopied] = useState(false);
 
   const connected = ready && (authenticated || isWagmiConnected);
-  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
+  const walletAddress = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   useEffect(() => {
     if (!connected || !walletAddress) { setUnreadCount(0); return; }

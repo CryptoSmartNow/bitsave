@@ -35,9 +35,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
 
+    const walletRegex = { $regex: new RegExp(`^${wallet}$`, 'i') };
+    const query = {
+      $or: [
+        { wallet: walletRegex },
+        { wallet: wallet }
+      ]
+    };
+
     const [holdings, payouts] = await Promise.all([
-      holdingsCol.find({ wallet }).sort({ createdAt: -1 }).toArray(),
-      payoutsCol.find({ wallet }).sort({ date: -1 }).toArray(),
+      holdingsCol.find(query).sort({ createdAt: -1 }).toArray(),
+      payoutsCol.find(query).sort({ date: -1 }).toArray(),
     ]);
 
     const alerts: Array<{

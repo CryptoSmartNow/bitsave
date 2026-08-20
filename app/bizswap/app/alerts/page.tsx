@@ -21,13 +21,13 @@ export default function AlertsPage() {
 
   const connected = authenticated || isWagmiConnected;
 
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
 
   const walletAddress = isWagmiConnected
     ? wagmiAddress
-    : (privySolanaWallet?.address || user?.wallet?.address);
+    : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
