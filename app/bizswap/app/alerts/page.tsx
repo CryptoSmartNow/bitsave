@@ -19,7 +19,7 @@ export default function AlertsPage() {
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
 
-  const connected = ready && (authenticated || isWagmiConnected);
+  const connected = authenticated || isWagmiConnected;
 
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
@@ -100,6 +100,14 @@ export default function AlertsPage() {
   };
 
   const unreadCount = alerts.filter(a => a.isNew).length;
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (

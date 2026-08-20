@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bitcoin01Icon, BankIcon, Search01Icon, Copy01Icon } from "hugeicons-react";
+import { Bitcoin01Icon, BankIcon, Search01Icon, Copy01Icon, Cancel01Icon, InformationCircleIcon, CheckmarkCircle01Icon } from "hugeicons-react";
 import { PaymentModal } from '@chainrails/react';
 import toast from 'react-hot-toast';
 import { ONSWITCH_COUNTRIES, CountryData } from '@/app/bizswap/wc26/countries';
@@ -45,6 +45,7 @@ export function UnifiedFiatModal({
   
   const [bankDetails, setBankDetails] = useState<any>(null);
   const [onswitchReference, setOnswitchReference] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   // Reset state when opened
   useEffect(() => {
@@ -103,8 +104,14 @@ export function UnifiedFiatModal({
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, field?: string) => {
     navigator.clipboard.writeText(text);
+    if (field) {
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    }
     toast.success('Copied to clipboard');
   };
 
@@ -324,71 +331,140 @@ export function UnifiedFiatModal({
   if (currentStep === 'bank' && bankDetails) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A0F17]/90 backdrop-blur-xl">
-        <div className="bg-gradient-to-br from-[#121A27] to-[#0A0F17] border border-[#1C2538] rounded-3xl p-6 sm:p-8 w-full max-w-md relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#81D7B4] to-transparent opacity-50"></div>
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#81D7B4]/10 rounded-full blur-[50px] pointer-events-none"></div>
+        <div className="bg-gradient-to-br from-[#121A27] via-[#0E1521] to-[#0A0F17] border border-[#1C2538] rounded-3xl p-6 sm:p-8 w-full max-w-[480px] relative overflow-hidden shadow-2xl">
+          {/* Ambient Top Glow */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#81D7B4] to-transparent opacity-60"></div>
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#81D7B4]/10 rounded-full blur-[60px] pointer-events-none"></div>
 
-          <h3 className="text-xl sm:text-2xl font-black text-[#F9F9FB] tracking-tight mb-2 relative z-10">Bank Transfer</h3>
-          <p className="text-xs sm:text-sm text-[#7B8B9A] font-medium mb-6 relative z-10 leading-relaxed">Transfer the exact amount below. Your payment will be credited once received.</p>
+          {/* Header with Close button */}
+          <div className="flex justify-between items-start mb-5 relative z-10">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-[#F9F9FB] tracking-tight">Bank Transfer</h3>
+              <p className="text-xs sm:text-sm text-[#7B8B9A] font-medium mt-1 leading-relaxed">
+                Transfer the exact amount below to complete your payment.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#1C2538]/60 transition-colors -mr-2 -mt-2 shrink-0"
+              title="Close"
+            >
+              <Cancel01Icon className="w-5 h-5" />
+            </button>
+          </div>
 
-          <div className="bg-[#0A0F17] rounded-2xl p-5 border border-[#1C2538] space-y-4 shadow-inner relative z-10">
+          {/* Bank Details Container */}
+          <div className="bg-[#090E17] rounded-2xl p-5 sm:p-6 border border-[#1C2538] space-y-4 shadow-inner relative z-10">
             <div>
               <p className="text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-1">Bank Name</p>
-              <p className="text-[#F9F9FB] font-black">{bankDetails.bank_name}</p>
+              <p className="text-[#F9F9FB] font-black text-base sm:text-lg break-words">{bankDetails.bank_name}</p>
             </div>
             
-            <div className="flex justify-between items-center group">
+            <div className="flex justify-between items-center group pt-1">
               <div>
                 <p className="text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-1">Account Number</p>
-                <p className="text-xl sm:text-2xl font-black text-[#81D7B4] tracking-tight drop-shadow-[0_0_10px_rgba(129,215,180,0.2)]">{bankDetails.account_number}</p>
+                <p className="text-2xl sm:text-3xl font-black text-[#81D7B4] tracking-tight drop-shadow-[0_0_12px_rgba(129,215,180,0.25)] break-all">
+                  {bankDetails.account_number}
+                </p>
               </div>
               <button 
-                onClick={() => copyToClipboard(bankDetails.account_number)}
-                className="p-2 sm:p-3 rounded-xl bg-[#121A27] border border-[#1C2538] text-[#7B8B9A] hover:text-[#81D7B4] hover:border-[#81D7B4]/30 transition-all active:scale-95"
+                onClick={() => copyToClipboard(bankDetails.account_number, 'account')}
+                className={`p-2.5 sm:p-3 rounded-xl border transition-all active:scale-95 flex items-center gap-1.5 ${
+                  copiedField === 'account'
+                    ? 'bg-[#81D7B4]/20 border-[#81D7B4] text-[#81D7B4]'
+                    : 'bg-[#121A27] border-[#1C2538] text-[#7B8B9A] hover:text-[#81D7B4] hover:border-[#81D7B4]/40'
+                }`}
+                title="Copy Account Number"
               >
-                <Copy01Icon className="w-5 h-5" />
+                {copiedField === 'account' ? (
+                  <CheckmarkCircle01Icon className="w-5 h-5 text-[#81D7B4]" />
+                ) : (
+                  <Copy01Icon className="w-5 h-5" />
+                )}
               </button>
             </div>
 
             <div>
               <p className="text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-1">Account Name</p>
-              <p className="text-[#F9F9FB] font-black">{bankDetails.account_name}</p>
+              <p className="text-[#F9F9FB] font-black text-sm sm:text-base break-words">{bankDetails.account_name}</p>
             </div>
 
             <div className="h-px w-full bg-[#1C2538]" />
 
-            <div className="flex justify-between items-center group">
+            <div className="flex justify-between items-center group pt-1">
               <div>
                 <p className="text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-1">Amount to Send</p>
-                <p className="text-2xl sm:text-3xl font-black text-[#F9F9FB] tracking-tight">{selectedCountry?.symbol}{bankDetails.amount.toLocaleString()}</p>
+                <p className="text-2xl sm:text-3xl font-black text-[#F9F9FB] tracking-tight">
+                  {selectedCountry?.symbol}{bankDetails.amount.toLocaleString()}
+                </p>
               </div>
               <button 
-                onClick={() => copyToClipboard(bankDetails.amount.toString())}
-                className="p-2 sm:p-3 rounded-xl bg-[#121A27] border border-[#1C2538] text-[#7B8B9A] hover:text-[#81D7B4] hover:border-[#81D7B4]/30 transition-all active:scale-95"
+                onClick={() => copyToClipboard(bankDetails.amount.toString(), 'amount')}
+                className={`p-2.5 sm:p-3 rounded-xl border transition-all active:scale-95 flex items-center gap-1.5 ${
+                  copiedField === 'amount'
+                    ? 'bg-[#81D7B4]/20 border-[#81D7B4] text-[#81D7B4]'
+                    : 'bg-[#121A27] border-[#1C2538] text-[#7B8B9A] hover:text-[#81D7B4] hover:border-[#81D7B4]/40'
+                }`}
+                title="Copy Amount"
               >
-                <Copy01Icon className="w-5 h-5" />
+                {copiedField === 'amount' ? (
+                  <CheckmarkCircle01Icon className="w-5 h-5 text-[#81D7B4]" />
+                ) : (
+                  <Copy01Icon className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
 
-          <div className="mt-4 bg-[#FF6B6B]/10 border border-[#FF6B6B]/20 rounded-xl p-4 relative z-10">
-            <p className="text-[10px] sm:text-xs text-[#FF6B6B] font-bold tracking-wide text-center uppercase">
-              Send exactly {selectedCountry?.symbol}{bankDetails.amount.toLocaleString()} or the transaction will fail.
+          {/* Warning Notice Box - Clean, Balanced, No Awkward Wrap */}
+          <div className="mt-4 bg-[#FF6B6B]/10 border border-[#FF6B6B]/25 rounded-2xl p-3.5 sm:p-4 flex items-center gap-3 relative z-10">
+            <div className="w-8 h-8 rounded-xl bg-[#FF6B6B]/15 flex items-center justify-center shrink-0 border border-[#FF6B6B]/20">
+              <InformationCircleIcon className="w-4 h-4 text-[#FF6B6B]" />
+            </div>
+            <p className="text-xs sm:text-[13px] text-[#FF8F8F] font-semibold leading-snug">
+              Send exactly <span className="text-[#F9F9FB] font-bold underline underline-offset-2">{selectedCountry?.symbol}{bankDetails.amount.toLocaleString()}</span> to avoid payment failure.
             </p>
           </div>
 
+          {/* Submit / Confirmation CTA */}
           <button
-            onClick={() => {
-              if (onPending) {
-                onPending();
-              } else {
-                toast.success('Your fiat payment is pending. We will issue your certificate once the bank transfer clears!');
-                onClose();
+            onClick={async () => {
+              setIsSimulating(true);
+              try {
+                // If it's a localhost or ngrok domain, simulate the payment!
+                if (window.location.hostname === 'localhost' || window.location.hostname.includes('ngrok')) {
+                  const res = await fetch('/api/bizswap/mock-pay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reference: onswitchReference || bankDetails?.reference })
+                  });
+                  if (res.ok) {
+                    toast.success('Mock payment successful! Completing transaction...');
+                    // In sandbox, wait 2 seconds for the webhook to update DB, then close
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    onSuccess(onswitchReference || bankDetails?.reference);
+                    return;
+                  }
+                }
+                
+                // Normal production flow
+                if (onPending) {
+                  onPending();
+                } else {
+                  toast.success('Your fiat payment is pending. We will issue your certificate once the bank transfer clears!');
+                  onClose();
+                }
+              } catch (e) {
+                console.error("Simulation error", e);
+                toast.error("Failed to process payment");
+              } finally {
+                setIsSimulating(false);
               }
             }}
-            className="mt-6 w-full py-3.5 sm:py-4 rounded-xl bg-[#81D7B4] text-[#080E18] font-black text-sm sm:text-base hover:opacity-90 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(129,215,180,0.3)] relative z-10"
+            disabled={isSimulating}
+            className="mt-5 w-full py-4 rounded-2xl bg-[#81D7B4] text-[#080E18] font-black text-sm sm:text-base hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(129,215,180,0.3)] relative z-10"
           >
-            I have paid
+            {isSimulating ? 'Processing...' : 'I have paid'}
           </button>
         </div>
       </div>

@@ -17,7 +17,7 @@ interface Payment {
 export default function HistoryPage() {
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
-  const connected = ready && (authenticated || isWagmiConnected);
+  const connected = authenticated || isWagmiConnected;
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
@@ -26,7 +26,8 @@ export default function HistoryPage() {
     ? wagmiAddress 
     : (privySolanaWallet?.address || user?.wallet?.address);
 
-  const [filter, setFilter] = useState('All');
+  const [instrumentFilter, setInstrumentFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +53,20 @@ export default function HistoryPage() {
     }
   };
 
-  const filteredHistory = filter === 'All' ? payments : payments.filter(h => h.instrument === filter);
+  const filteredHistory = payments.filter(h => {
+    const matchInstrument = instrumentFilter === 'All' || h.instrument === instrumentFilter;
+    const isPending = h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying');
+    const isFailed = h.txHash.includes('Failed');
+    const isCompleted = !isPending && !isFailed;
+    
+    const matchStatus = statusFilter === 'All' 
+      ? true 
+      : statusFilter === 'Completed' ? isCompleted
+      : statusFilter === 'Pending' ? isPending
+      : isFailed;
+      
+    return matchInstrument && matchStatus;
+  });
 
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
@@ -67,6 +81,14 @@ export default function HistoryPage() {
       default: return null;
     }
   };
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (
@@ -134,13 +156,26 @@ export default function HistoryPage() {
               <FilterIcon className="w-4 h-4 text-[#4B5A75]" />
               <select 
                 className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none w-full"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                value={instrumentFilter}
+                onChange={(e) => setInstrumentFilter(e.target.value)}
               >
                 <option value="All">All Instruments</option>
                 <option value="BizYield">BizYield</option>
                 <option value="BizCredit">BizCredit</option>
                 <option value="BizBond">BizBond</option>
+              </select>
+            </div>
+            <div className="bg-[#0A0F17] border border-[#1C2538] rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-inner w-full sm:w-auto">
+              <Activity01Icon className="w-4 h-4 text-[#4B5A75]" />
+              <select 
+                className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none w-full"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="All">All Statuses</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed / Expired</option>
               </select>
             </div>
           </div>
@@ -194,9 +229,9 @@ export default function HistoryPage() {
                       </div>
                       <p className="text-[10px] font-bold text-[#7B8B9A]">{formatDate(h.date)}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black rounded-full uppercase tracking-widest shadow-sm ${h.txHash.includes('Pending') ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' : 'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${h.txHash.includes('Pending') ? 'bg-[#F5A623]' : 'bg-[#059669]'}`}></span>
-                      {h.txHash.includes('Pending') ? 'Pending' : 'Completed'}
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black rounded-full uppercase tracking-widest shadow-sm ${h.txHash.includes('Failed') ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' : 'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${h.txHash.includes('Failed') ? 'bg-[#EF4444]' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]' : 'bg-[#059669]'}`}></span>
+                      {h.txHash.includes('Failed') ? 'Failed' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'Awaiting Payment' : 'Completed'}
                     </span>
                   </div>
                   
@@ -207,7 +242,7 @@ export default function HistoryPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-[9px] font-bold text-[#4B5A75] uppercase tracking-widest mb-1">Tx Hash</p>
-                      {h.txHash.includes('Pending') ? (
+                      {h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') || h.txHash.includes('Failed') ? (
                         <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#7B8B9A] bg-[#1C2538] px-2.5 py-1 rounded-md border border-[#2C3E5D]">N/A</span>
                       ) : (
                         <a 
@@ -266,13 +301,13 @@ export default function HistoryPage() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm ${h.txHash.includes('Pending') ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' : 'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${h.txHash.includes('Pending') ? 'bg-[#F5A623]' : 'bg-[#059669]'}`}></span>
-                          {h.txHash.includes('Pending') ? 'Pending' : 'Completed'}
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm ${h.txHash.includes('Failed') ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' : 'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${h.txHash.includes('Failed') ? 'bg-[#EF4444]' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]' : 'bg-[#059669]'}`}></span>
+                          {h.txHash.includes('Failed') ? 'Failed' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'Awaiting Payment' : 'Completed'}
                         </span>
                       </td>
                       <td className="px-6 py-5">
-                        {h.txHash.includes('Pending') ? (
+                        {h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') || h.txHash.includes('Failed') ? (
                           <span className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#7B8B9A] bg-[#0A0F17] px-3 py-1.5 rounded-lg border border-[#1C2538] shadow-inner">
                             N/A
                           </span>

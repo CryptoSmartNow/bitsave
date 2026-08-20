@@ -10,19 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    let ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
-
-    if (!ONSWITCH_API_KEY) {
-      const fs = require('fs');
-      const path = require('path');
-      try {
-        const envFile = fs.readFileSync(path.resolve(process.cwd(), '.env'), 'utf8');
-        const match = envFile.match(/ONSWITCH_API_KEY=(.*)/);
-        if (match && match[1]) ONSWITCH_API_KEY = match[1].trim();
-      } catch (e) {
-        console.error("Could not read .env dynamically", e);
-      }
-    }
+    const ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
 
     if (!ONSWITCH_API_KEY) {
       return NextResponse.json({ error: 'ONSWITCH_API_KEY is missing' }, { status: 500 });
@@ -31,10 +19,15 @@ export async function POST(req: NextRequest) {
     const reference = explicitReference || crypto.randomUUID();
 
     const origin = req.headers.get('origin') || req.nextUrl.origin;
-    const isLocalhost = origin.startsWith('http://localhost') || origin.includes('ngrok');
-    const callbackUrl = isLocalhost
-      ? 'https://bitsave.io/api/onswitch/webhook'
-      : `${origin}/api/onswitch/webhook`;
+    const isNgrok = origin.includes('ngrok');
+    const isLocalhost = origin.startsWith('http://localhost');
+    // When using ngrok, route the webhook back through the tunnel so we can test locally.
+    // Plain localhost falls back to production since Onswitch can't reach localhost directly.
+    const callbackUrl = isNgrok
+      ? `${origin}/api/onswitch/webhook`
+      : isLocalhost
+        ? 'https://bitsave.io/api/onswitch/webhook'
+        : `${origin}/api/onswitch/webhook`;
 
     const targetWallet = destinationWallet || process.env.ONSWITCH_REVENUE_WALLET;
 
@@ -101,9 +94,11 @@ export async function POST(req: NextRequest) {
       paymentMethod: 'fiat_onswitch',
       usdcAmount: amount,
       fiatAmount: onswitchResponseData.data.deposit.amount,
+      currency,
       reference,
       status: 'pending',
-      timestamp: new Date()
+      timestamp: new Date(),
+      createdAt: new Date(),
     };
 
     if (shares) {

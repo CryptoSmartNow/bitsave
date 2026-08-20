@@ -81,8 +81,8 @@ export default function BizSwapAppPage() {
   const { width, height } = useWindowSize();
 
   const connected = ready && (authenticated || isWagmiConnected);
-
-  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
+  const displayEvmWallet = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
+  const walletAddress = user?.wallet?.address || wagmiAddress || user?.email?.address || user?.id;
 
   const [mounted, setMounted] = useState(false);
   const [selectedInst, setSelectedInst] = useState<keyof typeof INSTRUMENTS>('bizyield');
@@ -652,7 +652,7 @@ export default function BizSwapAppPage() {
             <div className="flex gap-3">
               <Shield01Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#81D7B4] shrink-0 mt-0.5" />
               <p className="text-[10px] sm:text-xs font-medium text-[#7B8B9A] leading-relaxed">
-                Your ownership is recorded on the <span className="text-[#F9F9FB] font-black">Blockchain</span> immediately. You will receive a digital certificate in your wallet upon successful purchase.
+                Your ownership is recorded on our <span className="text-[#F9F9FB] font-black">Secure System</span> immediately. You will receive a digital certificate in your account upon successful purchase.
               </p>
             </div>
           </div>
@@ -689,7 +689,7 @@ export default function BizSwapAppPage() {
           totalCharged,
           bizswapReferralCode: isReferralValid ? referralCode : null,
           email: emailInput || user?.email?.address,
-          wallet: walletAddress
+          wallet: displayEvmWallet || walletAddress
         }}
       />
 
@@ -709,13 +709,13 @@ export default function BizSwapAppPage() {
             </h3>
             
             <p className="text-[#7B8B9A] mb-8 text-xs sm:text-sm font-medium leading-relaxed">
-              Your fiat payment is currently processing. As soon as the bank transfer clears, your certificate will be automatically minted and will appear in your dashboard!
+              Your fiat payment is currently processing. As soon as the bank transfer clears, your certificate will be automatically issued and will appear in your dashboard!
             </p>
 
             <button
               onClick={() => {
                 setShowPendingModal(false);
-                router.push('/bizswap/dashboard');
+                router.push('/bizswap/app');
               }}
               className="w-full py-3.5 sm:py-4 rounded-xl bg-[#81D7B4] text-[#080E18] font-black text-sm sm:text-base hover:opacity-90 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(129,215,180,0.3)]"
             >
@@ -735,7 +735,9 @@ export default function BizSwapAppPage() {
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A0F17]/90 backdrop-blur-xl">
-          <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.15} colors={['#81D7B4', '#3B82F6', '#FF6B6B', '#F9F9FB']} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 110, pointerEvents: 'none' }}>
+            <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.15} colors={['#81D7B4', '#3B82F6', '#FF6B6B', '#F9F9FB']} />
+          </div>
           <div className="bg-gradient-to-br from-[#121A27] to-[#0A0F17] border border-[#81D7B4]/30 rounded-3xl p-8 sm:p-10 w-full max-w-md relative flex flex-col items-center text-center shadow-[0_0_50px_rgba(129,215,180,0.15)] overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#81D7B4] to-transparent opacity-80"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#81D7B4]/10 rounded-full blur-[60px] pointer-events-none"></div>
@@ -748,7 +750,7 @@ export default function BizSwapAppPage() {
               Mint Successful!
             </h2>
             <p className="text-[#7B8B9A] text-xs sm:text-sm font-medium leading-relaxed mb-8 relative z-10">
-              Your certificate has been successfully minted to your wallet and recorded on the Blockchain.
+              Your certificate has been successfully issued to your Bitsave account.
             </p>
 
             <div className="flex flex-col gap-3 w-full relative z-10">
@@ -761,7 +763,7 @@ export default function BizSwapAppPage() {
                 Share on X
               </a>
               <button
-                onClick={() => router.push('/bizswap/dashboard')}
+                onClick={() => router.push('/bizswap/app')}
                 className="w-full py-3.5 sm:py-4 px-5 font-black rounded-xl transition-all text-sm sm:text-base hover:opacity-90 bg-[#81D7B4] text-[#080E18] shadow-[0_0_20px_rgba(129,215,180,0.2)] active:scale-[0.98]"
               >
                 Go to Dashboard

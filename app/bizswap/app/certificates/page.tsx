@@ -9,6 +9,7 @@ import { CertificateCard } from '@/components/CertificateCard';
 
 interface Holding {
   _id: string;
+  wallet?: string;
   instrument: string;
   investmentAmount: number;
   status: string;
@@ -21,15 +22,13 @@ interface Holding {
 export default function CertificatesPage() {
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
-
-  const connected = ready && (authenticated || isWagmiConnected);
+  const connected = authenticated || isWagmiConnected;
   const privySolanaWallet = user?.linkedAccounts?.find(
     (account) => account.type === 'wallet' && account.chainType === 'solana'
   ) as { address: string } | undefined;
   
-  const walletAddress = isWagmiConnected 
-    ? wagmiAddress 
-    : (privySolanaWallet?.address || user?.wallet?.address);
+  const walletAddress = user?.id || user?.email?.address || wagmiAddress;
+  const displayEvmWallet = isWagmiConnected ? wagmiAddress : user?.wallet?.address;
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +96,14 @@ export default function CertificatesPage() {
       toast.error('Failed to download certificate', { id: 'download-cert' });
     }
   };
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (
@@ -180,7 +187,7 @@ export default function CertificatesPage() {
                 
                 {/* Certificate Scaling container */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] flex-shrink-0 pointer-events-none scale-[0.25] sm:scale-[0.28] md:scale-[0.30] lg:scale-[0.26] xl:scale-[0.30] transition-transform duration-300 group-hover:scale-[0.26] sm:group-hover:scale-[0.29] md:group-hover:scale-[0.31] lg:group-hover:scale-[0.27] xl:group-hover:scale-[0.31]">
-                  <CertificateCard holding={{ ...h, wallet: walletAddress }} />
+                  <CertificateCard holding={{ ...h, wallet: displayEvmWallet || h.wallet }} />
                 </div>
                 
                 <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#05080C]/90 via-[#05080C]/20 to-transparent pointer-events-none" />
@@ -210,22 +217,22 @@ export default function CertificatesPage() {
 
       {/* CERTIFICATE MODAL */}
       {selectedCert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={() => setSelectedCert(null)}>
+        <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-4 py-12 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={() => setSelectedCert(null)}>
           <div 
-            className="relative w-full max-w-[1100px] my-8 animate-in fade-in zoom-in duration-200"
+            className="relative w-full max-w-[1100px] my-auto animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button 
               id="cert-close-btn"
               onClick={() => setSelectedCert(null)}
-              className="absolute -top-4 -right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-50 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D] shadow-lg"
+              className="absolute top-4 right-4 md:-top-4 md:-right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-50 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D] shadow-lg"
             >
               <Cancel01Icon className="w-5 h-5" />
             </button>
 
             <div ref={certificateRef} className="bg-[#0F1825] rounded-xl shadow-[0_0_50px_rgba(129,215,180,0.1)] border border-[#1C2538]/50">
-              <CertificateCard holding={{ ...selectedCert, wallet: walletAddress }} />
+              <CertificateCard holding={{ ...selectedCert, wallet: displayEvmWallet || selectedCert.wallet }} />
             </div>
 
             {/* Action Buttons */}

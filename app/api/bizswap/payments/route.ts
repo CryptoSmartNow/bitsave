@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBizSwapPayoutsCollection } from '@/lib/mongodb';
+import { getBizSwapPayoutsCollection, getDatabase } from '@/lib/mongodb';
 import { redis } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
@@ -24,19 +24,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
 
-    // Fetch pending transactions
-    const client = await import('@/lib/mongodb').then(m => m.default);
-    const db = client?.db('bitsave');
-    const transactionsCollection = db?.collection('bizswap_transactions');
-    
+    // Fetch pending/processing transactions using the proper getDatabase() helper
+    const db = await getDatabase();
     let pendingTransactions: any[] = [];
-    if (transactionsCollection) {
-      pendingTransactions = await transactionsCollection.find({ 
+    if (db) {
+      const transactionsCollection = db.collection('bizswap_transactions');
+      pendingTransactions = await transactionsCollection.find({
         $or: [
           { 'metadata.wallet': wallet },
           { userId: wallet }
         ],
-        status: 'pending' 
+        status: { $ne: 'completed' }
       }).sort({ timestamp: -1 }).toArray();
     }
 
@@ -46,7 +44,11 @@ export async function GET(req: NextRequest) {
       instrument: tx.metadata?.instrument || 'BizSwap Instrument',
       amount: tx.usdcAmount || tx.metadata?.totalCharged || tx.fiatAmount || 0,
       currency: tx.currency || 'USD (Fiat Pending)',
-      txHash: 'Pending Transfer'
+      txHash: ['failed', 'expired', 'cancelled', 'failed_underpaid'].includes(tx.status) ? `Failed: ${tx.status}` :
+              tx.status === 'processing' ? 'Processing...' :
+              tx.status === 'failed_fulfillment' ? 'Retrying...' :
+              'Pending Transfer',
+      status: tx.status,
     }));
 
     // Fetch payment history for the user, sorted by date descending

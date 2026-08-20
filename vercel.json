@@ -16,5 +16,11 @@
             "source": "/wrapped/:path*",
             "destination": "https://bitsave-wrapped.vercel.app/:path*"
         }   
+    ],
+    "crons": [
+        {
+            "path": "/api/cron/reconcile-pending",
+            "schedule": "0 0 * * *"
+        }
     ]
 }

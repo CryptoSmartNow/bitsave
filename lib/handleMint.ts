@@ -20,7 +20,7 @@ export async function handleMint(data: any) {
   let nextPayment = '';
   let apr = '';
   let payoutFrequency = '';
-  const now = new Date();
+  const now = data.originalPurchaseDate ? new Date(data.originalPurchaseDate) : new Date();
 
   const serialNumber = Math.floor(1000 + Math.random() * 9000).toString();
 
