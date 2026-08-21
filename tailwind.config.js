@@ -6,6 +6,7 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         display: ['var(--font-display)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+        instrument: ['var(--font-instrument)', "'Instrument Serif'", 'serif'],
       },
       // Add smooth scrolling configuration
       animation: {

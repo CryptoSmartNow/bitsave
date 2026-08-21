@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     if (db) {
       const transactionsCollection = db.collection('bizswap_transactions');
-      pendingTransactions = await transactionsCollection.find({
+      const rawPending = await transactionsCollection.find({
         $or: [
           { 'metadata.wallet': walletRegex },
           { 'metadata.wallet': wallet },
@@ -41,19 +41,39 @@ export async function GET(req: NextRequest) {
         ],
         status: { $ne: 'completed' }
       }).sort({ timestamp: -1 }).toArray();
+
+      const now = Date.now();
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+      for (const tx of rawPending) {
+        const txTime = new Date(tx.timestamp || tx.createdAt || 0).getTime();
+        const isStale = (now - txTime) > ONE_DAY_MS;
+
+        if (isStale && ['pending', 'processing', 'awaiting_deposit', 'failed_fulfillment'].includes(tx.status)) {
+          // Auto-expire stale transaction in DB
+          await transactionsCollection.updateOne(
+            { _id: tx._id },
+            { $set: { status: 'expired', updated_at: new Date() } }
+          );
+          tx.status = 'expired';
+        }
+        pendingTransactions.push(tx);
+      }
     }
 
     const formattedPending = pendingTransactions.map(tx => ({
       _id: tx._id.toString(),
-      date: tx.timestamp || new Date().toISOString(),
+      date: tx.timestamp || tx.createdAt || new Date().toISOString(),
       instrument: tx.metadata?.instrument || 'BizSwap Instrument',
       amount: tx.usdcAmount || tx.metadata?.totalCharged || tx.fiatAmount || 0,
       currency: tx.currency || 'USD (Fiat Pending)',
-      txHash: ['failed', 'expired', 'cancelled', 'failed_underpaid'].includes(tx.status) ? `Failed: ${tx.status}` :
+      txHash: tx.status === 'expired' ? 'Failed: Expired (>24h)' :
+              ['failed', 'cancelled', 'failed_underpaid'].includes(tx.status) ? `Failed: ${tx.status}` :
               tx.status === 'processing' ? 'Processing...' :
               tx.status === 'failed_fulfillment' ? 'Retrying...' :
               'Pending Transfer',
       status: tx.status,
+      type: 'order' as const,
     }));
 
     // Fetch payment history for the user, sorted by date descending (case-insensitive)
@@ -64,7 +84,13 @@ export async function GET(req: NextRequest) {
       ]
     }).sort({ date: -1 }).toArray();
 
-    const combinedPayments = [...formattedPending, ...payments];
+    const formattedPayouts = payments.map(p => ({
+      ...p,
+      _id: p._id.toString(),
+      type: 'payout' as const,
+    }));
+
+    const combinedPayments = [...formattedPending, ...formattedPayouts];
 
     if (redis) {
       await redis.set(cacheKey, JSON.stringify(combinedPayments), 'EX', 60); // cache for 60 seconds

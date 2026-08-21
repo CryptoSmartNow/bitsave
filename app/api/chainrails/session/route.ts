@@ -17,8 +17,9 @@ export async function GET(request: Request) {
 
         const recipient = searchParams.get('recipient') || '';
         let amount = searchParams.get('amount') || '0';
-        const destinationChain = searchParams.get('chain') || 'BASE';
-        const token = searchParams.get('token') || 'USDC';
+        const rawChain = (searchParams.get('chain') || 'BASE').toUpperCase();
+        const destinationChain = rawChain === 'SOLANA' ? 'SOLANA' : 'BASE';
+        const token = rawChain === 'SOLANA' ? 'USDC' : (searchParams.get('token') || 'USDC');
         const mode = searchParams.get('mode') || 'buy';
 
 

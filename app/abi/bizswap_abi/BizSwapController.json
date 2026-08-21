@@ -1,0 +1,122 @@
+[
+  {
+    "type": "function",
+    "name": "mintCertificate",
+    "inputs": [
+      { "name": "buyer", "type": "address", "internalType": "address" },
+      { "name": "instrumentType", "type": "uint8", "internalType": "uint8" },
+      { "name": "amountUsdCents", "type": "uint256", "internalType": "uint256" },
+      { "name": "feeAmountUsdCents", "type": "uint256", "internalType": "uint256" },
+      { "name": "entitlementBpsOrUnits", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "tokenIdOrUnits", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getInstrumentConfig",
+    "inputs": [
+      { "name": "instrumentType", "type": "uint8", "internalType": "uint8" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct InstrumentConfig",
+        "components": [
+          { "name": "cap", "type": "uint256", "internalType": "uint256" },
+          { "name": "minted", "type": "uint256", "internalType": "uint256" },
+          { "name": "minBuyInUsdCents", "type": "uint256", "internalType": "uint256" },
+          { "name": "originationFeeBps", "type": "uint16", "internalType": "uint16" },
+          { "name": "vestingRequired", "type": "bool", "internalType": "bool" },
+          { "name": "vestingDurationSeconds", "type": "uint64", "internalType": "uint64" },
+          { "name": "yieldStartTimestamp", "type": "uint64", "internalType": "uint64" },
+          { "name": "tokenContract", "type": "address", "internalType": "address" },
+          { "name": "initialized", "type": "bool", "internalType": "bool" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "remainingCap",
+    "inputs": [
+      { "name": "instrumentType", "type": "uint8", "internalType": "uint8" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "currentCycle",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "bytes8", "internalType": "bytes8" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cycleStartTimestamp",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "uint64", "internalType": "uint64" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cycleDurationSeconds",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "uint64", "internalType": "uint64" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPurchaseRecord",
+    "inputs": [
+      { "name": "purchaseId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct PurchaseRecord",
+        "components": [
+          { "name": "instrumentType", "type": "uint8", "internalType": "uint8" },
+          { "name": "buyer", "type": "address", "internalType": "address" },
+          { "name": "amountUsdCents", "type": "uint256", "internalType": "uint256" },
+          { "name": "feeAmountUsdCents", "type": "uint256", "internalType": "uint256" },
+          { "name": "totalChargedUsdCents", "type": "uint256", "internalType": "uint256" },
+          { "name": "entitlementBpsOrUnits", "type": "uint256", "internalType": "uint256" },
+          { "name": "timestamp", "type": "uint64", "internalType": "uint64" },
+          { "name": "tokenIdOrUnits", "type": "uint256", "internalType": "uint256" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "CertificateMinted",
+    "inputs": [
+      { "name": "purchaseId", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "instrumentType", "type": "uint8", "indexed": true, "internalType": "uint8" },
+      { "name": "buyer", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "tokenIdOrUnits", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "amountUsdCents", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "feeAmountUsdCents", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "totalChargedUsdCents", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "entitlementBpsOrUnits", "type": "uint256", "internalType": "uint256" },
+      { "name": "vestEndTimestamp", "type": "uint64", "indexed": false, "internalType": "uint64" }
+    ],
+    "anonymous": false
+  }
+]

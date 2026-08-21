@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Exo } from 'next/font/google';
+import { getChainConfig, getExplorerUrl } from '@/lib/bizswap-contracts';
 
 const exo = Exo({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800', '900'] });
 
@@ -15,6 +16,12 @@ interface Holding {
   apr: string;
   wallet?: string;
   business?: string | null;
+  chain?: string | null;
+  chainId?: number | null;
+  networkName?: string | null;
+  currency?: string | null;
+  explorerUrl?: string | null;
+  transactionSignature?: string | null;
 }
 
 interface CertificateCardProps {
@@ -22,7 +29,20 @@ interface CertificateCardProps {
 }
 
 export function CertificateCard({ holding }: CertificateCardProps) {
-  const { instrument, investmentAmount, serialNumber, purchaseDate, apr, wallet, business } = holding;
+  const {
+    instrument,
+    investmentAmount,
+    serialNumber,
+    purchaseDate,
+    apr,
+    wallet,
+    business,
+    chain,
+    transactionSignature,
+    mintAddress,
+  } = holding;
+
+  const chainConfig = getChainConfig(chain);
 
   // Derive values based on instrument type
   const isBizYield = instrument === 'BizYield';
@@ -32,13 +52,9 @@ export function CertificateCard({ holding }: CertificateCardProps) {
   const unitPrice = isBizYield ? 10 : isBizCredit ? 100 : 1000;
   const units = Math.floor(investmentAmount / unitPrice);
 
-  const displayAddress = wallet 
-    ? wallet
-    : 'System Vault';
+  const displayAddress = wallet ? wallet : 'System Vault';
 
-  // Specific Strings
   let title = '';
-  let subtitle = 'Official RWA Record . Bizmarket Protocol';
   let centralTitle = '';
   let highlightText = '';
   let detailedText = '';
@@ -50,29 +66,28 @@ export function CertificateCard({ holding }: CertificateCardProps) {
   if (isBizBond) {
     title = 'FIXED INCOME CERTIFICATE';
     centralTitle = 'BIZBOND';
-    // Dummy values for demonstration if exact calculations aren't available
     const quarterly = (investmentAmount * 0.10) / 4;
-    highlightText = `Fixed Annual Yield: 10% . $${quarterly.toFixed(2)} per quarter`;
-    detailedText = `Entitled to $${quarterly.toFixed(2)} quarterly, paid in stablecoins. Fixed 10% annual return on $${investmentAmount.toFixed(2)} principal. Backed by government treasury instruments. Vesting period ends ${vestEndStr}. This certificate is digitally signed and secured.`;
+    highlightText = `Fixed Annual Yield: 10% &middot; $${quarterly.toFixed(2)} per quarter`;
+    detailedText = `Entitled to $${quarterly.toFixed(2)} quarterly, paid in ${chainConfig.currency}. Fixed 10% annual return on $${investmentAmount.toFixed(2)} principal on ${chainConfig.name}. Backed by government treasury instruments. Vesting period ends ${vestEndStr}. This certificate is digitally signed and secured.`;
   } else if (isBizCredit) {
     title = 'CREDIT YIELD CERTIFICATE';
     centralTitle = 'BIZCREDIT';
-    const weekly = (investmentAmount * 0.16) / 52; // 16% APR approximation
-    highlightText = `Weekly Yield: $${weekly.toFixed(2)} per week . 12 weeks`;
+    const weekly = (investmentAmount * 0.16) / 52;
+    highlightText = `Weekly Yield: $${weekly.toFixed(2)} / week &middot; 12 weeks`;
     const totalReturn = investmentAmount + (weekly * 12);
-    detailedText = `Entitled to $${weekly.toFixed(2)} weekly for 12 consecutive weeks beginning July 20, 2026. Principal of $${investmentAmount.toFixed(2)} returned at Week 12. Total return: $${totalReturn.toFixed(2)}. Paid in USDC. This certificate is digitally signed and secured.`;
+    detailedText = `Entitled to $${weekly.toFixed(2)} weekly for 12 consecutive weeks on ${chainConfig.name}. Principal of $${investmentAmount.toFixed(2)} returned at Week 12. Total return: $${totalReturn.toFixed(2)}. Paid in ${chainConfig.currency}. This certificate is digitally signed and secured.`;
   } else if (isBizYield) {
     title = 'REVENUE SHARE CERTIFICATE';
     const bizName = business ? business.toUpperCase() : 'SHARD';
     centralTitle = `BIZYIELD - ${bizName}`;
-    const sharePercent = (units * 0.1).toFixed(1); // Mock 0.1% per unit
+    const sharePercent = (units * 0.1).toFixed(1);
     highlightText = `Revenue Share: ${sharePercent}% of ${bizName}'s monthly revenue pool`;
-    detailedText = `Entitled to ${sharePercent}% of ${bizName}'s monthly revenue, paid monthly in stablecoins for 24 months. Yield begins ${vestEndStr}. This certificate is digitally signed and secured.`;
+    detailedText = `Entitled to ${sharePercent}% of ${bizName}'s monthly revenue, paid monthly in ${chainConfig.currency} on ${chainConfig.name} for 24 months. Yield begins ${vestEndStr}. This certificate is digitally signed and secured.`;
   } else {
     title = 'DIGITAL CERTIFICATE';
     centralTitle = instrument.toUpperCase();
     highlightText = `APR: ${apr}`;
-    detailedText = `This certificate is digitally signed and secured.`;
+    detailedText = `This certificate is digitally signed and secured on ${chainConfig.name}.`;
   }
 
   const dateStr = purchaseDate 
@@ -158,7 +173,7 @@ export function CertificateCard({ holding }: CertificateCardProps) {
   } else if (isBizCredit) {
     themeConfig = {
       color1Hex: '#ffffff',
-      bgGlow: 'from-[#4ade80]/20', // subtle lighter green glow
+      bgGlow: 'from-[#4ade80]/20',
       borderFrom: 'from-white/50',
       borderTo: 'to-white/50',
       edgeHFrom: 'from-white/60',
@@ -179,21 +194,22 @@ export function CertificateCard({ holding }: CertificateCardProps) {
       innerDivider: 'via-white/40',
       dropShadow: 'drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]',
 
-      containerBg: 'bg-[#31BC6C]', // Solid vibrant green from image
+      containerBg: 'bg-[#31BC6C]',
       textPrimary: 'text-white',
-      textSecondary: 'text-green-100', // Light green for secondary text
+      textSecondary: 'text-green-100',
       textMuted: 'text-white',
       textFaded: 'text-white',
-      innerContainerClasses: 'bg-black/10 backdrop-blur-md relative border border-transparent', // Darker translucent box
+      innerContainerClasses: 'bg-black/10 backdrop-blur-md relative border border-transparent',
       walletInputClasses: 'border-white/30 bg-black/10 text-white',
-      sealOuterBg: 'bg-gray-300', // Grey outer ring
-      sealInnerBg: 'bg-[#31BC6C]', // Green inner circle
-      sealIconColor: 'text-white', // White check
-      sealColor: 'text-gray-200', // Light grey scalloped star
+      sealOuterBg: 'bg-gray-300',
+      sealInnerBg: 'bg-[#31BC6C]',
+      sealIconColor: 'text-white',
+      sealColor: 'text-gray-200',
     };
   }
 
   const isPending = holding.status?.toLowerCase().includes('pending');
+  const explorerLink = holding.explorerUrl || getExplorerUrl(chain, transactionSignature || mintAddress, 'tx');
 
   return (
     <div className={`relative w-full max-w-[1100px] mx-auto rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-center items-center py-10 px-4 sm:py-16 sm:px-8 md:px-16 font-sans ${exo.className} ${themeConfig.containerBg} ${themeConfig.textPrimary}`}>
@@ -206,35 +222,39 @@ export function CertificateCard({ holding }: CertificateCardProps) {
         </div>
       )}
       
+      {/* Network Badge */}
+      <div className="absolute top-6 right-6 z-30 flex items-center gap-2">
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md border shadow-md ${
+          chain === 'botchain'
+            ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40'
+            : 'bg-[#0052FF]/20 text-[#60A5FA] border-[#0052FF]/40'
+        }`}>
+          🌐 {chainConfig.name}
+        </span>
+      </div>
+
       {/* Universal gradient borders based on theme */}
       <>
-        {/* Subtle background glow */}
         <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] ${themeConfig.bgGlow} via-[#0A0D10] to-[#0A0D10] opacity-90`} />
-        
-        {/* Outer simple rounded border */}
         <div className={`absolute inset-1.5 rounded-xl border border-transparent bg-gradient-to-br ${themeConfig.borderFrom} via-transparent ${themeConfig.borderTo} [mask-composite:exclude]`} style={{ mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', padding: '1px' }} />
-        
-        {/* Inner border with concave corners */}
-        {/* Straight edges */}
         <div className={`absolute top-6 left-16 right-16 h-px bg-gradient-to-r ${themeConfig.edgeHFrom} ${themeConfig.edgeHVia} ${themeConfig.edgeHTo}`} />
         <div className={`absolute bottom-6 left-16 right-16 h-px bg-gradient-to-r ${themeConfig.edgeHFrom} ${themeConfig.edgeHVia} ${themeConfig.edgeHTo}`} />
         <div className={`absolute left-6 top-16 bottom-16 w-px bg-gradient-to-b ${themeConfig.edgeVFrom} ${themeConfig.edgeVVia} ${themeConfig.edgeVTo}`} />
         <div className={`absolute right-6 top-16 bottom-16 w-px bg-gradient-to-b ${themeConfig.edgeVFrom2} ${themeConfig.edgeVVia2} ${themeConfig.edgeVTo2}`} />
 
-        {/* Concave corners */}
         <div className={`absolute top-6 left-6 w-10 h-10 border-b border-r ${themeConfig.cornerTL} rounded-br-[100%]`} />
         <div className={`absolute top-6 right-6 w-10 h-10 border-b border-l ${themeConfig.cornerTR} rounded-bl-[100%]`} />
         <div className={`absolute bottom-6 left-6 w-10 h-10 border-t border-r ${themeConfig.cornerBL} rounded-tr-[100%]`} />
         <div className={`absolute bottom-6 right-6 w-10 h-10 border-t border-l ${themeConfig.cornerBR} rounded-tl-[100%]`} />
       </>
 
-      <div className={`relative z-20 flex flex-col items-center text-center w-full h-full justify-center mt-2 mb-2`}>
+      <div className="relative z-20 flex flex-col items-center text-center w-full h-full justify-center mt-2 mb-2">
         
         <h1 className="text-3xl md:text-5xl font-bold tracking-wide mb-1 drop-shadow-md uppercase">
           {title}
         </h1>
         <p className={`text-[10px] md:text-xs tracking-widest mb-6 font-light ${themeConfig.textSecondary}`}>
-          Official RWA Record . <span className={themeConfig.textMain}>Bizmarket Protocol</span>
+          Official RWA Record &middot; <span className={themeConfig.textMain}>Bizmarket Protocol ({chainConfig.name})</span>
         </p>
 
         <p className={`text-[10px] md:text-xs mb-3 font-light ${themeConfig.textSecondary}`}>
@@ -261,16 +281,14 @@ export function CertificateCard({ holding }: CertificateCardProps) {
             {centralTitle}
           </h2>
           <p className={`text-base md:text-lg ${themeConfig.textMuted} font-light mb-6`}>
-            Investment Value: <span className={`font-bold ${themeConfig.textPrimary}`}>${investmentAmount.toFixed(2)}</span>
+            Investment Value: <span className={`font-bold ${themeConfig.textPrimary}`}>${investmentAmount.toFixed(2)} {chainConfig.currency}</span>
           </p>
 
           <div className={`w-3/4 mx-auto h-px bg-gradient-to-r from-transparent ${themeConfig.innerDivider} to-transparent mb-4`}></div>
 
-          <p className={`text-xs md:text-sm font-light ${themeConfig.textFaded}`}>
-            {highlightText}
-          </p>
+          <p className={`text-xs md:text-sm font-light ${themeConfig.textFaded}`} dangerouslySetInnerHTML={{ __html: highlightText }} />
 
-          {/* Certificate Stamp / Seal Mock */}
+          {/* Certificate Stamp */}
           <div className={`absolute -right-8 opacity-20 md:opacity-100 md:-right-16 top-1/2 -translate-y-1/2 w-24 h-24 md:w-36 md:h-36 flex items-center justify-center filter ${themeConfig.dropShadow}`}>
              <svg viewBox="0 0 100 100" className={`w-full h-full fill-current drop-shadow-lg ${themeConfig.sealColor}`}>
                <path d="M50 2.5 L56 12 L66.5 9 L69 19.5 L80 20 L79 31 L88 35.5 L83 45 L90 53 L83 60 L85 70.5 L75 73.5 L73 84 L62.5 83 L57 92 L47 88.5 L38.5 96 L31.5 88.5 L21 91.5 L20 81 L9 78.5 L12 68 L3.5 61 L9 52 L3 42.5 L12 37 L11.5 26.5 L22 24.5 L25 14 L35.5 16 L42 7 Z" />
@@ -318,9 +336,16 @@ export function CertificateCard({ holding }: CertificateCardProps) {
           </div>
         </div>
 
-        <p className={`text-xs mt-12 mb-4 font-bold ${isBizYield ? 'text-[#81D7B4]' : isBizCredit ? 'text-green-100' : 'text-[#3E5549]'}`}>
-          Verify on Solana Explorer -&gt;
-        </p>
+        <a
+          href={explorerLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-xs mt-10 mb-2 font-bold hover:underline transition-all ${
+            isBizYield ? 'text-[#81D7B4]' : isBizCredit ? 'text-green-100' : 'text-[#3E5549]'
+          }`}
+        >
+          Verify on {chainConfig.name} Explorer &rarr;
+        </a>
 
       </div>
     </div>

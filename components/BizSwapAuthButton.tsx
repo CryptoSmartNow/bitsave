@@ -47,30 +47,30 @@ export function BizSwapAuthButton({ className, style, connectText = "Connect Wal
         };
 
         return (
-            <div className={`flex items-center gap-2 ${className || ''}`} style={style ? { height: style.height } : undefined}>
+            <div className={`flex items-center gap-1.5 ${className || ''}`} style={style ? { height: style.height } : undefined}>
                 <div 
-                    className="flex items-center gap-2 md:gap-3 border border-[#2C3E5D] bg-[#1C2538] rounded-xl shadow-sm px-2.5 sm:px-4"
-                    style={{ ...style, width: 'auto', padding: undefined, minHeight: style?.height || '44px' }}
+                    className="flex items-center gap-1.5 sm:gap-2 border border-[#1E293B] bg-[#0E1726] rounded-xl shadow-sm px-2.5 py-1"
+                    style={{ ...style, width: 'auto', minHeight: style?.height || '34px', height: style?.height || '34px' }}
                 >
-                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#81D7B4] animate-pulse shadow-[0_0_8px_#81D7B4] flex-shrink-0" />
-                    <span className="font-mono font-bold text-[11px] sm:text-sm md:text-base text-[#F9F9FB] whitespace-nowrap tracking-wide">{displayAddress}</span>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#81D7B4] animate-pulse shadow-[0_0_8px_#81D7B4] flex-shrink-0" />
+                    <span className="font-mono font-bold text-[11px] sm:text-xs text-[#F9F9FB] whitespace-nowrap tracking-tight">{displayAddress}</span>
                     {address && (
                         <button
                             onClick={handleCopy}
-                            className="p-1 hover:bg-[#2C3E5D] rounded-lg transition-colors text-[#7B8B9A] hover:text-[#F9F9FB] flex-shrink-0 ml-0.5 sm:ml-1"
+                            className="p-0.5 hover:bg-[#1E293B] rounded transition-colors text-[#64748B] hover:text-[#81D7B4] flex-shrink-0"
                             title="Copy Address"
                         >
-                            {copied ? <Tick01Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81D7B4]" /> : <Copy01Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                            {copied ? <Tick01Icon className="w-3 h-3 text-[#81D7B4]" /> : <Copy01Icon className="w-3 h-3" />}
                         </button>
                     )}
                 </div>
                 <button
                     onClick={handleSignOut}
-                    className="flex items-center justify-center border border-[#2C3E5D] bg-[#1C2538] text-[#7B8B9A] hover:text-[#FF6B6B] hover:bg-[#FF6B6B]/10 hover:border-[#FF6B6B]/30 transition-all flex-shrink-0 rounded-xl"
-                    style={{ ...style, width: style?.height || '44px', minHeight: style?.height || '44px', padding: 0 }}
+                    className="flex items-center justify-center border border-[#1E293B] bg-[#0E1726] text-[#64748B] hover:text-[#FF6B6B] hover:bg-[#FF6B6B]/10 hover:border-[#FF6B6B]/30 transition-all flex-shrink-0 rounded-xl"
+                    style={{ ...style, width: style?.height || '34px', minHeight: style?.height || '34px', height: style?.height || '34px', padding: 0 }}
                     title="Disconnect Wallet"
                 >
-                    <Logout01Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" strokeWidth={2} />
+                    <Logout01Icon className="w-3.5 h-3.5 text-current" strokeWidth={2} />
                 </button>
             </div>
         );

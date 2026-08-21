@@ -24,6 +24,8 @@ export async function GET(req: NextRequest) {
     const db = client.db('bitsave');
     const transactionsCollection = db.collection('bizswap_transactions');
 
+    const certsCollection = db.collection('bizswap_certificates');
+
     // 2. Fetch pending/failed_fulfillment transactions older than 3 minutes
     // This gives the webhook enough time to normally process things before the cron steps in
     const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
@@ -42,26 +44,68 @@ export async function GET(req: NextRequest) {
 
     // 3. Reconcile each transaction
     for (const transaction of pendingTransactions) {
-      if (!transaction.reference) continue;
+      const txAge = Date.now() - new Date(transaction.timestamp || transaction.createdAt || 0).getTime();
+      const isStaleExpired = txAge > 24 * 60 * 60 * 1000;
+
+      if (!transaction.reference) {
+        if (isStaleExpired) {
+          await transactionsCollection.updateOne(
+            { _id: transaction._id },
+            { $set: { status: 'expired', updated_at: new Date() } }
+          );
+          reconciledCount++;
+        }
+        continue;
+      }
 
       try {
-        const response = await fetch(`https://api.onswitch.xyz/payment/status?reference=${transaction.reference}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.ONSWITCH_API_KEY}`
-          }
-        });
+        let actualStatus = '';
+        let txData: any = null;
 
-        if (!response.ok) {
-          console.error(`[Cron] Onswitch API returned ${response.status} for reference ${transaction.reference}`);
-          continue;
+        try {
+          const response = await fetch(`https://api.onswitch.xyz/payment/status?reference=${transaction.reference}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.ONSWITCH_API_KEY}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            txData = data.data || data;
+            actualStatus = (txData.status || '').toLowerCase();
+          } else {
+            console.error(`[Cron] Onswitch API returned ${response.status} for reference ${transaction.reference}`);
+          }
+        } catch (apiErr) {
+          console.error(`[Cron] Error fetching Onswitch status:`, apiErr);
         }
 
-        const data = await response.json();
-        // The API returns the transaction inside data (e.g. data: { status: 'completed' })
-        const txData = data.data || data;
-        const actualStatus = (txData.status || '').toLowerCase();
+        // If stale (>24h) and not completed, expire immediately and purge any premature certificates
+        if (isStaleExpired && actualStatus !== 'completed') {
+          await transactionsCollection.updateOne(
+            { _id: transaction._id },
+            { $set: { status: 'expired', updated_at: new Date() } }
+          );
+          if (transaction.reference) {
+            await certsCollection.deleteMany({ reference: transaction.reference });
+          }
+          console.log(`[Cron] ref=${transaction.reference} was pending for >24h. Forcibly expired.`);
+          reconciledCount++;
+
+          const wallet = transaction.metadata?.wallet || transaction.userId;
+          if (wallet) {
+            try {
+              await Promise.all([
+                clearCache(`bizswap:holdings:${wallet}`),
+                clearCache(`bizswap:payments:${wallet}`),
+                clearCache('bizswap:analytics:global'),
+              ]);
+            } catch(e) {}
+          }
+          continue;
+        }
 
         // Use atomic processing lock (same as webhook) to prevent race conditions
         const lockResult = await transactionsCollection.findOneAndUpdate(
@@ -83,9 +127,6 @@ export async function GET(req: NextRequest) {
           console.log(`[Cron] ref=${transaction.reference} — Could not acquire processing lock. Skipping.`);
           continue;
         }
-
-        const txAge = Date.now() - new Date(transaction.timestamp || transaction.createdAt || 0).getTime();
-        const isStaleExpired = txAge > 24 * 60 * 60 * 1000;
 
         if (actualStatus === 'completed') {
           // Verify amount if provided
@@ -141,19 +182,25 @@ export async function GET(req: NextRequest) {
           }
 
         } else if (['failed', 'cancelled', 'expired'].includes(actualStatus)) {
-          // Terminal state -> Update DB
+          // Terminal state -> Update DB & purge any premature certificate
           await transactionsCollection.updateOne(
             { _id: lockResult._id },
             { $set: { status: actualStatus, updated_at: new Date() } }
           );
+          if (transaction.reference) {
+            await certsCollection.deleteMany({ reference: transaction.reference });
+          }
           console.log(`[Cron] ref=${transaction.reference} reconciled to ${actualStatus}.`);
           reconciledCount++;
         } else if (isStaleExpired) {
-          // It's still awaiting_deposit but it's older than 24 hours. Hard expire it.
+          // It's still awaiting_deposit but it's older than 24 hours. Hard expire it & purge premature certificate
           await transactionsCollection.updateOne(
             { _id: lockResult._id },
             { $set: { status: 'expired', updated_at: new Date() } }
           );
+          if (transaction.reference) {
+            await certsCollection.deleteMany({ reference: transaction.reference });
+          }
           console.log(`[Cron] ref=${transaction.reference} was pending for >24h. Forcibly expired.`);
           reconciledCount++;
         } else {

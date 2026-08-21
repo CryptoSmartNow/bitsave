@@ -12,6 +12,8 @@ interface Payment {
   amount: number;
   currency: string;
   txHash: string;
+  status?: string;
+  type?: 'order' | 'payout';
 }
 
 export default function HistoryPage() {
@@ -229,9 +231,22 @@ export default function HistoryPage() {
                       </div>
                       <p className="text-[10px] font-bold text-[#7B8B9A]">{formatDate(h.date)}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black rounded-full uppercase tracking-widest shadow-sm ${h.txHash.includes('Failed') ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' : 'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${h.txHash.includes('Failed') ? 'bg-[#EF4444]' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]' : 'bg-[#059669]'}`}></span>
-                      {h.txHash.includes('Failed') ? 'Failed' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'Awaiting Payment' : 'Completed'}
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black rounded-full uppercase tracking-widest shadow-sm ${
+                      (h.txHash.toLowerCase().includes('expired') || h.status === 'expired') ? 'bg-[#64748B]/10 text-[#94A3B8] border border-[#64748B]/25' :
+                      (h.txHash.includes('Failed') || h.status === 'failed') ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20' :
+                      (h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying')) ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' :
+                      'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        (h.txHash.toLowerCase().includes('expired') || h.status === 'expired') ? 'bg-[#64748B]' :
+                        (h.txHash.includes('Failed') || h.status === 'failed') ? 'bg-[#EF4444]' :
+                        (h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying')) ? 'bg-[#F5A623]' :
+                        'bg-[#059669]'
+                      }`}></span>
+                      {(h.txHash.toLowerCase().includes('expired') || h.status === 'expired') ? 'Expired' :
+                       (h.txHash.includes('Failed') || h.status === 'failed') ? 'Failed' :
+                       (h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying')) ? 'Awaiting Payment' :
+                       'Completed'}
                     </span>
                   </div>
                   
@@ -301,9 +316,22 @@ export default function HistoryPage() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm ${h.txHash.includes('Failed') ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' : 'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${h.txHash.includes('Failed') ? 'bg-[#EF4444]' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'bg-[#F5A623]' : 'bg-[#059669]'}`}></span>
-                          {h.txHash.includes('Failed') ? 'Failed' : h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') ? 'Awaiting Payment' : 'Completed'}
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm ${
+                          (h.txHash.toLowerCase().includes('expired') || h.status === 'expired') ? 'bg-[#64748B]/10 text-[#94A3B8] border border-[#64748B]/25' :
+                          (h.txHash.includes('Failed') || h.status === 'failed') ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20' :
+                          (h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying')) ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20' :
+                          'bg-[#059669]/10 text-[#059669] border border-[#059669]/20'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            (h.txHash.toLowerCase().includes('expired') || h.status === 'expired') ? 'bg-[#64748B]' :
+                            (h.txHash.includes('Failed') || h.status === 'failed') ? 'bg-[#EF4444]' :
+                            (h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying')) ? 'bg-[#F5A623]' :
+                            'bg-[#059669]'
+                          }`}></span>
+                          {(h.txHash.toLowerCase().includes('expired') || h.status === 'expired') ? 'Expired' :
+                           (h.txHash.includes('Failed') || h.status === 'failed') ? 'Failed' :
+                           (h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying')) ? 'Awaiting Payment' :
+                           'Completed'}
                         </span>
                       </td>
                       <td className="px-6 py-5">

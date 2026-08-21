@@ -35,6 +35,8 @@ interface Payment {
   amount: number;
   currency: string;
   txHash: string;
+  status?: string;
+  type?: 'order' | 'payout';
 }
 
 export default function BizSwapStandaloneDashboard() {
@@ -139,23 +141,19 @@ export default function BizSwapStandaloneDashboard() {
   const downloadCertificate = async () => {
     if (!certificateRef.current || !selectedCert) return;
     
+    const toastId = toast.loading('Generating high-res certificate...');
     try {
-      const toastId = toast.loading('Generating certificate image...', { id: 'download-cert' });
-      
-      // Temporarily hide the close and download buttons for the snapshot
-      const closeBtn = document.getElementById('cert-close-btn');
-      const actionBtns = document.getElementById('cert-action-btns');
+      // Hide buttons temporarily for clean render
+      const closeBtn = certificateRef.current.querySelector('.cert-close-btn') as HTMLElement;
+      const actionBtns = certificateRef.current.querySelector('.cert-action-btns') as HTMLElement;
       if (closeBtn) closeBtn.style.display = 'none';
       if (actionBtns) actionBtns.style.display = 'none';
 
-      // Use html-to-image to take a high quality snapshot
       const htmlToImage = await import('html-to-image');
       const dataUrl = await htmlToImage.toPng(certificateRef.current, {
-        backgroundColor: '#0F1825',
-        pixelRatio: 2, // High resolution
-        style: {
-          margin: '0',
-        }
+        cacheBust: true,
+        quality: 1.0,
+        pixelRatio: 3, // 3x for crystal clear retina quality
       });
       
       // Restore buttons
@@ -170,19 +168,19 @@ export default function BizSwapStandaloneDashboard() {
       toast.success('Certificate downloaded successfully!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Failed to download certificate', { id: 'download-cert' });
+      toast.error('Failed to download certificate', { id: toastId });
     }
   };
 
   const totalValue = holdings.reduce((sum, h) => sum + h.investmentAmount, 0);
 
-  // Compute real figures based on holdings and payments
+  // Compute real figures based strictly on actual yield payouts received
   const totalEarned = payments
-    .filter(p => p.txHash && !p.txHash.includes('Pending') && !p.txHash.includes('Failed') && !p.txHash.includes('Processing') && !p.txHash.includes('Retrying'))
+    .filter(p => p.type === 'payout' && p.txHash && !p.txHash.includes('Pending') && !p.txHash.includes('Failed'))
     .reduce((sum, p) => sum + p.amount, 0);
 
   const pendingOrdersValue = payments
-    .filter(p => p.txHash && (p.txHash.includes('Pending') || p.txHash.includes('Processing') || p.txHash.includes('Retrying')))
+    .filter(p => p.type === 'order' && (p.status === 'pending' || p.status === 'processing' || p.status === 'awaiting_deposit' || p.status === 'failed_fulfillment'))
     .reduce((sum, p) => sum + p.amount, 0);
   
   const pendingYield = Math.max(0, holdings.reduce((sum, h) => {

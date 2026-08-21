@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 import { CertificateCard } from '@/components/CertificateCard';
+import { getExplorerUrl } from '@/lib/bizswap-contracts';
 
 interface Holding {
   _id: string;
@@ -17,6 +18,10 @@ interface Holding {
   serialNumber: string;
   purchaseDate: string;
   apr: string;
+  chain?: string | null;
+  chainId?: number | null;
+  explorerUrl?: string | null;
+  transactionSignature?: string | null;
 }
 
 export default function CertificatesPage() {
@@ -249,7 +254,7 @@ export default function CertificatesPage() {
                 Download Certificate
               </button>
               <a 
-                href="#"
+                href={selectedCert.explorerUrl || getExplorerUrl(selectedCert.chain, selectedCert.transactionSignature || selectedCert.mintAddress, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto text-sm font-bold text-[#F9F9FB] bg-[#0A0F17] hover:bg-[#1C2538] transition-colors border border-[#2C3E5D] px-8 py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
