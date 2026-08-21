@@ -46,6 +46,7 @@ export function UnifiedFiatModal({
   const [bankDetails, setBankDetails] = useState<any>(null);
   const [onswitchReference, setOnswitchReference] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Reset state when opened
   useEffect(() => {
@@ -103,8 +104,6 @@ export function UnifiedFiatModal({
       setIsProcessing(false);
     }
   };
-
-  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, field?: string) => {
     navigator.clipboard.writeText(text);
