@@ -104,8 +104,8 @@ function ShufflingCards() {
                 <Activity01Icon style={{ width: 20, height: 20, color: card.accentColor }} />
               </div>
               <div style={{ textAlign: "right" }}>
-                <p style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 20, color: "#F9F9FB", lineHeight: 1 }}>{card.title}</p>
-                <p style={{ fontSize: 11, fontWeight: 700, color: card.accentColor + "BB", marginTop: 4, letterSpacing: "0.04em" }}>{card.risk}</p>
+                <p className="font-instrument text-2xl font-normal text-[#F9F9FB] leading-tight">{card.title}</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: card.accentColor + "BB", marginTop: 2, letterSpacing: "0.04em" }}>{card.risk}</p>
               </div>
             </div>
 
@@ -119,7 +119,7 @@ function ShufflingCards() {
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
               <div>
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: card.accentColor + "88", marginBottom: 4 }}>Expected Return</p>
-                <p style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 34, color: card.accentColor, lineHeight: 1 }}>{card.apy}</p>
+                <p className="font-instrument text-4xl font-normal leading-none" style={{ color: card.accentColor }}>{card.apy}</p>
               </div>
               <p style={{ fontSize: 10, color: "#F9F9FB", opacity: 0.2, fontWeight: 600, letterSpacing: "0.1em", marginBottom: 2 }}>BIZSWAP</p>
             </div>
@@ -272,15 +272,14 @@ export default function BizSwapLandingPage() {
                 variants={staggerContainer}
                 className="flex flex-col items-start"
               >
-                {/* Headline — Plus Jakarta Sans */}
+                {/* Headline */}
                 <motion.h1
                   variants={fadeUp}
-                  className="text-[56px] md:text-[72px] font-extrabold tracking-tight leading-[1.04] text-[#F9F9FB] mb-6"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-[52px] md:text-[72px] lg:text-[80px] font-black tracking-tight leading-[1.02] text-[#F9F9FB] mb-6"
                 >
                   Your RWA
                   <br />
-                  <span className="text-[#81D7B4]">Yield Aggregator</span>
+                  <span className="font-instrument italic font-normal text-[#81D7B4]">Yield Aggregator</span>
                 </motion.h1>
 
                 {/* Sub-copy */}
@@ -297,7 +296,6 @@ export default function BizSwapLandingPage() {
                   <button
                     onClick={login}
                     className="px-8 py-3.5 bg-[#81D7B4] text-[#0F1825] font-black rounded-xl text-base transition-all hover:opacity-90 hover:scale-105 hover:shadow-[0_8px_24px_rgba(129,215,180,0.25)]"
-                    style={{ fontFamily: "var(--font-display)" }}
                   >
                     Login
                   </button>
@@ -336,10 +334,9 @@ export default function BizSwapLandingPage() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center max-w-5xl mx-auto">
               <motion.h2
                 variants={fadeUp}
-                className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-[1.06] text-[#F9F9FB] tracking-tight mb-8"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.06] text-[#F9F9FB] tracking-tight mb-8"
               >
-                Earn 2x more yield from<br className="hidden md:block" /> <span className="text-[#81D7B4]">Emerging Markets&apos;</span> Money Market.
+                Earn 2x more yield from<br className="hidden md:block" /> <span className="font-instrument italic font-normal text-[#81D7B4]">Emerging Markets&apos;</span> Money Market.
               </motion.h2>
               <motion.p variants={fadeUp} className="text-[#7B8B9A] text-xl leading-relaxed max-w-3xl mx-auto">
                 BizSwap provides seamless access to high-quality Real World Assets (RWAs) with transparent, predictable yield schedules directly to your wallet.
@@ -354,7 +351,7 @@ export default function BizSwapLandingPage() {
                 { value: "USDC", label: "Stablecoin Payouts" },
               ].map(({ value, label }) => (
                 <div key={label} className="text-center">
-                  <p className="text-2xl md:text-3xl font-extrabold text-[#F9F9FB] leading-none mb-1" style={{ fontFamily: "var(--font-display)" }}>{value}</p>
+                  <p className="text-3xl md:text-5xl font-normal text-[#F9F9FB] font-instrument leading-none mb-1">{value}</p>
                   <p className="text-xs text-[#7B8B9A] font-medium uppercase tracking-wider">{label}</p>
                 </div>
               ))}
@@ -379,8 +376,8 @@ export default function BizSwapLandingPage() {
                   <div className="h-px w-8 bg-[#81D7B4]" />
                   <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">Our Instruments</span>
                 </motion.div>
-                <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>
-                  What are<br /><span className="text-[#81D7B4]">BizShares?</span>
+                <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-black leading-[1.06] text-[#F9F9FB]">
+                  What are<br /><span className="font-instrument italic font-normal text-[#81D7B4]">BizShares?</span>
                 </motion.h2>
               </motion.div>
               <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="lg:col-span-7 flex items-end">
@@ -419,7 +416,7 @@ export default function BizSwapLandingPage() {
 
                   {/* Name + risk */}
                   <div className="col-span-12 md:col-span-3">
-                    <h3 className="text-2xl font-extrabold text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>{item.title}</h3>
+                    <h3 className="text-3xl font-normal text-[#F9F9FB] font-instrument">{item.title}</h3>
                     <span className="text-xs font-bold tracking-widest uppercase mt-1 inline-block" style={{ color: item.riskColor }}>{item.risk}</span>
                   </div>
 
@@ -435,7 +432,7 @@ export default function BizSwapLandingPage() {
                     ].map(({ label, value, accent }) => (
                       <div key={label}>
                         <p className="text-[#7B8B9A] text-[10px] font-bold uppercase tracking-widest mb-1">{label}</p>
-                        <p className={`font-extrabold text-sm ${accent ? "text-[#81D7B4]" : "text-[#F9F9FB]"}`} style={{ fontFamily: "var(--font-display)" }}>{value}</p>
+                        <p className={`text-base font-normal ${accent ? "text-[#81D7B4] font-instrument" : "text-[#F9F9FB] font-instrument"}`}>{value}</p>
                       </div>
                     ))}
                   </div>
@@ -466,8 +463,8 @@ export default function BizSwapLandingPage() {
                   <div className="h-px w-8 bg-[#81D7B4]" />
                   <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">Simple Process</span>
                 </motion.div>
-                <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB] mb-6" style={{ fontFamily: "var(--font-display)" }}>
-                  How it<br /><span className="text-[#81D7B4]">Works</span>
+                <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-black leading-[1.06] text-[#F9F9FB] mb-6">
+                  How it<br /><span className="font-instrument italic font-normal text-[#81D7B4]">Works</span>
                 </motion.h2>
                 <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed">
                   Three simple steps to start earning real-world yield.
@@ -490,12 +487,12 @@ export default function BizSwapLandingPage() {
                     className="flex gap-10 py-10 border-b border-[#1E2F45] last:border-b-0 group"
                   >
                     <div className="flex-shrink-0 pt-1 w-16">
-                      <span className="text-5xl font-black leading-none text-[#1E2F45] group-hover:text-[#81D7B4]/25 transition-colors select-none" style={{ fontFamily: "var(--font-display)" }}>
+                      <span className="text-6xl font-normal leading-none text-[#1E2F45] group-hover:text-[#81D7B4]/30 font-instrument transition-colors select-none">
                         {item.step}
                       </span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-3xl font-extrabold text-[#F9F9FB] mb-3" style={{ fontFamily: "var(--font-display)" }}>{item.title}</h3>
+                      <h3 className="text-3xl font-normal text-[#F9F9FB] font-instrument mb-3">{item.title}</h3>
                       <p className="text-[#7B8B9A] text-base leading-relaxed max-w-lg">{item.desc}</p>
                     </div>
                   </motion.div>
@@ -525,14 +522,14 @@ export default function BizSwapLandingPage() {
                 <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">Get Started</span>
                 <div className="h-px w-8 bg-[#81D7B4]" />
               </motion.div>
-              <motion.h2 variants={fadeUp} className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-[#F9F9FB] leading-[1.05]" style={{ fontFamily: "var(--font-display)" }}>
-                Your money<br />should be working.
+              <motion.h2 variants={fadeUp} className="text-5xl md:text-7xl font-black tracking-tight mb-6 text-[#F9F9FB] leading-[1.05]">
+                Your money<br /><span className="font-instrument italic font-normal text-[#81D7B4]">should be working.</span>
               </motion.h2>
               <motion.p variants={fadeUp} className="text-[#7B8B9A] text-xl mb-12 leading-relaxed">
                 Pick an instrument. Swap in minutes.<br />Start earning real-world yield today.
               </motion.p>
               <motion.div variants={fadeUp}>
-                <Link href="/bizswap/buy" className="inline-flex items-center gap-3 px-12 py-5 bg-[#81D7B4] hover:opacity-90 hover:scale-105 text-[#0F1825] font-black rounded-2xl text-xl transition-all shadow-[0_10px_40px_rgba(129,215,180,0.2)] hover:shadow-[0_15px_60px_rgba(129,215,180,0.35)]" style={{ fontFamily: "var(--font-display)" }}>
+                <Link href="/bizswap/buy" className="inline-flex items-center gap-3 px-12 py-5 bg-[#81D7B4] hover:opacity-90 hover:scale-105 text-[#0F1825] font-black rounded-2xl text-xl transition-all shadow-[0_10px_40px_rgba(129,215,180,0.2)] hover:shadow-[0_15px_60px_rgba(129,215,180,0.35)]">
                   Access Swap Market
                 </Link>
               </motion.div>
@@ -564,10 +561,9 @@ export default function BizSwapLandingPage() {
 
                 <motion.h2
                   variants={fadeUp}
-                  className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB] mb-6"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-5xl md:text-6xl font-black leading-[1.06] text-[#F9F9FB] mb-6"
                 >
-                  The art of<br /><span className="text-[#81D7B4]">Savviness.</span>
+                  The art of<br /><span className="font-instrument italic font-normal text-[#81D7B4]">Savviness.</span>
                 </motion.h2>
 
                 <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed mb-12 max-w-md">

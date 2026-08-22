@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Chainrails, crapi } from '@chainrails/sdk';
 
-const DEFAULT_API_KEY = process.env.CHAINRAILS_API_KEY;
+const LIVE_API_KEY = process.env.CHAINRAILS_API_KEY;
 const BIZSWAP_API_KEY = process.env.BIZSWAP_CHAINRAILS_API_KEY;
 
 export async function GET(request: Request) {
@@ -9,16 +9,18 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const source = searchParams.get('source');
 
-        const CHAINRAILS_API_KEY = source === 'bizswap' ? BIZSWAP_API_KEY : DEFAULT_API_KEY;
+        // Always prefer the live CHAINRAILS_API_KEY, falling back to source-specific key
+        const CHAINRAILS_API_KEY = LIVE_API_KEY || (source === 'bizswap' ? BIZSWAP_API_KEY : DEFAULT_API_KEY);
 
         if (!CHAINRAILS_API_KEY) {
-            return NextResponse.json({ error: 'ChainRails is not configured for this source' }, { status: 503 });
+            return NextResponse.json({ error: 'ChainRails is not configured' }, { status: 503 });
         }
 
         const recipient = searchParams.get('recipient') || '';
         let amount = searchParams.get('amount') || '0';
-        const destinationChain = searchParams.get('chain') || 'BASE';
-        const token = searchParams.get('token') || 'USDC';
+        const rawChain = (searchParams.get('chain') || 'BASE').toUpperCase();
+        const destinationChain = rawChain === 'SOLANA' ? 'SOLANA' : 'BASE';
+        const token = rawChain === 'SOLANA' ? 'USDC' : (searchParams.get('token') || 'USDC');
         const mode = searchParams.get('mode') || 'buy';
 
 

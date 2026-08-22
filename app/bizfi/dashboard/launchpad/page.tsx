@@ -4,6 +4,7 @@ import { Tick01Icon, Activity01Icon, Dollar01Icon, Calendar01Icon, BarChartIcon,
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import "../../bizfi-colors.css";
 import BusinessDetailsModal from "./BusinessDetailsModal";
 import KYCStatus from "./components/KYCStatus";
@@ -13,7 +14,9 @@ import RiskAssessment from "./components/RiskAssessment";
 import EmptyState from "@/app/components/EmptyState";
 
 export default function LaunchPadPage() {
-    const { address } = useAccount();
+    const { address: wagmiAddress } = useAccount();
+    const { user } = usePrivy();
+    const address = user?.id || user?.email?.address || wagmiAddress;
     const [businesses, setBusinesses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeProject, setActiveProject] = useState<any>(null);

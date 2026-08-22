@@ -1,52 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
+import { handleMint } from '@/lib/handleMint';
+import { clearCache } from '@/lib/redis';
 
 export async function POST(req: NextRequest) {
+  let logReference = 'unknown';
+
   try {
     const rawBody = await req.text();
     const signature = req.headers.get('x-switch-signature');
 
-    // Signature Verification
-    if (signature) {
-      let ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
-      if (!ONSWITCH_API_KEY) {
-        const fs = require('fs');
-        const path = require('path');
-        try {
-          const envFile = fs.readFileSync(path.resolve(process.cwd(), '.env'), 'utf8');
-          const match = envFile.match(/ONSWITCH_API_KEY=(.*)/);
-          if (match && match[1]) ONSWITCH_API_KEY = match[1].trim();
-        } catch (e) {}
-      }
+    // ── Signature Verification ──────────────────────────────────────────
+    const ONSWITCH_API_KEY = process.env.ONSWITCH_API_KEY;
 
+    if (signature) {
       if (ONSWITCH_API_KEY) {
         const expectedSignature = crypto
           .createHmac('sha256', ONSWITCH_API_KEY)
           .update(rawBody)
           .digest('hex');
 
-        // Note: using crypto.timingSafeEqual is best practice but standard string comparison works
         if (expectedSignature !== signature.trim()) {
-          console.error('Invalid Onswitch webhook signature');
+          console.error('[Webhook] Invalid Onswitch webhook signature');
           return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
         }
       }
     } else {
-      console.warn('Missing x-switch-signature header on incoming webhook');
+      // In production, reject unsigned requests for security
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[Webhook] Missing x-switch-signature header — rejecting in production');
+        return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+      }
+      console.warn('[Webhook] Missing x-switch-signature header (allowed in dev mode)');
     }
 
     const data = JSON.parse(rawBody);
 
-    // Verify webhook payload
-    if (!data || !data.data || !data.data.reference) {
-      return NextResponse.json({ error: 'Invalid webhook payload' }, { status: 400 });
+    // ── Log raw payload for debugging ───────────────────────────────────
+    console.log(`[Webhook] Raw payload:`, JSON.stringify(data, null, 2));
+
+    // ── Validate & extract payload ──────────────────────────────────────
+    // Onswitch may send payloads in different structures depending on event type:
+    //   - { data: { reference, status, ... } }          — standard
+    //   - { reference, status, data: { ... } }          — alternative
+    //   - { event: "...", data: { reference, ... } }    — event-based
+    const transactionData = data.data || data;
+    const reference = transactionData.reference || data.reference;
+
+    if (!reference) {
+      console.warn('[Webhook] No reference found in payload — ignoring. Keys:', Object.keys(data));
+      // Return 200 so Onswitch doesn't keep retrying non-transactional webhooks (e.g. health checks)
+      return NextResponse.json({ success: true, message: 'No reference — ignored' });
     }
 
-    const transactionData = data.data;
+    logReference = reference;
+    const incomingStatus = (transactionData.status || data.status || '').toLowerCase();
 
-    const incomingStatus = (transactionData.status || '').toLowerCase();
+    console.log(`[Webhook] Received status="${incomingStatus}" for ref=${logReference}`);
 
     const client = await clientPromise;
     if (!client) {
@@ -54,129 +65,217 @@ export async function POST(req: NextRequest) {
     }
     const db = client.db('bitsave');
 
-    const positionsCollection = db.collection('wc26_positions');
-    const poolCollection = db.collection('wc26_pool');
-
-    // Find the pending transaction in either wc26 or bizswap
+    // ── Step 1: Find the transaction by reference ONLY (not by status) ──
+    // This enables idempotent retry handling — we can find already-processed
+    // transactions and short-circuit instead of silently swallowing retries.
     let project = 'wc26';
     let transactionsCollection = db.collection('wc26_transactions');
     let transaction = await transactionsCollection.findOne({
-      reference: transactionData.reference,
-      status: 'pending'
+      reference,
     });
 
     if (!transaction) {
       project = 'bizswap';
       transactionsCollection = db.collection('bizswap_transactions');
       transaction = await transactionsCollection.findOne({
-        reference: transactionData.reference,
-        status: 'pending'
+        reference,
       });
     }
 
     if (!transaction) {
-      console.warn(`Transaction reference ${transactionData.reference} not found or already processed.`);
+      console.warn(`[Webhook] ref=${logReference} — Transaction not found in any collection. Ignoring.`);
       return NextResponse.json({ success: true });
     }
 
-    if (incomingStatus === 'completed') {
-      // 1. Verify the amount paid matches the expected amount
-      // Webhook payload might contain amount in data.amount or data.deposit.amount
-      const webhookAmount = Number(transactionData.amount) || Number(transactionData.deposit?.amount);
-      const expectedAmount = Number(transaction.fiatAmount);
+    // ── Step 2: Idempotency guard — already completed? ──────────────────
+    if (transaction.status === 'completed') {
+      console.log(`[Webhook] ref=${logReference} — Already completed. Idempotent skip.`);
+      return NextResponse.json({ success: true });
+    }
 
-      // We allow a small tolerance (e.g., 0.5 fiat units) because Onswitch might quote an amount 
-      // with 4 decimal places (15000.0929) but a user's bank might only allow transferring 2 decimal places (15000.09).
+    // Already in a terminal failure state? Don't re-process.
+    if (['failed_underpaid', 'failed', 'cancelled', 'expired'].includes(transaction.status)) {
+      console.log(`[Webhook] ref=${logReference} — Already in terminal state "${transaction.status}". Skipping.`);
+      return NextResponse.json({ success: true });
+    }
+
+    // Currently being processed by another webhook delivery?
+    if (transaction.status === 'processing') {
+      console.log(`[Webhook] ref=${logReference} — Currently being processed by another request. Skipping.`);
+      return NextResponse.json({ success: true });
+    }
+
+    // ── Handle completed payments ───────────────────────────────────────
+    if (incomingStatus === 'completed') {
+
+      // ── Step 3: Atomic processing lock ────────────────────────────────
+      // Use findOneAndUpdate with status:'pending' (or 'failed_fulfillment' for retries)
+      // as a filter. Only ONE concurrent request can acquire this lock.
+      const lockResult = await transactionsCollection.findOneAndUpdate(
+        {
+          _id: transaction._id,
+          status: { $in: ['pending', 'failed_fulfillment'] },
+        },
+        {
+          $set: {
+            status: 'processing',
+            processing_started_at: new Date(),
+            updated_at: new Date(),
+          },
+        },
+        { returnDocument: 'after' }
+      );
+
+      if (!lockResult) {
+        // Another request already acquired the lock or transaction moved past pending
+        console.log(`[Webhook] ref=${logReference} — Could not acquire processing lock. Another handler is processing this.`);
+        return NextResponse.json({ success: true });
+      }
+
+      const lockedTransaction = lockResult;
+
+      // ── Step 4: Verify amount ─────────────────────────────────────────
+      const webhookAmount = Number(transactionData.amount) || Number(transactionData.deposit?.amount);
+      const expectedAmount = Number(lockedTransaction.fiatAmount);
+
       const TOLERANCE = 0.5;
       if (webhookAmount && webhookAmount < (expectedAmount - TOLERANCE)) {
-        console.error(`Amount mismatch for ${transactionData.reference}: Expected ${expectedAmount}, Got ${webhookAmount}`);
-        
-        // Mark transaction as failed due to underpayment
+        console.error(`[Webhook] ref=${logReference} — Amount mismatch: Expected ${expectedAmount}, Got ${webhookAmount}`);
+
         await transactionsCollection.updateOne(
-          { _id: transaction._id },
-          { $set: { status: 'failed_underpaid', amount_received: webhookAmount, updated_at: new Date() } }
+          { _id: lockedTransaction._id },
+          {
+            $set: {
+              status: 'failed_underpaid',
+              amount_received: webhookAmount,
+              updated_at: new Date(),
+            },
+          }
         );
-        
-        // Still return 200 so the provider doesn't keep retrying
+
         return NextResponse.json({ success: true, message: 'Underpaid transaction recorded' });
       }
 
-      // 2. Perform fulfillment BEFORE marking as completed
-      if (project === 'wc26') {
-        // Calculate investment vs fees based on a fixed $10 share price
-        const pureInvestment = transaction.shares * 10;
-        const feePaid = transaction.usdcAmount - pureInvestment;
+      // ── Step 5: Perform fulfillment ───────────────────────────────────
+      try {
+        if (project === 'wc26') {
+          const positionsCollection = db.collection('wc26_positions');
+          const poolCollection = db.collection('wc26_pool');
 
-        // Update the user's position
-        await positionsCollection.updateOne(
-          { user_id: transaction.userId },
-          {
-            $inc: { 
-              shares_held: transaction.shares, 
-              total_invested_usd: pureInvestment,
-              total_fees_paid: feePaid > 0 ? feePaid : 0
-            },
-            $set: { lastUpdated: new Date() },
-            $setOnInsert: { createdAt: new Date() }
-          },
-          { upsert: true }
-        );
+          const pureInvestment = lockedTransaction.shares * 10;
+          const feePaid = lockedTransaction.usdcAmount - pureInvestment;
 
-        // Update the pool stats
-        await poolCollection.updateOne(
-          { _id: 'main_pool' as any },
-          {
-            $inc: { 
-              current_supply: transaction.shares, 
-              current_tvl_usd: pureInvestment 
+          await positionsCollection.updateOne(
+            { user_id: lockedTransaction.userId },
+            {
+              $inc: {
+                shares_held: lockedTransaction.shares,
+                total_invested_usd: pureInvestment,
+                total_fees_paid: feePaid > 0 ? feePaid : 0,
+              },
+              $set: { lastUpdated: new Date() },
+              $setOnInsert: { createdAt: new Date() },
             },
-            $set: { last_updated: new Date() },
-            $setOnInsert: { created_at: new Date() }
-          },
-          { upsert: true }
-        );
-        
-        console.log(`Successfully credited user ${transaction.userId} with ${transaction.shares} shares from Onswitch webhook.`);
-      } else if (project === 'bizswap') {
-        if (transaction.metadata) {
-          const baseUrl = req.nextUrl.origin || 'https://bitsave.io';
-          const mintResponse = await fetch(`${baseUrl}/api/bizswap/mint`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(transaction.metadata)
-          });
-          if (!mintResponse.ok) {
-            const errorText = await mintResponse.text();
-            console.error('Failed to mint bizswap certificate from webhook:', errorText);
-            // Throw error to trigger a 500 response and force Onswitch to retry later
-            throw new Error(`Minting failed: ${errorText}`);
-          } else {
-            console.log(`Successfully minted bizswap certificate for ${transaction.userId} from webhook.`);
+            { upsert: true }
+          );
+
+          await poolCollection.updateOne(
+            { _id: 'main_pool' as any },
+            {
+              $inc: {
+                current_supply: lockedTransaction.shares,
+                current_tvl_usd: pureInvestment,
+              },
+              $set: { last_updated: new Date() },
+              $setOnInsert: { created_at: new Date() },
+            },
+            { upsert: true }
+          );
+
+          console.log(`[Webhook] ref=${logReference} — Credited user ${lockedTransaction.userId} with ${lockedTransaction.shares} WC26 shares.`);
+
+        } else if (project === 'bizswap') {
+          if (!lockedTransaction.metadata) {
+            throw new Error('No metadata found for bizswap transaction — cannot mint');
           }
-        } else {
-          console.error(`No metadata found for bizswap transaction ${transaction.reference}`);
-          throw new Error('No metadata found for bizswap transaction');
+
+          // Webhook might be delayed. Use the actual transaction creation time.
+          await handleMint({
+            ...lockedTransaction.metadata,
+            originalPurchaseDate: lockedTransaction.createdAt || lockedTransaction.timestamp
+          });
+          console.log(`[Webhook] ref=${logReference} — Minted BizSwap certificate for ${lockedTransaction.userId}.`);
         }
+
+      } catch (fulfillmentError: any) {
+        // ── Step 5b: Fulfillment failed — mark as failed_fulfillment ───
+        // This is the KEY fix: instead of leaving the transaction as 'pending'
+        // (which was causing the "stuck pending forever" bug), we move it to
+        // a distinct 'failed_fulfillment' state with error details.
+        // The processing lock filter above allows retries to re-attempt from this state.
+        console.error(`[Webhook] ref=${logReference} — Fulfillment failed:`, fulfillmentError.message);
+
+        await transactionsCollection.updateOne(
+          { _id: lockedTransaction._id },
+          {
+            $set: {
+              status: 'failed_fulfillment',
+              fulfillment_error: fulfillmentError.message,
+              fulfillment_attempts: (lockedTransaction.fulfillment_attempts || 0) + 1,
+              updated_at: new Date(),
+            },
+          }
+        );
+
+        // Return 500 so Onswitch retries — and our lock filter allows
+        // 'failed_fulfillment' to be re-processed on the next attempt.
+        return NextResponse.json({ error: 'Fulfillment failed' }, { status: 500 });
       }
 
-      // 3. Complete the transaction in DB ONLY after successful fulfillment
+      // ── Step 6: Mark as completed ─────────────────────────────────────
       await transactionsCollection.updateOne(
-        { _id: transaction._id },
-        { $set: { status: 'completed', updated_at: new Date() } }
+        { _id: lockedTransaction._id },
+        {
+          $set: {
+            status: 'completed',
+            completed_at: new Date(),
+            updated_at: new Date(),
+          },
+        }
       );
+
+      console.log(`[Webhook] ref=${logReference} — Transaction completed successfully.`);
+
+      // ── Step 7: Invalidate Redis caches ───────────────────────────────
+      // This ensures the user's dashboard updates immediately instead of
+      // waiting for the 60-120s cache TTL to expire.
+      try {
+        const wallet = lockedTransaction.metadata?.wallet || lockedTransaction.userId;
+        if (wallet) {
+          await Promise.all([
+            clearCache(`bizswap:holdings:${wallet}`),
+            clearCache(`bizswap:payments:${wallet}`),
+            clearCache('bizswap:analytics:global'),
+          ]);
+        }
+      } catch (cacheError) {
+        // Non-critical — log but don't fail the webhook
+        console.warn(`[Webhook] ref=${logReference} — Cache invalidation failed:`, cacheError);
+      }
+
     } else {
-      // 4. Update the database with the real non-completed status (e.g. 'failed', 'cancelled', 'expired')
+      // ── Handle non-completed statuses (failed, cancelled, expired) ────
       await transactionsCollection.updateOne(
         { _id: transaction._id },
         { $set: { status: incomingStatus, updated_at: new Date() } }
       );
-      console.log(`Transaction ${transactionData.reference} status updated to ${incomingStatus}`);
+      console.log(`[Webhook] ref=${logReference} — Status updated to "${incomingStatus}".`);
     }
 
-    // Always return 200 OK to the webhook provider so they don't retry unnecessarily
+    // Always return 200 OK so the webhook provider doesn't retry unnecessarily
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error processing Onswitch webhook:', error);
+    console.error(`[Webhook] ref=${logReference} — Unhandled error:`, error);
     // Return 500 so Onswitch retries if it's a real server error
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

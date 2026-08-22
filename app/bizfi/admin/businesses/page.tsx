@@ -41,7 +41,9 @@ export default function BizFiBusinessesPage() {
       result = result.filter(b =>
         b.businessName.toLowerCase().includes(lowerTerm) ||
         b.owner.toLowerCase().includes(lowerTerm) ||
-        (b.metadata?.ownerName && b.metadata.ownerName.toLowerCase().includes(lowerTerm))
+        (b.metadata?.ownerName && b.metadata.ownerName.toLowerCase().includes(lowerTerm)) ||
+        (b.metadata?.email && b.metadata.email.toLowerCase().includes(lowerTerm)) ||
+        (b.metadata?.businessEmail && b.metadata.businessEmail.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -179,7 +181,7 @@ export default function BizFiBusinessesPage() {
             <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7B8B9A]" />
             <input
               type="text"
-              placeholder="Search by business name, owner name, or ID..."
+              placeholder="Search by business, owner, email, or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#1A2538]/30 backdrop-blur-md border border-[#7B8B9A]/10 rounded-xl pl-12 pr-4 py-3.5 text-sm text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all placeholder:text-[#7B8B9A]/50 shadow-sm"

@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Calendar01Icon, Activity01Icon, Tick01Icon, Dollar01Icon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 
 interface Holding {
   _id: string;
+  wallet?: string;
   instrument: string;
   investmentAmount: number;
   nextPayment: string;
@@ -22,17 +23,16 @@ interface CalendarEvent {
 }
 
 export default function CalendarPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
-
-  const connected = ready && (authenticated || isSolanaConnected);
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
+  const connected = authenticated || isWagmiConnected;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
   
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
-    : (privySolanaWallet?.address || user?.wallet?.address);
+  const walletAddress = isWagmiConnected 
+    ? wagmiAddress 
+    : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +82,14 @@ export default function CalendarPage() {
       default: return type === 'bg' ? 'bg-gray-800' : type === 'text' ? 'text-gray-400' : 'border-gray-700';
     }
   };
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (

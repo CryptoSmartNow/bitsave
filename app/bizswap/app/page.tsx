@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon, Clock01Icon, GiftIcon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
-import { useBizSwapProgram } from '@/hooks/useBizSwapProgram';
 import { CertificateCard } from '@/components/CertificateCard';
 import { BizSwapAuthButton } from '@/components/BizSwapAuthButton';
 import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
@@ -14,6 +13,7 @@ import { useWindowSize } from 'react-use';
 
 interface Holding {
   _id: string;
+  wallet?: string;
   instrument: string;
   investmentAmount: number;
   entitlement: string;
@@ -24,6 +24,8 @@ interface Holding {
   apr: string;
   payoutFrequency: string;
   purchaseDate: string;
+  reference?: string;
+  createdAt?: string;
 }
 
 interface Payment {
@@ -33,21 +35,21 @@ interface Payment {
   amount: number;
   currency: string;
   txHash: string;
+  status?: string;
+  type?: 'order' | 'payout';
 }
 
 export default function BizSwapStandaloneDashboard() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
+    const connected = authenticated || isWagmiConnected;
   
-  const connected = ready && (authenticated || isSolanaConnected);
-  
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
-  
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
-    : (privySolanaWallet?.address || user?.wallet?.address || user?.id);
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
+
+  const displayEvmWallet = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address);
+  const walletAddress = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -55,7 +57,6 @@ export default function BizSwapStandaloneDashboard() {
   const [selectedCert, setSelectedCert] = useState<Holding | null>(null);
   const certificateRef = useRef<HTMLDivElement>(null);
 
-  const program = useBizSwapProgram();
   const { width, height } = useWindowSize();
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -140,23 +141,19 @@ export default function BizSwapStandaloneDashboard() {
   const downloadCertificate = async () => {
     if (!certificateRef.current || !selectedCert) return;
     
+    const toastId = toast.loading('Generating high-res certificate...');
     try {
-      const toastId = toast.loading('Generating certificate image...', { id: 'download-cert' });
-      
-      // Temporarily hide the close and download buttons for the snapshot
-      const closeBtn = document.getElementById('cert-close-btn');
-      const actionBtns = document.getElementById('cert-action-btns');
+      // Hide buttons temporarily for clean render
+      const closeBtn = certificateRef.current.querySelector('.cert-close-btn') as HTMLElement;
+      const actionBtns = certificateRef.current.querySelector('.cert-action-btns') as HTMLElement;
       if (closeBtn) closeBtn.style.display = 'none';
       if (actionBtns) actionBtns.style.display = 'none';
 
-      // Use html-to-image to take a high quality snapshot
       const htmlToImage = await import('html-to-image');
       const dataUrl = await htmlToImage.toPng(certificateRef.current, {
-        backgroundColor: '#0F1825',
-        pixelRatio: 2, // High resolution
-        style: {
-          margin: '0',
-        }
+        cacheBust: true,
+        quality: 1.0,
+        pixelRatio: 3, // 3x for crystal clear retina quality
       });
       
       // Restore buttons
@@ -171,19 +168,19 @@ export default function BizSwapStandaloneDashboard() {
       toast.success('Certificate downloaded successfully!', { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error('Failed to download certificate', { id: 'download-cert' });
+      toast.error('Failed to download certificate', { id: toastId });
     }
   };
 
   const totalValue = holdings.reduce((sum, h) => sum + h.investmentAmount, 0);
 
-  // Compute real figures based on holdings and payments
+  // Compute real figures based strictly on actual yield payouts received
   const totalEarned = payments
-    .filter(p => !p.txHash.includes('Pending'))
+    .filter(p => p.type === 'payout' && p.txHash && !p.txHash.includes('Pending') && !p.txHash.includes('Failed'))
     .reduce((sum, p) => sum + p.amount, 0);
 
   const pendingOrdersValue = payments
-    .filter(p => p.txHash.includes('Pending'))
+    .filter(p => p.type === 'order' && (p.status === 'pending' || p.status === 'processing' || p.status === 'awaiting_deposit' || p.status === 'failed_fulfillment'))
     .reduce((sum, p) => sum + p.amount, 0);
   
   const pendingYield = Math.max(0, holdings.reduce((sum, h) => {
@@ -267,6 +264,14 @@ export default function BizSwapStandaloneDashboard() {
       default: return type === 'bg' ? 'bg-gray-800' : type === 'border' ? 'border-gray-700' : type === 'text' ? 'text-gray-400' : 'from-gray-800/5';
     }
   };
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (
@@ -411,9 +416,11 @@ export default function BizSwapStandaloneDashboard() {
                       <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Units Held</th>
                       <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Total Invested</th>
                       <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Entitlement / Yield</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Date</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Ref</th>
                       <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Status</th>
                       <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Next Payment</th>
-                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Est. Next Payment</th>
+                      <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]">Est. Amount</th>
                       <th className="px-5 py-3 text-xs font-bold text-[#4B5A75]"></th>
                     </tr>
                   </thead>
@@ -441,16 +448,22 @@ export default function BizSwapStandaloneDashboard() {
                           <p className="font-bold text-[#F9F9FB]">{h.apr}</p>
                           <p className="text-xs text-[#7B8B9A]">{h.payoutFrequency}</p>
                         </td>
+                        <td className="px-5 py-4 font-medium text-[#F9F9FB] text-xs">
+                          {formatDate(h.purchaseDate || h.createdAt || '')}
+                        </td>
+                        <td className="px-5 py-4 font-medium text-[#7B8B9A] text-xs">
+                          {h.reference ? `${h.reference.slice(0,4)}...${h.reference.slice(-4)}` : 'N/A'}
+                        </td>
                         <td className="px-5 py-4">
                           <span className={`px-2 py-1 text-[10px] font-bold rounded uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/20 text-[#059669] border border-[#059669]/30' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/30'}`}>
                             {h.status.split('—')[0]}
                           </span>
                         </td>
                         <td className="px-5 py-4 font-medium text-[#F9F9FB]">
-                          {formatDate(h.nextPayment)}
+                          {h.instrument === 'BizYield' ? 'Variable Calendar' : formatDate(h.nextPayment)}
                         </td>
                         <td className="px-5 py-4 font-bold text-[#81D7B4]">
-                          ~${(h.investmentAmount * 0.05).toFixed(2)}
+                          {h.instrument === 'BizYield' ? 'Variable' : `~${(h.investmentAmount * 0.05).toFixed(2)}`}
                         </td>
                         <td className="px-5 py-4">
                           <button className="w-8 h-8 rounded-lg bg-[#1C2538] hover:bg-[#2C3E5D] flex items-center justify-center text-[#7B8B9A] transition-colors border border-[#2C3E5D]">
@@ -475,6 +488,7 @@ export default function BizSwapStandaloneDashboard() {
                         <div>
                           <p className="font-bold text-[#F9F9FB] text-base">{h.instrument}</p>
                           <p className="text-[10px] text-[#7B8B9A] uppercase tracking-wider">{h.instrument === 'BizYield' ? 'Revenue Share' : h.instrument === 'BizCredit' ? 'Private Credit Pool' : 'Treasury Backed'}</p>
+                          <p className="text-[9px] text-[#4B5A75] mt-0.5">{formatDate(h.purchaseDate || h.createdAt || '')} • Ref: {h.reference ? `${h.reference.slice(0,4)}...${h.reference.slice(-4)}` : 'N/A'}</p>
                         </div>
                       </div>
                       <span className={`px-2.5 py-1 text-[9px] font-bold rounded uppercase tracking-widest ${h.status.includes('Active') ? 'bg-[#059669]/20 text-[#059669] border border-[#059669]/30' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/30'}`}>
@@ -489,7 +503,7 @@ export default function BizSwapStandaloneDashboard() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Est. Next Payment</p>
-                        <p className="font-black text-[#81D7B4] text-lg">~${(h.investmentAmount * 0.05).toFixed(2)}</p>
+                        <p className="font-black text-[#81D7B4] text-lg">{h.instrument === 'BizYield' ? 'Variable' : `~${(h.investmentAmount * 0.05).toFixed(2)}`}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Entitlement</p>
@@ -497,7 +511,7 @@ export default function BizSwapStandaloneDashboard() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#4B5A75] uppercase tracking-wider mb-1">Next Date</p>
-                        <p className="text-sm font-bold text-[#F9F9FB]">{formatDate(h.nextPayment)}</p>
+                        <p className="text-sm font-bold text-[#F9F9FB]">{h.instrument === 'BizYield' ? 'Var Calendar' : formatDate(h.nextPayment)}</p>
                       </div>
                     </div>
                   </div>
@@ -632,7 +646,7 @@ export default function BizSwapStandaloneDashboard() {
                       <td colSpan={6} className="px-5 py-8 text-center text-[#7B8B9A]">No payment history yet.</td>
                     </tr>
                   ) : (
-                    payments.map((p) => (
+                    payments.filter(p => !p.txHash.includes('Failed')).map((p) => (
                       <tr key={p._id} className="hover:bg-[#1C2538]/30 transition-colors">
                         <td className="px-5 py-4 text-[#F9F9FB]">{formatDate(p.date)}</td>
                         <td className="px-5 py-4 font-bold text-[#F9F9FB]">
@@ -642,8 +656,16 @@ export default function BizSwapStandaloneDashboard() {
                         <td className={`px-5 py-4 font-bold ${p.txHash.includes('Pending') ? 'text-[#F5A623]' : 'text-[#81D7B4]'}`}>+${p.amount.toFixed(2)}</td>
                         <td className="px-5 py-4 text-[#7B8B9A]">{p.currency?.includes('Fiat') ? 'Fiat' : (p.currency || 'USDC')}</td>
                         <td className="px-5 py-4 font-bold">
-                          {p.txHash.includes('Pending') ? (
-                            <span className="text-[#F5A623]">Pending</span>
+                          {p.txHash.includes('Failed') ? (
+                            <span className="text-[#EF4444]">Failed</span>
+                          ) : p.txHash.includes('Pending') || p.txHash.includes('Processing') || p.txHash.includes('Retrying') ? (
+                            <span className="inline-flex items-center gap-1.5 text-[#F5A623]">
+                              Awaiting Payment
+                              <svg className="animate-spin h-3.5 w-3.5 text-[#F5A623]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </span>
                           ) : (
                             <span className="text-[#81D7B4]">Success</span>
                           )}
@@ -769,7 +791,7 @@ export default function BizSwapStandaloneDashboard() {
                       <div className="absolute inset-0 z-30 bg-gradient-to-tr from-white/0 via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none transform -translate-x-full group-hover:translate-x-full transition-transform ease-in-out"></div>
                       
                       <div className="w-[1100px] flex-shrink-0 origin-center pointer-events-none scale-[0.29] sm:scale-[0.345] bg-[#0A0F17] flex justify-center items-center h-[730px] -mt-[250px] -ml-[390px] sm:-ml-[360px]">
-                        <CertificateCard holding={{ ...h, wallet: walletAddress }} />
+                        <CertificateCard holding={{ ...h, wallet: displayEvmWallet || h.wallet }} />
                       </div>
                       
                       <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#05080C]/80 via-transparent to-transparent pointer-events-none" />
@@ -809,22 +831,22 @@ export default function BizSwapStandaloneDashboard() {
 
       {/* CERTIFICATE MODAL */}
       {selectedCert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={() => setSelectedCert(null)}>
+        <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-4 py-12 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={() => setSelectedCert(null)}>
           <div 
-            className="relative w-full max-w-[1100px] my-8 animate-in fade-in zoom-in duration-200"
+            className="relative w-full max-w-[1100px] my-auto animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button 
               id="cert-close-btn"
               onClick={() => setSelectedCert(null)}
-              className="absolute -top-4 -right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-50 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D] shadow-lg"
+              className="absolute top-4 right-4 md:-top-4 md:-right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors z-50 bg-[#1A2538] p-2 rounded-full border border-[#2C3E5D] shadow-lg"
             >
               <Cancel01Icon className="w-5 h-5" />
             </button>
 
             <div ref={certificateRef} className="bg-[#0F1825] rounded-xl">
-              <CertificateCard holding={{ ...selectedCert, wallet: walletAddress }} />
+              <CertificateCard holding={{ ...selectedCert, wallet: displayEvmWallet || selectedCert.wallet }} />
             </div>
 
             {/* Action Buttons */}

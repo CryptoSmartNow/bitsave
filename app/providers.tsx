@@ -62,8 +62,39 @@ const hedera = {
   testnet: true,
 } as const;
 
+// Define custom Botchain Testnet
+const botchainTestnet = {
+  id: 968,
+  name: 'BOT Testnet',
+  network: 'botchain-testnet',
+  nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 },
+  rpcUrls: {
+    default: { http: [process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai'] },
+    public: { http: [process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai'] },
+  },
+  blockExplorers: {
+    default: { name: 'BOT Explorer', url: 'https://testnet-explorer.botchain.ai' },
+  },
+  testnet: true,
+} as const;
+
+// Define custom Botchain Mainnet
+const botchainMainnet = {
+  id: 677,
+  name: 'BOT Mainnet',
+  network: 'botchain-mainnet',
+  nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://rpc.botchain.ai'] },
+    public: { http: ['https://rpc.botchain.ai'] },
+  },
+  blockExplorers: {
+    default: { name: 'BOT Explorer', url: 'https://explorer.botchain.ai' },
+  },
+} as const;
+
 // Define the supported chains
-const chains = [base, baseSepolia, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet] as const;
+const chains = [base, baseSepolia, botchainTestnet, botchainMainnet, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet] as const;
 
 const config = createConfig({
   chains,
@@ -71,6 +102,8 @@ const config = createConfig({
   transports: {
     [base.id]: http(process.env.NEXT_PUBLIC_RPC_URL),
     [baseSepolia.id]: http(),
+    [botchainTestnet.id]: http(process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai'),
+    [botchainMainnet.id]: http('https://rpc.botchain.ai'),
     [optimismSepolia.id]: http(),
     [arbitrumSepolia.id]: http(),
     [polygonAmoy.id]: http(),
@@ -127,13 +160,9 @@ function InnerProviders({ children }: { children: ReactNode }) {
           logo: "/bitsavelogo.png",
           showWalletLoginFirst: !isBizSwap,
         },
-        embeddedWallets: isBizSwap ? {
-          solana: {
-            createOnLogin: "all-users",
-          },
-        } : {
+        embeddedWallets: {
           ethereum: {
-            createOnLogin: "users-without-wallets",
+            createOnLogin: isBizSwap ? "all-users" : "users-without-wallets",
           },
         },
         loginMethods: isBizSwap 
@@ -141,7 +170,7 @@ function InnerProviders({ children }: { children: ReactNode }) {
           : isBizFi 
             ? ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'] 
             : ['wallet'],
-        supportedChains: [base, baseSepolia, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet],
+        supportedChains: [base, baseSepolia, botchainTestnet, botchainMainnet, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
           walletConnect: { enabled: true },
           solana: { connectors: solanaConnectors }

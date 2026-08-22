@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBizSwapCollection } from '@/lib/mongodb';
+import { getBizSwapCollection, getDatabase } from '@/lib/mongodb';
 import { redis } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
@@ -24,7 +24,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
 
-    const holdings = await collection.find({ wallet }).sort({ createdAt: -1 }).toArray();
+    const isDid = wallet.startsWith('did:privy:');
+    let query: any;
+    if (isDid) {
+      const db = await getDatabase();
+      let linkedWallet: string | undefined;
+      if (db) {
+        const tx = await db.collection('bizswap_transactions').findOne({ userId: wallet });
+        linkedWallet = tx?.metadata?.wallet;
+      }
+      query = {
+        $or: [
+          { wallet: wallet },
+          ...(linkedWallet ? [{ wallet: { $regex: new RegExp(`^${linkedWallet}$`, 'i') } }] : [])
+        ]
+      };
+    } else {
+      query = {
+        $or: [
+          { wallet: { $regex: new RegExp(`^${wallet}$`, 'i') } },
+          { wallet: wallet }
+        ]
+      };
+    }
+
+    const holdings = await collection.find(query).sort({ createdAt: -1 }).toArray();
 
     if (redis) {
       await redis.set(cacheKey, JSON.stringify(holdings), 'EX', 60); // cache for 60 seconds

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Notification01Icon, Tick01Icon, InformationCircleIcon, Cancel01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 
 interface Alert {
@@ -16,18 +16,18 @@ interface Alert {
 }
 
 export default function AlertsPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
 
-  const connected = ready && (authenticated || isSolanaConnected);
+  const connected = authenticated || isWagmiConnected;
 
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
 
-  const walletAddress = isSolanaConnected
-    ? publicKey?.toBase58()
-    : (privySolanaWallet?.address || user?.wallet?.address);
+  const walletAddress = isWagmiConnected
+    ? wagmiAddress
+    : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +100,14 @@ export default function AlertsPage() {
   };
 
   const unreadCount = alerts.filter(a => a.isNew).length;
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (

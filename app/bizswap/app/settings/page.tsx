@@ -1,12 +1,12 @@
 'use client';
 
-import { Wallet01Icon, Money01Icon, Shield01Icon, UserIcon, File01Icon, Refresh01Icon, Notification01Icon, Megaphone01Icon } from "hugeicons-react";
+import { Wallet01Icon, Money01Icon, File01Icon, Refresh01Icon, Notification01Icon, Megaphone01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { Exo } from 'next/font/google';
 import toast from 'react-hot-toast';
+import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
 
 const exo = Exo({
   subsets: ['latin'],
@@ -15,23 +15,24 @@ const exo = Exo({
 });
 
 export default function BizSwapSettings() {
-  const { address: wagmiAddress } = useAccount();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { user } = usePrivy();
-  const { publicKey } = useWallet();
   
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
-  
-  const address = publicKey?.toBase58() || privySolanaWallet?.address || wagmiAddress || user?.wallet?.address;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account: any) => account.type === 'wallet' && account.chainType !== 'solana'
+  ) as any)?.address;
+
+  const address = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id);
+  const walletAddress = isWagmiConnected ? wagmiAddress : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
+
+  const { referralData } = useBizSwapReferrals(walletAddress);
+  const referralCode = referralData?.bizswapReferralCode;
 
   const [mounted, setMounted] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'Investor Profile' | 'Payouts' | 'Auto-Invest' | 'Notifications'>('Investor Profile');
   const tabs = ['Investor Profile', 'Payouts', 'Auto-Invest', 'Notifications'] as const;
 
   // Settings states
-  const [kycStatus, setKycStatus] = useState<'Unverified' | 'Pending' | 'Verified'>('Unverified');
-  const [investorType, setInvestorType] = useState<'Retail' | 'Accredited'>('Retail');
   const [payoutCurrency, setPayoutCurrency] = useState<'USDC' | 'USDT' | 'DAI'>('USDC');
   const [autoReinvest, setAutoReinvest] = useState(false);
   const [yieldAlerts, setYieldAlerts] = useState(true);
@@ -105,42 +106,82 @@ export default function BizSwapSettings() {
                </div>
 
                <div className="p-6 sm:p-10">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-[#F9F9FB] tracking-tight">Identity & KYC</h2>
-                      <p className="text-[#7B8B9A] text-[14px] mt-1 font-medium">Verification required for purchasing BizShares.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 bg-[#1A2538] border border-[#2C3E5D] rounded-xl flex items-center justify-center">
-                             <Shield01Icon className="w-6 h-6 text-[#F5A623]" />
-                           </div>
-                           <div>
-                              <p className="font-bold text-[#F9F9FB] text-[15px]">KYC Status</p>
-                              <p className="text-[13px] text-[#F5A623] font-bold mt-0.5">{kycStatus}</p>
-                           </div>
+                  <h2 className="text-xl font-bold text-[#F9F9FB] mb-2 tracking-tight">Account Overview</h2>
+                  <p className="text-[#7B8B9A] text-[14px] mb-6 font-medium">Your investor profile on BizSwap.</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     {/* Login Method */}
+                     <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17] flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#81D7B4]/10 border border-[#81D7B4]/20 flex items-center justify-center">
+                           <Wallet01Icon className="w-5 h-5 text-[#81D7B4]" />
                         </div>
-                        <button className="text-[13px] font-bold text-[#0A0F17] bg-[#81D7B4] px-4 py-2 rounded-xl transition-colors hover:bg-[#6ec2a0]">
-                          Verify Now
-                        </button>
+                        <div>
+                           <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">Login Method</p>
+                           <p className="text-[15px] font-bold text-[#F9F9FB]">
+                             {user?.email ? 'Email' : user?.google ? 'Google' : user?.twitter ? 'Twitter' : user?.wallet ? 'Wallet' : 'Connected'}
+                           </p>
+                        </div>
                      </div>
 
-                     <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
+                     {/* Email */}
+                     <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17] flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#81D7B4]/10 border border-[#81D7B4]/20 flex items-center justify-center">
+                           <Notification01Icon className="w-5 h-5 text-[#81D7B4]" />
+                        </div>
+                        <div>
+                           <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">Email</p>
+                           <p className="text-[15px] font-bold text-[#F9F9FB] truncate">
+                             {user?.email?.address || '—'}
+                           </p>
+                        </div>
+                     </div>
+
+                     {/* Member Since */}
+                     <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17] flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#81D7B4]/10 border border-[#81D7B4]/20 flex items-center justify-center">
+                           <File01Icon className="w-5 h-5 text-[#81D7B4]" />
+                        </div>
+                        <div>
+                           <p className="text-[11px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-1">Member Since</p>
+                           <p className="text-[15px] font-bold text-[#F9F9FB]">
+                             {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
+                           </p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Referral Code Section */}
+               <div className="p-6 sm:p-10">
+                  <h2 className="text-xl font-bold text-[#F9F9FB] mb-2 tracking-tight">Referral Program</h2>
+                  <p className="text-[#7B8B9A] text-[14px] mb-6 font-medium">Earn 0.1% of every purchase made through your link.</p>
+
+                  <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
+                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 bg-[#1A2538] border border-[#2C3E5D] rounded-xl flex items-center justify-center">
-                             <UserIcon className="w-6 h-6 text-[#3B82F6]" />
+                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/5 flex items-center justify-center border border-[#81D7B4]/20 shadow-[0_0_20px_rgba(129,215,180,0.08)]">
+                              <Megaphone01Icon className="w-6 h-6 text-[#81D7B4]" />
                            </div>
                            <div>
-                              <p className="font-bold text-[#F9F9FB] text-[15px]">Investor Type</p>
-                              <p className="text-[13px] text-[#7B8B9A] font-medium mt-0.5">{investorType}</p>
+                              <p className="font-bold text-[#F9F9FB] text-[15px]">Your Referral Code</p>
+                              <p className="text-[13px] text-[#7B8B9A] font-medium mt-0.5">Share with friends to earn commissions.</p>
                            </div>
                         </div>
-                        <button className="text-[13px] font-bold text-[#3B82F6] hover:bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-4 py-2 rounded-xl transition-colors">
-                          Upgrade
-                        </button>
+                        <div className="flex items-center gap-3">
+                           {referralCode ? (
+                             <>
+                               <span className="font-mono font-bold text-[#81D7B4] text-[15px] bg-[#81D7B4]/10 px-4 py-2 rounded-xl border border-[#81D7B4]/20">{referralCode}</span>
+                               <button 
+                                 onClick={() => { navigator.clipboard.writeText(`https://bitsave.io/bizswap/buy?ref=${referralCode}`); toast.success('Referral link copied!'); }}
+                                 className="text-[13px] font-bold text-[#F9F9FB] bg-[#1A2538] border border-[#2C3E5D] px-4 py-2.5 rounded-xl hover:bg-[#121A27] transition-colors"
+                               >
+                                 Copy Link
+                               </button>
+                             </>
+                           ) : (
+                             <span className="text-[13px] text-[#7B8B9A] font-medium italic">Visit the dashboard to generate your code.</span>
+                           )}
+                        </div>
                      </div>
                   </div>
                </div>

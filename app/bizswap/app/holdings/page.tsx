@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Activity01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, ArrowDown01Icon, Briefcase01Icon, TextIcon, Search01Icon, FilterIcon } from "hugeicons-react";
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import toast from 'react-hot-toast';
 
 interface Holding {
   _id: string;
+  wallet?: string;
   instrument: string;
   investmentAmount: number;
   entitlement: string;
@@ -21,43 +22,39 @@ interface Holding {
 }
 
 export default function HoldingsPage() {
-  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const { ready, authenticated, user } = usePrivy();
 
-  const connected = ready && (authenticated || isSolanaConnected);
-  const privySolanaWallet = user?.linkedAccounts?.find(
-    (account) => account.type === 'wallet' && account.chainType === 'solana'
-  ) as { address: string } | undefined;
+  const connected = authenticated || isWagmiConnected;
+  const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
+    (account) => account.type === 'wallet' && (account as any).chainType !== 'solana'
+  ) as any)?.address;
   
-  const walletAddress = isSolanaConnected 
-    ? publicKey?.toBase58() 
-    : (privySolanaWallet?.address || user?.wallet?.address);
+  const walletAddress = isWagmiConnected 
+    ? wagmiAddress 
+    : (privyEvmWallet || user?.wallet?.address || user?.id || user?.email?.address);
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (connected && walletAddress) {
-      fetchHoldings(walletAddress);
-    } else if (!connected && ready) {
-      setHoldings([]);
+      loadHoldings();
+    } else {
       setLoading(false);
     }
-  }, [connected, walletAddress, ready]);
+  }, [connected, walletAddress]);
 
-  const fetchHoldings = async (wallet: string) => {
-    setLoading(true);
+  const loadHoldings = async () => {
     try {
-      const res = await fetch(`/api/bizswap/holdings?wallet=${wallet}`);
+      setLoading(true);
+      const res = await fetch(`/api/bizswap/holdings?wallet=${walletAddress}`);
       const data = await res.json();
-      if (res.ok) {
+      if (data.success) {
         setHoldings(data.data);
-      } else {
-        toast.error('Failed to load holdings');
       }
-    } catch (e) {
-      console.error(e);
-      toast.error('Network error loading holdings');
+    } catch (error) {
+      toast.error('Failed to load holdings');
     } finally {
       setLoading(false);
     }
@@ -68,14 +65,24 @@ export default function HoldingsPage() {
   const bcTotal = holdings.filter(h => h.instrument === 'BizCredit').reduce((s, h) => s + h.investmentAmount, 0);
   const bbTotal = holdings.filter(h => h.instrument === 'BizBond').reduce((s, h) => s + h.investmentAmount, 0);
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const d = new Date(dateString);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const getExpectedPaymentAmount = (holding: Holding) => {
+    const yieldRateMap: Record<string, number> = {
+      'BizYield': 0.05,
+      'BizCredit': 0.16,
+      'BizBond': 0.10
+    };
+    const rate = yieldRateMap[holding.instrument] || 0.05;
+    return holding.investmentAmount * rate;
   };
 
-  const getInstrumentIcon = (name: string, sizeClass = "w-5 h-5") => {
-    let initials = 'BZ';
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'TBA';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const getInstrumentIcon = (name: string, sizeClass = 'w-10 h-10') => {
+    let initials = 'BY';
     let colorClass = 'text-[#7B8B9A]';
     if (name === 'BizYield') { initials = 'BY'; colorClass = 'text-[#FF6B6B]'; }
     if (name === 'BizCredit') { initials = 'BC'; colorClass = 'text-[#3B82F6]'; }
@@ -99,6 +106,14 @@ export default function HoldingsPage() {
       default: return 'bg-gray-800';
     }
   };
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+      </div>
+    );
+  }
 
   if (!connected) {
     return (
