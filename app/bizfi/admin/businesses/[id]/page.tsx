@@ -114,7 +114,7 @@ export default function BusinessDetailsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0F1825] flex flex-col items-center justify-center text-[#9BA8B5] gap-4">
+            <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center text-[#9BA8B5] gap-4">
                 <div className="relative w-20 h-20">
                     <div className="absolute inset-0 border-4 border-[#81D7B4]/20 rounded-full animate-pulse"></div>
                     <div className="absolute inset-0 border-t-4 border-[#81D7B4] rounded-full animate-spin"></div>
@@ -126,7 +126,7 @@ export default function BusinessDetailsPage() {
 
     if (error || !business) {
         return (
-            <div className="min-h-screen bg-[#0F1825] flex flex-col items-center justify-center text-[#9BA8B5] gap-6">
+            <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center text-[#9BA8B5] gap-6">
                 <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
                     <Activity01Icon className="w-12 h-12 text-red-500" />
                 </div>
@@ -149,7 +149,7 @@ export default function BusinessDetailsPage() {
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="min-h-screen bg-[#0F1825] text-[#F9F9FB] pb-20 overflow-x-hidden relative font-sans"
+            className="min-h-screen bg-[#121212] text-[#F9F9FB] pb-20 overflow-x-hidden relative font-sans"
         >
             {/* Background Ambient Effects */}
             <div className="fixed top-0 left-0 w-full h-[60vh] bg-gradient-to-b from-[#1A2538]/50 to-transparent opacity-40 pointer-events-none" />
@@ -198,7 +198,7 @@ export default function BusinessDetailsPage() {
                             {/* Actions Row */}
                             <div className="flex justify-end w-full">
                                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                                    <div className="flex items-center bg-[#0F1825]/80 p-1.5 rounded-xl border border-[#7B8B9A]/10 shadow-inner w-full sm:w-auto backdrop-blur-sm">
+                                    <div className="flex items-center bg-[#121212]/80 p-1.5 rounded-xl border border-[#7B8B9A]/10 shadow-inner w-full sm:w-auto backdrop-blur-sm">
                                         {['approved', 'rejected'].map((status) => {
                                             if (business.status === status) return null;
                                             const isApproved = status === 'approved';
@@ -297,7 +297,7 @@ export default function BusinessDetailsPage() {
                             <div className="space-y-4">
                                 <div>
                                     <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Wallet Address</p>
-                                    <div className="p-3 bg-[#0F1825]/50 rounded-lg border border-[#7B8B9A]/10 font-mono text-xs sm:text-sm text-[#F9F9FB] break-all select-all hover:border-[#81D7B4]/30 transition-colors">
+                                    <div className="p-3 bg-[#121212]/50 rounded-lg border border-[#7B8B9A]/10 font-mono text-xs sm:text-sm text-[#F9F9FB] break-all select-all hover:border-[#81D7B4]/30 transition-colors">
                                         {business.owner}
                                     </div>
                                 </div>
@@ -305,7 +305,7 @@ export default function BusinessDetailsPage() {
                                 {business.referralCode && (
                                     <div>
                                         <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Referral Code</p>
-                                        <div className="flex items-center gap-3 p-3 bg-[#0F1825]/50 rounded-lg border border-[#7B8B9A]/10">
+                                        <div className="flex items-center gap-3 p-3 bg-[#121212]/50 rounded-lg border border-[#7B8B9A]/10">
                                             <div className="w-8 h-8 rounded-md bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] shrink-0">
                                                 <Activity01Icon className="w-5 h-5" />
                                             </div>
@@ -444,9 +444,9 @@ export default function BusinessDetailsPage() {
                                         <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 p-6 overflow-hidden">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h3 className="text-sm font-bold text-[#F9F9FB] uppercase tracking-wider">Raw JSON</h3>
-                                                <span className="text-[10px] font-mono text-[#9BA8B5] bg-[#0F1825] px-2 py-1 rounded border border-[#7B8B9A]/10">Read-only</span>
+                                                <span className="text-[10px] font-mono text-[#9BA8B5] bg-[#121212] px-2 py-1 rounded border border-[#7B8B9A]/10">Read-only</span>
                                             </div>
-                                            <div className="bg-[#0F1825] rounded-xl p-4 overflow-x-auto border border-[#7B8B9A]/10 custom-scrollbar">
+                                            <div className="bg-[#121212] rounded-xl p-4 overflow-x-auto border border-[#7B8B9A]/10 custom-scrollbar">
                                                 <pre className="text-xs font-mono text-[#81D7B4] leading-relaxed">
                                                     {JSON.stringify(business, null, 2)}
                                                 </pre>
@@ -521,7 +521,7 @@ function InfoRow({ label, value, mono = false }: { label: string, value: string,
     return (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-[#7B8B9A]/5 last:border-0">
             <span className="text-sm font-medium text-[#9BA8B5]">{label}</span>
-            <span className={`text-sm text-[#F9F9FB] text-right truncate max-w-full sm:max-w-[60%] ${mono ? 'font-mono text-xs bg-[#0F1825]/50 px-2 py-1 rounded border border-[#7B8B9A]/10' : 'font-medium'}`} title={typeof value === 'string' ? value : undefined}>
+            <span className={`text-sm text-[#F9F9FB] text-right truncate max-w-full sm:max-w-[60%] ${mono ? 'font-mono text-xs bg-[#121212]/50 px-2 py-1 rounded border border-[#7B8B9A]/10' : 'font-medium'}`} title={typeof value === 'string' ? value : undefined}>
                 {value || 'N/A'}
             </span>
         </div>
@@ -530,7 +530,7 @@ function InfoRow({ label, value, mono = false }: { label: string, value: string,
 
 function DocumentCard({ label, url }: { label: string, url: string | undefined }) {
     if (!url) return (
-        <div className="flex flex-col items-center justify-center gap-2 p-4 bg-[#0F1825]/30 text-[#9BA8B5]/50 rounded-xl border border-[#7B8B9A]/10 border-dashed">
+        <div className="flex flex-col items-center justify-center gap-2 p-4 bg-[#121212]/30 text-[#9BA8B5]/50 rounded-xl border border-[#7B8B9A]/10 border-dashed">
             <Activity01Icon className="w-6 h-6" />
             <span className="text-xs font-medium">{label} Missing</span>
         </div>

@@ -57,7 +57,7 @@ export const removePendingTransaction = (txnhash: string) => {
   }
 };
 
-export const syncPendingTransactions = async () => {
+export const syncPendingTransactions = async (getAccessToken?: () => Promise<string | null>) => {
   if (typeof window === 'undefined') return;
   
   const pending = getPendingTransactions();
@@ -65,18 +65,26 @@ export const syncPendingTransactions = async () => {
   
   for (const tx of pending) {
     try {
-      const response = await fetch("/api/transactions", {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      if (getAccessToken) {
+        const token = await getAccessToken();
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+      }
+
+      const response = await fetch("/api/savefi/record-tx", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           amount: tx.amount,
-          txnhash: tx.txnhash,
+          txHash: tx.txnhash,
           chain: tx.chain,
-          savingsname: tx.savingsname,
-          useraddress: tx.useraddress,
-          transaction_type: tx.transaction_type,
+          planName: tx.savingsname,
+          type: tx.transaction_type,
           currency: tx.currency
         }),
       });
@@ -91,25 +99,84 @@ export const syncPendingTransactions = async () => {
   }
 };
 
-export const submitTransaction = async (tx: Omit<PendingTransaction, 'id' | 'timestamp'>) => {
+export const submitTransaction = async (
+  tx: Omit<PendingTransaction, 'id' | 'timestamp'>, 
+  getAccessToken?: () => Promise<string | null>
+) => {
   try {
-    const response = await fetch("/api/transactions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tx),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
+    // 1. Immediately store in local client transaction history for instant UI update
+    if (typeof window !== 'undefined' && tx.useraddress) {
+      try {
+        const storageKey = `bitsave_txs_${tx.useraddress.toLowerCase()}`;
+        const stored = localStorage.getItem(storageKey);
+        const list = stored ? JSON.parse(stored) : [];
+        const existingIdx = list.findIndex((item: any) => item.txnhash === tx.txnhash);
+        const newRecord = {
+          id: tx.txnhash,
+          amount: tx.amount,
+          txnhash: tx.txnhash,
+          chain: tx.chain,
+          savingsname: tx.savingsname,
+          useraddress: tx.useraddress,
+          transaction_type: tx.transaction_type,
+          currency: tx.currency,
+          created_at: new Date().toISOString()
+        };
+        if (existingIdx >= 0) {
+          list[existingIdx] = newRecord;
+        } else {
+          list.unshift(newRecord);
+        }
+        localStorage.setItem(storageKey, JSON.stringify(list.slice(0, 50)));
+        window.dispatchEvent(new CustomEvent('bitsave_tx_updated', { detail: newRecord }));
+      } catch {}
     }
+
+    // 2. Post to /api/transactions
+    fetch("/api/transactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: tx.amount,
+        txnhash: tx.txnhash,
+        chain: tx.chain,
+        savingsname: tx.savingsname,
+        useraddress: tx.useraddress,
+        transaction_type: tx.transaction_type,
+        currency: tx.currency
+      }),
+    }).catch(() => {});
+
+    // 3. Post to /api/savefi/record-tx
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
     
-    return await response.json();
+    if (getAccessToken) {
+      const token = await getAccessToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    const response = await fetch("/api/savefi/record-tx", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        amount: tx.amount,
+        txHash: tx.txnhash,
+        chain: tx.chain,
+        planName: tx.savingsname,
+        type: tx.transaction_type,
+        currency: tx.currency
+      }),
+    });
+
+    if (!response.ok) {
+      savePendingTransaction(tx);
+    }
   } catch (error) {
-    console.error("Failed to submit transaction, saving to fallback queue", error);
+    console.error("Transaction submission failed:", error);
     savePendingTransaction(tx);
-    // Don't throw, assume it will sync later
-    return null;
   }
 };

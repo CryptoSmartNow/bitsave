@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Instrument_Serif } from 'next/font/google'
+import { Inter, Instrument_Serif, Outfit } from 'next/font/google'
 import './globals.css'
 
 // Inter: excellent readability at all sizes, modern body font
@@ -18,13 +18,17 @@ const instrumentSerif = Instrument_Serif({
   variable: '--font-instrument',
 })
 
+const outfit = Outfit({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit',
+})
+
 import { Providers } from './providers';
 import ReferralTracker from '@/components/ReferralTracker';
-import InstallPWA from '@/components/InstallPWA';
 
 // Add this import to your layout file
 // import "../styles/date-picker.css";
-import '@solana/wallet-adapter-react-ui/styles.css';
 
 export const metadata: Metadata = {
   title: 'BitSave - Your Crypto Savings Protocol',
@@ -80,7 +84,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${instrumentSerif.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${instrumentSerif.variable} ${outfit.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -96,10 +100,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className}`}>
+      <body className={`${inter.className} bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-gray-100`}>
         <Providers>
-          <ReferralTracker key="referral-tracker" />
-          <InstallPWA key="install-pwa" />
+          <ReferralTracker />
           {children}
         </Providers>
       </body>

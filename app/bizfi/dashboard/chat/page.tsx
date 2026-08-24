@@ -234,7 +234,7 @@ export default function ChatPage() {
                                 S
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full border-2 border-[#0A0E14] flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#0F1825] animate-pulse"></div>
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#121212] animate-pulse"></div>
                             </div>
                         </div>
                         <div className="flex-1 text-left min-w-0">
@@ -246,7 +246,7 @@ export default function ChatPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-[#0F1825] relative">
+            <div className="flex-1 flex flex-col bg-[#121212] relative">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+')]"></div>
 
@@ -306,7 +306,7 @@ export default function ChatPage() {
                                         ) : null}
                                         {msg.content && <p>{msg.content}</p>}
                                     </div>
-                                    <p className="text-[10px] text-[#7B8B9A] mt-1.5 font-medium px-1 flex items-center gap-1">
+                                    <p className="text-[10px] text-gray-400 mt-1.5 font-medium px-1 flex items-center gap-1">
                                         {format(new Date(msg.timestamp), 'h:mm a')}
                                         {msg.sender === 'business' && (
                                             <span className="text-[#81D7B4]">✓</span>
@@ -359,20 +359,20 @@ export default function ChatPage() {
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploading}
-                                className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                className="p-2 md:p-2.5 hover:bg-[#121212] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
                                 <Activity01Icon className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={() => setShowDoodle(true)}
                                 disabled={uploading}
-                                className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                className="hidden sm:block p-2 md:p-2.5 hover:bg-[#121212] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                             >
                                 <Edit02Icon className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={() => setShowEmoji(!showEmoji)}
-                                className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
+                                className={`p-2 md:p-2.5 hover:bg-[#121212] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#121212]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                             >
                                 <Activity01Icon className="w-5 h-5" />
                             </button>

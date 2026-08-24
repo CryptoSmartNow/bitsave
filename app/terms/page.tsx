@@ -6,11 +6,11 @@ export default function TermsAndConditions() {
             <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-12 pb-8 border-b border-[#1E2F45]">
-                    <Link href="/bizswap/app" className="inline-flex items-center text-[#7B8B9A] hover:text-[#81D7B4] transition-colors mb-8 text-sm font-bold tracking-widest uppercase">
+                    <Link href="/bizswap/app" className="inline-flex items-center text-gray-400 hover:text-[#81D7B4] transition-colors mb-8 text-sm font-bold tracking-widest uppercase">
                         <span>← Back to Platform</span>
                     </Link>
                     <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">Terms & Conditions</h1>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-[#7B8B9A] text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-gray-400 text-sm">
                         <span className="font-bold tracking-wide uppercase text-[#81D7B4]">BIZMARKET PROTOCOL</span>
                         <span className="hidden sm:inline">•</span>
                         <span>Effective Date: June 5, 2026</span>
@@ -397,7 +397,7 @@ export default function TermsAndConditions() {
                         </div>
                     </section>
 
-                    <div className="mt-16 pt-8 border-t border-[#1E2F45] text-sm text-[#7B8B9A] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="mt-16 pt-8 border-t border-[#1E2F45] text-sm text-gray-400 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <p className="font-bold uppercase tracking-wide text-[#F9F9FB] mb-1">BizMarket Protocol</p>
                             <p>Terms and Conditions · Version 1.0</p>

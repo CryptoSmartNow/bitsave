@@ -1,8 +1,8 @@
 'use client';
 
-import { Activity01Icon, Alert02Icon, UserMultipleIcon, DashboardSquare01Icon, FlashIcon, Menu01Icon } from "hugeicons-react";
+import { Menu01Icon } from "hugeicons-react";
 import { useState } from 'react';
-import UserInteractionsSidebar, { SidebarState } from '@/components/UserInteractionsSidebar';
+import UserInteractionsSidebar, { SidebarState, defaultUserInteractionsNav } from '@/components/UserInteractionsSidebar';
 import { AuthProvider, useAuth } from '@/lib/adminAuth';
 import UserInteractionsLoginForm from './components/UserInteractionsLoginForm';
 
@@ -14,49 +14,11 @@ function UserInteractionsLayoutInner({
   const [sidebarState, setSidebarState] = useState<SidebarState>('open');
   const { user, loading } = useAuth();
 
-  const navigationItems = [
-    {
-      name: 'Dashboard',
-      icon: DashboardSquare01Icon,
-      href: '/user-interactions',
-      description: 'Overview & Health'
-    },
-    {
-      name: 'Analytics',
-      icon: Activity01Icon,
-      href: '/user-interactions/analytics',
-      description: 'User & System Metrics'
-    },
-    {
-      name: 'Error Logs',
-      icon: Alert02Icon,
-      href: '/user-interactions/errors',
-      description: 'Bug Tracking & Diagnostics'
-    },
-    {
-      name: 'User Management',
-      icon: UserMultipleIcon,
-      href: '/user-interactions/users',
-      description: 'Search & Profiles'
-    },
-    {
-      name: 'BizSwap',
-      icon: DashboardSquare01Icon,
-      href: '/user-interactions/bizswap',
-      description: 'BizSwap Analytics'
-    },
-    {
-      name: 'Real-time',
-      icon: FlashIcon,
-      href: '/user-interactions/real-time',
-      description: 'Live Activity Feed'
-    }
-  ];
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F8FDFC] via-white to-[#F0F9FF] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#81D7B4]"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#070b14] flex flex-col items-center justify-center gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#81D7B4] border-t-transparent"></div>
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Verifying session...</p>
       </div>
     );
   }
@@ -68,27 +30,27 @@ function UserInteractionsLayoutInner({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 font-sans selection:bg-[#81D7B4] selection:text-white">
+    <div className="min-h-screen bg-gray-50/70 dark:bg-[#060a12] text-gray-900 dark:text-white font-sans selection:bg-[#81D7B4] selection:text-white">
       <UserInteractionsSidebar 
         sidebarState={sidebarState} 
         setSidebarState={setSidebarState}
-        navigationItems={navigationItems}
+        navigationItems={defaultUserInteractionsNav}
       />
 
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setSidebarState('open')}
-        className={`lg:hidden fixed left-4 top-4 z-40 p-2.5 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl shadow-sm text-slate-600 hover:text-[#81D7B4] hover:border-[#81D7B4]/50 transition-all duration-200 ${
+        className={`lg:hidden fixed left-4 top-4 z-40 p-2.5 bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg text-gray-700 dark:text-gray-200 hover:text-[#81D7B4] hover:border-[#81D7B4]/50 transition-all duration-200 cursor-pointer ${
           sidebarState === 'open' ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        aria-label="Open Menu"
+        aria-label="Open Navigation Menu"
       >
-        <Menu01Icon className="w-6 h-6" />
+        <Menu01Icon className="w-5 h-5" />
       </button>
       
       <div 
         className={`transition-all duration-300 ease-in-out min-h-screen ${
-          sidebarState === 'open' ? 'lg:pl-72' : sidebarState === 'collapsed' ? 'lg:pl-20' : ''
+          sidebarState === 'open' ? 'lg:pl-[310px]' : sidebarState === 'collapsed' ? 'lg:pl-[104px]' : ''
         }`}
       >
         <main className="p-4 pt-16 md:p-6 md:pt-6 lg:p-8 lg:pt-8 max-w-[1600px] mx-auto">

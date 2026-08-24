@@ -1,70 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboardCollection } from '@/lib/mongodb';
-import clientPromise from '@/lib/mongodb';
+import { getDatabase, getLeaderboardCollection } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const collection = await getLeaderboardCollection();
-
-    if (!collection) {
-      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+    const db = await getDatabase();
+    if (!db) {
+      return NextResponse.json([]);
     }
 
-    // Fetch all users from leaderboard collection
-    // Sort by totalamount descending
-    const leaderboard = await collection.find({})
-      .sort({ totalamount: -1 })
-      .toArray();
-
-    // Fetch Savvy Names for these users
-    const client = await clientPromise;
-    if (!client) {
-      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
-    }
-    const db = client.db('bitsave');
+    const leaderboardCollection = db.collection('leaderboard');
     const usersCollection = db.collection('users');
 
-    // Extract all wallet addresses
-    const walletAddresses = leaderboard
-      .map((user: any) => user.useraddress?.toLowerCase())
-      .filter(Boolean);
+    const GOODDOLLAR_PRICE = 0.0001086;
+    const SUPPORTED_CHAINS = new Set(['base', 'celo', 'lisk', 'bsc', 'avalanche']);
 
-    // Fetch all related users in a single query
+    // 1. Fetch from leaderboard collection
+    const rawLeaderboard = await leaderboardCollection.find({}).toArray();
+
+    const validEntries = rawLeaderboard.filter((entry: any) => {
+      const addr = (entry.useraddress || '').toLowerCase();
+      let chain = (entry.chain || 'base').toLowerCase();
+      if (chain === 'avax') chain = 'avalanche';
+      return addr.startsWith('0x') && addr.length === 42 && addr !== 'string' && SUPPORTED_CHAINS.has(chain);
+    });
+
+    // 2. Fetch all related users for Savvy Names
+    const allAddresses = validEntries.map((e: any) => e.useraddress.toLowerCase());
     const users = await usersCollection
-      .find({ walletAddress: { $in: walletAddresses } })
+      .find({ walletAddress: { $in: allAddresses } })
       .project({ walletAddress: 1, savvyName: 1 })
       .toArray();
 
-    // Map walletAddress to savvyName for O(1) lookups
-    const userMap = users.reduce((acc: Record<string, string>, u) => {
+    const savvyMap = users.reduce((acc: Record<string, string>, u) => {
       if (u.walletAddress && u.savvyName) {
-        acc[u.walletAddress] = u.savvyName;
+        acc[u.walletAddress.toLowerCase()] = u.savvyName;
       }
       return acc;
     }, {});
 
-    const enhancedLeaderboard = leaderboard.map((user: any) => {
-      const address = user.useraddress?.toLowerCase() || '';
-      return {
-        useraddress: user.useraddress,
-        savvyName: userMap[address] || null,
-        totalamount: parseFloat(user.totalamount) || 0, // Ensure number
-        chain: user.chain,
-        id: user.id || user._id.toString()
-      };
-    });
+    // 3. Format and return accurate rankings
+    const enhancedLeaderboard = validEntries
+      .map((entry: any) => {
+        let totalUsd = parseFloat(entry.totalamount || 0);
+        let chain = (entry.chain || 'base').toLowerCase();
+        if (chain === 'avax') chain = 'avalanche';
 
-    // Return extended array
+        if (chain === 'celo' && totalUsd > 1000) {
+          totalUsd = totalUsd * GOODDOLLAR_PRICE;
+        }
+
+        const addrLower = entry.useraddress.toLowerCase();
+        return {
+          useraddress: entry.useraddress,
+          savvyName: savvyMap[addrLower] || null,
+          totalamount: Number(totalUsd.toFixed(2)),
+          chain: chain,
+          id: entry._id ? entry._id.toString() : entry.id || entry.useraddress
+        };
+      })
+      .filter((u: any) => u.totalamount > 0)
+      .sort((a: any, b: any) => b.totalamount - a.totalamount);
+
     return NextResponse.json(enhancedLeaderboard);
 
   } catch (error) {
-    console.error('Error fetching leaderboard:', error);
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : 'Failed to fetch leaderboard'
-    }, { status: 500 });
+    console.warn('Leaderboard fetch fallback used:', error);
+    return NextResponse.json([]);
   }
 }
 

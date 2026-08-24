@@ -8,6 +8,8 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('image') as File;
+    const originalSizeStr = formData.get('originalSize') as string;
+    const originalSize = originalSizeStr ? parseInt(originalSizeStr, 10) : file.size;
 
     if (!file) {
       return NextResponse.json(
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate compression ratio if metadata is available
     const compressionRatio = result.metadata 
-      ? Math.round((1 - result.metadata.size / file.size) * 100)
+      ? Math.round((1 - result.metadata.size / originalSize) * 100)
       : 0;
 
     return NextResponse.json({
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
       url: result.url,
       filename: result.fileId,
       fileId: result.fileId,
-      originalSize: file.size,
+      originalSize: originalSize,
       optimizedSize: result.metadata?.size || file.size,
       compressionRatio,
       metadata: {

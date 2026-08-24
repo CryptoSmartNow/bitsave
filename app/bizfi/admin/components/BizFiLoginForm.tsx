@@ -27,7 +27,7 @@ export default function BizFiLoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1825] flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[#121212] flex items-center justify-center relative overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#81D7B4]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[#1A2538]/50 rounded-full blur-[120px] pointer-events-none" />
@@ -37,7 +37,7 @@ export default function BizFiLoginForm() {
           <h1 className="text-3xl font-bold text-[#F9F9FB] mb-2">
             BizFi Admin
           </h1>
-          <p className="text-[#7B8B9A]">Secure access to BizFi analytics</p>
+          <p className="text-gray-400">Secure access to BizFi analytics</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -50,7 +50,7 @@ export default function BizFiLoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#0F1825] border border-[#7B8B9A]/20 text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-[#121212] border border-[#7B8B9A]/20 text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-colors"
               required
             />
           </div>

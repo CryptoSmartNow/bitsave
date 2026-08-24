@@ -246,7 +246,7 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                     </div>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-10 custom-scrollbar bg-[#0F1825]">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-10 custom-scrollbar bg-[#121212]">
                         {SECTIONS.map((section) => {
                             const SectionIcon = section.icon;
                             

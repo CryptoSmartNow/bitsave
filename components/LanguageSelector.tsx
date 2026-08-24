@@ -308,26 +308,25 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) =
   // Determine theme based on path
   const isBizFi = pathname.startsWith('/bizfi') || pathname.startsWith('/bizfun');
   
-  // Theme configuration
   const theme = {
-    buttonBg: isBizFi ? 'bg-[#1A2538]/80' : 'bg-white/80',
-    buttonBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200',
-    buttonHover: isBizFi ? 'hover:bg-[#1A2538]' : 'hover:bg-white',
+    buttonBg: isBizFi ? 'bg-[#1A2538]/80' : 'bg-white',
+    buttonBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200/80',
+    buttonHover: isBizFi ? 'hover:bg-[#1A2538]' : 'hover:bg-gray-50',
     textPrimary: isBizFi ? 'text-[#F9F9FB]' : 'text-gray-800',
-    textSecondary: isBizFi ? 'text-[#7B8B9A]' : 'text-gray-500',
-    iconBg: isBizFi ? 'bg-[#81D7B4]/10' : 'bg-[#81D7B4]/10',
-    iconBorder: isBizFi ? 'border-[#81D7B4]/20' : 'border-[#81D7B4]/20',
-    iconColor: isBizFi ? 'text-[#81D7B4]' : 'text-[#81D7B4]',
+    textSecondary: isBizFi ? 'text-gray-400' : 'text-gray-500',
+    iconBg: 'bg-[#81D7B4]/10',
+    iconBorder: 'border-[#81D7B4]/20',
+    iconColor: 'text-[#81D7B4]',
     dropdownBg: isBizFi ? 'bg-[#1A2538]' : 'bg-white',
     dropdownBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200',
-    dropdownShadow: isBizFi ? 'shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]' : 'shadow-xl',
-    itemHover: isBizFi ? 'hover:bg-[#7B8B9A]/10' : 'hover:bg-gray-50',
-    itemText: isBizFi ? 'text-[#9BA8B5]' : 'text-gray-600',
-    itemHoverText: isBizFi ? 'hover:text-[#F9F9FB]' : 'hover:text-gray-900',
-    activeBg: isBizFi ? 'bg-[#81D7B4]/10' : 'bg-[#81D7B4]/10',
-    activeText: isBizFi ? 'text-[#81D7B4]' : 'text-[#2D5A4A]',
-    activeBorder: isBizFi ? 'border-[#81D7B4]/20' : 'border-[#81D7B4]/20',
-    loaderBg: isBizFi ? 'bg-[#1A2538]/80' : 'bg-white/80',
+    dropdownShadow: isBizFi ? 'shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]' : 'shadow-[0_15px_35px_rgba(0,0,0,0.12)]',
+    itemHover: isBizFi ? 'hover:bg-[#7B8B9A]/10' : 'hover:bg-[#81D7B4]/10',
+    itemText: isBizFi ? 'text-[#9BA8B5]' : 'text-gray-700',
+    itemHoverText: isBizFi ? 'hover:text-[#F9F9FB]' : 'hover:text-gray-950',
+    activeBg: isBizFi ? 'bg-[#81D7B4]/10' : 'bg-[#81D7B4]/15',
+    activeText: isBizFi ? 'text-[#81D7B4]' : 'text-[#1D6C50] font-bold',
+    activeBorder: 'border-[#81D7B4]/30',
+    loaderBg: isBizFi ? 'bg-[#1A2538]/80' : 'bg-white/90',
     loaderBorder: isBizFi ? 'border-[#7B8B9A]/20' : 'border-gray-200',
   };
 

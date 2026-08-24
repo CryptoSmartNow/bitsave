@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity01Icon, Tick01Icon, AtIcon } from "hugeicons-react";
+import { Link01Icon, Tick01Icon, AtIcon } from "hugeicons-react";
 import { useState, useEffect, Fragment } from 'react'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
@@ -139,12 +139,12 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
 
   if (currentNetworkName?.toLowerCase() === 'solana' || isSolanaAddress || isSolanaNetwork) {
     return (
-       <div className="flex flex-col items-center justify-center p-8 bg-[#f8faf9] rounded-2xl border border-gray-100">
-           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100 text-[#0f172a] mb-3">
-             <Activity01Icon className="w-6 h-6" />
+       <div className="flex flex-col items-center justify-center p-8 bg-[#f8faf9] dark:bg-[#1a1a1a] rounded-2xl border border-gray-100 dark:border-white/10">
+           <div className="w-12 h-12 bg-white dark:bg-[#2a2a2a] rounded-full flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/10 text-[#0f172a] dark:text-white mb-3">
+             <Link01Icon className="w-6 h-6 text-[#81D7B4]" />
            </div>
-           <p className="text-[#0f172a] font-bold text-[15px] mb-1">ENS is EVM Only</p>
-           <p className="text-[#64748b] text-[13px] font-medium text-center">Please connect to an EVM compatible chain to link your ENS domain.</p>
+           <p className="text-[#0f172a] dark:text-white font-bold text-[15px] mb-1">ENS is EVM Only</p>
+           <p className="text-[#64748b] dark:text-gray-400 text-[13px] font-medium text-center">Please connect to an EVM compatible chain to link your ENS domain.</p>
        </div>
     );
   }
@@ -159,7 +159,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
     >
       <div className="relative z-10 text-center">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Activity01Icon className="w-8 h-8 text-gray-400" />
+          <Link01Icon className="w-8 h-8 text-gray-400" />
         </div>
         <h3 className="text-lg font-semibold text-gray-800 mb-2">ENS is not available on Solana</h3>
         <p className="text-gray-500 mb-6">Please connect to an EVM compatible chain to use ENS domains.</p>
@@ -183,7 +183,7 @@ export default function ENSLinking({ onENSLinked, walletAddress, isSolanaNetwork
       <div className="relative z-10">
         <div className="flex items-center mb-6 sm:mb-8">
           <div className="bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-3 sm:p-4 rounded-xl sm:rounded-2xl mr-3 sm:mr-4 shadow-lg group-hover:shadow-xl transition-all duration-300">
-            <Activity01Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            <Link01Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
           <div>
             <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">ENS Domain</h2>

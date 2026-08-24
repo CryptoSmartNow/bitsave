@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBizSwapPayoutsCollection, getDatabase } from '@/lib/mongodb';
-import { redis } from '@/lib/redis';
+import { getCache, setCache } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,11 +12,9 @@ export async function GET(req: NextRequest) {
     }
 
     const cacheKey = `bizswap:payments:${wallet}`;
-    if (redis) {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        return NextResponse.json({ success: true, data: JSON.parse(cached) });
-      }
+    const cached = await getCache<any[]>(cacheKey);
+    if (cached) {
+      return NextResponse.json({ success: true, data: cached });
     }
 
     const collection = await getBizSwapPayoutsCollection();
@@ -46,8 +44,9 @@ export async function GET(req: NextRequest) {
       const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
       for (const tx of rawPending) {
-        const txTime = new Date(tx.timestamp || tx.createdAt || 0).getTime();
-        const isStale = (now - txTime) > ONE_DAY_MS;
+        const rawDate = tx.timestamp || tx.createdAt || tx.created_at;
+        const txTime = rawDate ? new Date(rawDate).getTime() : 0;
+        const isStale = txTime > 0 ? (now - txTime) > ONE_DAY_MS : true;
 
         if (isStale && ['pending', 'processing', 'awaiting_deposit', 'failed_fulfillment'].includes(tx.status)) {
           // Auto-expire stale transaction in DB
@@ -92,9 +91,7 @@ export async function GET(req: NextRequest) {
 
     const combinedPayments = [...formattedPending, ...formattedPayouts];
 
-    if (redis) {
-      await redis.set(cacheKey, JSON.stringify(combinedPayments), 'EX', 60); // cache for 60 seconds
-    }
+    await setCache(cacheKey, combinedPayments, 60); // cache for 60 seconds
 
     return NextResponse.json({
       success: true,

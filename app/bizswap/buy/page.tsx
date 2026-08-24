@@ -162,9 +162,19 @@ export default function BizSwapAppPage() {
   useEffect(() => {
     setMounted(true);
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('ref') || localStorage.getItem('bizswapPendingReferralCode');
+    const code = 
+      urlParams.get('ref') || 
+      urlParams.get('referral') ||
+      localStorage.getItem('bizswapPendingReferralCode') ||
+      localStorage.getItem('pendingReferralCode') ||
+      localStorage.getItem('bitsave_referral_code');
+
     if (code) {
-      setReferralCode(code);
+      const clean = code.trim().toUpperCase();
+      setReferralCode(clean);
+      localStorage.setItem('bizswapPendingReferralCode', clean);
+      localStorage.setItem('pendingReferralCode', clean);
+      localStorage.setItem('bitsave_referral_code', clean);
     }
 
     const savedChain = localStorage.getItem('bizswap_selectedChain');
@@ -304,14 +314,41 @@ export default function BizSwapAppPage() {
     }
   }, [inputAmount, inst]);
 
-  const handleNetworkChange = (chainKey: BizSwapSupportedChain) => {
+  const handleNetworkChange = async (chainKey: BizSwapSupportedChain) => {
     setSelectedChain(chainKey);
     const targetConfig = BIZSWAP_CHAINS[chainKey];
-    if (isWagmiConnected && switchChain && activeChainId !== targetConfig.id) {
+
+    // If connected via Web3 browser wallet, seamlessly switch or add chain
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      const ethereum = (window as any).ethereum;
+      const hexChainId = `0x${targetConfig.id.toString(16)}`;
+
       try {
-        switchChain({ chainId: targetConfig.id });
-      } catch (err) {
-        console.log("Auto chain switch skipped or prompt rejected", err);
+        if (switchChain) {
+          switchChain({ chainId: targetConfig.id });
+        }
+      } catch (err: any) {
+        // If unrecognized chain or error, prompt wallet_addEthereumChain
+        try {
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: hexChainId,
+                chainName: targetConfig.name,
+                nativeCurrency: {
+                  name: chainKey === 'botchain' ? 'BOT' : 'ETH',
+                  symbol: chainKey === 'botchain' ? 'BOT' : 'ETH',
+                  decimals: 18,
+                },
+                rpcUrls: [targetConfig.rpcUrl],
+                blockExplorerUrls: [targetConfig.explorerUrl],
+              },
+            ],
+          });
+        } catch (addErr) {
+          console.log('Wallet chain switch or add handled:', addErr);
+        }
       }
     }
   };
@@ -478,19 +515,19 @@ export default function BizSwapAppPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#3B82F6]/20 border border-[#3B82F6]/40 text-[#3B82F6] flex items-center justify-center text-[10px] sm:text-xs font-black">1</div>
-                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#F9F9FB]">Settlement Network</h3>
+                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#F9F9FB]">Certificate Minting Network</h3>
                 </div>
-                <span className="text-[9px] sm:text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
-                  Target Chain
+                <span className="text-[9px] sm:text-[10px] font-bold text-[#81D7B4] uppercase tracking-wider bg-[#81D7B4]/10 px-2 py-0.5 rounded border border-[#81D7B4]/20">
+                  Mint Destination
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-3">
                 {/* Base Option */}
                 <button
                   type="button"
                   onClick={() => handleNetworkChange('base')}
-                  className={`group relative p-3 sm:p-3.5 rounded-xl border transition-all duration-300 flex items-center gap-3 text-left ${
+                  className={`group relative p-3 sm:p-3.5 rounded-xl border transition-all duration-300 flex items-center gap-3 text-left cursor-pointer ${
                     selectedChain === 'base'
                       ? 'bg-[#0052FF]/10 border-[#0052FF] shadow-[0_0_24px_rgba(0,82,255,0.25)]'
                       : 'bg-[#070A0F] border-[#182338] hover:border-[#2C3E5D]'
@@ -521,7 +558,7 @@ export default function BizSwapAppPage() {
                 <button
                   type="button"
                   onClick={() => handleNetworkChange('botchain')}
-                  className={`group relative p-3 sm:p-3.5 rounded-xl border transition-all duration-300 flex items-center gap-3 text-left ${
+                  className={`group relative p-3 sm:p-3.5 rounded-xl border transition-all duration-300 flex items-center gap-3 text-left cursor-pointer ${
                     selectedChain === 'botchain'
                       ? 'bg-[#10B981]/10 border-[#10B981] shadow-[0_0_24px_rgba(16,185,129,0.25)]'
                       : 'bg-[#070A0F] border-[#182338] hover:border-[#2C3E5D]'
@@ -547,6 +584,11 @@ export default function BizSwapAppPage() {
                     </div>
                   )}
                 </button>
+              </div>
+
+              <div className="px-3 py-2 bg-[#070A0F] rounded-lg border border-[#182338] flex items-center gap-2 text-[10px] text-[#7B8B9A]">
+                <InformationCircleIcon className="w-3.5 h-3.5 text-[#81D7B4] shrink-0" />
+                <span>Your certificate will be minted on this blockchain. You can pay using fiat or crypto in checkout.</span>
               </div>
             </div>
 
@@ -724,45 +766,30 @@ export default function BizSwapAppPage() {
                 </span>
               </div>
 
-              {/* Referral & Email Inputs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-1.5">Referral Code (Optional)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={referralCode}
-                      onChange={(e) => {
-                        setReferralCode(e.target.value.toUpperCase());
-                        setIsReferralValid(false);
-                        setReferralError('');
-                      }}
-                      placeholder="Enter code"
-                      className="w-full rounded-xl border px-3 py-2 text-xs font-bold text-[#F9F9FB] outline-none bg-[#070A0F] placeholder:text-[#2C3E5D]"
-                      style={{ borderColor: isReferralValid ? '#81D7B4' : referralError ? '#FF6B6B' : '#182338' }}
-                      onBlur={() => referralCode && validateReferral(referralCode)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => validateReferral(referralCode)}
-                      disabled={validatingReferral || !referralCode || isReferralValid}
-                      className="px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all disabled:opacity-50 bg-[#070A0F] border-[#182338] text-[#F9F9FB]"
-                    >
-                      {validatingReferral ? '...' : isReferralValid ? 'Applied' : 'Apply'}
-                    </button>
+              {/* Referral Active Banner (Silent / Link-based) */}
+              {isReferralValid && referralCode && (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-xl mb-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <SparklesIcon className="w-4 h-4 text-[#81D7B4]" />
+                    <span className="text-[#F9F9FB] font-medium text-xs">Referral Active:</span>
+                    <span className="font-mono font-bold text-[#81D7B4] text-xs">{referralCode}</span>
                   </div>
+                  <span className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-wider">0.1% Reward Linked</span>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-1.5">Receipt Email</label>
-                  <input
-                    type="email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="you@email.com"
-                    className="w-full rounded-xl border border-[#182338] px-3 py-2 text-xs font-bold text-[#F9F9FB] outline-none bg-[#070A0F] placeholder:text-[#2C3E5D]"
-                  />
-                </div>
+              {/* Receipt Email Input */}
+              <div className="mb-4">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-1.5">
+                  Receipt & Certificate Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="Enter email for minting receipt & certificate updates"
+                  className="w-full rounded-xl border border-[#182338] focus:border-[#81D7B4]/60 px-4 py-2.5 text-xs font-bold text-[#F9F9FB] outline-none bg-[#070A0F] placeholder:text-[#3B4C68] transition-colors shadow-inner"
+                />
               </div>
 
               {/* Order breakdown */}

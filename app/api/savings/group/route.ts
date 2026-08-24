@@ -9,35 +9,57 @@ export async function POST(request: Request) {
         const db = client.db('bitsave');
 
         const body = await request.json();
-        const { name, token, network, maturityDate, creatorWallet, invitedSavvyNames, description } = body;
+        const { name, token, network, maturityDate, creatorWallet, invitedSavvyNames, description, penalty, targetAmount } = body;
 
         if (!name || !token || !creatorWallet) {
             return NextResponse.json({ error: 'Name, token, and creator wallet are required' }, { status: 400 });
         }
 
-        // Resolve Savvy Names to wallet addresses
-        const members = [{ wallet: creatorWallet.toLowerCase(), role: 'creator', joinedAt: new Date(), contributed: 0 }];
-        const existingWallets = new Set([creatorWallet.toLowerCase()]);
+        const normalizedCreator = creatorWallet.toLowerCase();
+
+        // Resolve Savvy Names or raw 0x wallet addresses to member records
+        const members: Array<{ wallet: string; role: string; joinedAt: Date; contributed: number }> = [
+            { wallet: normalizedCreator, role: 'creator', joinedAt: new Date(), contributed: 0 }
+        ];
+        const existingWallets = new Set([normalizedCreator]);
 
         if (invitedSavvyNames && Array.isArray(invitedSavvyNames)) {
             const usersCollection = db.collection('users');
-            for (const savvyName of invitedSavvyNames) {
-                const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${savvyName}$`, 'i') } });
-                if (user && !existingWallets.has(user.walletAddress.toLowerCase())) {
-                    members.push({ wallet: user.walletAddress, role: 'member', joinedAt: new Date(), contributed: 0 });
-                    existingWallets.add(user.walletAddress.toLowerCase());
+            for (const rawInvite of invitedSavvyNames) {
+                const invite = (rawInvite || '').trim().replace(/^@/, '');
+                if (!invite) continue;
+
+                // Direct wallet address
+                if (invite.startsWith('0x') && invite.length === 42) {
+                    const cleanWallet = invite.toLowerCase();
+                    if (!existingWallets.has(cleanWallet)) {
+                        members.push({ wallet: cleanWallet, role: 'member', joinedAt: new Date(), contributed: 0 });
+                        existingWallets.add(cleanWallet);
+                    }
+                } else {
+                    // Look up via Savvy Name
+                    const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${invite}$`, 'i') } });
+                    if (user && user.walletAddress) {
+                        const cleanWallet = user.walletAddress.toLowerCase();
+                        if (!existingWallets.has(cleanWallet)) {
+                            members.push({ wallet: cleanWallet, role: 'member', joinedAt: new Date(), contributed: 0 });
+                            existingWallets.add(cleanWallet);
+                        }
+                    }
                 }
             }
         }
 
         const group = {
-            name,
-            description: description || '',
+            name: name.trim(),
+            description: description ? description.trim() : '',
             currentAmount: 0,
+            targetAmount: targetAmount ? parseFloat(targetAmount) : 0,
             token,
             network: network || 'Base',
+            penalty: penalty || '10%',
             maturityDate: maturityDate ? new Date(maturityDate) : null,
-            creatorWallet: creatorWallet.toLowerCase(),
+            creatorWallet: normalizedCreator,
             members,
             invitedSavvyNames: invitedSavvyNames || [],
             status: 'active', // active, completed, cancelled
@@ -73,7 +95,7 @@ export async function GET(request: Request) {
 
         // Enrich with Savvy Names for display
         const usersCollection = db.collection('users');
-        const enrichedGroups = await Promise.all(groups.map(async (group) => {
+        const enrichedGroups = await Promise.all(groups.map(async (group: any) => {
             const enrichedMembers = await Promise.all(group.members.map(async (member: { wallet: string; role: string; contributed: number; joinedAt: Date }) => {
                 const user = await usersCollection.findOne({ walletAddress: member.wallet });
                 return { ...member, savvyName: user?.savvyName || null };
@@ -83,8 +105,8 @@ export async function GET(request: Request) {
 
         return NextResponse.json(enrichedGroups);
     } catch (error) {
-        console.error('Error fetching group savings:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.warn('Group savings database unreachable, returning empty list:', error);
+        return NextResponse.json([]);
     }
 }
 
@@ -109,23 +131,76 @@ export async function PUT(request: Request) {
         }
 
         if (action === 'contribute' && amount) {
-            // Update member contribution and group total
-            await collection.updateOne(
+            const numAmount = parseFloat(amount);
+            if (isNaN(numAmount) || numAmount <= 0) {
+                return NextResponse.json({ error: 'Invalid contribution amount' }, { status: 400 });
+            }
+
+            // Update member contribution and group total if member exists
+            const updateRes = await collection.updateOne(
                 { _id: new ObjectId(groupId), 'members.wallet': walletAddress.toLowerCase() },
                 {
-                    $inc: { 'members.$.contributed': parseFloat(amount), currentAmount: parseFloat(amount) },
+                    $inc: { 'members.$.contributed': numAmount, currentAmount: numAmount },
                     $set: { updatedAt: new Date() }
                 }
             );
+
+            // If user contributed without being previously listed in members array, add them
+            if (updateRes.matchedCount === 0) {
+                await collection.updateOne(
+                    { _id: new ObjectId(groupId) },
+                    {
+                        $push: {
+                            members: {
+                                wallet: walletAddress.toLowerCase(),
+                                role: 'member',
+                                joinedAt: new Date(),
+                                contributed: numAmount
+                            }
+                        } as any,
+                        $inc: { currentAmount: numAmount },
+                        $set: { updatedAt: new Date() }
+                    }
+                );
+            }
             return NextResponse.json({ success: true, message: 'Contribution recorded' });
         }
 
-        if (action === 'leave') {
+        if (action === 'join') {
+            const cleanWallet = walletAddress.toLowerCase();
+            const isAlreadyMember = group.members.some((m: any) => m.wallet.toLowerCase() === cleanWallet);
+            if (isAlreadyMember) {
+                return NextResponse.json({ success: true, message: 'Already a member of this vault' });
+            }
+
             await collection.updateOne(
                 { _id: new ObjectId(groupId) },
-                { $pull: { members: { wallet: walletAddress.toLowerCase() } } as any, $set: { updatedAt: new Date() } }
+                {
+                    $push: {
+                        members: {
+                            wallet: cleanWallet,
+                            role: 'member',
+                            joinedAt: new Date(),
+                            contributed: 0
+                        }
+                    } as any,
+                    $set: { updatedAt: new Date() }
+                }
             );
-            return NextResponse.json({ success: true, message: 'Left the group' });
+            return NextResponse.json({ success: true, message: 'Successfully joined the vault' });
+        }
+
+        if (action === 'leave') {
+            const cleanWallet = walletAddress.toLowerCase();
+            if (group.creatorWallet.toLowerCase() === cleanWallet) {
+                return NextResponse.json({ error: 'Vault creator cannot leave the vault. You can delete the vault instead.' }, { status: 400 });
+            }
+
+            await collection.updateOne(
+                { _id: new ObjectId(groupId) },
+                { $pull: { members: { wallet: cleanWallet } } as any, $set: { updatedAt: new Date() } }
+            );
+            return NextResponse.json({ success: true, message: 'Left the vault successfully' });
         }
 
         if (action === 'invite' && invitedSavvyNames && Array.isArray(invitedSavvyNames)) {
@@ -133,11 +208,25 @@ export async function PUT(request: Request) {
             const newMembers = [];
             const existingWallets = new Set(group.members.map((m: any) => m.wallet.toLowerCase()));
 
-            for (const savvyName of invitedSavvyNames) {
-                const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${savvyName}$`, 'i') } });
-                if (user && !existingWallets.has(user.walletAddress.toLowerCase())) {
-                    newMembers.push({ wallet: user.walletAddress, role: 'member', joinedAt: new Date(), contributed: 0 });
-                    existingWallets.add(user.walletAddress.toLowerCase());
+            for (const rawInvite of invitedSavvyNames) {
+                const invite = (rawInvite || '').trim().replace(/^@/, '');
+                if (!invite) continue;
+
+                if (invite.startsWith('0x') && invite.length === 42) {
+                    const cleanWallet = invite.toLowerCase();
+                    if (!existingWallets.has(cleanWallet)) {
+                        newMembers.push({ wallet: cleanWallet, role: 'member', joinedAt: new Date(), contributed: 0 });
+                        existingWallets.add(cleanWallet);
+                    }
+                } else {
+                    const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${invite}$`, 'i') } });
+                    if (user && user.walletAddress) {
+                        const cleanWallet = user.walletAddress.toLowerCase();
+                        if (!existingWallets.has(cleanWallet)) {
+                            newMembers.push({ wallet: cleanWallet, role: 'member', joinedAt: new Date(), contributed: 0 });
+                            existingWallets.add(cleanWallet);
+                        }
+                    }
                 }
             }
 

@@ -38,14 +38,17 @@ export default function LandingStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/user-interactions/stats');
-        const data = await res.json();
-        
+        const [statsRes, pricesRes] = await Promise.all([
+          fetch('/api/user-interactions/stats').catch(() => null),
+          fetch('/api/prices?ids=binancecoin,celo,usd-coin,tether,celo-dollar').catch(() => null)
+        ]);
+
+        const data = statsRes ? await statsRes.json().catch(() => null) : null;
+        const pricesData = pricesRes ? await pricesRes.json().catch(() => ({})) : {};
+
         if (data) {
           let totalUSD = 0;
           if (data.tvsBreakdown) {
-             const pricesRes = await fetch('/api/prices?ids=binancecoin,celo,usd-coin,tether,celo-dollar').catch(() => null);
-             const pricesData = pricesRes ? await pricesRes.json() : {};
              const prices: any = {
                BNB: pricesData.binancecoin?.usd || 400,
                CELO: pricesData.celo?.usd || 0.6,
@@ -53,7 +56,12 @@ export default function LandingStats() {
                USDT: pricesData.tether?.usd || 1,
                CUSD: pricesData['celo-dollar']?.usd || 1,
              };
-             Object.values(data.tvsBreakdown as Record<string, Record<string, number>>).forEach(chainData => {
+             const supportedChains = ['base', 'celo', 'lisk', 'bsc', 'avalanche'];
+             Object.entries(data.tvsBreakdown as Record<string, Record<string, number>>).forEach(([chain, chainData]) => {
+               const lowerChain = chain.toLowerCase();
+               if (!supportedChains.includes(lowerChain) || lowerChain.includes('solana') || lowerChain.includes('hedera')) {
+                 return;
+               }
                Object.entries(chainData).forEach(([currency, amount]) => {
                  const normCurrency = currency.toUpperCase();
                  if (normCurrency === 'ETH') return;

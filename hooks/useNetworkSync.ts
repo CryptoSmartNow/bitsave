@@ -17,7 +17,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useAccount, useChainId, useSwitchChain, useConnectorClient } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { useSavingsData } from './useSavingsData';
 
 // Network configuration
@@ -80,10 +79,10 @@ const getNetworkParams = (networkName: string) => {
   }
 };
 
-interface UseNetworkSyncReturn {
+export interface UseNetworkSyncReturn {
+  isNetworkSynced: boolean;
   syncToWalletNetwork: () => Promise<void>;
   switchToNetwork: (networkName: string) => Promise<boolean>;
-  isNetworkSynced: boolean;
   currentNetworkName: string | null;
   isNetworkSwitching: boolean;
   isSyncing: boolean;
@@ -95,14 +94,12 @@ export function useNetworkSync(): UseNetworkSyncReturn {
   const { switchChain } = useSwitchChain();
   const { data: connectorClient } = useConnectorClient();
   const { login, connectWallet, authenticated } = usePrivy();
-  const { connected: isSolanaConnected, publicKey: solanaPublicKey } = useWallet();
   const {
     isBaseNetwork,
     isCeloNetwork,
     isLiskNetwork,
     isBSCNetwork,
     isAvalancheNetwork,
-    isSolanaNetwork,
     refetch: refetchSavingsData,
     forceRefreshNetworkState
   } = useSavingsData();
@@ -117,20 +114,16 @@ export function useNetworkSync(): UseNetworkSyncReturn {
 
   // Get current network name based on chain ID
   const getCurrentNetworkName = useCallback((currentChainId?: number | string): string | null => {
-    if (!currentChainId && !isSolanaNetwork) return null;
-    if (currentChainId === 'solana' || isSolanaNetwork) return 'Solana';
+    if (!currentChainId) return null;
 
     const network = Object.values(SUPPORTED_NETWORKS).find(
       net => net.chainId === currentChainId
     );
     return network?.name || `Unknown Network (${currentChainId})`;
-  }, [isSolanaNetwork]);
-
-
+  }, []);
 
   // Check if network is synced (UI state matches wallet state)
   const isNetworkSynced = useCallback((): boolean => {
-    if (isSolanaNetwork) return true;
     if (!chainId) return false;
 
     switch (chainId) {
@@ -147,7 +140,7 @@ export function useNetworkSync(): UseNetworkSyncReturn {
       default:
         return false;
     }
-  }, [chainId, isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork, isSolanaNetwork]);
+  }, [chainId, isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork]);
 
   // Get current network name
   const currentNetworkName = getCurrentNetworkName(chainId);
@@ -289,46 +282,15 @@ export function useNetworkSync(): UseNetworkSyncReturn {
     console.log('🧹 Cleared all pending network notifications');
   }, []);
 
-  // Simplified sync notification - only for success
+  // Silenced sync notification for unified multi-chain connection
   const showSyncNotification = useCallback((message: string, type: 'success' = 'success') => {
-    // Clear all pending notifications first
-    clearAllNotifications();
-    console.log(`✅ Success notification: ${message}`);
+    console.log(`[NetworkSync] ${message}`);
+  }, []);
 
-    const toast = document.createElement('div');
-    toast.id = 'network-sync-toast';
-    toast.className = 'fixed top-4 right-4 bg-white/90 backdrop-blur-xl border border-white/60 rounded-xl px-6 py-4 shadow-[0_20px_60px_rgba(129,215,180,0.4)] z-[9999] flex items-center space-x-3';
-
-    const iconColor = 'bg-[#81D7B4]';
-    const icon = `<svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-    </svg>`;
-
-    toast.innerHTML = `
-      <div class="w-5 h-5 ${iconColor} rounded-full flex items-center justify-center">
-        ${icon}
-      </div>
-      <span class="text-gray-800 font-medium">${message}</span>
-    `;
-
-    document.body.appendChild(toast);
-
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
-  }, [clearAllNotifications]);
-
-  // Specialized function for successful network synchronization
+  // Silenced function for successful network synchronization
   const showSuccessfulSyncNotification = useCallback((networkName: string) => {
-    // Clear ALL pending notifications (info, error, etc.) before showing success
-    clearAllNotifications();
-
-    // Show success notification
-    showSyncNotification(`Successfully switched to ${networkName}`, 'success');
-
-    console.log(`🎉 Network sync success: Terminated all pending notifications and showed success for ${networkName}`);
-  }, [clearAllNotifications, showSyncNotification]);
+    console.log(`[NetworkSync] Switched to ${networkName}`);
+  }, []);
 
   // Sync UI to match wallet's current network
   const syncToWalletNetwork = useCallback(async () => {
@@ -382,11 +344,10 @@ export function useNetworkSync(): UseNetworkSyncReturn {
     }
 
     // Check if already on the target network
-    const isCurrentlySolana = isSolanaNetwork || localStorage.getItem('bitsave_active_network') === 'solana';
-    if ((networkName === 'Solana' && isCurrentlySolana) || (chainId === network.chainId && networkName !== 'Solana' && !isCurrentlySolana)) {
+    if (chainId === network.chainId) {
       console.log(`Network switch: Already on ${networkName} network`);
       showSyncNotification(`Already connected to ${networkName}`);
-      await syncToWalletNetwork(); // Ensure UI is synced
+      await syncToWalletNetwork();
       return true;
     }
 
@@ -394,45 +355,6 @@ export function useNetworkSync(): UseNetworkSyncReturn {
 
     try {
       console.log(`Network switch: Switching to ${networkName} (${network.chainId})`);
-
-      if (networkName === 'Solana') {
-        localStorage.setItem('bitsave_active_network', 'solana');
-        
-        // If not connected to Solana, trigger Privy login or Wallet Adapter connect
-        if (!isSolanaConnected || !solanaPublicKey) {
-          if (authenticated && connectWallet) {
-            connectWallet();
-          } else {
-            login();
-          }
-        }
-        
-        showSuccessfulSyncNotification('Solana');
-        forceRefreshNetworkState();
-        setTimeout(async () => {
-          try {
-            await refetchSavingsData(false);
-          } catch (error) {}
-        }, 500);
-        return true;
-      }
-
-      // If switching from Solana back to an EVM network, clear the Solana override first
-      if (isCurrentlySolana && networkName !== 'Solana') {
-        localStorage.removeItem('bitsave_active_network');
-        forceRefreshNetworkState();
-        
-        // If the wallet is actually already on the target EVM chain, we don't need to call switchChain
-        if (chainId === network.chainId) {
-          showSuccessfulSyncNotification(networkName);
-          setTimeout(async () => {
-            try {
-              await refetchSavingsData(false);
-            } catch (error) {}
-          }, 500);
-          return true;
-        }
-      }
 
       // Switch the wallet network (EVM only)
       await switchChain({ chainId: network.chainId as number });

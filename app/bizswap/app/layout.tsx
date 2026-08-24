@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Home01Icon, Calendar01Icon, Notification01Icon, Cancel01Icon, Briefcase01Icon, Certificate01Icon, Clock01Icon, CalculatorIcon, Settings01Icon, Add01Icon, GiftIcon, Menu01Icon, Copy01Icon, CheckmarkCircle01Icon, Link01Icon } from "hugeicons-react";
+import { Home01Icon, Calendar01Icon, Notification01Icon, Cancel01Icon, Briefcase01Icon, Certificate01Icon, Clock01Icon, CalculatorIcon, Settings01Icon, Add01Icon, GiftIcon, Menu01Icon, Copy01Icon, CheckmarkCircle01Icon, Link01Icon, CustomerService01Icon } from "hugeicons-react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -17,6 +17,8 @@ const NAV_LINKS = [
   { name: 'My Certificates', href: '/bizswap/app/certificates', icon: Certificate01Icon },
   { name: 'Alerts', href: '/bizswap/app/alerts', icon: Notification01Icon },
   { name: 'Yield Calculator', href: '/bizswap/app/calculator', icon: CalculatorIcon },
+  { name: 'Settings', href: '/bizswap/app/settings', icon: Settings01Icon },
+  { name: 'Help & Feedback', href: '/feedback?app=bizswap&from=/bizswap/app', icon: CustomerService01Icon },
 ];
 
 export default function BizSwapDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -104,12 +106,12 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
       )}
 
       {/* SIDEBAR */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0A0F17] border-r border-[#1C2538] flex flex-col h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0A0F17] border-r border-white/10 flex flex-col h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 md:p-6 flex items-center justify-between gap-1">
             <Link href="/bizswap" className="flex items-center gap-2">
               <span className="text-xl font-black text-[#81D7B4] tracking-tight">BizSwap</span>
             </Link>
-          <button className="md:hidden text-[#7B8B9A] hover:text-[#F9F9FB] p-1 shrink-0" onClick={() => setIsMobileMenuOpen(false)}>
+          <button className="md:hidden text-gray-400 hover:text-[#F9F9FB] p-1 shrink-0" onClick={() => setIsMobileMenuOpen(false)}>
             <Cancel01Icon className="w-6 h-6" />
           </button>
         </div>
@@ -124,10 +126,10 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
                   isActive 
                     ? 'bg-[#1C2538] text-[#F9F9FB]' 
-                    : 'text-[#7B8B9A] hover:bg-[#1C2538]/50 hover:text-[#F9F9FB]'
+                    : 'text-gray-400 hover:bg-[#1C2538]/50 hover:text-[#F9F9FB]'
                 }`}
               >
-                <link.icon className={`w-5 h-5 ${isActive ? 'text-[#81D7B4]' : 'text-[#7B8B9A]'}`} />
+                <link.icon className={`w-5 h-5 ${isActive ? 'text-[#81D7B4]' : 'text-gray-400'}`} />
                 {link.name}
               </Link>
             );
@@ -135,8 +137,8 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
           
           {/* Mobile Only Quick Links */}
           <div className="md:hidden mt-2 space-y-1">
-            <Link href="/bizswap/app/settings" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7B8B9A] hover:bg-[#1C2538]/50 hover:text-[#F9F9FB] transition-colors">
-              <Settings01Icon className="w-5 h-5 text-[#7B8B9A]" />
+            <Link href="/bizswap/app/settings" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:bg-[#1C2538]/50 hover:text-[#F9F9FB] transition-colors">
+              <Settings01Icon className="w-5 h-5 text-gray-400" />
               Settings
             </Link>
           </div>
@@ -149,18 +151,18 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
             <Add01Icon className="w-5 h-5" />
             Buy BizShares
           </Link>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7B8B9A] hover:bg-[#1C2538]/50 transition-colors opacity-50 cursor-not-allowed text-left mt-1">
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:bg-[#1C2538]/50 transition-colors opacity-50 cursor-not-allowed text-left mt-1">
             <div className="w-5 h-5 rounded-full border border-current flex items-center justify-center text-[10px]">C</div>
             Claim Yield
           </button>
         </nav>
 
-        <div className="p-4 border-t border-[#1C2538]">
-          <div className="bg-gradient-to-r from-[#1C2538] to-[#0A0F17] p-4 rounded-xl border border-[#2C3E5D]">
+        <div className="p-4 border-t border-white/10">
+          <div className="bg-gradient-to-r from-[#1C2538] to-[#0A0F17] p-4 rounded-xl border border-white/20">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-bold text-[#81D7B4]">Refer & Earn</p>
-                <p className="text-xs text-[#7B8B9A] mt-1">Invite friends, earn rewards</p>
+                <p className="text-xs text-gray-400 mt-1">Invite friends, earn rewards</p>
               </div>
               <GiftIcon className="w-5 h-5 text-[#81D7B4]" />
             </div>
@@ -173,17 +175,17 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#0A0F17]">
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#070A0F]">
         
         {/* HEADER */}
-        <header className="h-20 px-4 md:px-8 flex items-center justify-between border-b border-[#1C2538] flex-shrink-0">
+        <header className="h-20 px-4 md:px-8 flex items-center justify-between border-b border-white/10 flex-shrink-0 bg-[#0A0F17]">
           <div className="flex items-center gap-4">
-            <button className="md:hidden p-2 -ml-2 text-[#7B8B9A] hover:text-[#F9F9FB] rounded-lg hover:bg-[#1C2538] transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
+            <button className="md:hidden p-2 -ml-2 text-gray-400 hover:text-[#F9F9FB] rounded-lg hover:bg-[#1C2538] transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu01Icon className="w-6 h-6" />
             </button>
             <div className="hidden sm:block">
               <h1 className="text-xl font-black text-[#F9F9FB]">Welcome back, Savvy 👋</h1>
-              <p className="text-sm text-[#7B8B9A] mt-0.5">Here's your portfolio at a glance.</p>
+              <p className="text-sm text-gray-400 mt-0.5">Here's your portfolio at a glance.</p>
             </div>
             <div className="sm:hidden">
                <h1 className="text-lg font-black text-[#F9F9FB]">Portfolio</h1>
@@ -193,7 +195,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
             <div className="bizswap-wallet-wrapper">
               <BizSwapAuthButton connectText="Login" style={{ height: '36px', fontSize: '13px', borderRadius: '0.75rem', fontWeight: 'bold' }} />
             </div>
-            <Link href="/bizswap/app/alerts" className="hidden md:flex relative w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
+            <Link href="/bizswap/app/alerts" className="hidden md:flex relative w-10 h-10 rounded-xl bg-[#1C2538] border border-white/20 items-center justify-center text-gray-400 hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
               <Notification01Icon className="w-5 h-5" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#81D7B4] rounded-full text-[#0A0F17] text-[9px] font-bold flex items-center justify-center">
@@ -201,7 +203,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
                 </span>
               )}
             </Link>
-            <Link href="/bizswap/app/settings" className="hidden md:flex w-10 h-10 rounded-xl bg-[#1C2538] border border-[#2C3E5D] items-center justify-center text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
+            <Link href="/bizswap/app/settings" className="hidden md:flex w-10 h-10 rounded-xl bg-[#1C2538] border border-white/20 items-center justify-center text-gray-400 hover:text-[#F9F9FB] hover:bg-[#2C3E5D] transition-colors cursor-pointer active:scale-95">
               <Settings01Icon className="w-5 h-5" />
             </Link>
           </div>
@@ -244,7 +246,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-[#F9F9FB]">Refer &amp; Earn</h2>
-                    <p className="text-xs text-[#7B8B9A]">Share your code, earn rewards</p>
+                    <p className="text-xs text-gray-400">Share your code, earn rewards</p>
                   </div>
                 </div>
                 <button onClick={() => setShowReferralModal(false)} className="text-[#4B5A75] hover:text-[#F9F9FB] transition-colors p-1 rounded-lg hover:bg-[#1C2538]">
@@ -254,7 +256,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
 
               {/* Referral Code Box */}
               <div className="mb-6">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-2">Your Referral Code</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Your Referral Code</p>
                 <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ backgroundColor: 'rgba(129,215,180,0.06)', border: '1px solid rgba(129,215,180,0.15)' }}>
                   {referralLoading ? (
                     <div className="flex-1 h-7 bg-[#1C2538] rounded-lg animate-pulse" />
@@ -270,7 +272,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
                   <button
                     onClick={copyLink}
                     className={`mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-colors ${
-                      copied ? 'text-[#81D7B4] bg-[#81D7B4]/10 border-[#81D7B4]/30' : 'text-[#7B8B9A] hover:text-[#81D7B4] bg-[#1C2538]/60 border-[#1C2538]'
+                      copied ? 'text-[#81D7B4] bg-[#81D7B4]/10 border-[#81D7B4]/30' : 'text-gray-400 hover:text-[#81D7B4] bg-[#1C2538]/60 border-white/10'
                     }`}
                     style={!copied ? { backgroundColor: 'rgba(28,37,56,0.6)' } : {}}
                   >
@@ -282,7 +284,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
 
               {/* How It Works */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-3">How It Works</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">How It Works</p>
                 <div className="space-y-3">
                   {[
                     { step: '1', title: 'Share your code', desc: 'Send your referral code or invite link to friends.' },
@@ -295,7 +297,7 @@ export default function BizSwapDashboardLayout({ children }: { children: React.R
                       </div>
                       <div>
                         <p className="text-sm font-bold text-[#F9F9FB]">{title}</p>
-                        <p className="text-xs text-[#7B8B9A] mt-0.5">{desc}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
                       </div>
                     </div>
                   ))}

@@ -68,7 +68,7 @@ export default function BizFiDashboardLayout({
                     {/* Collapse Button - Desktop Only */}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="hidden lg:block p-1 rounded-lg transition-colors text-[#7B8B9A] hover:bg-gray-800 hover:text-white"
+                        className="hidden lg:block p-1 rounded-lg transition-colors text-gray-400 hover:bg-gray-800 hover:text-white"
                     >
                         {isCollapsed ? (
                             <Activity01Icon className="w-5 h-5" />

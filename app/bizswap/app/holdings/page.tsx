@@ -36,6 +36,8 @@ export default function HoldingsPage() {
 
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterInstrument, setFilterInstrument] = useState('All');
 
   useEffect(() => {
     if (connected && walletAddress) {
@@ -60,10 +62,19 @@ export default function HoldingsPage() {
     }
   };
 
-  const totalValue = holdings.reduce((sum, h) => sum + h.investmentAmount, 0);
-  const byTotal = holdings.filter(h => h.instrument === 'BizYield').reduce((s, h) => s + h.investmentAmount, 0);
-  const bcTotal = holdings.filter(h => h.instrument === 'BizCredit').reduce((s, h) => s + h.investmentAmount, 0);
-  const bbTotal = holdings.filter(h => h.instrument === 'BizBond').reduce((s, h) => s + h.investmentAmount, 0);
+  const filteredHoldings = holdings.filter(h => {
+    const matchSearch = !searchQuery || 
+      (h.instrument || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.serialNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.status || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchFilter = filterInstrument === 'All' || h.instrument === filterInstrument;
+    return matchSearch && matchFilter;
+  });
+
+  const totalValue = holdings.reduce((sum, h) => sum + (h.investmentAmount || 0), 0);
+  const byTotal = holdings.filter(h => h.instrument === 'BizYield').reduce((s, h) => s + (h.investmentAmount || 0), 0);
+  const bcTotal = holdings.filter(h => h.instrument === 'BizCredit').reduce((s, h) => s + (h.investmentAmount || 0), 0);
+  const bbTotal = holdings.filter(h => h.instrument === 'BizBond').reduce((s, h) => s + (h.investmentAmount || 0), 0);
 
   const getExpectedPaymentAmount = (holding: Holding) => {
     const yieldRateMap: Record<string, number> = {
@@ -231,14 +242,22 @@ export default function HoldingsPage() {
               <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B5A75]" />
               <input 
                 type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search holdings..." 
                 className="w-full bg-[#0A0F17] border border-[#1C2538] rounded-xl pl-9 pr-4 py-2.5 text-sm font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4]/50 transition-colors shadow-inner placeholder:font-normal placeholder:text-[#4B5A75]"
               />
             </div>
-            <button className="flex items-center justify-center gap-2 text-xs font-bold text-[#F9F9FB] hover:text-[#81D7B4] border border-[#1C2538] bg-[#0A0F17] px-4 py-2.5 rounded-xl transition-colors shadow-sm w-full sm:w-auto shrink-0">
-              <FilterIcon className="w-4 h-4" />
-              Filter
-            </button>
+            <select
+              value={filterInstrument}
+              onChange={(e) => setFilterInstrument(e.target.value)}
+              className="bg-[#0A0F17] border border-[#1C2538] rounded-xl px-4 py-2.5 text-xs font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4]/50 transition-colors shadow-sm cursor-pointer"
+            >
+              <option value="All">All Instruments</option>
+              <option value="BizYield">BizYield</option>
+              <option value="BizCredit">BizCredit</option>
+              <option value="BizBond">BizBond</option>
+            </select>
           </div>
         </div>
         
@@ -265,22 +284,24 @@ export default function HoldingsPage() {
               </div>
             ))}
           </div>
-        ) : holdings.length === 0 ? (
+        ) : filteredHoldings.length === 0 ? (
           <div className="p-16 flex flex-col items-center justify-center text-center">
             <div className="w-20 h-20 rounded-full bg-[#1C2538]/30 flex items-center justify-center mb-4 border border-[#2C3E5D]/30">
               <Briefcase01Icon className="w-8 h-8 text-[#4B5A75]" />
             </div>
-            <h3 className="text-xl font-black text-[#F9F9FB] mb-2">No Active Holdings</h3>
-            <p className="text-[#7B8B9A] max-w-sm mb-6">You don't have any active investment contracts in your portfolio yet.</p>
-            <a href="/bizswap/buy" className="text-sm font-bold text-[#0A0F17] bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] px-6 py-3 rounded-xl hover:brightness-110 transition-all shadow-[0_4px_20px_rgba(129,215,180,0.2)]">
-              Explore BizShares
-            </a>
+            <h3 className="text-xl font-black text-[#F9F9FB] mb-2">{holdings.length === 0 ? 'No Active Holdings' : 'No Matching Holdings'}</h3>
+            <p className="text-[#7B8B9A] max-w-sm mb-6">{holdings.length === 0 ? "You don't have any active investment contracts in your portfolio yet." : "No holdings match your search criteria."}</p>
+            {holdings.length === 0 && (
+              <a href="/bizswap/buy" className="text-sm font-bold text-[#0A0F17] bg-gradient-to-r from-[#81D7B4] to-[#6BC4A0] px-6 py-3 rounded-xl hover:brightness-110 transition-all shadow-[0_4px_20px_rgba(129,215,180,0.2)]">
+                Explore BizShares
+              </a>
+            )}
           </div>
         ) : (
           <div className="w-full">
             {/* MOBILE CARD LAYOUT */}
             <div className="md:hidden flex flex-col divide-y divide-[#1C2538]/50">
-              {holdings.map((h) => (
+              {filteredHoldings.map((h) => (
                 <div key={h._id} className="p-5 flex flex-col gap-4 hover:bg-[#1C2538]/20 transition-colors">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
@@ -342,7 +363,7 @@ export default function HoldingsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1C2538]/50">
-                  {holdings.map((h) => (
+                  {filteredHoldings.map((h) => (
                     <tr key={h._id} className="hover:bg-[#1C2538]/30 transition-colors group">
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-4">

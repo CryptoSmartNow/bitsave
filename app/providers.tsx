@@ -1,32 +1,16 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createConfig, http } from 'wagmi';
+import { createConfig } from 'wagmi';
+import { fallback, http } from 'viem';
 import { base, celo, avalanche, mainnet, baseSepolia, optimismSepolia, arbitrumSepolia, polygonAmoy } from 'viem/chains';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { PrivyProvider } from '@privy-io/react-auth';
-import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { usePathname } from 'next/navigation';
 import { injected } from 'wagmi/connectors';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
-import { useMemo } from 'react';
-import { 
-  PhantomWalletAdapter, 
-  SolflareWalletAdapter,
-  CoinbaseWalletAdapter,
-  TrustWalletAdapter,
-  LedgerWalletAdapter,
-  TrezorWalletAdapter,
-  BitgetWalletAdapter,
-  MathWalletAdapter,
-  TokenPocketWalletAdapter,
-  Coin98WalletAdapter,
-  SafePalWalletAdapter
-} from '@solana/wallet-adapter-wallets';
+import { Toaster } from 'react-hot-toast';
 
 // Define the project ID for WalletConnect (used by Privy if configured, or internally)
 const projectId = 'dfffb9bb51c39516580c01f134de2345';
@@ -69,86 +53,79 @@ const botchainTestnet = {
   network: 'botchain-testnet',
   nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 },
   rpcUrls: {
-    default: { http: [process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai'] },
-    public: { http: [process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai'] },
+    default: { http: ['https://testnet-rpc.botchain.app'] },
+    public: { http: ['https://testnet-rpc.botchain.app'] },
   },
   blockExplorers: {
-    default: { name: 'BOT Explorer', url: 'https://testnet-explorer.botchain.ai' },
+    default: { name: 'BOT Testnet Explorer', url: 'https://testnet-scan.botchain.app' },
   },
   testnet: true,
 } as const;
 
 // Define custom Botchain Mainnet
 const botchainMainnet = {
-  id: 677,
-  name: 'BOT Mainnet',
+  id: 969,
+  name: 'Botchain Mainnet',
   network: 'botchain-mainnet',
   nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.botchain.ai'] },
-    public: { http: ['https://rpc.botchain.ai'] },
+    default: { http: ['https://rpc.botchain.app'] },
+    public: { http: ['https://rpc.botchain.app'] },
   },
   blockExplorers: {
-    default: { name: 'BOT Explorer', url: 'https://explorer.botchain.ai' },
+    default: { name: 'Botchain Explorer', url: 'https://scan.botchain.app' },
   },
 } as const;
 
-// Define the supported chains
-const chains = [base, baseSepolia, botchainTestnet, botchainMainnet, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet] as const;
-
-const config = createConfig({
-  chains,
-  ssr: true,
-  transports: {
-    [base.id]: http(process.env.NEXT_PUBLIC_RPC_URL),
-    [baseSepolia.id]: http(),
-    [botchainTestnet.id]: http(process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai'),
-    [botchainMainnet.id]: http('https://rpc.botchain.ai'),
-    [optimismSepolia.id]: http(),
-    [arbitrumSepolia.id]: http(),
-    [polygonAmoy.id]: http(),
-    [celo.id]: http(),
-    [avalanche.id]: http(),
-    [lisk.id]: http(),
-    [hedera.id]: http(),
-    [mainnet.id]: http(),
-  },
+// Wagmi configuration for EVM chains with multi-RPC high availability fallback
+export const config = createConfig({
+  chains: [base, celo, lisk, avalanche, mainnet, baseSepolia, optimismSepolia, arbitrumSepolia, polygonAmoy],
   connectors: [
     injected(),
   ],
-});
-
-const queryClient = new QueryClient();
-
-// Define Solana clusters
-const solanaConnectors = toSolanaWalletConnectors({
-  shouldAutoConnect: false,
+  transports: {
+    [base.id]: fallback([
+      http('https://mainnet.base.org'),
+      http('https://base.llamarpc.com'),
+      http('https://base.publicnode.com'),
+    ]),
+    [celo.id]: fallback([
+      http('https://forno.celo.org'),
+      http('https://celo.drpc.org'),
+      http('https://rpc.ankr.com/celo'),
+    ]),
+    [lisk.id]: fallback([
+      http('https://rpc.api.lisk.com'),
+      http('https://lisk.drpc.org'),
+    ]),
+    [avalanche.id]: fallback([
+      http('https://api.avax.network/ext/bc/C/rpc'),
+      http('https://avalanche.drpc.org'),
+    ]),
+    [mainnet.id]: fallback([
+      http('https://cloudflare-eth.com'),
+      http('https://eth.llamarpc.com'),
+    ]),
+    [baseSepolia.id]: fallback([
+      http('https://sepolia.base.org'),
+      http('https://base-sepolia-rpc.publicnode.com'),
+    ]),
+    [optimismSepolia.id]: http(),
+    [arbitrumSepolia.id]: http(),
+    [polygonAmoy.id]: http(),
+  },
+  ssr: true,
 });
 
 function InnerProviders({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
   const { theme } = useTheme();
   const pathname = usePathname();
   const isBizSwap = pathname?.startsWith('/bizswap');
   const isBizFi = pathname?.startsWith('/bizfi') || pathname?.startsWith('/bizfun');
-  const isPrivyLoginEnabled = isBizFi || isBizSwap;
 
   // Force dark theme for BizFi pages
   const effectiveTheme = isBizFi ? 'dark' : (theme === 'dark' ? 'dark' : 'light');
-
-  const solanaNetwork = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl('devnet');
-  const wallets = useMemo(() => [
-    new PhantomWalletAdapter(),
-    new SolflareWalletAdapter(),
-    new CoinbaseWalletAdapter(),
-    new TrustWalletAdapter(),
-    new LedgerWalletAdapter(),
-    new TrezorWalletAdapter(),
-    new BitgetWalletAdapter(),
-    new MathWalletAdapter(),
-    new TokenPocketWalletAdapter(),
-    new Coin98WalletAdapter(),
-    new SafePalWalletAdapter(),
-  ], []);
 
   return (
     <PrivyProvider
@@ -158,63 +135,49 @@ function InnerProviders({ children }: { children: ReactNode }) {
           theme: effectiveTheme as 'light' | 'dark',
           accentColor: '#81D7B4',
           logo: "/bitsavelogo.png",
-          showWalletLoginFirst: !isBizSwap,
+          showWalletLoginFirst: true,
         },
         embeddedWallets: {
           ethereum: {
-            createOnLogin: isBizSwap ? "all-users" : "users-without-wallets",
+            createOnLogin: "users-without-wallets",
           },
         },
-        loginMethods: isBizSwap 
-          ? ['email', 'google', 'twitter', 'linkedin', 'discord', 'apple']
-          : isBizFi 
-            ? ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'] 
-            : ['wallet'],
+        loginMethods: ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
         supportedChains: [base, baseSepolia, botchainTestnet, botchainMainnet, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
           walletConnect: { enabled: true },
-          solana: { connectors: solanaConnectors }
         },
       }}
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
-          <ConnectionProvider endpoint={solanaNetwork}>
-            <WalletProvider wallets={wallets} autoConnect>
-              <WalletModalProvider>
-                {children}
-              </WalletModalProvider>
-            </WalletProvider>
-          </ConnectionProvider>
+          {children}
+          <Toaster 
+            position="top-center" 
+            toastOptions={{
+              style: {
+                background: '#333',
+                color: '#fff',
+                borderRadius: '10px',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#81D7B4',
+                  secondary: '#fff',
+                },
+              },
+            }} 
+          />
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
   );
 }
 
-import { Toaster } from 'react-hot-toast';
-
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <InnerProviders>
-        <>
-          {children}
-          <Toaster position="top-center" toastOptions={{
-            style: {
-              background: '#333',
-              color: '#fff',
-              borderRadius: '10px',
-            },
-            success: {
-              iconTheme: {
-                primary: '#81D7B4',
-                secondary: '#fff',
-              },
-            },
-          }} />
-        </>
-      </InnerProviders>
+      <InnerProviders>{children}</InnerProviders>
     </ThemeProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBizSwapCollection, getDatabase } from '@/lib/mongodb';
-import { redis } from '@/lib/redis';
+import { getCache, setCache } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,11 +12,9 @@ export async function GET(req: NextRequest) {
     }
 
     const cacheKey = `bizswap:holdings:${wallet}`;
-    if (redis) {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        return NextResponse.json({ success: true, data: JSON.parse(cached) });
-      }
+    const cached = await getCache<any[]>(cacheKey);
+    if (cached) {
+      return NextResponse.json({ success: true, data: cached });
     }
 
     const collection = await getBizSwapCollection();
@@ -50,9 +48,7 @@ export async function GET(req: NextRequest) {
 
     const holdings = await collection.find(query).sort({ createdAt: -1 }).toArray();
 
-    if (redis) {
-      await redis.set(cacheKey, JSON.stringify(holdings), 'EX', 60); // cache for 60 seconds
-    }
+    await setCache(cacheKey, holdings, 60); // cache for 60 seconds
 
     return NextResponse.json({ success: true, data: holdings });
   } catch (error: any) {

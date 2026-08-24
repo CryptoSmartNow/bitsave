@@ -30,7 +30,7 @@ function NotifyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0F1825]/80 backdrop-blur-sm"
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#121212]/80 backdrop-blur-sm"
                 onClick={onClose}
             >
                 <motion.div
@@ -40,7 +40,7 @@ function NotifyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                     onClick={(e) => e.stopPropagation()}
                     className="w-full max-w-md bg-[#0D1724] border border-[#1E2F45] rounded-3xl p-8 shadow-2xl relative"
                 >
-                    <button onClick={onClose} className="absolute top-4 right-4 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-[#F9F9FB] transition-colors">
                         <Cancel01Icon className="w-6 h-6" />
                     </button>
 
@@ -49,7 +49,7 @@ function NotifyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                             <Notification01Icon className="w-8 h-8" />
                         </div>
                         <h3 className="text-2xl font-bold text-[#F9F9FB] mb-2" style={{ fontFamily: "var(--font-display)" }}>Stay Updated</h3>
-                        <p className="text-[#7B8B9A] mb-8">Enter your email to get notified when our roadmap triggers are hit.</p>
+                        <p className="text-gray-400 mb-8">Enter your email to get notified when our roadmap triggers are hit.</p>
 
                         <form className="w-full space-y-4" onSubmit={(e) => { e.preventDefault(); onClose(); }}>
                             <input
@@ -101,7 +101,7 @@ export default function BizFiLandingPage() {
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen bg-[#0F1825] text-[#F9F9FB] font-sans overflow-x-hidden selection:bg-[#81D7B4] selection:text-[#0F1825]">
+        <div className="min-h-screen bg-[#121212] text-[#F9F9FB] font-sans overflow-x-hidden selection:bg-[#81D7B4] selection:text-[#0F1825]">
             <style dangerouslySetInnerHTML={{ __html: `
                 @media (min-width: 1024px) {
                     html { font-size: 90% !important; }
@@ -115,7 +115,7 @@ export default function BizFiLandingPage() {
 
             {/* NAV */}
             <div className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none">
-                <nav className="pointer-events-auto w-full max-w-[1400px] rounded-2xl border border-[#2C3E5D]/50 bg-[#0F1825]/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                <nav className="pointer-events-auto w-full max-w-[1400px] rounded-2xl border border-white/20/50 bg-[#121212]/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
                     <div className="px-6 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-6">
                             <Link href="/bizfi" className="flex items-center group">
@@ -132,7 +132,7 @@ export default function BizFiLandingPage() {
                             <div className="hidden md:block">
                                 <LanguageSelector />
                             </div>
-                            <Link href="/dashboard" className="hidden sm:flex items-center text-[#7B8B9A] hover:text-[#81D7B4] transition-colors text-sm font-bold">
+                            <Link href="/dashboard" className="hidden sm:flex items-center text-gray-400 hover:text-[#81D7B4] transition-colors text-sm font-bold">
                                 Back to SaveFi
                             </Link>
                             
@@ -141,7 +141,7 @@ export default function BizFiLandingPage() {
                                     <div className="hidden sm:block px-3 py-1.5 rounded-full border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5]">
                                         {address.slice(0, 6)}...{address.slice(-4)}
                                     </div>
-                                    <button onClick={() => disconnect()} className="hidden sm:block text-xs text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors font-bold">
+                                    <button onClick={() => disconnect()} className="hidden sm:block text-xs text-gray-400 hover:text-[#F9F9FB] transition-colors font-bold">
                                         Logout
                                     </button>
                                 </div>
@@ -153,7 +153,7 @@ export default function BizFiLandingPage() {
 
                             {/* Mobile Hamburger Button */}
                             <button
-                                className="md:hidden p-2 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors rounded-lg bg-[#1A2538]/50 border border-[#2C3E5D]/50"
+                                className="md:hidden p-2 text-gray-400 hover:text-[#F9F9FB] transition-colors rounded-lg bg-[#1A2538]/50 border border-white/20/50"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             >
                                 {isMobileMenuOpen ? (
@@ -176,7 +176,7 @@ export default function BizFiLandingPage() {
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="md:hidden border-t border-[#2C3E5D]/50 overflow-hidden bg-[#0D1724]/95 backdrop-blur-3xl rounded-b-2xl pointer-events-auto"
+                                className="md:hidden border-t border-white/20/50 overflow-hidden bg-[#0D1724]/95 backdrop-blur-3xl rounded-b-2xl pointer-events-auto"
                             >
                                 <div className="p-6 flex flex-col gap-6">
                                     <div className="flex flex-col gap-4 text-sm font-bold">
@@ -185,13 +185,13 @@ export default function BizFiLandingPage() {
                                         <a href="#products" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F9F9FB] hover:text-[#81D7B4] transition-colors">Products</a>
                                         <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F9F9FB] hover:text-[#81D7B4] transition-colors">Back to SaveFi</Link>
                                     </div>
-                                    <div className="pt-4 border-t border-[#2C3E5D]/50 flex justify-center">
+                                    <div className="pt-4 border-t border-white/20/50 flex justify-center">
                                         {isConnected && address ? (
                                             <div className="flex flex-col gap-4 w-full">
                                                 <div className="px-3 py-2 rounded-lg border text-xs font-mono bg-[#1A2538]/50 border-[#7B8B9A]/20 text-[#9BA8B5] text-center">
                                                     {address.slice(0, 6)}...{address.slice(-4)}
                                                 </div>
-                                                <button onClick={() => { disconnect(); setIsMobileMenuOpen(false); }} className="w-full py-2 rounded-lg border border-[#2C3E5D] text-sm text-[#F9F9FB] font-bold">
+                                                <button onClick={() => { disconnect(); setIsMobileMenuOpen(false); }} className="w-full py-2 rounded-lg border border-white/20 text-sm text-[#F9F9FB] font-bold">
                                                     Logout
                                                 </button>
                                             </div>
@@ -243,7 +243,7 @@ export default function BizFiLandingPage() {
                                 and access capital.
                             </motion.h1>
 
-                            <motion.p variants={fadeUp} className="text-[#7B8B9A] text-xl leading-relaxed max-w-2xl mb-12">
+                            <motion.p variants={fadeUp} className="text-gray-400 text-xl leading-relaxed max-w-2xl mb-12">
                                 BizFi connects visionaries with global capital. Launch your business on the blockchain in minutes, not months.
                             </motion.p>
 
@@ -251,7 +251,7 @@ export default function BizFiLandingPage() {
                                 <Link href="/bizfi/dashboard" className="flex-1 sm:flex-none px-3 sm:px-8 py-3.5 sm:py-4 bg-[#81D7B4] text-[#0F1825] font-black rounded-xl text-[14px] sm:text-lg text-center transition-all hover:opacity-90 hover:scale-105 hover:shadow-[0_8px_24px_rgba(129,215,180,0.25)] whitespace-nowrap" style={{ fontFamily: "var(--font-display)" }}>
                                     Launch Business
                                 </Link>
-                                <a href="#how-it-works" className="flex-1 sm:flex-none px-3 sm:px-8 py-3.5 sm:py-4 text-[#9BA8B5] font-bold text-[14px] sm:text-lg text-center border border-[#2C3E5D] rounded-xl transition-all hover:border-[#81D7B4]/40 hover:text-[#F9F9FB] whitespace-nowrap">
+                                <a href="#how-it-works" className="flex-1 sm:flex-none px-3 sm:px-8 py-3.5 sm:py-4 text-[#9BA8B5] font-bold text-[14px] sm:text-lg text-center border border-white/20 rounded-xl transition-all hover:border-[#81D7B4]/40 hover:text-[#F9F9FB] whitespace-nowrap">
                                     Learn More
                                 </a>
                             </motion.div>
@@ -276,7 +276,7 @@ export default function BizFiLandingPage() {
                                 <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB] mb-6" style={{ fontFamily: "var(--font-display)" }}>
                                     How it<br /><span className="text-[#81D7B4]">Works</span>
                                 </motion.h2>
-                                <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed">
+                                <motion.p variants={fadeUp} className="text-gray-400 text-lg leading-relaxed">
                                     A simple, transparent process to get your business funded and scale onchain.
                                 </motion.p>
                             </motion.div>
@@ -292,7 +292,7 @@ export default function BizFiLandingPage() {
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="text-3xl font-extrabold text-[#F9F9FB] mb-3" style={{ fontFamily: "var(--font-display)" }}>{item.title}</h3>
-                                            <p className="text-[#7B8B9A] text-lg leading-relaxed max-w-xl">{item.desc}</p>
+                                            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">{item.desc}</p>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -313,7 +313,7 @@ export default function BizFiLandingPage() {
                                 <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>
                                     Built for<br /><span className="text-[#81D7B4]">Everyone.</span>
                                 </motion.h2>
-                                <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed">
+                                <motion.p variants={fadeUp} className="text-gray-400 text-lg leading-relaxed">
                                     Whether you are building the next big thing or looking to invest in real-world value, BizMarket provides the immutable infrastructure.
                                 </motion.p>
                             </div>
@@ -327,7 +327,7 @@ export default function BizFiLandingPage() {
                                         <span className="px-3 py-1 bg-[#81D7B4]/10 text-[#81D7B4] text-xs font-bold rounded-full">Available Now</span>
                                     </div>
                                     <h4 className="text-4xl font-extrabold text-[#F9F9FB] mb-4 group-hover:text-[#81D7B4] transition-colors" style={{ fontFamily: "var(--font-display)" }}>For Business Owners</h4>
-                                    <p className="text-[#7B8B9A] text-lg leading-relaxed mb-8">Tokenize your SME, Start-Up, Company, Project, or Idea on BizMarket directly.</p>
+                                    <p className="text-gray-400 text-lg leading-relaxed mb-8">Tokenize your SME, Start-Up, Company, Project, or Idea on BizMarket directly.</p>
                                 </div>
                                 <Link href="/bizfi/dashboard" className="text-[#81D7B4] font-bold text-lg inline-flex items-center gap-2 hover:gap-4 transition-all">
                                     Launch Business →
@@ -340,7 +340,7 @@ export default function BizFiLandingPage() {
                                         <p className="text-xs font-black tracking-[0.2em] text-[#81D7B4]/50" style={{ fontFamily: "var(--font-display)" }}>INVESTORS</p>
                                     </div>
                                     <h4 className="text-4xl font-extrabold text-[#F9F9FB] mb-4" style={{ fontFamily: "var(--font-display)" }}>For Investors</h4>
-                                    <p className="text-[#7B8B9A] text-lg leading-relaxed mb-8">Own equity or revenue of Real World Businesses curated from our portfolio. Backed by solid metrics.</p>
+                                    <p className="text-gray-400 text-lg leading-relaxed mb-8">Own equity or revenue of Real World Businesses curated from our portfolio. Backed by solid metrics.</p>
                                 </div>
                                 <Link href="/bizswap" className="text-[#81D7B4] font-bold text-lg inline-flex items-center gap-2 hover:gap-4 transition-all">
                                     Start Investing →
@@ -359,7 +359,7 @@ export default function BizFiLandingPage() {
                                     <span className="text-[#81D7B4] text-xs font-bold tracking-[0.2em] uppercase">Learn</span>
                                 </div>
                                 <h4 className="text-3xl md:text-4xl font-extrabold text-[#F9F9FB] mb-4" style={{ fontFamily: "var(--font-display)" }}>Investing in BizShares</h4>
-                                <p className="text-[#7B8B9A] text-lg leading-relaxed">
+                                <p className="text-gray-400 text-lg leading-relaxed">
                                     Master the mechanics of onchain business financing. Explore our curated series to understand how to build and manage a powerful portfolio of real-world assets.
                                 </p>
                             </motion.div>
@@ -399,11 +399,11 @@ export default function BizFiLandingPage() {
                                 <motion.h2 variants={fadeUp} className="text-5xl md:text-6xl font-extrabold leading-[1.06] text-[#F9F9FB] mb-4" style={{ fontFamily: "var(--font-display)" }}>
                                     BizFi Products
                                 </motion.h2>
-                                <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed">
+                                <motion.p variants={fadeUp} className="text-gray-400 text-lg leading-relaxed">
                                     A suite of financial tools designed to power the next generation of borderless business finance.
                                 </motion.p>
                             </motion.div>
-                            <motion.button initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} onClick={() => setShowNotifyModal(true)} className="px-6 py-3 border border-[#2C3E5D] text-[#F9F9FB] rounded-xl font-bold hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors whitespace-nowrap">
+                            <motion.button initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} onClick={() => setShowNotifyModal(true)} className="px-6 py-3 border border-white/20 text-[#F9F9FB] rounded-xl font-bold hover:border-[#81D7B4] hover:text-[#81D7B4] transition-colors whitespace-nowrap">
                                 Get Notified When Live
                             </motion.button>
                         </div>
@@ -414,12 +414,12 @@ export default function BizFiLandingPage() {
                                 { title: "BizSwap", desc: "Provide liquidity for the top 1% projects on BizMarket; earn a Savvy 10% markup.", status: "Live", link: "/bizswap" },
                                 { title: "Bitloans", desc: "Use your BizShares or ETH as collateral and borrow Local StableCoins seamlessly.", status: "Coming Soon" }
                             ].map((p, i) => (
-                                <motion.div key={i} variants={fadeUp} className="group grid grid-cols-12 gap-6 items-center bg-[#0D1724] border border-[#1E2F45] rounded-2xl px-8 py-8 transition-all hover:-translate-y-0.5 hover:border-[#2C3E5D]">
+                                <motion.div key={i} variants={fadeUp} className="group grid grid-cols-12 gap-6 items-center bg-[#0D1724] border border-[#1E2F45] rounded-2xl px-8 py-8 transition-all hover:-translate-y-0.5 hover:border-white/20">
                                     <div className="col-span-12 md:col-span-3">
                                         <h3 className="text-3xl font-extrabold text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>{p.title}</h3>
                                     </div>
                                     <div className="col-span-12 md:col-span-6">
-                                        <p className="text-[#7B8B9A] text-lg leading-relaxed">{p.desc}</p>
+                                        <p className="text-gray-400 text-lg leading-relaxed">{p.desc}</p>
                                     </div>
                                     <div className="col-span-12 md:col-span-3 md:text-right flex justify-start md:justify-end">
                                         {p.link ? (
@@ -437,7 +437,7 @@ export default function BizFiLandingPage() {
                 </section>
 
                 {/* NEWSLETTER */}
-                <section className="relative bg-[#0F1825] overflow-hidden py-32">
+                <section className="relative bg-[#121212] overflow-hidden py-32">
                     <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, rgba(129,215,180,0.02) 1px, transparent 1px)", backgroundSize: "44px 44px" }} />
                     <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
                         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -445,7 +445,7 @@ export default function BizFiLandingPage() {
                                 <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-extrabold leading-[1.06] text-[#F9F9FB] mb-6" style={{ fontFamily: "var(--font-display)" }}>
                                     The art of <span className="text-[#81D7B4]">Savviness.</span>
                                 </motion.h2>
-                                <motion.p variants={fadeUp} className="text-[#7B8B9A] text-lg leading-relaxed mb-8">
+                                <motion.p variants={fadeUp} className="text-gray-400 text-lg leading-relaxed mb-8">
                                     Get smarter with your money — personal and business finance strategies to build growth, delivered straight to your inbox.
                                 </motion.p>
                             </motion.div>
@@ -458,12 +458,12 @@ export default function BizFiLandingPage() {
             </main>
 
             {/* FOOTER */}
-            <footer className="border-t border-[#2C3E5D] py-12 bg-[#0A0F17] relative z-10">
+            <footer className="border-t border-white/20 py-12 bg-[#121212] relative z-10">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center">
                         <span className="text-xl font-black tracking-tight text-[#81D7B4]" style={{ fontFamily: "var(--font-display)" }}>BizFi</span>
                     </div>
-                    <p className="text-[#7B8B9A] text-sm">© {new Date().getFullYear()} Bitsave Bizfi. All rights reserved.</p>
+                    <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Bitsave Bizfi. All rights reserved.</p>
                     <div className="flex gap-6 text-sm font-medium text-[#9BA8B5]">
                         <a href="https://x.com/bitsaveprotocol" target="_blank" rel="noopener noreferrer" className="hover:text-[#81D7B4] transition-colors">Twitter</a>
                         <a href="https://t.me/+YimKRR7wAkVmZGRk" target="_blank" rel="noopener noreferrer" className="hover:text-[#81D7B4] transition-colors">Telegram</a>

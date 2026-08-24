@@ -29,18 +29,18 @@ export default function BizFiSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-[#9BA8B5] mb-2">Username</label>
-                <div className="w-full bg-[#0F1825] border border-[#7B8B9A]/20 rounded-xl px-4 py-2.5 text-[#F9F9FB] opacity-70 flex items-center h-11">
+                <div className="w-full bg-[#121212] border border-[#7B8B9A]/20 rounded-xl px-4 py-2.5 text-[#F9F9FB] opacity-70 flex items-center h-11">
                   {user?.username || 'Loading...'}
                 </div>
               </div>
               <div>
                 <label className="block text-sm text-[#9BA8B5] mb-2">Role</label>
-                <div className="w-full bg-[#0F1825] border border-[#7B8B9A]/20 rounded-xl px-4 py-2.5 text-[#F9F9FB] opacity-70 capitalize flex items-center h-11">
+                <div className="w-full bg-[#121212] border border-[#7B8B9A]/20 rounded-xl px-4 py-2.5 text-[#F9F9FB] opacity-70 capitalize flex items-center h-11">
                   {user?.role || 'Admin'}
                 </div>
               </div>
             </div>
-            <p className="text-sm text-[#7B8B9A] italic">
+            <p className="text-sm text-gray-400 italic">
               * Account details are managed by system administrators via environment configuration.
             </p>
           </div>
@@ -67,7 +67,7 @@ export default function BizFiSettingsPage() {
         </div>
 
         {/* System Info */}
-        <div className="text-center text-[#7B8B9A] text-sm pt-8">
+        <div className="text-center text-gray-400 text-sm pt-8">
           <p>BizFi Admin Dashboard v1.0.0</p>
           <p>Environment: {process.env.NODE_ENV === 'production' ? 'Production' : 'Development'}</p>
         </div>

@@ -23,11 +23,12 @@ export async function POST(request: NextRequest) {
 
     const usersCollection = db.collection('users');
     
-    // Tick if user already exists
-    const user = await usersCollection.findOne({ walletAddress });
+    // Check if user already exists
+    const user = await usersCollection.findOne({ 
+      walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } 
+    });
     
     if (user && user.referralCode) {
-      // User already has a referral code
       return NextResponse.json({
         referralCode: user.referralCode,
         referralLink: `https://bitsave.io/ref/${user.referralCode}`,
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     let isUnique = false;
     
     while (!isUnique) {
-      referralCode = nanoid(8); // Generate 8-character code
+      referralCode = nanoid(8);
       const existingUser = await usersCollection.findOne({ referralCode });
       if (!existingUser) {
         isUnique = true;
@@ -49,14 +50,14 @@ export async function POST(request: NextRequest) {
     
     // Update or create user with referral code
     await usersCollection.updateOne(
-      { walletAddress },
+      { walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } },
       {
         $set: {
           referralCode,
           updatedAt: new Date().toISOString()
         },
         $setOnInsert: {
-          walletAddress,
+          walletAddress: walletAddress,
           createdAt: new Date().toISOString(),
           referralCount: 0,
           totalReferralRewards: 0

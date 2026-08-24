@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getBizSwapCollection } from '@/lib/mongodb';
-import { redis } from '@/lib/redis';
+import { getCache, setCache } from '@/lib/redis';
+
 export async function GET() {
   try {
-    const cacheKey = 'bizswap:analytics:global';
-    if (redis) {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        return NextResponse.json(JSON.parse(cached));
-      }
+    const cacheKey = 'bizswap:analytics:global:v2';
+    const cached = await getCache<any>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const collection = await getBizSwapCollection();
@@ -29,7 +28,17 @@ export async function GET() {
     const usersMap: Record<string, any> = {};
 
     for (const holding of allHoldings) {
-      const amount = holding.investmentAmount || 0;
+      let amount = holding.investmentAmount || 0;
+      const currency = holding.currency || 'USDC';
+      
+      // Clean sweep: if amount is suspiciously large (e.g., > 10000) and no NGN currency was explicitly set, 
+      // it was likely an NGN purchase that wasn't tagged correctly in the past.
+      const isNgn = currency === 'NGN' || currency === 'cNGN' || amount > 10000;
+      
+      if (isNgn) {
+        amount = amount / 1346.49; // Convert NGN to USD using the platform rate
+      }
+
       const instrument = holding.instrument || 'Unknown';
       const wallet = holding.wallet || 'Anonymous';
 
@@ -67,14 +76,22 @@ export async function GET() {
       });
     }
 
+    const roundedInstrumentBreakdown = Object.fromEntries(
+      Object.entries(instrumentBreakdown).map(([k, v]) => [k, Math.round(v * 100) / 100])
+    );
+
     const globalStats = {
-      totalInvested,
+      totalInvested: Math.round(totalInvested * 100) / 100,
       totalCertificates: allHoldings.length,
       uniqueInvestors: uniqueWallets.size,
-      instrumentBreakdown
+      instrumentBreakdown: roundedInstrumentBreakdown
     };
 
-    const usersList = Object.values(usersMap).sort((a, b) => b.totalInvested - a.totalInvested);
+    const usersList = Object.values(usersMap).map(u => ({
+      ...u,
+      totalInvested: Math.round(u.totalInvested * 100) / 100,
+      instruments: Object.fromEntries(Object.entries(u.instruments).map(([k, v]) => [k, Math.round((v as number) * 100) / 100]))
+    })).sort((a, b) => b.totalInvested - a.totalInvested);
 
     const responseData = {
       success: true,
@@ -84,9 +101,7 @@ export async function GET() {
       }
     };
 
-    if (redis) {
-      await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 120); // cache for 2 minutes
-    }
+    await setCache(cacheKey, responseData, 120); // cache for 2 minutes
 
     return NextResponse.json(responseData);
 

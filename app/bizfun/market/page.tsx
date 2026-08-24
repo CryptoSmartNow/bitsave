@@ -48,9 +48,9 @@ export default function MarketPage() {
     }, []);
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen bg-[#0b0c15] text-white selection:bg-[#81D7B4] selection:text-[#0b0c15]`}>
+        <div className={`${exo.variable} font-sans min-h-screen bg-[#121212] text-white selection:bg-[#81D7B4] selection:text-[#0b0c15]`}>
             {/* Header */}
-            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0b0c15]/80 backdrop-blur-md">
+            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#121212]/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href="/bizfun" className="flex items-center gap-2 group">
                         <div className="w-8 h-8 rounded-lg bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0b0c15] transition-all">
@@ -118,7 +118,7 @@ export default function MarketPage() {
                                 >
                                     {/* Vibe Badge */}
                                     <div className="absolute top-4 right-4 z-10">
-                                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#0b0c15] border border-[#81D7B4]/30 text-[#81D7B4]">
+                                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#121212] border border-[#81D7B4]/30 text-[#81D7B4]">
                                             {market.vibe || 'Experimental'}
                                         </span>
                                     </div>
@@ -140,7 +140,7 @@ export default function MarketPage() {
                                         </p>
 
                                         {/* Stats */}
-                                        <div className="flex items-center justify-between p-4 rounded-xl bg-[#0b0c15] border border-white/5 mb-6 group-hover:border-[#81D7B4]/20 transition-colors">
+                                        <div className="flex items-center justify-between p-4 rounded-xl bg-[#121212] border border-white/5 mb-6 group-hover:border-[#81D7B4]/20 transition-colors">
                                             <div>
                                                 <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Deadline</div>
                                                 <div className="text-sm font-mono text-gray-300 flex items-center gap-1">

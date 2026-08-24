@@ -51,7 +51,7 @@ export default function ChatDoodle({ isOpen, onClose, onSend }: ChatDoodleProps)
                         </div>
 
                         {/* Canvas Area */}
-                        <div className="flex-1 bg-[#0F1825] relative flex justify-center items-center overflow-hidden cursor-crosshair">
+                        <div className="flex-1 bg-[#121212] relative flex justify-center items-center overflow-hidden cursor-crosshair">
                             <CanvasDraw
                                 ref={canvasRef}
                                 brushColor={color}
@@ -89,7 +89,7 @@ export default function ChatDoodle({ isOpen, onClose, onSend }: ChatDoodleProps)
                                         max="10"
                                         value={brushRadius}
                                         onChange={(e) => setBrushRadius(parseInt(e.target.value))}
-                                        className="w-20 h-1 bg-[#0F1825] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#81D7B4]"
+                                        className="w-20 h-1 bg-[#121212] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#81D7B4]"
                                     />
                                 </div>
                             </div>

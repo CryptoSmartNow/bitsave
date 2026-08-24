@@ -14,7 +14,7 @@ function BizFiAdminContent({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0F1825] flex items-center justify-center">
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#81D7B4]"></div>
       </div>
     );
@@ -25,7 +25,7 @@ function BizFiAdminContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1825] text-[#F9F9FB] overflow-x-hidden">
+    <div className="min-h-screen bg-[#121212] text-[#F9F9FB] overflow-x-hidden">
       <BizFiSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content Wrapper - Pushed right on desktop to accommodate fixed sidebar */}
@@ -40,7 +40,7 @@ function BizFiAdminContent({ children }: { children: React.ReactNode }) {
           </div>
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-[#9BA8B5] hover:text-[#F9F9FB] hover:bg-[#0F1825] rounded-xl transition-all active:scale-95"
+            className="p-2 text-[#9BA8B5] hover:text-[#F9F9FB] hover:bg-[#121212] rounded-xl transition-all active:scale-95"
             aria-label="Open Menu"
           >
             <Menu01Icon className="w-6 h-6" />

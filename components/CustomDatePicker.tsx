@@ -2,15 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay } from 'date-fns';
-import { Exo } from 'next/font/google';
 import { motion } from 'framer-motion';
-
-// Initialize the Space Grotesk font
-const exo = Exo({ 
-  subsets: ['latin'],
-  display: 'swap',
-})
-
 export default function CustomDatePicker({
   selectedDate,
   onSelectDate,
@@ -34,19 +26,19 @@ export default function CustomDatePicker({
 
   const renderHeader = () => {
     return (
-      <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-4 bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-4 bg-gradient-to-r from-[#81D7B4]/5 to-[#6bc5a0]/5 dark:from-[#81D7B4]/10 dark:to-[#6bc5a0]/10">
         <motion.button 
           onClick={prevMonth} 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="p-1.5 xs:p-2 sm:p-3 bg-white hover:bg-gray-50 rounded-md xs:rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-100"
+          className="p-1.5 xs:p-2 sm:p-3 bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md xs:rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-100 dark:border-white/10"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
         </motion.button>
         <motion.span 
-          className="text-lg sm:text-xl font-black text-gray-800 px-3 sm:px-4 py-1 sm:py-2 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm text-center min-w-[120px]"
+          className="text-lg sm:text-xl font-black text-gray-800 dark:text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm shadow-sm text-center min-w-[120px]"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -58,9 +50,9 @@ export default function CustomDatePicker({
           onClick={nextMonth} 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="p-1.5 xs:p-2 sm:p-3 bg-white hover:bg-gray-50 rounded-md xs:rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-100"
+          className="p-1.5 xs:p-2 sm:p-3 bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md xs:rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-100 dark:border-white/10"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
         </motion.button>
@@ -78,7 +70,7 @@ export default function CustomDatePicker({
       days.push(
         <motion.div 
           key={i} 
-          className="text-center text-xs sm:text-sm font-bold text-gray-400 py-2 sm:py-3 uppercase tracking-widest"
+          className="text-center text-xs sm:text-sm font-bold text-gray-400 dark:text-gray-500 py-2 sm:py-3 uppercase tracking-widest"
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.05 }}
@@ -134,19 +126,19 @@ export default function CustomDatePicker({
               whileHover={isSelectable ? { scale: 1.1, y: -2 } : {}}
               whileTap={isSelectable ? { scale: 0.95 } : {}}
               className={`
-                flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 mx-auto rounded-xl
+                flex items-center justify-center w-full aspect-square max-w-[2.5rem] sm:max-w-[3rem] mx-auto rounded-xl
                 transition-all duration-300 ${isSelectable ? 'cursor-pointer' : 'cursor-not-allowed'}
                 ${!isCurrentMonth 
-                  ? 'text-gray-300 hover:bg-gray-50/50' 
+                  ? 'text-gray-300 dark:text-gray-600 hover:bg-gray-50/50 dark:hover:bg-white/10/50' 
                   : isToday
                     ? 'bg-gradient-to-br from-[#81D7B4]/20 to-[#6bc5a0]/20 text-[#81D7B4] font-bold shadow-lg ring-1 ring-[#81D7B4]/50'
                   : isPastDate
-                    ? 'text-gray-300 bg-gray-100/30'
+                    ? 'text-gray-300 dark:text-gray-600 bg-gray-100/30 dark:bg-[#1a1a1a]/30'
                   : isTooSoon
-                    ? 'text-gray-400 bg-gray-100/50'
+                    ? 'text-gray-400 dark:text-gray-500 bg-gray-100/50 dark:bg-[#1a1a1a]/50'
                   : isSelected
-                    ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] text-white shadow-xl ring-2 ring-[#81D7B4] ring-offset-2'
-                    : 'text-gray-700 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md font-medium border border-gray-50'
+                    ? 'bg-gradient-to-br from-[#81D7B4] to-[#6bc5a0] text-white shadow-xl ring-2 ring-[#81D7B4] ring-offset-2 dark:ring-offset-gray-900'
+                    : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm hover:shadow-md font-medium border border-gray-50 dark:border-white/10'
               }
             `}
           >
@@ -182,7 +174,7 @@ export default function CustomDatePicker({
 
   return (
     <motion.div 
-      className={`${exo.className} rounded-2xl overflow-hidden relative w-full max-w-full bg-white shadow-xl border border-gray-100 min-w-0`}
+      className={`font-sans rounded-2xl overflow-hidden relative w-full max-w-full bg-white dark:bg-[#121212] shadow-xl border border-gray-100 dark:border-white/10 min-w-0`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
@@ -207,7 +199,7 @@ export default function CustomDatePicker({
               <span className="text-xs sm:text-sm font-medium">Today</span>
             </div>
             <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-gray-200 rounded-full"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
               <span className="text-xs sm:text-sm font-medium">Unavailable</span>
             </div>
           </div>

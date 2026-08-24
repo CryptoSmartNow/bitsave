@@ -62,7 +62,7 @@ export default async function ShareScorePage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1825] flex items-center justify-center p-4 selection:bg-[#81D7B4]/30">
+    <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4 selection:bg-[#81D7B4]/30">
       {/* Background ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#81D7B4]/5 blur-[120px] rounded-full pointer-events-none" />
       

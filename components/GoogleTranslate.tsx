@@ -445,7 +445,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
         <select
           value={selectedLanguage}
           onChange={(e) => handleLanguageChange(e.target.value)}
-          className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+          className="appearance-none bg-white dark:bg-[#1a1a1a] border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
           disabled={!isLoaded || isDetectingLocation}
         >
           {languages.map((language) => (
@@ -463,7 +463,7 @@ const GoogleTranslate: React.FC<GoogleTranslateProps> = ({ className = '' }) => 
       
       {/* Loading indicator */}
       {(!isLoaded || isDetectingLocation) && (
-        <div className="absolute top-0 left-0 w-full h-full bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+        <div className="absolute top-0 left-0 w-full h-full bg-gray-100 dark:bg-[#1a1a1a] rounded-lg flex items-center justify-center">
           <div className="flex items-center space-x-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
             {isDetectingLocation && (

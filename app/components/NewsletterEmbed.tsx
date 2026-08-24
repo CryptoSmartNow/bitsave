@@ -26,7 +26,7 @@ export default function NewsletterEmbed({ className = "", theme = 'dark' }: News
         }`}
       >
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 bg-[#0F1825] rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg border border-[#7B8B9A]/20">
+          <div className="w-14 h-14 bg-[#121212] rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg border border-[#7B8B9A]/20">
             <Image src="/bitsavelogo.png" alt="Bitsave Logo" width={32} height={32} className="object-contain" />
           </div>
           
@@ -48,7 +48,7 @@ export default function NewsletterEmbed({ className = "", theme = 'dark' }: News
             onChange={(e) => setEmail(e.target.value)}
             className={`w-full pl-4 pr-[110px] py-3.5 rounded-xl text-sm font-medium focus:outline-none transition-all ${
               isDark 
-                ? 'bg-[#0F1825] border border-[#7B8B9A]/30 text-[#F9F9FB] focus:border-[#81D7B4] placeholder:text-[#7B8B9A]' 
+                ? 'bg-[#121212] border border-[#7B8B9A]/30 text-[#F9F9FB] focus:border-[#81D7B4] placeholder:text-gray-400' 
                 : 'bg-white border border-gray-200 text-[#0F1825] focus:border-[#0F1825] placeholder:text-gray-400 shadow-sm'
             }`}
             required
@@ -65,7 +65,7 @@ export default function NewsletterEmbed({ className = "", theme = 'dark' }: News
           </button>
         </div>
         
-        <p className={`text-[11px] mt-5 leading-tight ${isDark ? 'text-[#7B8B9A]/60' : 'text-gray-400'}`}>
+        <p className={`text-[11px] mt-5 leading-tight ${isDark ? 'text-gray-400/60' : 'text-gray-400'}`}>
           By subscribing you agree to Substack's <a href="#" className="underline hover:text-[#81D7B4] transition-colors">Terms of Use</a>, our <a href="#" className="underline hover:text-[#81D7B4] transition-colors">Privacy Policy</a> and our Information collection notice.
         </p>
       </form>

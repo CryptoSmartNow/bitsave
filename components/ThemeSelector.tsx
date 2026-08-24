@@ -2,6 +2,7 @@
 
 import { Activity01Icon, ArrowDown01Icon, Sun01Icon, Moon01Icon, ComputerSettingsIcon } from "hugeicons-react";
 import { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,6 +21,20 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Force theme application when theme changes (from KI)
+  useEffect(() => {
+    if (!mounted) return;
+
+    const root = document.documentElement;
+    const effectiveTheme = theme === 'system' ? systemTheme : theme;
+
+    root.classList.remove('light', 'dark');
+
+    if (effectiveTheme) {
+      root.classList.add(effectiveTheme);
+    }
+  }, [theme, systemTheme, mounted]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -40,7 +55,7 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
 
   if (!mounted) {
     return (
-      <div className={`w-32 h-10 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse ${className}`} />
+      <div className={`w-32 h-10 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl animate-pulse ${className}`} />
     );
   }
 
@@ -50,8 +65,29 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
     { id: 'system', name: 'System', icon: ComputerSettingsIcon },
   ];
 
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
+  const handleThemeChange = (newTheme: string, event?: React.MouseEvent) => {
+    const applyTheme = () => {
+      setTheme(newTheme);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', newTheme);
+      }
+    };
+
+    if (!document.startViewTransition || !event) {
+      applyTheme();
+      return;
+    }
+
+    const x = event.clientX;
+    const y = event.clientY;
+    document.documentElement.style.setProperty('--click-x', `${x}px`);
+    document.documentElement.style.setProperty('--click-y', `${y}px`);
+
+    document.startViewTransition(() => {
+      flushSync(() => {
+        applyTheme();
+      });
+    });
   };
 
   const currentTheme = themes.find(t => t.id === theme) || themes[0];
@@ -62,7 +98,7 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
       <div className={`relative ${className}`} ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2.5 bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-[#81D7B4] transition-all duration-200 group backdrop-blur-sm"
+          className="p-2.5 bg-white/80 dark:bg-[#1a1a1a]/80 border border-gray-200 dark:border-white/10 rounded-lg hover:border-[#81D7B4] transition-all duration-200 group backdrop-blur-sm"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
           aria-label={`Current theme: ${currentTheme.name}`}
@@ -77,14 +113,14 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5"
+              className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5"
             >
               <div className="p-1" role="listbox">
                 {themes.map((t) => (
                   <button
                     key={t.id}
-                    onClick={() => {
-                      handleThemeChange(t.id);
+                    onClick={(e) => {
+                      handleThemeChange(t.id, e);
                       setIsOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${theme === t.id
@@ -108,11 +144,11 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
 
   if (variant === 'segmented') {
     return (
-      <div className={`flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 ${className}`}>
+      <div className={`flex bg-gray-100 dark:bg-[#1a1a1a] rounded-lg p-1 ${className}`}>
         {themes.map((t) => (
           <button
             key={t.id}
-            onClick={() => handleThemeChange(t.id)}
+            onClick={(e) => handleThemeChange(t.id, e)}
             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${theme === t.id
               ? 'bg-white dark:bg-gray-700 text-[#81D7B4] shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
@@ -131,7 +167,7 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full sm:w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm hover:border-[#81D7B4] transition-all duration-200 group"
+        className="w-full sm:w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm hover:border-[#81D7B4] transition-all duration-200 group"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
@@ -153,14 +189,14 @@ export default function ThemeSelector({ className = '', variant = 'dropdown' }: 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-2 w-full sm:w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5"
+            className="absolute right-0 top-full mt-2 w-full sm:w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5"
           >
             <div className="p-1" role="listbox">
               {themes.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => {
-                    handleThemeChange(t.id);
+                  onClick={(e) => {
+                    handleThemeChange(t.id, e);
                     setIsOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${theme === t.id

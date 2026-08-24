@@ -112,12 +112,12 @@ export default function AlertsPage() {
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center py-32">
-        <div className="w-24 h-24 rounded-full bg-[#1C2538]/30 flex items-center justify-center mb-6 border border-[#2C3E5D]/30 relative">
+        <div className="w-24 h-24 rounded-full bg-[#1C2538]/30 flex items-center justify-center mb-6 border border-white/20/30 relative">
           <div className="absolute inset-0 bg-[#81D7B4]/10 rounded-full blur-xl"></div>
           <Notification01Icon className="w-10 h-10 text-[#4B5A75] relative z-10" />
         </div>
         <h2 className="text-3xl font-black text-[#F9F9FB] mb-3 tracking-tight">Wallet Not Connected</h2>
-        <p className="text-[#7B8B9A] mb-8 max-w-md text-lg">Please connect your wallet to view your notifications.</p>
+        <p className="text-gray-400 mb-8 max-w-md text-lg">Please connect your wallet to view your notifications.</p>
       </div>
     );
   }
@@ -143,14 +143,14 @@ export default function AlertsPage() {
               </span>
             )}
           </h1>
-          <p className="text-base text-[#7B8B9A] mt-2 max-w-md">Stay updated on your payouts, account activity, and real-world asset news.</p>
+          <p className="text-base text-gray-400 mt-2 max-w-md">Stay updated on your payouts, account activity, and real-world asset news.</p>
         </div>
 
         <div className="w-full lg:w-auto">
           {unreadCount > 0 && (
             <button 
               onClick={markAllAsRead}
-              className="w-full lg:w-auto text-sm font-bold text-[#F9F9FB] bg-[#0A0F17] hover:bg-[#1C2538] transition-colors border border-[#2C3E5D] px-6 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg"
+              className="w-full lg:w-auto text-sm font-bold text-[#F9F9FB] bg-[#0A0F17] hover:bg-[#1C2538] transition-colors border border-white/20 px-6 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg"
             >
               <CheckmarkCircle01Icon className="w-4 h-4 text-[#81D7B4]" />
               Mark all as read
@@ -164,7 +164,7 @@ export default function AlertsPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="p-6 rounded-2xl border border-[#1C2538] bg-[#121A27] flex gap-4 animate-pulse shadow-xl">
+              <div key={i} className="p-6 rounded-2xl border border-white/10 bg-[#0A0F17] flex gap-4 animate-pulse shadow-xl">
                 <div className="w-14 h-14 rounded-full bg-[#1C2538] shrink-0" />
                 <div className="flex-1 space-y-3 py-2">
                   <div className="h-4 bg-[#1C2538] rounded w-1/3" />
@@ -174,13 +174,13 @@ export default function AlertsPage() {
             ))}
           </div>
         ) : alerts.length === 0 ? (
-          <div className="bg-gradient-to-b from-[#121A27] to-[#0A0F17] border border-[#1C2538] rounded-3xl p-16 text-center shadow-2xl">
-            <div className="w-20 h-20 rounded-full bg-[#1C2538]/30 flex items-center justify-center mx-auto mb-6 border border-[#2C3E5D]/30 relative">
+          <div className="bg-gradient-to-b from-[#121A27] to-[#0A0F17] border border-white/10 rounded-3xl p-16 text-center shadow-2xl">
+            <div className="w-20 h-20 rounded-full bg-[#1C2538]/30 flex items-center justify-center mx-auto mb-6 border border-white/20/30 relative">
               <div className="absolute inset-0 bg-[#81D7B4]/10 rounded-full blur-xl"></div>
               <Notification01Icon className="w-8 h-8 text-[#4B5A75] relative z-10" />
             </div>
             <h3 className="text-xl font-black text-[#F9F9FB] mb-2">You're all caught up!</h3>
-            <p className="text-[#7B8B9A] max-w-sm mx-auto">Alerts will appear here when you make purchases or receive yield distributions.</p>
+            <p className="text-gray-400 max-w-sm mx-auto">Alerts will appear here when you make purchases or receive yield distributions.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -192,8 +192,8 @@ export default function AlertsPage() {
                   onClick={() => handleAlertClick(alert.id)}
                   className={`relative rounded-2xl border transition-all duration-300 cursor-pointer group shadow-lg overflow-hidden ${
                     alert.isNew
-                      ? 'bg-gradient-to-r from-[#1A2538] to-[#121A27] border-[#2C3E5D] hover:border-[#81D7B4]/50 hover:shadow-[0_0_30px_rgba(129,215,180,0.1)]'
-                      : 'bg-[#0A0F17] border-[#1C2538] hover:border-[#2C3E5D]'
+                      ? 'bg-gradient-to-r from-[#1A2538] to-[#121A27] border-white/20 hover:border-[#81D7B4]/50 hover:shadow-[0_0_30px_rgba(129,215,180,0.1)]'
+                      : 'bg-[#0A0F17] border-white/10 hover:border-white/20'
                   }`}
                 >
                   {/* Glowing edge indicator for new alerts */}
@@ -212,7 +212,7 @@ export default function AlertsPage() {
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex justify-between items-start gap-4">
                         <h3 className={`font-black text-base sm:text-lg leading-tight transition-colors ${
-                          alert.isNew ? 'text-[#F9F9FB]' : 'text-[#7B8B9A]'
+                          alert.isNew ? 'text-[#F9F9FB]' : 'text-gray-400'
                         }`}>
                           {alert.title}
                         </h3>
@@ -259,7 +259,7 @@ export default function AlertsPage() {
                         <p className="text-sm text-[#F9F9FB] leading-relaxed">
                           {alert.message}
                         </p>
-                        <div className="mt-4 pt-4 border-t border-[#1C2538] flex items-center justify-between">
+                        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
                           <span className="text-[10px] font-bold uppercase tracking-widest text-[#4B5A75]">
                             {new Date(alert.timestamp).toLocaleString('en-US', {
                               month: 'long', day: 'numeric', year: 'numeric',

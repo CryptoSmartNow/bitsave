@@ -72,14 +72,14 @@ export default function BizFiAuditPage() {
         ) : (
           <div className="divide-y divide-[#7B8B9A]/10">
             {logs.map((log) => (
-              <div key={log._id} className="p-4 flex items-start gap-4 hover:bg-[#0F1825]/50 transition-colors">
+              <div key={log._id} className="p-4 flex items-start gap-4 hover:bg-[#121212]/50 transition-colors">
                 <div className="w-10 h-10 rounded-full bg-[#1A2538] border border-[#7B8B9A]/20 flex items-center justify-center text-[#9BA8B5] shrink-0 mt-1">
                   <Shield01Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1.5">
                     <h4 className="font-bold text-[#F9F9FB] text-base truncate">{log.action}</h4>
-                    <span className="text-[10px] md:text-xs font-medium text-[#7B8B9A] bg-[#0F1825] px-2 py-0.5 rounded-full border border-[#7B8B9A]/10 flex items-center gap-1 w-fit">
+                    <span className="text-[10px] md:text-xs font-medium text-gray-400 bg-[#121212] px-2 py-0.5 rounded-full border border-[#7B8B9A]/10 flex items-center gap-1 w-fit">
                       <Clock01Icon className="w-3 h-3" />
                       {log.timestamp ? formatDistanceToNow(new Date(log.timestamp), { addSuffix: true }) : '-'}
                     </span>

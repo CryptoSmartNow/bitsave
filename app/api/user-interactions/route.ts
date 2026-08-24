@@ -192,16 +192,29 @@ export async function POST(request: NextRequest) {
             { upsert: true }
           );
 
-          // Update leaderboard
-          if (leaderboardCollection) {
-             // We need to parse amount as number for leaderboard aggregation
-             const amount = parseFloat(transactionRecord.amount);
-             if (!isNaN(amount) && amount > 0) {
+          // Update leaderboard for EVM wallets
+          if (leaderboardCollection && interaction.walletAddress.startsWith('0x') && transactionRecord.chain !== 'solana') {
+             const rawAmount = parseFloat(transactionRecord.amount);
+             if (!isNaN(rawAmount) && rawAmount > 0) {
+                const curr = (transactionRecord.currency || '').toLowerCase();
+                let usdVal = rawAmount;
+
+                if (curr.includes('gooddollar') || curr === '$g' || curr === 'g$') {
+                  usdVal = rawAmount * 0.0001086;
+                } else if (curr === 'eth' || curr === 'ethereum') {
+                  usdVal = rawAmount * 3500;
+                } else if (curr.includes('cngn') || curr === 'ngn') {
+                  usdVal = rawAmount / 1500;
+                }
+
                 await leaderboardCollection.updateOne(
                   { useraddress: interaction.walletAddress },
                   { 
-                    $inc: { totalamount: amount },
-                    $set: { chain: transactionRecord.chain } // Update chain to latest
+                    $inc: { totalamount: usdVal },
+                    $set: { 
+                      chain: transactionRecord.chain || 'base',
+                      last_updated: new Date().toISOString()
+                    }
                   },
                   { upsert: true }
                 );

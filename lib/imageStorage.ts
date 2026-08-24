@@ -1,7 +1,5 @@
 import { GridFSBucket, ObjectId, Db } from 'mongodb';
 import { getDatabase } from './mongodb';
-import sharp from 'sharp';
-
 export interface ImageMetadata {
   originalName: string;
   mimeType: string;
@@ -77,39 +75,11 @@ class MongoImageStorage {
         size: buffer.length,
         uploadedAt: new Date(),
         category,
-        optimized: false
+        optimized: true
       };
 
-      // Optimize image if requested
-      if (optimize && this.isImageMimeType(mimeType)) {
-        try {
-          const sharpInstance = sharp(buffer);
-          const imageMetadata = await sharpInstance.metadata();
-          
-          processedBuffer = await sharpInstance
-            .resize(1200, 800, { 
-              fit: 'inside', 
-              withoutEnlargement: true 
-            })
-            .webp({ quality: 85 })
-            .toBuffer();
-
-          metadata = {
-            ...metadata,
-            width: imageMetadata.width,
-            height: imageMetadata.height,
-            mimeType: 'image/webp',
-            size: processedBuffer.length,
-            optimized: true
-          };
-
-          // Update filename to reflect optimization
-          filename = filename.replace(/\.[^/.]+$/, '.webp');
-        } catch (optimizationError) {
-          console.warn('Image optimization failed, using original:', optimizationError);
-          // Continue with original buffer if optimization fails
-        }
-      }
+      // Note: Image optimization is now handled on the client-side
+      // to reduce server CPU load. The incoming buffer is already compressed.
 
       // Generate unique filename to prevent conflicts
       const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2)}-${filename}`;

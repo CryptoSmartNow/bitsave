@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
-import { useBitsaveSolana } from '@/hooks/useBitsaveSolana';
-import { PublicKey } from '@solana/web3.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Exo } from 'next/font/google';
 import { ethers } from 'ethers';
 import { submitTransaction } from '@/utils/transactionSync';
 import { useAccount, useChainId } from 'wagmi';
-// import { useWallets } from '@privy-io/react-auth'; 
+import { usePrivy } from '@privy-io/react-auth'; 
 import { useEthersSigner } from '@/app/bizfi/hooks/useEthersSigner';
 import { toast } from 'react-hot-toast';
+import Link from 'next/link';
 import Image from 'next/image';
+import { MessageQuestionIcon } from 'hugeicons-react';
 import { trackTransaction, trackError } from '@/lib/interactionTracker';
 
 // Contract addresses and ABIs
@@ -100,13 +100,20 @@ const getBaseContractAddress = (contractAddress?: string, startTime?: number): s
 }
 
 const getTokenLogo = (name: string, logoUrl: string) => {
-  if (logoUrl) return ensureImageUrl(logoUrl);
-  if (name === 'ETH') return '/eth.png';
-  if (name === 'USDC') return '/usdclogo.png';
-  if (name === 'cUSD') return '/cusd.png';
-  if (name === 'cNGN') return '/cngn.png';
-  if (name === 'Gooddollar' || name === '$G') return '/gooddollar.png';
-  return '/default-token.png';
+  if (logoUrl && !logoUrl.includes('gooddollar.png')) return ensureImageUrl(logoUrl);
+  if (!name) return '/coin.png';
+  const lower = name.toLowerCase();
+  if (lower === 'eth' || lower === 'ethereum') return '/eth.png';
+  if (lower === 'usdc') return '/usdclogo.png';
+  if (lower === 'cusd') return '/cusd.png';
+  if (lower === 'cngn') return '/cngn.png';
+  if (lower === 'usdglo') return '/usdglo.png';
+  if (lower === 'gooddollar' || lower === '$g' || lower === 'g$') return '/$g.png';
+  if (lower === 'usdt') return '/usdt.png';
+  if (lower === 'celo') return '/celo.png';
+  if (lower === 'bnb' || lower === 'bsc') return '/bsc.png';
+  if (lower === 'lisk' || lower === 'lsk') return '/lisk.png';
+  return '/coin.png';
 }
 
 const TopUpModal = memo(function TopUpModal({
@@ -120,6 +127,7 @@ const TopUpModal = memo(function TopUpModal({
   startTime: planStartTime,
   network: planNetwork
 }: TopUpModalProps) {
+  const { getAccessToken } = usePrivy();
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
@@ -132,7 +140,6 @@ const TopUpModal = memo(function TopUpModal({
   const { address, isConnected } = useAccount()
   const signer = useEthersSigner()
   const chainId = useChainId()
-  const { incrementSaving: incrementSolanaSaving } = useBitsaveSolana()
 
   // Wallet balance checking states
   const [walletBalance, setWalletBalance] = useState<string>('0')
@@ -465,42 +472,7 @@ const TopUpModal = memo(function TopUpModal({
         currencyName = `${networkLabel}(${tokenNameToUse})`;
       }
 
-      if (networkType === 'solana') {
-        const tx = await incrementSolanaSaving(
-          savingsPlanName,
-          userEnteredAmount,
-          decimals,
-          new PublicKey(tokenAddress)
-        );
 
-        setTxHash(tx);
-        
-        await submitTransaction({
-          amount: userEnteredAmount.toString(),
-          txnhash: tx,
-          chain: 'solana',
-          savingsname: savingsPlanName,
-          useraddress: address || '',
-          transaction_type: "topup",
-          currency: tokenNameToUse
-        });
-
-        if (address) {
-          trackTransaction(address, {
-            type: 'top_up',
-            amount: userEnteredAmount.toString(),
-            currency: tokenNameToUse,
-            chain: 'solana',
-            planName: savingsPlanName,
-            txHash: tx
-          });
-        }
-
-        setSuccess(true);
-        setShowTransactionModal(true);
-        setLoading(false);
-        return;
-      }
 
       if (!contractAddress) throw new Error("Contract address not set");
 
@@ -591,7 +563,11 @@ const TopUpModal = memo(function TopUpModal({
         useraddress: address || '',
         transaction_type: "topup",
         currency: tokenNameToUse
-      });
+      }, getAccessToken);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('bitsave_tx_updated'));
+      }
 
       // Track successful transaction
       if (address) {
@@ -767,7 +743,11 @@ const TopUpModal = memo(function TopUpModal({
         useraddress: address || '',
         transaction_type: "topup",
         currency: currencyName
-      });
+      }, getAccessToken);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('bitsave_tx_updated'));
+      }
 
       // Track successful ETH top-up
       if (address) {
@@ -894,8 +874,8 @@ const TopUpModal = memo(function TopUpModal({
               <div className="p-8 flex flex-col items-center">
 
 
-                <h2 className="text-2xl font-bold mb-4">{success ? "Success!" : "Failed"}</h2>
-                <p className="mb-4 text-center">{error || (success ? "Transaction successful." : "")}</p>
+                <h2 className="text-2xl font-bold mb-3 font-instrument text-gray-900 dark:text-white">{success ? "Top Up Successful!" : "Top Up Notice"}</h2>
+                <p className="mb-4 text-center text-xs text-gray-600 dark:text-gray-300 leading-relaxed max-w-xs">{error || (success ? "Your funds have been deposited and locked into your savings vault." : "")}</p>
 
                 {success && (
                   <a
@@ -906,16 +886,32 @@ const TopUpModal = memo(function TopUpModal({
                     }).href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3 mb-3 flex items-center justify-center gap-2 text-white bg-black hover:bg-gray-800 rounded-xl transition-all"
+                    className="w-full py-3 mb-3 flex items-center justify-center gap-2 text-white bg-black hover:bg-gray-800 rounded-2xl text-xs font-bold transition-all shadow-xs"
                   >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
-                    Share on Cancel
+                    <span>Share on X</span>
                   </a>
                 )}
 
-                <button className="ds-btn-primary w-full py-3" onClick={handleCloseTransactionModal}>Close</button>
+                {!success && (
+                  <Link
+                    href={`/feedback?app=savefi&context=topup&error=${encodeURIComponent(error || 'Top-up transaction failed')}`}
+                    onClick={handleCloseTransactionModal}
+                    className="w-full mb-3 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold bg-[#81D7B4]/15 hover:bg-[#81D7B4]/25 text-[#81D7B4] border border-[#81D7B4]/30 transition-colors cursor-pointer"
+                  >
+                    <MessageQuestionIcon className="w-4 h-4" />
+                    <span>Report Error / Log Inquiry</span>
+                  </Link>
+                )}
+
+                <button 
+                  className="w-full py-3.5 bg-[#81D7B4] hover:opacity-90 text-white font-bold text-xs rounded-2xl transition-all shadow-xs cursor-pointer" 
+                  onClick={handleCloseTransactionModal}
+                >
+                  {success ? "Done" : "Got it / Close"}
+                </button>
               </div>
             </motion.div>
           ) : (

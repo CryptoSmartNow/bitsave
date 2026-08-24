@@ -110,6 +110,27 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  async rewrites() {
+    return [
+      {
+        source: "/docs",
+        destination: "https://proxy.gitbook.site/sites/site_qixqW",
+      },
+      {
+        source: "/docs/:path*",
+        destination: "https://proxy.gitbook.site/sites/site_qixqW/:path*",
+      },
+      {
+        source: "/wrapped",
+        destination: "https://bitsave-wrapped.vercel.app",
+      },
+      {
+        source: "/wrapped/:path*",
+        destination: "https://bitsave-wrapped.vercel.app/:path*",
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

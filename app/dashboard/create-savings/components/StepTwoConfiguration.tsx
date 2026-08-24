@@ -3,6 +3,7 @@ import { motion, Variants } from "framer-motion";
 import Image from 'next/image';
 import { format } from "date-fns";
 import CustomDatePicker from "@/components/CustomDatePicker";
+import { LockKeyIcon, Shield01Icon, Shield02Icon, Alert01Icon, Wallet01Icon, Calendar01Icon } from "hugeicons-react";
 
 interface StepTwoConfigurationProps {
   amount: string;
@@ -20,17 +21,21 @@ interface StepTwoConfigurationProps {
   setPenalty: (val: string) => void;
   handlePrevious: () => void;
   handleNext: () => void;
+  tokenBalance?: string;
+  nativeBalance?: string;
+  nativeSymbol?: string;
+  isCheckingBalance?: boolean;
 }
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       type: "spring",
-      stiffness: 100,
-      damping: 15,
+      stiffness: 120,
+      damping: 18,
     },
   },
 };
@@ -51,327 +56,255 @@ export default function StepTwoConfiguration({
   setPenalty,
   handlePrevious,
   handleNext,
+  tokenBalance = "0",
+  nativeBalance = "0",
+  nativeSymbol = "ETH",
+  isCheckingBalance = false,
 }: StepTwoConfigurationProps) {
+  const tokenBalNum = parseFloat(tokenBalance || "0");
+  const amountNum = parseFloat(amount || "0");
+  const isInsufficient = amountNum > 0 && tokenBalNum < amountNum;
+
+  const penaltyPercentNum = parseFloat(penalty.replace('%', '')) || 10;
+  const penaltyCalculatedCost = amountNum > 0 ? ((amountNum * penaltyPercentNum) / 100).toFixed(2) : '0.00';
+  const returnAfterPenalty = amountNum > 0 ? (amountNum - (amountNum * penaltyPercentNum) / 100).toFixed(2) : '0.00';
+
+  const penaltyOptions = [
+    { label: "Lenient", rate: "10%", desc: "Standard discipline", icon: Shield01Icon },
+    { label: "Strict", rate: "20%", desc: "High conviction", icon: Shield02Icon },
+    { label: "Diamond", rate: "30%", desc: "Unbreakable lock", icon: LockKeyIcon },
+  ];
+
   return (
     <motion.div
       key="step2"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
       className="space-y-8"
     >
-      {/* Amount Section */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 px-3 py-6 sm:p-8 lg:p-10 relative overflow-hidden group"
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F4FBF8]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="relative z-10 flex flex-col items-center">
-          <label className="block text-xs sm:text-sm font-bold text-[#81D7B4] uppercase tracking-wider mb-8">
-            Savings Amount
-          </label>
+      {/* ─── 1. AMOUNT SECTION ─── */}
+      <motion.div variants={itemVariants} className="text-center bg-white/70 dark:bg-[#0c121e]/70 backdrop-blur-md rounded-3xl p-6 border border-gray-200/70 dark:border-white/10 shadow-xs">
+        <label className="block text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
+          1. Deposit Amount
+        </label>
 
-          <div className="flex flex-col items-center justify-center mb-8 w-full">
-            <div className="flex items-center justify-center w-full">
-              <span className="text-4xl sm:text-5xl font-light text-gray-300 mr-1 sm:mr-2 select-none">$</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0"
-                className={`w-[140px] sm:w-[200px] bg-transparent text-5xl sm:text-7xl font-black text-gray-900 placeholder:text-gray-200 focus:outline-none focus:ring-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-colors ${errors.amount ? "text-red-500" : ""}`}
-                style={{ width: amount ? `${Math.max(1, amount.length) * 1.1}ch` : '2ch' }}
-              />
-            </div>
-            <div className="inline-flex items-center justify-center px-3 py-1 bg-gray-50 rounded-full border border-gray-100 mt-4">
-              <span className="text-xs sm:text-sm font-bold text-gray-500 tracking-wide">
-                {currency}
-              </span>
-            </div>
-            <div className="h-px w-full max-w-[200px] bg-gradient-to-r from-transparent via-gray-200 to-transparent mt-6"></div>
+        <div className="flex flex-col items-center justify-center">
+          <div className="relative flex items-center justify-center group my-1">
+            <span className={`text-4xl sm:text-5xl font-normal font-instrument absolute left-0 -ml-7 sm:-ml-10 ${amount ? 'text-gray-900 dark:text-white' : 'text-gray-300 dark:text-gray-700'} transition-colors`}>$</span>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className={`bg-transparent text-5xl sm:text-7xl font-normal font-instrument text-gray-900 dark:text-white placeholder:text-gray-200 dark:placeholder:text-white/10 text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.amount || isInsufficient ? "text-red-500 dark:text-red-400" : ""}`}
+              style={{ width: amount ? `${Math.max(4, amount.length)}ch` : '4ch' }}
+            />
+          </div>
+          
+          <div className="mt-1 bg-gray-100 dark:bg-white/5 rounded-full px-3.5 py-1 flex items-center gap-1.5 border border-gray-200/70 dark:border-white/10">
+             <span className="text-[11px] font-bold text-gray-500">Locking in</span>
+             <span className="text-xs font-black text-gray-900 dark:text-white">{currency}</span>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
-            {["50", "250", "500", "1000"].map((val) => (
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                key={val}
+          {/* Wallet Balance Indicator */}
+          <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gray-50 dark:bg-white/[0.04] border border-gray-200/70 dark:border-white/10 text-xs font-medium">
+            <Wallet01Icon className="w-3.5 h-3.5 text-gray-400" />
+            <span className="text-gray-500 dark:text-gray-400 text-[11px]">
+              Wallet: <strong className="text-gray-900 dark:text-white font-bold font-instrument text-xs">{tokenBalNum.toLocaleString(undefined, { maximumFractionDigits: 4 })} {currency}</strong>
+            </span>
+            {tokenBalNum > 0 && (
+              <button
                 type="button"
-                onClick={() => setAmount(val)}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold border transition-all duration-300 ${
-                  amount === val
-                    ? "bg-[#81D7B4] border-[#81D7B4] text-white shadow-[0_4px_12px_rgb(129,215,180,0.3)]"
-                    : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-700"
+                onClick={() => setAmount(tokenBalance)}
+                className="ml-1 px-2 py-0.5 rounded-md bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 text-[#1c4b38] dark:text-[#81D7B4] font-black text-[10px] tracking-wider transition-colors cursor-pointer"
+              >
+                USE MAX
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Amount Shortcuts */}
+        <div className="flex justify-center flex-wrap gap-2 mt-4">
+          {["25", "50", "100", "250", "500"].map((val) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setAmount(val)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                amount === val
+                  ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-xs"
+                  : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+              }`}
+            >
+              +${val}
+            </button>
+          ))}
+        </div>
+        
+        {errors.amount && (
+          <p className="mt-3 text-xs text-red-500 font-bold">{errors.amount}</p>
+        )}
+
+        {isInsufficient && !errors.amount && (
+          <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400">
+            <Alert01Icon className="w-3.5 h-3.5 shrink-0" />
+            <span>Amount exceeds wallet balance ({tokenBalNum.toFixed(2)} {currency}).</span>
+          </div>
+        )}
+
+        {/* GoodDollar Equivalent */}
+        {currency === "Gooddollar" && amount && goodDollarEquivalent > 0 && (
+          <div className="mt-3 p-3 bg-[#81D7B4]/10 rounded-xl border border-[#81D7B4]/30 inline-flex items-center gap-3 shadow-xs mx-auto">
+            <span className="text-xs text-[#1c4b38] dark:text-[#81D7B4] flex items-center gap-1.5 font-bold">
+              <Image src="/$g.png" alt="$G" width={16} height={16} className="rounded-full" />
+              Equivalent
+            </span>
+            <span className="text-sm font-black text-[#1c4b38] dark:text-[#81D7B4]">
+              {goodDollarEquivalent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $G
+            </span>
+          </div>
+        )}
+      </motion.div>
+
+      {/* ─── 2. STRICTNESS LEVEL (PENALTY) — PROMINENTLY PLACED BEFORE CALENDAR ─── */}
+      <motion.div variants={itemVariants} className="bg-white/70 dark:bg-[#0c121e]/70 backdrop-blur-md rounded-3xl p-6 border border-gray-200/70 dark:border-white/10 shadow-xs space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <label className="block text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              2. Strictness Level (Early Withdrawal Penalty)
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Enforces disciplined saving. Penalty is only applied if you break the vault before maturity.
+            </p>
+          </div>
+          <span className="shrink-0 whitespace-nowrap px-3 py-1 bg-[#81D7B4]/15 text-[#81D7B4] border border-[#81D7B4]/25 rounded-xl text-xs font-bold font-sans">
+            {penalty} Selected
+          </span>
+        </div>
+
+        {/* 3 Horizontal Penalty Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {penaltyOptions.map((opt) => {
+            const Icon = opt.icon;
+            const isSelected = penalty === opt.rate;
+            return (
+              <button
+                key={opt.rate}
+                type="button"
+                onClick={() => setPenalty(opt.rate)}
+                className={`p-4 rounded-2xl border text-left flex sm:flex-col justify-between items-start gap-3 transition-all cursor-pointer ${
+                  isSelected
+                    ? "border-[#81D7B4] bg-[#81D7B4]/10 shadow-xs ring-2 ring-[#81D7B4]/20"
+                    : "border-gray-200/70 dark:border-white/10 hover:border-[#81D7B4]/50 bg-gray-50/50 dark:bg-white/[0.02]"
                 }`}
               >
-                +${val}
-              </motion.button>
-            ))}
-          </div>
-          {errors.amount && (
-            <p className="mt-4 text-sm text-red-500 font-medium text-center">
-              {errors.amount}
-            </p>
-          )}
+                <div className="flex items-center justify-between w-full">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                    isSelected ? 'bg-[#81D7B4] text-white shadow-xs' : 'bg-gray-100 dark:bg-white/5 text-gray-400'
+                  }`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className={`text-xl font-black font-instrument ${
+                    isSelected ? 'text-[#81D7B4]' : 'text-gray-900 dark:text-white'
+                  }`}>
+                    {opt.rate}
+                  </span>
+                </div>
 
-          {/* GoodDollar Equivalent */}
-          {currency === "Gooddollar" && amount && goodDollarEquivalent > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-5 p-4 bg-gradient-to-r from-[#F4FBF8] to-white rounded-[16px] border border-[#81D7B4]/30 flex items-center justify-between shadow-sm"
-            >
-              <span className="text-sm text-gray-600 flex items-center gap-2.5 font-medium">
-                <Image
-                  src="/$g.png"
-                  alt="$G"
-                  width={20}
-                  height={20}
-                  className="rounded-full shadow-sm"
-                />
-                Equivalent
-              </span>
-              <span className="text-base font-extrabold text-[#81D7B4]">
-                {goodDollarEquivalent.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{" "}
-                $G
-              </span>
-            </motion.div>
-          )}
+                <div>
+                  <p className={`text-xs font-bold ${isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                    {opt.label}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {opt.desc}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
-      </motion.div>
 
-      {/* Duration Section */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-white rounded-[24px] shadow-[0_4px_24px_rgb(0,0,0,0.03)] border border-gray-100 px-3 py-6 sm:p-8 lg:p-10 relative overflow-hidden group text-center"
-      >
-        <div className="absolute inset-0 bg-gradient-to-bl from-[#F4FBF8]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="relative z-10 flex flex-col items-center">
-          <label className="block text-xs sm:text-sm font-bold text-[#81D7B4] uppercase tracking-wider mb-2">
-            Lock Duration
-          </label>
-          <p className="text-xs sm:text-sm text-gray-500 mb-8">
-            Choose how long to lock your savings securely.
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mb-8">
-            {startDate &&
-              [
-                { label: "1 Month", days: 30 },
-                { label: "3 Months", days: 90 },
-                { label: "6 Months", days: 180 },
-                { label: "1 Year", days: 365 },
-              ].map((preset) => {
-                const presetDate = new Date(startDate);
-                presetDate.setDate(presetDate.getDate() + preset.days);
-                const isSelected =
-                  endDate &&
-                  format(presetDate, "yyyy-MM-dd") ===
-                    format(endDate, "yyyy-MM-dd");
-                return (
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    key={preset.label}
-                    type="button"
-                    onClick={() => {
-                      setEndDate(presetDate);
-                      setCalendarNavigateDate(presetDate);
-                    }}
-                    className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold border transition-all duration-300 ${
-                      isSelected
-                        ? "bg-[#81D7B4] border-[#81D7B4] text-white shadow-[0_4px_12px_rgb(129,215,180,0.3)]"
-                        : "bg-white border-gray-100 text-gray-500 hover:border-[#81D7B4]/40 hover:bg-[#81D7B4]/5 hover:text-[#0f172a] hover:shadow-sm"
-                    }`}
-                  >
-                    <span className="whitespace-nowrap">
-                      {preset.label}
-                    </span>
-                  </motion.button>
-                );
-              })}
-          </div>
-
-          <div className="relative group/calendar">
-            <div
-              className={`absolute -inset-0.5 bg-gradient-to-r from-[#81D7B4] to-[#81D7B4] rounded-[24px] blur opacity-0 group-hover/calendar:opacity-10 transition duration-500`}
-            ></div>
-            <div className="relative bg-white rounded-[20px] p-1 border border-gray-100 shadow-sm">
-              <CustomDatePicker
-                selectedDate={endDate}
-                onSelectDate={(date) => setEndDate(date)}
-                navigateToDate={calendarNavigateDate}
-              />
+        {/* Real-time Penalty Impact Pill */}
+        {amountNum > 0 && (
+          <div className="p-3 bg-red-500/[0.06] dark:bg-red-500/[0.1] rounded-2xl border border-red-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-medium">
+              <Alert01Icon className="w-4 h-4 shrink-0" />
+              <span>If broken early: <strong className="font-bold">-${penaltyCalculatedCost} penalty</strong></span>
+            </div>
+            <div className="text-gray-600 dark:text-gray-300">
+              Return on early exit: <strong className="font-bold text-gray-900 dark:text-white font-instrument">${returnAfterPenalty}</strong>
             </div>
           </div>
-
-          {startDate && endDate && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"
-            >
-              <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6BC7A0] rounded-[16px] shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[11px] text-white/60 font-bold uppercase tracking-widest">Maturity Date</span>
-                  <span className="text-white font-extrabold text-base truncate">{format(endDate, "MMM d, yyyy")}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#81D7B4] to-[#6BC7A0] rounded-[16px] shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[11px] text-white/60 font-bold uppercase tracking-widest">Total Duration</span>
-                  <span className="text-white font-extrabold text-xl">{Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} Days</span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          {errors.endDate && (
-            <p className="mt-3 text-sm text-red-500 font-medium">
-              {errors.endDate}
-            </p>
-          )}
-        </div>
+        )}
       </motion.div>
 
-      {/* Penalty Section */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-white rounded-[24px] shadow-[0_4px_24px_rgb(0,0,0,0.03)] border border-gray-100 px-3 py-6 sm:p-8 lg:p-10 relative overflow-hidden group text-center"
-      >
-        <div className="absolute inset-0 bg-gradient-to-tl from-[#81D7B4]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="relative z-10 flex flex-col items-center">
-          <label className="block text-xs sm:text-sm font-bold text-[#81D7B4] uppercase tracking-wider mb-2">
-            Strictness Level (Penalty)
-          </label>
-          <p className="text-xs sm:text-sm text-gray-500 mb-8 max-w-sm mx-auto">
-            Choose how severely early withdrawals are penalized. Higher penalty
-            = more commitment.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-3 w-full mb-8">
-            {penalties.map((p, idx) => {
+      {/* ─── 3. LOCK DURATION & CALENDAR ─── */}
+      <motion.div variants={itemVariants} className="bg-white/70 dark:bg-[#0c121e]/70 backdrop-blur-md rounded-3xl p-6 border border-gray-200/70 dark:border-white/10 shadow-xs space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <label className="block text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              3. Target Maturity Date
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Select when your savings mature and unlock penalty-free.
+            </p>
+          </div>
+          {endDate && (
+            <span className="shrink-0 whitespace-nowrap px-3 py-1 bg-[#81D7B4]/15 text-[#81D7B4] border border-[#81D7B4]/25 rounded-xl text-xs font-bold font-sans flex items-center gap-1.5">
+              <Calendar01Icon className="w-3.5 h-3.5" />
+              {format(endDate, "MMM d, yyyy")}
+            </span>
+          )}
+        </div>
+        
+        {/* Quick Presets */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {startDate &&
+            [
+              { label: "1 Month", days: 30 },
+              { label: "3 Months", days: 90 },
+              { label: "6 Months", days: 180 },
+              { label: "1 Year", days: 365 },
+            ].map((preset) => {
+              const presetDate = new Date(startDate);
+              presetDate.setDate(presetDate.getDate() + preset.days);
+              const isSelected = endDate && format(presetDate, "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd");
               return (
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  key={p}
+                <button
+                  key={preset.label}
                   type="button"
-                  onClick={() => setPenalty(p)}
-                  className={`flex flex-col items-center justify-center gap-1 px-6 py-4 rounded-[1.2rem] border transition-all duration-300 w-full sm:w-[140px] ${
-                    penalty === p
-                      ? "bg-[#81D7B4] border-[#81D7B4] text-white shadow-[0_4px_12px_rgb(129,215,180,0.3)]"
-                      : "bg-white border-gray-100 hover:border-[#81D7B4]/40 hover:bg-[#81D7B4]/5 hover:shadow-sm"
+                  onClick={() => {
+                    setEndDate(presetDate);
+                    setCalendarNavigateDate(presetDate);
+                  }}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[#81D7B4]/15 border-[#81D7B4] text-[#81D7B4] shadow-xs"
+                      : "bg-gray-50 dark:bg-white/5 border-gray-200/70 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-[#81D7B4]/50"
                   }`}
                 >
-                  <span
-                    className={`text-2xl font-black ${penalty === p ? "text-white" : "text-gray-900"}`}
-                  >
-                    {p}
-                  </span>
-                  <span
-                    className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${penalty === p ? "text-white/90" : "text-[#81D7B4]"}`}
-                  >
-                    {idx === 0
-                      ? "Lenient"
-                      : idx === 1
-                        ? "Strict"
-                        : "Diamond Hands"}
-                  </span>
-                </motion.button>
+                  {preset.label}
+                </button>
               );
             })}
-          </div>
-
-          {amount && parseFloat(amount) > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-5 bg-gradient-to-b from-[#f8faf9] to-white w-full rounded-[20px] border border-[#81D7B4]/30 shadow-sm space-y-4 flex flex-col items-center"
-            >
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center shrink-0 border border-red-100 text-red-400 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div className="flex flex-col items-center text-center pb-2 border-b border-gray-100 w-full">
-                <span className="text-xs sm:text-sm text-gray-500 font-medium mb-1">If you break the lock early, you pay a penalty of:</span>
-                <span className="text-xl sm:text-2xl text-red-500 font-black">
-                  ${((Number(amount) * parseFloat(penalty)) / 100).toFixed(2)}
-                </span>
-              </div>
-              <div className="w-full pt-1 flex flex-col items-center">
-                <span className="text-[10px] sm:text-xs text-[#81D7B4] font-black uppercase tracking-widest mb-1">You get back</span>
-                <span className="text-2xl sm:text-3xl font-black text-gray-900">${((Number(amount) * (100 - parseFloat(penalty))) / 100).toFixed(2)}</span>
-              </div>
-            </motion.div>
-          )}
         </div>
-      </motion.div>
 
-      {/* Navigation */}
-      <div className="flex justify-between items-center pt-4">
-        <motion.button
-          whileHover={{ scale: 1.02, x: -2 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={handlePrevious}
-          className="text-gray-600 hover:text-gray-900 px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-full text-sm sm:text-base font-bold transition-all duration-200 inline-flex items-center gap-2 hover:bg-gray-100 whitespace-nowrap"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={handleNext}
-          className="bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-full text-sm sm:text-base font-bold transition-all duration-200 shadow-[0_4px_14px_rgb(129,215,180,0.3)] hover:shadow-[0_6px_20px_rgb(129,215,180,0.4)] inline-flex items-center gap-2 whitespace-nowrap"
-        >
-          Review & Create
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </motion.button>
-      </div>
+        {/* Date Picker */}
+        <div className="bg-gray-50/50 dark:bg-white/[0.02] rounded-2xl p-2 border border-gray-200/70 dark:border-white/10">
+          <CustomDatePicker
+            selectedDate={endDate}
+            onSelectDate={(date) => setEndDate(date)}
+            navigateToDate={calendarNavigateDate}
+          />
+        </div>
+        
+        {errors.endDate && (
+          <p className="text-xs text-red-500 font-bold">{errors.endDate}</p>
+        )}
+      </motion.div>
     </motion.div>
   );
 }

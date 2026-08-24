@@ -46,13 +46,13 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
                 <span className="block text-lg font-bold text-[#F9F9FB] group-hover:text-[#81D7B4] transition-colors">
                   BizFi Admin
                 </span>
-                <span className="text-xs text-[#7B8B9A]">Management Portal</span>
+                <span className="text-xs text-gray-400">Management Portal</span>
               </div>
             </Link>
             {/* Close button for mobile */}
             <button
               onClick={onClose}
-              className="md:hidden p-2 text-[#9BA8B5] hover:text-[#F9F9FB] hover:bg-[#0F1825] rounded-lg transition-colors"
+              className="md:hidden p-2 text-[#9BA8B5] hover:text-[#F9F9FB] hover:bg-[#121212] rounded-lg transition-colors"
             >
               <Cancel01Icon className="w-5 h-5" />
             </button>
@@ -68,7 +68,7 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
                       ? 'bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20'
-                      : 'text-[#9BA8B5] hover:bg-[#0F1825] hover:text-[#F9F9FB]'
+                      : 'text-[#9BA8B5] hover:bg-[#121212] hover:text-[#F9F9FB]'
                     }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-[#81D7B4]' : 'group-hover:text-[#81D7B4] transition-colors'}`} />
@@ -81,13 +81,13 @@ export default function BizFiSidebar({ isOpen = false, onClose }: BizFiSidebarPr
           {/* Sidebar Stats */}
           <div className="mt-auto space-y-4">
             <div className="pt-4 border-t border-[#7B8B9A]/20">
-              <div className="flex items-center gap-3 px-3 mb-4 py-2 bg-[#0F1825]/30 rounded-xl border border-[#7B8B9A]/5">
+              <div className="flex items-center gap-3 px-3 mb-4 py-2 bg-[#121212]/30 rounded-xl border border-[#7B8B9A]/5">
                 <div className="w-9 h-9 rounded-full bg-[#81D7B4]/20 flex items-center justify-center text-[#81D7B4] shrink-0">
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div className="overflow-hidden">
                   <p className="text-sm font-bold text-[#F9F9FB] truncate">{user?.username || 'Admin User'}</p>
-                  <p className="text-[10px] text-[#7B8B9A] truncate uppercase tracking-wider font-semibold">{user?.role || 'Administrator'}</p>
+                  <p className="text-[10px] text-gray-400 truncate uppercase tracking-wider font-semibold">{user?.role || 'Administrator'}</p>
                 </div>
               </div>
               <button

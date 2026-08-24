@@ -26,14 +26,15 @@ const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: str
   "0x765de816845861e75a25fca122bb6898b8b1282a": { name: "cUSD", decimals: 18, logo: "/cusd.png" },
   "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3": { name: "USDGLO", decimals: 18, logo: "/usdglo.png" },
   "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdclogo.png" },
-  "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" }
+  "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" },
+  "0xe899557c3ed87d49911e3b6a9a316a34f9f7a999": { name: "cNGN", decimals: 18, logo: "/cngn.png" }
 };
 const AVALANCHE_USDC_E = "0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664";
 
 // Network Configurations
 const NETWORKS_CONFIG = [
-  { chainId: BASE_CHAIN_ID, rpcUrl: 'https://base.publicnode.com', contractAddress: BASE_CONTRACT_ADDRESS_OLD, name: 'Base' },
-  { chainId: BASE_CHAIN_ID, rpcUrl: 'https://base.publicnode.com', contractAddress: BASE_CONTRACT_ADDRESS_NEW, name: 'Base' },
+  { chainId: BASE_CHAIN_ID, rpcUrl: 'https://base-rpc.publicnode.com', contractAddress: BASE_CONTRACT_ADDRESS_OLD, name: 'Base' },
+  { chainId: BASE_CHAIN_ID, rpcUrl: 'https://base-rpc.publicnode.com', contractAddress: BASE_CONTRACT_ADDRESS_NEW, name: 'Base' },
   { chainId: CELO_CHAIN_ID, rpcUrl: 'https://forno.celo.org', contractAddress: CELO_CONTRACT_ADDRESS, name: 'Celo' },
   { chainId: LISK_CHAIN_ID, rpcUrl: 'https://rpc.api.lisk.com', contractAddress: LISK_CONTRACT_ADDRESS, name: 'Lisk' },
   { chainId: BSC_CHAIN_ID, rpcUrl: 'https://bsc-dataseed.binance.org/', contractAddress: BSC_CONTRACT_ADDRESS, name: 'BSC' },
@@ -41,10 +42,17 @@ const NETWORKS_CONFIG = [
 ];
 
 export async function GET(request: NextRequest) {
-  const address = request.nextUrl.searchParams.get('address');
+  const rawAddress = request.nextUrl.searchParams.get('address');
   
-  if (!address) {
+  if (!rawAddress) {
     return NextResponse.json({ error: "Address is required" }, { status: 400 });
+  }
+
+  let address = rawAddress;
+  try {
+    address = ethers.getAddress(rawAddress.toLowerCase());
+  } catch {
+    address = rawAddress;
   }
 
   const cacheKey = `bitsave:savings:${address.toLowerCase()}`;
@@ -52,7 +60,7 @@ export async function GET(request: NextRequest) {
   try {
     // 1. Tick Redis Cache
     const cachedData = await getCache<any>(cacheKey);
-    if (cachedData) {
+    if (cachedData && Array.isArray(cachedData.currentPlans) && (cachedData.currentPlans.length > 0 || cachedData.completedPlans?.length > 0)) {
       if (DEBUG) console.log(`Serving savings for ${address} from Redis`);
       return NextResponse.json(cachedData);
     }
@@ -78,10 +86,13 @@ export async function GET(request: NextRequest) {
         let userChildContractAddress;
         try {
           const contractPromise = contract.getUserChildContractAddress({ from: address });
-          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Contract call timeout')), 10000));
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Contract call timeout')), 6000));
           userChildContractAddress = await Promise.race([contractPromise, timeoutPromise]);
           if (!userChildContractAddress || userChildContractAddress === ethers.ZeroAddress) return null;
-        } catch (err) { return null; }
+        } catch (err: any) {
+          console.error(`[Savings API] ${network.name} child address error:`, err.message);
+          return null;
+        }
 
         const childContract = new ethers.Contract(userChildContractAddress, childContractABI, provider);
 
@@ -95,27 +106,30 @@ export async function GET(request: NextRequest) {
             if (Array.isArray(savingsNamesObj[0])) savingsNamesArray = savingsNamesObj[0];
             else savingsNamesArray = savingsNamesObj;
           } else if (savingsNamesObj?.savingsNames) savingsNamesArray = savingsNamesObj.savingsNames;
-        } catch (err) { return null; }
+        } catch (err: any) {
+          console.error(`[Savings API] ${network.name} savings names error:`, err.message);
+          return null;
+        }
 
         if (!savingsNamesArray || savingsNamesArray.length === 0) return null;
 
-        const processedPlanNames = new Set();
-        const validSavingNames = savingsNamesArray.filter((savingName: string) => savingName && typeof savingName === "string" && savingName !== "" && !processedPlanNames.has(savingName));
+        // Process unique names from newest to oldest
+        const uniqueSavingNames = [...new Set(savingsNamesArray)].filter((name: string) => name && typeof name === "string" && name.trim() !== "").reverse();
 
-        const BATCH_SIZE = 5;
         const networkPlans = [];
         const networkCompletedPlans = [];
         let networkDeposits = 0;
         let networkTotalUsdValue = 0;
         let networkRewards = 0;
 
-        for (let i = 0; i < validSavingNames.length; i += BATCH_SIZE) {
-          const batch = validSavingNames.slice(i, i + BATCH_SIZE);
+        // Batch in groups of 4 to prevent RPC throttling
+        const BATCH_SIZE = 4;
+        for (let i = 0; i < uniqueSavingNames.length; i += BATCH_SIZE) {
+          const batch = uniqueSavingNames.slice(i, i + BATCH_SIZE);
           const batchPromises = batch.map(async (savingName: string) => {
             try {
-              processedPlanNames.add(savingName);
               const savingDataPromise = childContract.getSaving(savingName);
-              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout for ${savingName}`)), 5000));
+              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout for ${savingName}`)), 4500));
               const savingData: any = await Promise.race([savingDataPromise, timeoutPromise]);
               return { savingName, savingData };
             } catch (err) { return null; }
@@ -125,7 +139,8 @@ export async function GET(request: NextRequest) {
           for (const result of batchResults) {
             if (result.status === 'fulfilled' && result.value) {
               const { savingName, savingData } = result.value;
-              if (!savingData || !savingData.isValid) continue;
+              const isClosedOrWithdrawn = !savingData.isValid && Number(savingData.startTime || 0) > 0 && Number(savingData.amount || 0) > 0;
+              if (!savingData.isValid && !isClosedOrWithdrawn) continue;
 
               const tokenId = savingData.tokenId || ethers.ZeroAddress;
               const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
@@ -155,26 +170,32 @@ export async function GET(request: NextRequest) {
               const maturityTime = savingData.maturityTime ? Number(savingData.maturityTime) : startTime + (30 * 24 * 60 * 60);
 
               let progress = 0;
-              if (maturityTime <= startTime || now >= maturityTime) progress = 100;
+              if (maturityTime <= startTime || now >= maturityTime || isClosedOrWithdrawn) progress = 100;
               else progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
-              const isCompleted = savingData.isCompleted || progress >= 100;
+              const isCompleted = savingData.isCompleted || progress >= 100 || isClosedOrWithdrawn;
 
               const amountVal = parseFloat(amountFormatted);
+              if (isClosedOrWithdrawn && (amountVal <= 0.0001 || isNaN(amountVal))) continue;
+
               let price = 1;
               if (tokenName === "ETH") price = currentEthPrice || 3500;
               if (tokenName === "Gooddollar") price = goodDollarPrice || 0.0001086;
               const usdValue = amountVal * price;
-              networkRewards += usdValue * 5;
-              networkTotalUsdValue += usdValue;
+              
+              if (!isClosedOrWithdrawn) {
+                networkRewards += usdValue * 5;
+                networkTotalUsdValue += usdValue;
+              }
 
               const plan = {
                 id: savingName, name: savingName, amount: amountFormatted, currentAmount: amountFormatted,
                 startTime, maturityTime, isEth, tokenName, tokenLogo, progress,
-                status: isCompleted ? 'Completed' : 'Active',
+                status: isClosedOrWithdrawn ? 'Withdrawn' : isCompleted ? 'Completed' : 'Active',
                 timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / (24 * 60 * 60))} days`,
                 penalty: (savingData.penaltyPercentage ?? savingData[5] ?? 0).toString(),
                 penaltyPercentage: Number(savingData.penaltyPercentage ?? savingData[5] ?? 0),
-                network: network.name, chainId: Number(network.chainId), contractAddress: network.contractAddress
+                network: network.name, chainId: Number(network.chainId), contractAddress: network.contractAddress,
+                isWithdrawn: isClosedOrWithdrawn
               };
 
               if (isCompleted) networkCompletedPlans.push(plan);
@@ -184,7 +205,10 @@ export async function GET(request: NextRequest) {
           }
         }
         return { plans: networkPlans, completedPlans: networkCompletedPlans, deposits: networkDeposits, totalUsdValue: networkTotalUsdValue, rewards: networkRewards };
-      } catch (error) { return null; }
+      } catch (error: any) {
+        console.error('[Savings API] error in network', network.name, error.message);
+        return null;
+      }
     });
 
     const results = await Promise.allSettled(networkPromises);
@@ -212,8 +236,10 @@ export async function GET(request: NextRequest) {
       completedPlans: aggregatedCompletedPlans
     };
 
-    // Cache in Redis for 120 seconds
-    await setCache(cacheKey, finalData, 120);
+    // Only cache in Redis if valid plans were discovered
+    if (aggregatedPlans.length > 0 || aggregatedCompletedPlans.length > 0) {
+      await setCache(cacheKey, finalData, 120);
+    }
 
     return NextResponse.json(finalData);
   } catch (error: any) {

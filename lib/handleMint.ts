@@ -1,4 +1,5 @@
-import { getBizSwapCollection, getBizSwapUsersCollection } from '@/lib/mongodb';
+import { getBizSwapCollection, getBizSwapUsersCollection, getDatabase } from '@/lib/mongodb';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { BIZSWAP_CHAINS, BizSwapSupportedChain, getChainConfig, getExplorerUrl } from '@/lib/bizswap-contracts';
@@ -139,15 +140,83 @@ export async function handleMint(data: any) {
 
   await collection.insertOne(purchaseRecord);
 
-  // Process Referral Reward (0.1% reward)
+  // Process Referral Reward (0.1% reward in USDC)
   if (bizswapReferralCode) {
-    const usersCollection = await getBizSwapUsersCollection();
-    if (usersCollection) {
+    try {
       const rewardAmount = investmentAmount * 0.001;
-      await usersCollection.updateOne(
-        { bizswapReferralCode: bizswapReferralCode.toUpperCase() },
-        { $inc: { bizswapPendingUsdcEarnings: rewardAmount, bizswapTotalUsdcEarned: rewardAmount } }
-      );
+      const cleanCode = bizswapReferralCode.trim().toUpperCase();
+
+      // 1. Credit in MongoDB
+      const db = await getDatabase();
+      if (db) {
+        const usersCollection = db.collection('users');
+        const earningsCollection = db.collection('bizswap_referral_earnings');
+
+        const referrerUser = await usersCollection.findOne({
+          $or: [
+            { referralCode: { $regex: new RegExp(`^${cleanCode}$`, 'i') } },
+            { referral_code: { $regex: new RegExp(`^${cleanCode}$`, 'i') } },
+            { bizswapReferralCode: { $regex: new RegExp(`^${cleanCode}$`, 'i') } }
+          ]
+        });
+
+        if (referrerUser) {
+          const refWallet = referrerUser.walletAddress || referrerUser.evm_wallet || referrerUser.wallet;
+          await usersCollection.updateOne(
+            { _id: referrerUser._id },
+            { $inc: { bizswapPendingUsdcEarnings: rewardAmount, bizswapTotalUsdcEarned: rewardAmount } }
+          );
+
+          if (refWallet) {
+            await earningsCollection.updateOne(
+              { wallet: refWallet },
+              { $inc: { pending_usdc: rewardAmount, total_earned_usdc: rewardAmount } },
+              { upsert: true }
+            );
+          }
+        } else {
+          await usersCollection.updateOne(
+            { bizswapReferralCode: cleanCode },
+            { $inc: { bizswapPendingUsdcEarnings: rewardAmount, bizswapTotalUsdcEarned: rewardAmount } }
+          );
+        }
+      }
+
+      // 2. Credit in Supabase if available
+      try {
+        const supabase = getSupabaseAdmin();
+        if (supabase) {
+          const { data: suUser } = await supabase
+            .from('users')
+            .select('id')
+            .ilike('referral_code', cleanCode)
+            .single();
+
+          if (suUser?.id) {
+            const { data: currentEarnings } = await supabase
+              .from('bizswap_referral_earnings')
+              .select('pending_usdc, total_earned_usdc')
+              .eq('user_id', suUser.id)
+              .single();
+
+            const newPending = (Number(currentEarnings?.pending_usdc) || 0) + rewardAmount;
+            const newTotal = (Number(currentEarnings?.total_earned_usdc) || 0) + rewardAmount;
+
+            await supabase
+              .from('bizswap_referral_earnings')
+              .upsert({
+                user_id: suUser.id,
+                pending_usdc: newPending,
+                total_earned_usdc: newTotal,
+                updated_at: new Date().toISOString()
+              });
+          }
+        }
+      } catch (suErr) {
+        console.warn('[Referral Reward] Supabase sync notice:', suErr);
+      }
+    } catch (refErr) {
+      console.error('[Referral Reward] Error crediting referral:', refErr);
     }
   }
 

@@ -6,6 +6,9 @@ import { useEffect, useState, memo, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { usePrivy, useLogin } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 
 // Helper function
 const ensureImageUrl = (url: string | undefined): string => {
@@ -19,17 +22,29 @@ const ensureImageUrl = (url: string | undefined): string => {
 }
 
 const Hero = memo(() => {
-  const containerRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
+  const router = useRouter();
+  const { authenticated, ready } = usePrivy();
+  const { isConnected } = useAccount();
+  const { login: privyLogin } = useLogin({
+    onComplete: () => {
+      router.push('/dashboard');
+    },
   });
+  const { scrollYProgress } = useScroll();
 
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.6, 1], [1, 1, 0]);
-  const contentScale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0.9]);
+  const contentScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.98]);
 
   const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+
+  const handleStartSaving = () => {
+    if (ready && (authenticated || isConnected)) {
+      router.push('/dashboard');
+    } else {
+      privyLogin();
+    }
+  };
 
   useEffect(() => {
     fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'bsc'])
@@ -98,28 +113,28 @@ const Hero = memo(() => {
     }
   ];
 
-  // Sparse positions for the 5 tokens, safely below the navbar
+  // Sparsed positions for background tokens that stay clear of typography
   const tokenPositions = [
-    { top: '18%', left: '8%', size: '140px' },  // Top Left
-    { top: '75%', left: '15%', size: '180px' },  // Bottom Left (Celo moved to clear congestion)
-    { top: '22%', left: '82%', size: '160px' }, // Top Right
-    { top: '15%', left: '55%', size: '170px' },  // Top Center
-    { top: '72%', left: '42%', size: '150px' }, // Center Bottom
+    { top: '10%', left: '4%', size: '110px' },   // Top Left
+    { top: '78%', left: '8%', size: '130px' },   // Bottom Left
+    { top: '12%', left: '86%', size: '120px' },  // Top Right
+    { top: '8%', left: '58%', size: '110px' },   // Top Center
+    { top: '82%', left: '44%', size: '115px' },  // Center Bottom
   ];
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-[90vh] bg-gradient-to-br from-[#81D7B4]/10 via-white to-[#81D7B4]/5 overflow-hidden flex flex-col justify-center pt-36 lg:pt-48 pb-20 z-0">
+    <section className="relative w-full min-h-[90vh] bg-gradient-to-br from-[#81D7B4]/10 via-white to-[#81D7B4]/5 overflow-hidden flex flex-col justify-center pt-32 lg:pt-40 pb-20 z-0">
       
       {/* Background Sparsed Neobrutalist Tokens */}
-      <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden opacity-85 blur-[1px]">
+      <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden opacity-75 blur-[0.5px]">
           {chains.map((chain, index) => {
             const pos = tokenPositions[index];
             return (
               <motion.div
                 key={chain.name}
                 animate={{
-                  y: [0, -20, 0],
-                  rotateZ: [-5, 5, -5],
+                  y: [0, -15, 0],
+                  rotateZ: [-3, 3, -3],
                 }}
                 transition={{ 
                   duration: 6 + (index % 3), 
@@ -127,17 +142,17 @@ const Hero = memo(() => {
                   ease: "easeInOut",
                   delay: index * 0.5
                 }}
-                className="absolute flex items-center justify-center rounded-full bg-white border-[5px] border-gray-900"
+                className="absolute flex items-center justify-center rounded-full bg-white border-[4px] border-gray-900"
                 style={{ 
                   top: pos.top, 
                   left: pos.left, 
                   width: pos.size, 
                   height: pos.size,
-                  boxShadow: `8px 12px 0px ${chain.accentColor}, 8px 12px 0px 5px #111`
+                  boxShadow: `6px 10px 0px ${chain.accentColor}, 6px 10px 0px 4px #111`
                 }}
               >
                 {/* Inner Coin Rim */}
-                <div className="w-[85%] h-[85%] rounded-full border-4 border-gray-100 flex items-center justify-center bg-white shadow-[inset_0_4px_15px_rgba(0,0,0,0.05)]">
+                <div className="w-[85%] h-[85%] rounded-full border-2 border-gray-100 flex items-center justify-center bg-white shadow-[inset_0_4px_15px_rgba(0,0,0,0.05)]">
                   <Image 
                     src={chain.logo} 
                     alt={chain.name} 
@@ -152,30 +167,31 @@ const Hero = memo(() => {
       </div>
 
       {/* Liquid Glass Overlay */}
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-20 pointer-events-none" />
+      <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 pointer-events-none" />
 
       <motion.div 
         style={{ opacity: contentOpacity, scale: contentScale }} 
         className="relative w-full flex items-center justify-center origin-top z-30"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[90rem]">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
             {/* Left Column: Content */}
-            <div className="flex flex-col items-start text-left space-y-8 relative z-20">
+            <div className="flex flex-col items-start text-left space-y-6 sm:space-y-8 relative z-20">
               
               {/* Heading */}
-              <div className="space-y-1 max-w-2xl relative z-10">
+              <div className="space-y-2 max-w-2xl relative z-10">
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
-                  className="text-[4rem] sm:text-[5rem] lg:text-[6rem] xl:text-[7.5rem] tracking-tight text-[#111111] leading-[0.9] font-instrument"
+                  className="font-instrument tracking-tight text-[#111111] leading-none"
                 >
-                  <span className="block text-[#111111]">Your Crypto</span>
-                  <span className="block mt-1 text-[#111111]">Savings</span>
+                  <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-[3.65rem] xl:text-[4.15rem] text-[#111111] whitespace-nowrap font-normal">
+                    Your Crypto Savings
+                  </span>
                   <span 
-                    className="block mt-3 italic text-[#81D7B4]" 
+                    className="block mt-1 sm:mt-2 text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] xl:text-[5.75rem] italic text-[#81D7B4] leading-tight font-normal" 
                   >
                     Protocol
                   </span>
@@ -187,12 +203,12 @@ const Hero = memo(() => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-base sm:text-lg xl:text-xl text-slate-600 font-normal leading-relaxed max-w-2xl tracking-normal relative z-10"
+                className="text-sm sm:text-base xl:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl tracking-normal relative z-10"
               >
                 Save your <strong className="font-bold text-slate-900">Stable Coins</strong>. Lock your Crypto. Build Wealth on Bitsave That Stops You From Rugging Yourself across
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mx-2 bg-white/80 backdrop-blur-md rounded-xl border border-slate-200/60 shadow-sm align-middle relative -top-[1px]">
                   {chains.map(chain => (
-                    <Image key={chain.name} src={chain.logo} alt={chain.name} width={16} height={16} className="w-4 h-4 object-contain rounded-[3px]" />
+                    <Image key={chain.name} src={chain.logo} alt={chain.name} width={16} height={16} priority className="w-4 h-4 object-contain rounded-[3px]" />
                   ))}
                 </span>
                 networks.
@@ -203,15 +219,15 @@ const Hero = memo(() => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-row items-center gap-3 relative z-20 pt-4 w-full sm:w-auto"
+                className="flex flex-row items-center gap-3 relative z-20 pt-2 w-full sm:w-auto"
               >
-                <Link
-                  href="/dashboard/create-savings"
-                  className="group flex-1 sm:flex-none px-4 sm:px-6 py-3.5 bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white font-black text-sm sm:text-base rounded-xl hover:from-[#6BC5A0] hover:to-[#5fb392] transition-all flex items-center justify-center gap-1.5 shadow-[0_8px_20px_rgba(129,215,180,0.3)] hover:shadow-[0_12px_25px_rgba(129,215,180,0.4)] hover:-translate-y-1 whitespace-nowrap"
+                <button
+                  onClick={handleStartSaving}
+                  className="group flex-1 sm:flex-none px-4 sm:px-6 py-3.5 bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white font-black text-sm sm:text-base rounded-xl hover:from-[#6BC5A0] hover:to-[#5fb392] transition-all flex items-center justify-center gap-1.5 shadow-[0_8px_20px_rgba(129,215,180,0.3)] hover:shadow-[0_12px_25px_rgba(129,215,180,0.4)] hover:-translate-y-1 whitespace-nowrap cursor-pointer"
                 >
                   <span>Start saving<span className="hidden sm:inline"> now</span></span>
                   <ArrowRight01Icon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </button>
                 <a
                   href="https://youtu.be/BDQxf_fgsNo"
                   target="_blank"
@@ -227,7 +243,7 @@ const Hero = memo(() => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="pt-8 flex flex-row flex-wrap items-center gap-3 sm:gap-4 relative z-10 w-full"
+                className="pt-4 sm:pt-6 flex flex-row flex-wrap items-center gap-3 sm:gap-4 relative z-10 w-full"
               >
                 {[
                   { title: "Non-Custodial", sub: "Your keys, your crypto", icon: Shield01Icon },
@@ -247,11 +263,11 @@ const Hero = memo(() => {
               </motion.div>
             </div>
 
-            {/* Right Column: Interactive Cards (Unchanged from prev logic, just keeping here) */}
-            <div className="relative h-[350px] sm:h-[450px] lg:h-[700px] w-full flex items-center justify-center lg:justify-end perspective-1000 mt-8 lg:mt-0 z-20">
+            {/* Right Column: Smooth Stacked Interactive Cards */}
+            <div className="relative h-[350px] sm:h-[450px] lg:h-[650px] w-full flex items-center justify-center lg:justify-end perspective-1000 mt-6 lg:mt-0 z-20">
 
               {/* Card Stack Container */}
-              <div className="relative w-full max-w-[340px] aspect-[3/4] md:max-w-[380px]">
+              <div className="relative w-full max-w-[330px] aspect-[3/4] md:max-w-[370px]">
                 {chains.map((chain, index) => {
                   const relativeIndex = (index - activeCardIndex + chains.length) % chains.length;
                   const isVisible = relativeIndex < 3;
@@ -261,14 +277,17 @@ const Hero = memo(() => {
                       key={chain.name}
                       initial={false}
                       animate={{ 
-                        x: relativeIndex === 0 ? 0 : relativeIndex === 1 ? 16 : relativeIndex === 2 ? 32 : relativeIndex === chains.length - 1 ? -160 : 48,
-                        y: relativeIndex === 0 ? 0 : relativeIndex === 1 ? 32 : relativeIndex === 2 ? 64 : relativeIndex === chains.length - 1 ? -80 : 96,
-                        scale: relativeIndex === 0 ? 1 : relativeIndex === 1 ? 0.95 : relativeIndex === 2 ? 0.9 : relativeIndex === chains.length - 1 ? 1.05 : 0.85,
-                        rotateZ: relativeIndex === 0 ? 0 : relativeIndex === 1 ? -2 : relativeIndex === 2 ? -4 : relativeIndex === chains.length - 1 ? -15 : -6,
-                        zIndex: relativeIndex === chains.length - 1 ? 60 : 50 - relativeIndex,
-                        opacity: relativeIndex < 3 ? 1 : 0,
+                        x: relativeIndex === 0 ? 0 : relativeIndex === 1 ? 14 : relativeIndex === 2 ? 28 : 0,
+                        y: relativeIndex === 0 ? 0 : relativeIndex === 1 ? 16 : relativeIndex === 2 ? 32 : -20,
+                        scale: relativeIndex === 0 ? 1 : relativeIndex === 1 ? 0.96 : relativeIndex === 2 ? 0.92 : 0.88,
+                        rotateZ: relativeIndex === 0 ? 0 : relativeIndex === 1 ? -2 : relativeIndex === 2 ? -4 : 0,
+                        zIndex: isVisible ? 30 - relativeIndex : 0,
+                        opacity: relativeIndex === 0 ? 1 : relativeIndex === 1 ? 0.9 : relativeIndex === 2 ? 0.65 : 0,
                       }}
-                      transition={{ duration: 0.8, type: 'spring', stiffness: 200, damping: 25 }}
+                      transition={{ 
+                        duration: 0.85, 
+                        ease: [0.25, 1, 0.5, 1]
+                      }}
                       className="absolute inset-0 will-change-transform origin-center"
                     >
                       {/* Premium Light Frosted Glass Card Body */}

@@ -320,21 +320,21 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
             <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-[#0D1724] border border-[#81D7B4] text-center space-y-6 sm:space-y-8">
                 <div>
                     <h2 className="text-2xl sm:text-[32px] md:text-[40px] font-extrabold text-[#F9F9FB] tracking-tight uppercase" style={{ fontFamily: "var(--font-display)" }}>REGISTRATION SUCCESSFUL</h2>
-                    <p className="text-[#7B8B9A] max-w-lg mx-auto mt-4">
+                    <p className="text-gray-400 max-w-lg mx-auto mt-4">
                         Welcome to BizFi. Your business has been successfully listed and attested.
                     </p>
                 </div>
 
                 {attestationData && (
                     <div className="w-full max-w-md bg-[#080E18] border border-[#1E2F45] p-6 text-left">
-                        <p className="text-xs font-bold tracking-widest uppercase text-[#7B8B9A] mb-4">ATTESTATION DETAILS</p>
+                        <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">ATTESTATION DETAILS</p>
                         <div className="space-y-4">
                             <div>
-                                <p className="text-[10px] uppercase tracking-widest text-[#7B8B9A] mb-1">TRANSACTION HASH</p>
+                                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">TRANSACTION HASH</p>
                                 <code className="text-[#81D7B4] text-sm font-mono break-all">{attestationData.transactionHash}</code>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase tracking-widest text-[#7B8B9A] mb-1">EAS UID</p>
+                                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">EAS UID</p>
                                 <code className="text-[#F9F9FB] text-sm font-mono break-all">{attestationData.easUid}</code>
                             </div>
                         </div>
@@ -379,7 +379,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                 <div
                                     className={`w-full h-1 mb-2 sm:mb-3 transition-all ${index + 1 <= currentStep ? 'bg-[#81D7B4]' : 'bg-[#1E2F45]'}`}
                                 />
-                                <span className={`w-full text-[8px] sm:text-[10px] font-bold tracking-widest uppercase transition-colors truncate sm:whitespace-normal sm:break-words pr-1 sm:pr-0 ${index + 1 <= currentStep ? 'text-[#81D7B4]' : 'text-[#7B8B9A]'}`} title={step.title}>
+                                <span className={`w-full text-[8px] sm:text-[10px] font-bold tracking-widest uppercase transition-colors truncate sm:whitespace-normal sm:break-words pr-1 sm:pr-0 ${index + 1 <= currentStep ? 'text-[#81D7B4]' : 'text-gray-400'}`} title={step.title}>
                                     {step.title}
                                 </span>
                             </div>
@@ -423,12 +423,12 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                 {isLastStep ? (
                     <div className="flex-1 sm:flex-none flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                         <div className="flex items-center relative">
-                            <span className="text-[#7B8B9A] text-xs font-bold tracking-widest uppercase mr-3 hidden sm:inline-block">ATTEST ON:</span>
+                            <span className="text-gray-400 text-xs font-bold tracking-widest uppercase mr-3 hidden sm:inline-block">ATTEST ON:</span>
                             <div className="relative">
                                 <button 
                                     type="button"
                                     onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
-                                    className="flex items-center gap-2 px-4 py-4 bg-[#0F1825] border border-[#1E2F45] text-[#F9F9FB] font-bold text-sm tracking-wide uppercase hover:border-[#81D7B4] transition-colors min-w-[140px] justify-between"
+                                    className="flex items-center gap-2 px-4 py-4 bg-[#121212] border border-[#1E2F45] text-[#F9F9FB] font-bold text-sm tracking-wide uppercase hover:border-[#81D7B4] transition-colors min-w-[140px] justify-between"
                                 >
                                     <div className="flex items-center gap-2">
                                         {attestationNetwork === 'base' ? (
@@ -438,11 +438,11 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                                         )}
                                         <span>{attestationNetwork.toUpperCase()}</span>
                                     </div>
-                                    <span className="text-[10px] ml-2 text-[#7B8B9A]">▼</span>
+                                    <span className="text-[10px] ml-2 text-gray-400">▼</span>
                                 </button>
 
                                 {isNetworkDropdownOpen && (
-                                    <div className="absolute bottom-full left-0 mb-2 w-full bg-[#0F1825] border border-[#1E2F45] z-50">
+                                    <div className="absolute bottom-full left-0 mb-2 w-full bg-[#121212] border border-[#1E2F45] z-50">
                                         <button
                                             type="button"
                                             onClick={() => { setAttestationNetwork('base'); setIsNetworkDropdownOpen(false); }}
@@ -516,7 +516,7 @@ export default function WizardForm({ selectedTier, referralCode, isReferralValid
                             <h3 className="text-lg sm:text-xl font-bold mb-4 tracking-wide uppercase" style={{ color: notificationConfig.type === 'success' ? '#81D7B4' : '#FF6B6B' }}>
                                 {notificationConfig.title}
                             </h3>
-                            <p className="text-sm leading-relaxed mb-8 text-[#7B8B9A]">
+                            <p className="text-sm leading-relaxed mb-8 text-gray-400">
                                 {notificationConfig.message}
                             </p>
                             <button
@@ -552,12 +552,12 @@ function renderFormSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-[#F9F9FB] mb-2">Personal Information</h2>
-                    <p className="text-[#7B8B9A] text-xs sm:text-sm">Let's start with some details about you.</p>
+                    <p className="text-gray-400 text-xs sm:text-sm">Let's start with some details about you.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Name *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Name *</label>
                         <input
                             type="text"
                             value={formData.name || ''}
@@ -567,7 +567,7 @@ function renderFormSection(
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Email *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Email *</label>
                         <input
                             type="email"
                             value={formData.email || ''}
@@ -577,7 +577,7 @@ function renderFormSection(
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Country *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Country *</label>
                         <input
                             type="text"
                             value={formData.country || ''}
@@ -587,7 +587,7 @@ function renderFormSection(
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Phone Number *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Phone Number *</label>
                         <input
                             type="tel"
                             value={formData.phone || ''}
@@ -600,7 +600,7 @@ function renderFormSection(
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Telegram Handle *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Telegram Handle *</label>
                         <input
                             type="text"
                             placeholder="@username"
@@ -611,7 +611,7 @@ function renderFormSection(
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Birthday (YY/MM/DD) *</label>
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Birthday (YY/MM/DD) *</label>
                         <input
                             type="date"
                             value={formData.birthday || ''}
@@ -623,12 +623,12 @@ function renderFormSection(
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
-                        Social Handles <span className="text-[#7B8B9A] text-xs">(Optional but Important - 2 credible socials recommended)</span>
+                    <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
+                        Social Handles <span className="text-gray-400 text-xs">(Optional but Important - 2 credible socials recommended)</span>
                     </label>
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-[#7B8B9A] mb-1">Twitter</label>
+                            <label className="block text-xs text-gray-400 mb-1">Twitter</label>
                             <input
                                 type="url"
                                 placeholder="https://twitter.com/username"
@@ -638,7 +638,7 @@ function renderFormSection(
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-[#7B8B9A] mb-1">LinkedIn</label>
+                            <label className="block text-xs text-gray-400 mb-1">LinkedIn</label>
                             <input
                                 type="url"
                                 placeholder="https://linkedin.com/in/username"
@@ -648,7 +648,7 @@ function renderFormSection(
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-[#7B8B9A] mb-1">Instagram</label>
+                            <label className="block text-xs text-gray-400 mb-1">Instagram</label>
                             <input
                                 type="url"
                                 placeholder="https://instagram.com/username"
@@ -658,7 +658,7 @@ function renderFormSection(
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-[#7B8B9A] mb-1">Facebook</label>
+                            <label className="block text-xs text-gray-400 mb-1">Facebook</label>
                             <input
                                 type="url"
                                 placeholder="https://facebook.com/username"
@@ -671,7 +671,7 @@ function renderFormSection(
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Brief Professional Bio *</label>
+                    <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Brief Professional Bio *</label>
                     <textarea
                         rows={4}
                         value={formData.bio || ''}
@@ -683,7 +683,7 @@ function renderFormSection(
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">Do you own the business/company you're listing? *</label>
+                    <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">Do you own the business/company you're listing? *</label>
                     <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -731,7 +731,7 @@ function renderFormSection(
 // Helper component for input fields
 const InputField = ({ label, required = false, ...props }: any) => (
     <div>
-        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
             {label} {required && <span className="text-[#81D7B4]">*</span>}
         </label>
         <input
@@ -743,7 +743,7 @@ const InputField = ({ label, required = false, ...props }: any) => (
 
 const TextAreaField = ({ label, required = false, rows = 4, ...props }: any) => (
     <div>
-        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
             {label} {required && <span className="text-[#81D7B4]">*</span>}
         </label>
         <textarea
@@ -769,7 +769,7 @@ function renderMicroBusinessSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Business Identity</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's get to know your business.</p>
+                    <p className="text-gray-400 text-sm">Let's get to know your business.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -782,7 +782,7 @@ function renderMicroBusinessSection(
                     />
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Is your business registered in your country? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -829,7 +829,7 @@ function renderMicroBusinessSection(
                             onChange={(e: any) => updateFormData('businessDescription', e.target.value)}
                             maxLength={750}
                         />
-                        <p className="text-xs text-[#7B8B9A] mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                             {(formData.businessDescription || '').split(' ').filter((w: string) => w).length}/150 words
                         </p>
                     </div>
@@ -909,7 +909,7 @@ function renderMicroBusinessSection(
                             value={formData.businessPicturesLink || ''}
                             onChange={(e: any) => updateFormData('businessPicturesLink', e.target.value)}
                         />
-                        <p className="text-xs text-[#7B8B9A] mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                             Include store fronts, logos, social media screenshots where applicable
                         </p>
                     </div>
@@ -926,13 +926,13 @@ function renderMicroBusinessSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Operational Data</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's get to know your growth.</p>
+                    <p className="text-gray-400 text-sm">Let's get to know your growth.</p>
                 </div>
 
                 <div className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                            <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                                 Average Monthly Revenue <span className="text-[#81D7B4]">*</span>
                             </label>
                             <div className="flex gap-2">
@@ -955,7 +955,7 @@ function renderMicroBusinessSection(
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                            <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                                 Average Monthly Expenses <span className="text-[#81D7B4]">*</span>
                             </label>
                             <div className="flex gap-2">
@@ -981,7 +981,7 @@ function renderMicroBusinessSection(
                     <div className="p-4 bg-[#81D7B4]/10 border border-[#81D7B4]/30 rounded-none">
                         <label className="block text-sm font-medium text-[#81D7B4] mb-2">Profit Margin Estimate (Auto-calculated)</label>
                         <div className="text-3xl font-bold text-[#F9F9FB]">{profitMargin}%</div>
-                        <p className="text-xs text-[#7B8B9A] mt-1">Formula: (Revenue - Expenses) / Revenue × 100</p>
+                        <p className="text-xs text-gray-400 mt-1">Formula: (Revenue - Expenses) / Revenue × 100</p>
                     </div>
 
                     <InputField
@@ -994,7 +994,7 @@ function renderMicroBusinessSection(
                     />
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Primary Sales Channels <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1015,7 +1015,7 @@ function renderMicroBusinessSection(
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Do you have repeat customers? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1036,7 +1036,7 @@ function renderMicroBusinessSection(
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Do you have any financial business records? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1054,7 +1054,7 @@ function renderMicroBusinessSection(
                                 </label>
                             ))}
                         </div>
-                        <p className="text-xs text-[#7B8B9A] mt-1">Receipts, notebooks, POS reports, etc.</p>
+                        <p className="text-xs text-gray-400 mt-1">Receipts, notebooks, POS reports, etc.</p>
                     </div>
                 </div>
             </div>
@@ -1070,7 +1070,7 @@ function renderMicroBusinessSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Growth Reflection</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's get to know your business needs.</p>
+                    <p className="text-gray-400 text-sm">Let's get to know your business needs.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1082,13 +1082,13 @@ function renderMicroBusinessSection(
                             value={formData.biggestChallenge || ''}
                             onChange={(e: any) => updateFormData('biggestChallenge', e.target.value)}
                         />
-                        <p className={`text-xs mt-1 ${challengeWordCount > 1000 ? 'text-red-400' : 'text-[#7B8B9A]'}`}>
+                        <p className={`text-xs mt-1 ${challengeWordCount > 1000 ? 'text-red-400' : 'text-gray-400'}`}>
                             {challengeWordCount}/1,000 words
                         </p>
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             How much do you want to raise? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-2">
@@ -1108,7 +1108,7 @@ function renderMicroBusinessSection(
                                 className="flex-1 px-4 py-3 bg-[#1E2F45] border border-[#1E2F45] rounded-none text-[#F9F9FB] focus:border-[#81D7B4] focus:outline-none"
                             />
                         </div>
-                        <p className="text-xs text-[#7B8B9A] mt-1">USD equivalent will be calculated</p>
+                        <p className="text-xs text-gray-400 mt-1">USD equivalent will be calculated</p>
                     </div>
 
                     <div>
@@ -1119,10 +1119,10 @@ function renderMicroBusinessSection(
                             value={formData.fundUsage || ''}
                             onChange={(e: any) => updateFormData('fundUsage', e.target.value)}
                         />
-                        <p className={`text-xs mt-1 ${fundUsageWordCount > 2000 ? 'text-red-400' : 'text-[#7B8B9A]'}`}>
+                        <p className={`text-xs mt-1 ${fundUsageWordCount > 2000 ? 'text-red-400' : 'text-gray-400'}`}>
                             {fundUsageWordCount}/2,000 words
                         </p>
-                        <p className="text-xs text-[#7B8B9A] mt-2">
+                        <p className="text-xs text-gray-400 mt-2">
                             Feel free to include your business records for the past 1 year if available. Upload them on Google Drive and add the link below.
                         </p>
                         <input
@@ -1169,7 +1169,7 @@ function renderBuilderSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Startup Details</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's get to know your Start-Up</p>
+                    <p className="text-gray-400 text-sm">Let's get to know your Start-Up</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1182,7 +1182,7 @@ function renderBuilderSection(
                     />
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Is your business registered yet? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1200,7 +1200,7 @@ function renderBuilderSection(
                                 </label>
                             ))}
                         </div>
-                        <p className="text-xs text-[#7B8B9A] mt-1">If it isn't you can contact Timog Services, but continue filing the form.</p>
+                        <p className="text-xs text-gray-400 mt-1">If it isn't you can contact Timog Services, but continue filing the form.</p>
                     </div>
 
                     <div>
@@ -1211,11 +1211,11 @@ function renderBuilderSection(
                             value={formData.ideaSummary || ''}
                             onChange={(e: any) => updateFormData('ideaSummary', e.target.value)}
                         />
-                        <p className="text-xs text-[#7B8B9A] mt-1">{ideaWordCount}/150 words</p>
+                        <p className="text-xs text-gray-400 mt-1">{ideaWordCount}/150 words</p>
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Development Stage <span className="text-[#81D7B4]">*</span>
                         </label>
                         <select
@@ -1273,7 +1273,7 @@ function renderBuilderSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Startup Potential</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's see your potential</p>
+                    <p className="text-gray-400 text-sm">Let's see your potential</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1294,7 +1294,7 @@ function renderBuilderSection(
                     />
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Have you earned any revenue yet? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1342,7 +1342,7 @@ function renderBuilderSection(
                             value={formData.capitalUsage || ''}
                             onChange={(e: any) => updateFormData('capitalUsage', e.target.value)}
                         />
-                        <p className="text-xs text-[#7B8B9A] mt-2">
+                        <p className="text-xs text-gray-400 mt-2">
                             Feel free to include your business records for the past 1 year if available. Upload them on Google Drive and add the link below.
                         </p>
                         <input
@@ -1364,7 +1364,7 @@ function renderBuilderSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Commitment & Vision</h2>
-                    <p className="text-[#7B8B9A] text-sm">How big are you thinking?</p>
+                    <p className="text-gray-400 text-sm">How big are you thinking?</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1409,7 +1409,7 @@ function renderGrowthSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Company Details</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's get to know your Brand</p>
+                    <p className="text-gray-400 text-sm">Let's get to know your Brand</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1447,7 +1447,7 @@ function renderGrowthSection(
                     />
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Industry <span className="text-[#81D7B4]">*</span>
                         </label>
                         <select
@@ -1545,7 +1545,7 @@ function renderGrowthSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Finance</h2>
-                    <p className="text-[#7B8B9A] text-sm">Give us estimates not exacts, we'll ask for exacts during KYC & KYB</p>
+                    <p className="text-gray-400 text-sm">Give us estimates not exacts, we'll ask for exacts during KYC & KYB</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1602,7 +1602,7 @@ function renderGrowthSection(
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Current Debts or Loans? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4 mb-2">
@@ -1632,7 +1632,7 @@ function renderGrowthSection(
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest uppercase text-[#7B8B9A] mb-2">
+                        <label className="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2">
                             Any existing investors? <span className="text-[#81D7B4]">*</span>
                         </label>
                         <div className="flex gap-4">
@@ -1662,7 +1662,7 @@ function renderGrowthSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Operations & Business Growth Readiness</h2>
-                    <p className="text-[#7B8B9A] text-sm">Tell us about your operations</p>
+                    <p className="text-gray-400 text-sm">Tell us about your operations</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1753,7 +1753,7 @@ function renderGrowthSection(
                             value={formData.fundsUsage || ''}
                             onChange={(e: any) => updateFormData('fundsUsage', e.target.value)}
                         />
-                        <p className="text-xs text-[#7B8B9A] mt-2">
+                        <p className="text-xs text-gray-400 mt-2">
                             Feel free to include your business records for the past 1 year if available. Upload them on Google Drive and add the link below.
                         </p>
                         <input
@@ -1798,7 +1798,7 @@ function renderEnterpriseSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Company Details</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's get to know your Company</p>
+                    <p className="text-gray-400 text-sm">Let's get to know your Company</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1937,7 +1937,7 @@ function renderEnterpriseSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Project Executive Summary</h2>
-                    <p className="text-[#7B8B9A] text-sm">Tell us about your project</p>
+                    <p className="text-gray-400 text-sm">Tell us about your project</p>
                 </div>
 
                 <div className="space-y-4">
@@ -1999,7 +1999,7 @@ function renderEnterpriseSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Financial Requirements</h2>
-                    <p className="text-[#7B8B9A] text-sm">Let's understand your financial needs</p>
+                    <p className="text-gray-400 text-sm">Let's understand your financial needs</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2084,7 +2084,7 @@ function renderEnterpriseSection(
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Funding Expectations</h2>
-                    <p className="text-[#7B8B9A] text-sm">How will you use the funds?</p>
+                    <p className="text-gray-400 text-sm">How will you use the funds?</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2121,7 +2121,7 @@ function renderEnterpriseSection(
                             value={formData.projectAssets || ''}
                             onChange={(e: any) => updateFormData('projectAssets', e.target.value)}
                         />
-                        <p className="text-xs text-[#7B8B9A] mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                             Verification will be done during KYC/KYB (e.g., Land documents, Machinery/equipment lists, Existing buildings or structures, Valuation documents, Film Scripts, Studio etc.)
                         </p>
                     </div>
@@ -2142,7 +2142,7 @@ function renderDeclarationSection(agreedToTerms: boolean, setAgreedToTerms: (val
         <div className="space-y-6">
             <div>
                 <h2 className="text-2xl font-bold text-[#F9F9FB] mb-2">Declaration and Consent</h2>
-                <p className="text-[#7B8B9A] text-sm">Please review and confirm the following.</p>
+                <p className="text-gray-400 text-sm">Please review and confirm the following.</p>
             </div>
 
             <div className="p-6 bg-[#080E18] border border-[#1E2F45] rounded-none space-y-4">

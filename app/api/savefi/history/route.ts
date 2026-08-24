@@ -23,14 +23,14 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (fetchError) {
-      console.error('Failed to fetch SaveFi history:', fetchError.message);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      console.warn('SaveFi history notice:', fetchError.message);
+      return NextResponse.json({ success: true, data: [] });
     }
 
-    return NextResponse.json({ success: true, data: history });
+    return NextResponse.json({ success: true, data: history || [] });
 
   } catch (error: any) {
-    console.error('SaveFi history error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.warn('SaveFi history notice:', error?.message);
+    return NextResponse.json({ success: true, data: [] });
   }
 }

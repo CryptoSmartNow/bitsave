@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 
 interface BizSwapReferralData {
   bizswapReferralCode: string;
@@ -16,6 +17,7 @@ interface UseBizSwapReferralsReturn {
 }
 
 export function useBizSwapReferrals(walletAddress?: string): UseBizSwapReferralsReturn {
+  const { getAccessToken } = usePrivy();
   const [referralData, setReferralData] = useState<BizSwapReferralData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +36,13 @@ export function useBizSwapReferrals(walletAddress?: string): UseBizSwapReferrals
       // Wait, we can use a fetch endpoint. Actually, generating automatically on fetch might be too aggressive.
       // Let's create a dedicated fetch endpoint if it doesn't exist, or just use the generate endpoint which creates it if it doesn't exist.
       // Actually, let's just make generate handle both checking and creating.
+      let token = await getAccessToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/bizswap/referrals/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ walletAddress }),
       });
 
@@ -51,7 +57,7 @@ export function useBizSwapReferrals(walletAddress?: string): UseBizSwapReferrals
     } finally {
       setLoading(false);
     }
-  }, [walletAddress]);
+  }, [walletAddress, getAccessToken]);
 
   const generateReferralCode = useCallback(async () => {
     await refreshReferralData();
@@ -67,9 +73,13 @@ export function useBizSwapReferrals(walletAddress?: string): UseBizSwapReferrals
     setError(null);
 
     try {
+      let token = await getAccessToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/bizswap/referrals/withdraw', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ walletAddress, amount }),
       });
 
@@ -85,7 +95,7 @@ export function useBizSwapReferrals(walletAddress?: string): UseBizSwapReferrals
     } finally {
       setLoading(false);
     }
-  }, [walletAddress, refreshReferralData]);
+  }, [walletAddress, refreshReferralData, getAccessToken]);
 
   useEffect(() => {
     if (walletAddress) {

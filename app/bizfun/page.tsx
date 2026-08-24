@@ -109,20 +109,20 @@ export default function BizFunPage() {
 
     if (!mounted) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0b0c15] flex items-center justify-center`}>
+            <div className={`${exo.variable} font-sans min-h-screen bg-[#121212] flex items-center justify-center`}>
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className={`${exo.variable} font-[family-name:var(--font-exo)] min-h-screen text-white bg-[#0b0c15] selection:bg-[#81D7B4]/30 selection:text-white overflow-x-hidden`}>
+        <div className={`${exo.variable} font-[family-name:var(--font-exo)] min-h-screen text-white bg-[#121212] selection:bg-[#81D7B4]/30 selection:text-white overflow-x-hidden`}>
             
             {/* Header */}
             <header 
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
                   scrolled 
-                    ? 'bg-[#0b0c15]/80 backdrop-blur-xl border-b border-white/5 py-4' 
+                    ? 'bg-[#121212]/80 backdrop-blur-xl border-b border-white/5 py-4' 
                     : 'bg-transparent py-6'
                 }`}
             >
@@ -193,7 +193,7 @@ export default function BizFunPage() {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="absolute top-full left-0 right-0 bg-[#0b0c15] border-b border-white/10 shadow-2xl xl:hidden"
+                            className="absolute top-full left-0 right-0 bg-[#121212] border-b border-white/10 shadow-2xl xl:hidden"
                         >
                             <div className="p-4 space-y-4">
                                 <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-base font-medium text-gray-300 hover:bg-white/5 rounded-lg">How It Works</a>
@@ -333,7 +333,7 @@ export default function BizFunPage() {
                 </section>
 
                 {/* Features Section */}
-                <section id="features" className="py-20 lg:py-32 px-4 relative overflow-hidden bg-[#0b0c15]">
+                <section id="features" className="py-20 lg:py-32 px-4 relative overflow-hidden bg-[#121212]">
                     {/* Subtle Background Pattern */}
                     <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.05]" />
 
@@ -383,7 +383,7 @@ export default function BizFunPage() {
                 </section>
 
                 {/* Meet BizMart Section */}
-                <section id="bizmart" className="py-20 lg:py-32 px-4 relative bg-[#0b0c15]">
+                <section id="bizmart" className="py-20 lg:py-32 px-4 relative bg-[#121212]">
                     <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#81D7B4]/20 to-transparent"></div>
                     
                     <div className="container mx-auto max-w-7xl relative z-10">
@@ -474,7 +474,7 @@ export default function BizFunPage() {
                                         viewport={{ once: true }}
                                         className="w-full h-full rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-[#81D7B4] to-[#6BC5A0] p-[2px] shadow-[0_0_50px_rgba(129,215,180,0.2)] cursor-pointer transition-shadow duration-300 group-hover:shadow-[0_0_70px_rgba(129,215,180,0.4)]"
                                     >
-                                        <div className="w-full h-full rounded-[1.8rem] sm:rounded-[2.8rem] bg-[#0b0c15] flex items-center justify-center overflow-hidden relative p-4 sm:p-0 border border-white/10">
+                                        <div className="w-full h-full rounded-[1.8rem] sm:rounded-[2.8rem] bg-[#121212] flex items-center justify-center overflow-hidden relative p-4 sm:p-0 border border-white/10">
                                             {/* Card Grid Background */}
                                             <div className="absolute inset-0 bg-[linear-gradient(rgba(129,215,180,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(129,215,180,0.1)_1px,transparent_1px)] bg-[size:20px_20px] opacity-[0.3]" />
                                             
@@ -503,7 +503,7 @@ export default function BizFunPage() {
                 </section>
 
                 {/* How It Works Section */}
-                <section id="how-it-works" className="py-20 lg:py-32 bg-[#0b0c15]">
+                <section id="how-it-works" className="py-20 lg:py-32 bg-[#121212]">
                     <div className="container mx-auto px-4 max-w-7xl">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">How It Works</h2>
@@ -523,7 +523,7 @@ export default function BizFunPage() {
                                     transition={{ duration: 0.5, delay: index * 0.2 }}
                                     className="flex flex-col items-center text-center bg-white/5 p-8 rounded-3xl border border-white/10 shadow-sm relative backdrop-blur-sm"
                                 >
-                                    <div className="w-16 h-16 rounded-full bg-[#0b0c15] text-[#81D7B4] border-2 border-[#81D7B4] flex items-center justify-center text-xl font-bold shadow-[0_0_20px_rgba(129,215,180,0.3)] mb-6 relative z-10">
+                                    <div className="w-16 h-16 rounded-full bg-[#121212] text-[#81D7B4] border-2 border-[#81D7B4] flex items-center justify-center text-xl font-bold shadow-[0_0_20px_rgba(129,215,180,0.3)] mb-6 relative z-10">
                                         {step.step}
                                     </div>
                                     <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
@@ -535,7 +535,7 @@ export default function BizFunPage() {
                 </section>
 
                 {/* CTA Section */}
-                <section className="py-20 px-4 bg-[#0b0c15]">
+                <section className="py-20 px-4 bg-[#121212]">
                     <div className="container mx-auto max-w-5xl">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}

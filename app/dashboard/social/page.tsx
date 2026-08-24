@@ -1,71 +1,25 @@
 'use client';
 
-import { Award01Icon, UserMultipleIcon, Activity01Icon } from "hugeicons-react";
-import { useState, ReactNode, lazy, Suspense, memo, useEffect } from 'react';
+import { 
+  Award01Icon, UserMultipleIcon, Activity01Icon, SparklesIcon,
+  BubbleChatIcon, PlayIcon, Notification01Icon, Calendar01Icon,
+  ArrowRight01Icon, Rocket01Icon, Share01Icon, CheckmarkCircle02Icon
+} from "hugeicons-react";
+import { useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { Exo } from 'next/font/google';
-import { useReferrals } from '@/lib/useReferrals';
-import { useSavingsData } from '@/hooks/useSavingsData';
+import Link from 'next/link';
 
-// Database dependencies
-import SavvyForum from './components/SavvyForum'
-
-const TwitterFeed = lazy(() => import('./components/TwitterFeed'))
-const SavvyFinanceVideos = lazy(() => import('./components/SavvyFinanceVideos'))
-
-// Declare Twitter widgets for TypeScript
-declare global {
-  interface Window {
-    twttr: {
-      widgets: {
-        load: () => void;
-        createTweet: (tweetId: string, container: HTMLElement, options?: object) => Promise<HTMLElement>;
-      };
-    };
-  }
-}
-
-const exo = Exo({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-exo'
-})
-
-// Mock data for demonstration
-const MOCK_USER_DATA = {
-  hasSavingsPlan: true,
-  hasConnectedX: true,
-  hasConnectedFarcaster: true,
-  hasEmail: true,
-  userPoints: 0, // Start with 0 points, will be updated based on actual activity
-}
-
-const twitterLinks = [
-  'https://x.com/0xK3llyy/status/1975477383592616411?t=ROFvnL-WZedP4ofxq65eSA&s=19',
-  'https://x.com/gloorry_/status/1974768248001286249?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
-  'https://x.com/FranciscaChiso3/status/1974575891515850862?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
-  'https://x.com/0xK3llyy/status/1974928974041035080?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
-  'https://x.com/mamin_xyz/status/1974961667646935062?t=shWHyt4R6Pd6IivrwjFG9A&s=19',
-  'https://x.com/Elisha__Sunday/status/1974739002113642661?t=V0JknyQ_5P8rVUX3hFEKYg&s=19',
-  'https://x.com/theweb3athlete/status/1974799128485113995?t=V0JknyQ_5P8rVUX3hFEKYg&s=19',
-  'https://x.com/Celestina_crypt/status/1974571442814468483?t=hiLnCQaYv_UQNcO2Q5nlHg&s=19',
-  'https://x.com/Heslinmariolar/status/1974215922039587272?t=hiLnCQaYv_UQNcO2Q5nlHg&s=19',
-  'https://x.com/0xmillysmith/status/1974630660296847530?t=hiLnCQaYv_UQNcO2Q5nlHg&s=19',
-  'https://x.com/bitsaveprotocol/status/1937769440806076921?s=46',
-  'https://x.com/benedictfrank_/status/1923176035505344973?s=46',
-  'https://x.com/mamin_xyz/status/1933100118766416048?s=46',
-  'https://x.com/thedesign_dr/status/1928114921230803107?s=46',
-  'https://x.com/lighter_defi/status/1935946790240489699?s=46',
-  'https://x.com/sapphsparkles/status/1934659049544667648?s=46',
-  'https://x.com/mamin_xyz/status/1904884465320472905?s=46',
-  'https://x.com/alamzy001/status/1922675320861212679?s=46',
-]
+// Component Widgets
+import TrendingForumWidget from './components/TrendingForumWidget';
+import SavvyFinanceVideos from './components/SavvyFinanceVideos';
+import AnnouncementsWidget from './components/AnnouncementsWidget';
+import CalendarWidget from './components/CalendarWidget';
 
 const savvyFinanceVideos = [
   {
     id: 'daOztI1KsS8',
-    title: 'Bitsave Story',
-    creator: 'Bitsave Protocol',
+    title: 'BitSave Story & Vision',
+    creator: 'BitSave Protocol',
     embedUrl: 'https://www.youtube.com/embed/daOztI1KsS8',
     url: 'https://www.youtube.com/watch?v=daOztI1KsS8',
     views: '1.2K',
@@ -73,8 +27,8 @@ const savvyFinanceVideos = [
   },
   {
     id: 'OG6NC_6_9Oo',
-    title: 'DeFi in 2026 is SaveFi - (What you need to know about Vitalik Buterin\'s Low Risk #defi)',
-    creator: 'Bitsave Protocol',
+    title: 'DeFi is SaveFi - Vitalik Buterin\'s Low Risk DeFi',
+    creator: 'BitSave Protocol',
     embedUrl: 'https://www.youtube.com/embed/OG6NC_6_9Oo',
     url: 'https://www.youtube.com/watch?v=OG6NC_6_9Oo',
     views: '850',
@@ -82,8 +36,8 @@ const savvyFinanceVideos = [
   },
   {
     id: 'BDQxf_fgsNo',
-    title: 'How To Save Onchain - (Use Bitsave.io)',
-    creator: 'Bitsave Protocol',
+    title: 'How To Save On-Chain with BitSave.io',
+    creator: 'BitSave Protocol',
     embedUrl: 'https://www.youtube.com/embed/BDQxf_fgsNo',
     url: 'https://www.youtube.com/watch?v=BDQxf_fgsNo',
     views: '2.1K',
@@ -91,8 +45,8 @@ const savvyFinanceVideos = [
   },
   {
     id: 'InTpwxsQkzs',
-    title: 'How to hide your funds on Bitsave from your wallet #blockchain #savings #onchain',
-    creator: 'Bitsave Protocol',
+    title: 'How to Lock & Secure Your Funds on BitSave',
+    creator: 'BitSave Protocol',
     embedUrl: 'https://www.youtube.com/embed/InTpwxsQkzs',
     url: 'https://www.youtube.com/watch?v=InTpwxsQkzs',
     views: '1.5K',
@@ -101,287 +55,165 @@ const savvyFinanceVideos = [
 ];
 
 export default function SavvySpacePage() {
-  const [userData] = useState(MOCK_USER_DATA)
-  const [showModal, setShowModal] = useState(false)
-  const { referralData, loading: referralLoading, error: referralError, generateReferralCode } = useReferrals()
-  const { savingsData, isLoading: savingsLoading } = useSavingsData()
-
-  const isPageLoading = referralLoading || savingsLoading;
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setShowModal(true)
-      // Auto-hide modal after 2 seconds
-      setTimeout(() => setShowModal(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy text: ', err)
-    }
-  }
-
-  // Generate referral code on component mount if user doesn't have one
-  useEffect(() => {
-    if (!referralData && !referralLoading && !referralError) {
-      generateReferralCode()
-    }
-  }, [referralData, referralLoading, referralError, generateReferralCode])
-
-  const referralLink = referralData?.referralLink || 'https://bitsave.io'
-
-  const totalSavings = parseFloat(savingsData.totalLocked.replace(/[^0-9.-]+/g, ''))
-  const showReferral = totalSavings >= 5
-
-  const SavvySpace = () => (
-    <div className="space-y-12 pb-20">
-      {/* Stats Bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
-        {/* Points Card - Compact */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+  return (
+    <div className="w-full font-sans min-h-screen pb-24">
+      <div className="max-w-7xl mx-auto py-6 sm:py-8 px-2 sm:px-4">
+        
+        {/* Page Header */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Earned</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-gray-900">{userData.userPoints.toLocaleString()}</span>
-              <span className="text-sm font-semibold text-[#81D7B4]">PTS</span>
-            </div>
+            <h1 className="font-instrument text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1">
+              Savvy Space
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Community discussions, educational resources, protocol updates, and events.
+            </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-            <Award01Icon className="w-6 h-6" />
+
+          {/* Quick Action Badges */}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard/forum"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white dark:bg-[#161616] border border-gray-200/70 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 hover:border-[#81D7B4] transition-all shadow-xs"
+            >
+              <BubbleChatIcon className="w-4 h-4 text-[#81D7B4]" />
+              <span>Community Forum</span>
+            </Link>
+            <Link
+              href="/dashboard/activity"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#81D7B4] text-white font-bold text-xs hover:opacity-90 transition-all shadow-xs"
+            >
+              <SparklesIcon className="w-4 h-4" />
+              <span>Earn $BTS</span>
+            </Link>
           </div>
         </div>
 
-        {/* Referral Card - Compact */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-center">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Referral Link</p>
-          {showReferral ? (
-            <div className="flex items-center gap-2">
-              <code className="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm text-gray-600 truncate font-mono">
-                {referralLink}
-              </code>
-              <button
-                onClick={() => copyToClipboard(referralLink)}
-                className="bg-[#81D7B4] hover:bg-[#6BC4A0] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-sm text-gray-500">
-                Unlock your referral link by saving at least <span className="font-bold text-gray-900">$5</span>.
+        {/* Wrapped CTA Hero Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#121212] to-[#1c1c1c] p-6 sm:p-10 border border-gray-800 dark:border-white/10 shadow-lg mb-10 group"
+        >
+          {/* Subtle Ambient Glow */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-[#81D7B4]/10 rounded-full blur-[100px] pointer-events-none group-hover:bg-[#81D7B4]/15 transition-all duration-700"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div className="flex-1 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#81D7B4]/15 border border-[#81D7B4]/30 text-[#81D7B4] text-[10px] font-black uppercase tracking-widest mb-3">
+                <SparklesIcon className="w-3.5 h-3.5" />
+                <span>Protocol Analytics</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight font-instrument mb-3 leading-tight">
+                Your Savings, <span className="text-[#81D7B4]">Wrapped.</span>
+              </h2>
+              <p className="text-gray-300 dark:text-gray-400 text-sm leading-relaxed mb-5">
+                Explore your lifetime on-chain savings journey, consistency milestones, earned protocol yields, and shareable statistics.
               </p>
-              <div className="hidden sm:block">
-                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
-                  Locked
+
+              <div className="flex flex-wrap gap-2.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-gray-300">
+                  <CheckmarkCircle02Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                  <span>Verified On-Chain</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-gray-300">
+                  <Award01Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                  <span>Yield Metrics</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-gray-300">
+                  <Share01Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                  <span>Shareable Badges</span>
                 </span>
               </div>
             </div>
-          )}
-        </div>
-      </motion.div>
 
-      {/* Main Content Area */}
-      <div className="space-y-16">
-
-        {/* Wrapped CTA Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-        >
-          <div className="relative overflow-hidden rounded-[28px] bg-white p-8 sm:p-10 border border-gray-100 shadow-[0_4px_24px_rgb(0,0,0,0.03)] group cursor-pointer">
-            {/* Subtle background orbs */}
-            <div className="absolute top-[-40px] right-[-40px] w-48 h-48 bg-[#81D7B4]/10 rounded-full blur-3xl group-hover:bg-[#81D7B4]/15 transition-all duration-700"></div>
-            <div className="absolute bottom-[-60px] left-[-30px] w-56 h-56 bg-[#81D7B4]/5 rounded-full blur-3xl group-hover:bg-[#81D7B4]/10 transition-all duration-700 delay-100"></div>
-
-            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-              <div className="flex-1 min-w-0">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 mb-5">
-                  <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse"></span>
-                  <span className="text-xs font-black text-[#81D7B4] uppercase tracking-widest">New Feature</span>
-                </div>
-
-                <h3 className="text-3xl sm:text-4xl font-black text-[#0f172a] tracking-tight mb-3 leading-tight">
-                  Your Savings,<br />
-                  <span className="text-[#81D7B4]">Wrapped.</span>
-                </h3>
-                <p className="text-base text-[#64748b] font-medium leading-relaxed max-w-md">
-                  Discover your savings journey — total locked, longest streak, favorite network, top currency, and more. All beautifully visualized.
-                </p>
-
-                <div className="flex flex-wrap items-center gap-3 mt-6">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f8faf9] border border-gray-100">
-                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                    <span className="text-xs font-bold text-[#0f172a]">Stats Breakdown</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f8faf9] border border-gray-100">
-                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span className="text-xs font-bold text-[#0f172a]">Saving Streaks</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f8faf9] border border-gray-100">
-                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
-                    <span className="text-xs font-bold text-[#0f172a]">Shareable</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full lg:w-auto shrink-0">
-                <button
-                  onClick={() => window.location.href = '/wrapped'}
-                  className="w-full lg:w-auto bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-4 py-3 sm:px-8 sm:py-4 rounded-2xl text-base font-black transition-all duration-300 shadow-[0_4px_20px_rgb(129,215,180,0.4)] hover:shadow-[0_8px_30px_rgb(129,215,180,0.5)] inline-flex items-center justify-center gap-3"
-                >
-                  View My Wrapped
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                </button>
-              </div>
+            <div className="w-full md:w-auto shrink-0">
+              <Link
+                href="/dashboard/wrapped"
+                className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-[#81D7B4] hover:bg-[#6BC5A0] text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-[#81D7B4]/25 hover:shadow-xl hover:shadow-[#81D7B4]/35"
+              >
+                <span>View My Wrapped</span>
+                <ArrowRight01Icon className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </motion.div>
 
-        {/* Savvy Forum Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-        >
-          <SavvyForum />
-        </motion.div>
-
-        {/* Videos Section */}
-        <section>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                <span className="w-2 h-8 bg-[#81D7B4] rounded-full"></span>
-                Savvy Finance Videos
-              </h2>
-              <p className="text-gray-500 mt-1 ml-4 text-sm">Master DeFi savings with our educational series</p>
-            </div>
-            {/* <button className="text-[#81D7B4] font-bold text-sm hover:underline">View All</button> */}
-          </div>
-
-          <Suspense fallback={
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map(i => <div key={i} className="bg-white rounded-2xl border border-gray-100 h-[240px] animate-[shimmer_1.5s_infinite]"></div>)}
-            </div>
-          }>
-            <SavvyFinanceVideos videos={savvyFinanceVideos} />
-          </Suspense>
-        </section>
-
-
-
-      </div>
-    </div>
-  )
-
-  return (
-    <div className={`${exo.className} min-h-screen bg-gray-50/50 text-gray-800`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-
-        {/* Page Header */}
-        <header className="mb-12 text-center sm:text-left sm:flex sm:items-end sm:justify-between">
-          <div>
-            <motion.h1
-              initial={{ opacity: 0, y: -10 }}
+        {/* Main Grid: Left 8 Columns & Right 4 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Main Column (8 cols) */}
+          <div className="lg:col-span-8 space-y-10">
+            
+            {/* Trending Forum Discussions */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2"
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
-              Savvy Space
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-lg text-gray-500 max-w-2xl"
-            >
-              Your hub for community, learning, and rewards.
-            </motion.p>
-          </div>
+              <TrendingForumWidget />
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex gap-3 mt-4 sm:mt-0"
-          >
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm text-xs font-bold text-gray-600">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Live
+            {/* Mobile / Tablet View of Announcements & Calendar */}
+            <div className="flex flex-col gap-6 lg:hidden">
+              <AnnouncementsWidget />
+              <CalendarWidget />
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm text-xs font-bold text-gray-600">
-              <UserMultipleIcon className="w-3 h-3 text-[#81D7B4]" />
-              Community
-            </div>
-          </motion.div>
-        </header>
 
-        {isPageLoading ? (
-          <div className="space-y-12 pb-20">
-            {/* Stats Bar Skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between h-[88px]">
-                <div className="w-full h-full flex flex-col justify-center gap-3">
-                  <div className="w-24 h-3 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
-                  <div className="w-32 h-6 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
+            {/* Educational Videos Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight font-instrument flex items-center gap-2.5">
+                    <span className="w-2.5 h-7 bg-[#81D7B4] rounded-full"></span>
+                    Savvy Finance Videos
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 ml-5">
+                    Master on-chain savings and decentralized yield strategies.
+                  </p>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite] shrink-0"></div>
               </div>
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-center h-[88px]">
-                <div className="w-24 h-3 rounded-full bg-gray-100 mb-3 animate-[shimmer_1.5s_infinite]"></div>
-                <div className="w-full h-8 rounded-lg bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
-              </div>
-            </div>
 
-            {/* Wrapped CTA Skeleton */}
-            <div className="rounded-[28px] bg-white p-8 sm:p-10 border border-gray-100 shadow-sm h-[250px] flex flex-col justify-center gap-6">
-               <div className="w-24 h-6 rounded-full bg-[#81D7B4]/20 animate-[shimmer_1.5s_infinite]"></div>
-               <div className="w-64 h-12 rounded-lg bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
-               <div className="w-full max-w-md h-4 rounded-full bg-gray-100 animate-[shimmer_1.5s_infinite]"></div>
-            </div>
+              <Suspense fallback={
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-56 bg-gray-100 dark:bg-white/5 rounded-3xl animate-pulse" />
+                  ))}
+                </div>
+              }>
+                <SavvyFinanceVideos videos={savvyFinanceVideos} />
+              </Suspense>
+            </section>
 
-            {/* Forum Skeleton */}
-            <div className="rounded-2xl bg-white border border-gray-100 h-[400px] animate-[shimmer_1.5s_infinite]"></div>
-
-            {/* Videos Skeleton */}
-            <div>
-              <div className="w-48 h-8 rounded bg-gray-100 mb-6 animate-[shimmer_1.5s_infinite]"></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-100 h-[240px] animate-[shimmer_1.5s_infinite]"></div>
-                ))}
-              </div>
-            </div>
           </div>
-        ) : (
-          <SavvySpace />
-        )}
-      </div>
 
-      {/* Success Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4 text-center border border-gray-100 transform transition-all scale-100">
-            <div className="w-12 h-12 bg-[#81D7B4]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-[#2D5A4A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Copied!</h3>
-            <p className="text-sm text-gray-500 mb-6">Referral link copied to clipboard.</p>
-            <button
-              onClick={() => setShowModal(false)}
-              className="w-full bg-[#81D7B4] hover:bg-[#6BC4A0] text-white py-2.5 rounded-xl font-bold transition-colors"
+          {/* Sidebar Column (4 cols) - Desktop */}
+          <div className="hidden lg:flex lg:col-span-4 flex-col gap-6">
+            
+            {/* Announcements Widget */}
+            <motion.div
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
             >
-              Close
-            </button>
+              <AnnouncementsWidget />
+            </motion.div>
+
+            {/* Community Calendar Widget */}
+            <motion.div
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <CalendarWidget />
+            </motion.div>
+
           </div>
+
         </div>
-      )}
+
+      </div>
     </div>
-  )
+  );
 }

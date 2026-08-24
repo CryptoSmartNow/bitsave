@@ -1,5 +1,13 @@
 import React from "react";
-import { Cancel01Icon } from "hugeicons-react";
+import Link from "next/link";
+import { 
+  Cancel01Icon, 
+  CheckmarkCircle01Icon, 
+  Alert02Icon, 
+  ArrowUpRight01Icon, 
+  InformationCircleIcon, 
+  MessageQuestionIcon,
+} from "hugeicons-react";
 import { getTweetButtonProps } from "@/utils/tweetUtils";
 
 interface TransactionStatusModalProps {
@@ -12,6 +20,9 @@ interface TransactionStatusModalProps {
   referralData: any;
   savingsData: { deposits: number };
   handleClose: () => void;
+  tokenBalance?: string;
+  nativeBalance?: string;
+  nativeSymbol?: string;
 }
 
 export default function TransactionStatusModal({
@@ -24,259 +35,230 @@ export default function TransactionStatusModal({
   referralData,
   savingsData,
   handleClose,
+  tokenBalance,
+  nativeBalance,
+  nativeSymbol = "ETH",
 }: TransactionStatusModalProps) {
   const isUserRejected =
     error &&
     typeof error === "string" &&
-    error.toLowerCase().includes("user rejected");
+    (error.toLowerCase().includes("user rejected") || 
+     error.toLowerCase().includes("user denied") ||
+     error.toLowerCase().includes("cancelled"));
+
+  const isBalanceError =
+    error &&
+    typeof error === "string" &&
+    (error.toLowerCase().includes("insufficient") || 
+     error.toLowerCase().includes("balance") ||
+     error.toLowerCase().includes("exceeds"));
 
   const getExplorerUrl = () => {
     if (!txHash) return "";
     switch (chain) {
-      case "solana":
-        return `https://explorer.solana.com/tx/${txHash}?cluster=devnet`;
-      case "celo":
-        return `https://explorer.celo.org/tx/${txHash}`;
-      case "lisk":
-        return `https://blockscout.lisk.com/tx/${txHash}`;
-      case "avalanche":
-        return `https://snowtrace.io/tx/${txHash}`;
-      case "bsc":
-        return `https://bscscan.com/tx/${txHash}`;
-      default:
-        return `https://basescan.org/tx/${txHash}`;
+      case "celo": return `https://celoscan.io/tx/${txHash}`;
+      case "lisk": return `https://blockscout.lisk.com/tx/${txHash}`;
+      case "avalanche": return `https://snowtrace.io/tx/${txHash}`;
+      case "bsc": return `https://bscscan.com/tx/${txHash}`;
+      default: return `https://basescan.org/tx/${txHash}`;
     }
   };
 
+  const getExplorerName = () => {
+    switch (chain) {
+      case "celo": return "CeloScan";
+      case "lisk": return "Lisk Explorer";
+      case "avalanche": return "SnowTrace";
+      case "bsc": return "BscScan";
+      default: return "BaseScan";
+    }
+  };
+
+  const getModalTitle = () => {
+    if (success) return "Savings Plan Created!";
+    if (isUserRejected) return "Transaction Cancelled";
+    if (isBalanceError) return "Insufficient Funds";
+    return "Transaction Failed";
+  };
+
   const getErrorMessage = () => {
-    if (isUserRejected) return "You cancelled the transaction in your wallet.";
+    if (isUserRejected) {
+      return "The transaction was rejected or cancelled in your connected wallet. No funds were debited.";
+    }
+    if (isBalanceError) {
+      return (
+        error ||
+        `Your wallet does not have enough ${currency} to lock $${amount}. Please top up your wallet balance and try again.`
+      );
+    }
     return (
       error ||
-      "Something went wrong. Please try again or reach out to our support team."
+      "The blockchain transaction could not be completed. Please ensure your wallet has sufficient stablecoins and native gas tokens."
     );
   };
 
+  const rawErrorMessage = typeof error === 'string' ? error : (error as any)?.message || 'Transaction could not be completed';
+
   return (
     <div
-      className="fixed inset-0 bg-[#0f172a]/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+      className="fixed inset-0 bg-black/70 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
     >
-      <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-md mx-auto overflow-hidden relative">
+      <div className="bg-white dark:bg-[#0c121e] border border-gray-200/80 dark:border-white/10 rounded-[2.5rem] shadow-2xl w-full max-w-lg mx-auto overflow-hidden relative p-6 sm:p-9 text-center">
+        
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-5 right-5 z-20 p-2 rounded-full text-gray-400 hover:text-[#0f172a] hover:bg-gray-100 transition-colors"
+          className="absolute top-5 right-5 z-20 p-2 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
         >
           <Cancel01Icon className="w-5 h-5" />
         </button>
 
-        <div className="p-8">
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            {success ? (
-              <div className="w-20 h-20 rounded-full bg-[#81D7B4]/10 flex items-center justify-center ring-4 ring-[#81D7B4]/20">
-                <svg
-                  className="w-10 h-10 text-[#81D7B4]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            ) : isUserRejected ? (
-              <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center ring-4 ring-amber-100">
-                <svg
-                  className="w-10 h-10 text-amber-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center ring-4 ring-red-100">
-                <svg
-                  className="w-10 h-10 text-red-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v4m0 4h.01M12 3a9 9 0 110 18 9 9 0 010-18z"
-                  />
-                </svg>
-              </div>
-            )}
-          </div>
-
-          {/* Title */}
-          <div className="text-center mb-6">
-            <h2
-              id="modal-title"
-              className={`text-2xl font-black tracking-tight mb-2 ${
-                success
-                  ? "text-[#0f172a]"
-                  : isUserRejected
-                    ? "text-[#0f172a]"
-                    : "text-[#0f172a]"
-              }`}
-            >
-              {success
-                ? "Plan Created!"
-                : isUserRejected
-                  ? "Transaction Cancelled"
-                  : "Something Went Wrong"}
-            </h2>
-            <p className="text-sm text-[#64748b] font-medium leading-relaxed max-w-xs mx-auto">
-              {success
-                ? "Your savings plan is now live. Start building your financial future."
-                : isUserRejected
-                  ? "No changes were made. You can try again anytime."
-                  : getErrorMessage()}
-            </p>
-          </div>
-
-          {/* Error Details (only for real errors, not user rejection) */}
-          {error && !isUserRejected && (
-            <div className="mb-6 bg-[#f8faf9] rounded-[20px] p-5 border border-gray-100">
-              <p className="text-xs font-black text-[#64748b] uppercase tracking-widest mb-3">
-                What to try
-              </p>
-              <div className="space-y-3">
-                {[
-                  "Refresh the page and try again",
-                  "Tick your wallet connection",
-                  "Verify you have sufficient balance",
-                  "Make sure you're on the correct network",
-                ].map((tip) => (
-                  <div key={tip} className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#81D7B4] shrink-0"></div>
-                    <span className="text-sm text-[#0f172a] font-medium">
-                      {tip}
-                    </span>
-                  </div>
-                ))}
-              </div>
+        {/* Status Icon */}
+        <div className="flex justify-center mb-5">
+          {success ? (
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#81D7B4]/15 flex items-center justify-center ring-8 ring-[#81D7B4]/10">
+              <CheckmarkCircle01Icon className="w-8 h-8 sm:w-10 sm:h-10 text-[#81D7B4]" />
+            </div>
+          ) : isUserRejected ? (
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/15 flex items-center justify-center ring-8 ring-amber-500/10">
+              <Alert02Icon className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/15 flex items-center justify-center ring-8 ring-red-500/10">
+              <Cancel01Icon className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
             </div>
           )}
-
-          {/* Transaction Hash */}
-          {txHash && (success || (error && !isUserRejected)) && (
-            <button
-              onClick={() => window.open(getExplorerUrl(), "_blank")}
-              className="w-full mb-4 flex items-center justify-center gap-2.5 py-3.5 bg-[#f8faf9] hover:bg-gray-100 border border-gray-200 rounded-2xl text-sm font-bold text-[#0f172a] transition-colors"
-            >
-              <svg
-                className="w-4 h-4 text-[#64748b]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-              View on Explorer
-            </button>
-          )}
-
-          {/* Tweet Button (success only) */}
-          {success &&
-            (() => {
-              const referralLink =
-                referralData?.referralLink || "https://bitsave.io";
-              const isFirstTime = savingsData.deposits === 0;
-              const transactionType = isFirstTime
-                ? "first-time-saving"
-                : "subsequent-saving";
-              const tweetProps = getTweetButtonProps(transactionType, {
-                currency,
-                amount,
-                referralLink,
-                userTransactionCount: savingsData.deposits,
-              });
-
-              return (
-                <a
-                  href={tweetProps.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() =>
-                    setTimeout(() => {
-                      window.location.href = "/dashboard";
-                    }, 2000)
-                  }
-                  className="w-full mb-4 flex items-center justify-center gap-2.5 py-3.5 bg-[#0f172a] hover:bg-[#1e293b] rounded-2xl text-sm font-bold text-white transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.209c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                  </svg>
-                  Share on Cancel
-                </a>
-              );
-            })()}
-
-          {/* Telegram Support (errors only) */}
-          {error && !isUserRejected && (
-            <button
-              onClick={() =>
-                window.open("https://t.me/bitsaveprotocol/2", "_blank")
-              }
-              className="w-full mb-4 flex items-center justify-center gap-2.5 py-3.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-[#0f172a] transition-colors"
-            >
-              <svg
-                className="w-4 h-4 text-[#0088cc]"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.169 1.858-.896 6.728-.896 6.728-.377 2.617-1.407 3.08-2.896 1.596l-2.123-1.596-1.018.96c-.11.11-.202.202-.418.202-.286 0-.237-.107-.335-.38L9.9 13.74l-3.566-1.199c-.778-.244-.79-.778.173-1.16L18.947 6.84c.636-.295 1.295.173.621 1.32z" />
-              </svg>
-              Get Help on Telegram
-            </button>
-          )}
-
-          {/* Primary Action */}
-          <button
-            onClick={handleClose}
-            className={`w-full py-4 rounded-2xl text-base font-extrabold transition-all duration-200 ${
-              success
-                ? "bg-[#81D7B4] hover:bg-[#6BC7A0] text-white shadow-[0_4px_14px_rgb(129,215,180,0.4)]"
-                : isUserRejected
-                  ? "bg-[#0f172a] hover:bg-[#1e293b] text-white"
-                  : "bg-[#0f172a] hover:bg-[#1e293b] text-white"
-            }`}
-          >
-            {success
-              ? "Go to Dashboard"
-              : isUserRejected
-                ? "Try Again"
-                : "Close"}
-          </button>
         </div>
+
+        {/* Title */}
+        <h3 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight font-instrument">
+          {getModalTitle()}
+        </h3>
+
+        {/* Main description */}
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-md mx-auto">
+          {success
+            ? `Your ${amount} ${currency} is now safely locked on ${chain.toUpperCase()} into your verified BitSave vault.`
+            : getErrorMessage()}
+        </p>
+
+        {/* ── ERROR DIAGNOSTIC CHECKLIST ── */}
+        {!success && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200/80 dark:border-white/10 text-left space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+              <InformationCircleIcon className="w-4 h-4 text-[#81D7B4]" />
+              <span>Criteria Checklist</span>
+            </div>
+
+            <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-start gap-2">
+                <span className="text-[#81D7B4] font-bold">✓</span>
+                <span>
+                  <strong>Token Balance:</strong> Ensure your wallet has at least <strong>${amount} {currency}</strong>.
+                  {tokenBalance && (
+                    <span className="block text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      Current: {parseFloat(tokenBalance).toFixed(4)} {currency}
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span className="text-[#81D7B4] font-bold">✓</span>
+                <span>
+                  <strong>Gas Fee ({nativeSymbol}):</strong> Ensure you have native tokens to pay for network gas.
+                  {nativeBalance && (
+                    <span className="block text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      Current: {parseFloat(nativeBalance).toFixed(4)} {nativeSymbol}
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span className="text-[#81D7B4] font-bold">✓</span>
+                <span>
+                  <strong>Network:</strong> Connected to <strong>{chain.toUpperCase()}</strong> network.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Block Explorer Link (on success) */}
+        {txHash && (
+          <a
+            href={getExplorerUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#81D7B4] hover:underline mb-6 bg-[#81D7B4]/10 px-4 py-2 rounded-full border border-[#81D7B4]/20"
+          >
+            <span>View on {getExplorerName()}</span>
+            <ArrowUpRight01Icon className="w-3.5 h-3.5" />
+          </a>
+        )}
+
+        {/* Tweet Button (success only) */}
+        {success &&
+          (() => {
+            const referralLink = referralData?.referralLink || "https://bitsave.io";
+            const isFirstTime = (savingsData?.deposits || 0) === 0;
+            const transactionType = isFirstTime ? "first-time-saving" : "subsequent-saving";
+            const tweetProps = getTweetButtonProps(transactionType, {
+              currency,
+              amount,
+              referralLink,
+              userTransactionCount: savingsData?.deposits || 0,
+            });
+
+            return (
+              <a
+                href={tweetProps.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full mb-3 flex items-center justify-center gap-2.5 py-3.5 bg-gray-900 dark:bg-white hover:bg-black dark:hover:bg-gray-100 rounded-2xl text-sm font-bold text-white dark:text-gray-900 transition-colors shadow-sm cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                <span>Share on X</span>
+              </a>
+            );
+          })()}
+
+        {/* Report Error & Feedback CTA (errors only) */}
+        {!success && !isUserRejected && (
+          <div className="space-y-2 mb-3">
+            <Link
+              href={`/feedback?app=savefi&context=create-savings&error=${encodeURIComponent(rawErrorMessage)}`}
+              onClick={handleClose}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-xs font-bold bg-[#81D7B4]/15 hover:bg-[#81D7B4]/25 text-[#81D7B4] border border-[#81D7B4]/30 transition-colors cursor-pointer"
+            >
+              <MessageQuestionIcon className="w-4 h-4" />
+              <span>Report Error / Log Inquiry to Dev Team</span>
+            </Link>
+
+            <a
+              href="https://t.me/bitsaveprotocol/2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <span>Need instant chat? Join Telegram Community</span>
+              <ArrowUpRight01Icon className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        )}
+
+        {/* Primary Action Button */}
+        <button
+          onClick={handleClose}
+          className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all bg-[#81D7B4] hover:opacity-90 text-white shadow-md shadow-[#81D7B4]/20 cursor-pointer"
+        >
+          {success ? "Go to Dashboard" : "Got it / Try Again"}
+        </button>
       </div>
     </div>
   );

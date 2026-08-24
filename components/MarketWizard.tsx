@@ -27,7 +27,7 @@ const STEPS = [
     {
         id: 'description',
         title: "Explain it in a few sentences",
-        subtitle: "Pretend you’re explaining it to someone on Cancel scrolling fast.",
+        subtitle: "Pretend you're explaining it to someone on X / Twitter scrolling fast.",
         type: 'textarea',
         placeholder: "We are building..."
     },
@@ -36,7 +36,7 @@ const STEPS = [
         title: "What value are you providing?",
         subtitle: "And who is your target audience?",
         type: 'textarea',
-        placeholder: "Providing Cancel to Y audience..."
+        placeholder: "Providing value X to target audience Y..."
     },
     {
         id: 'stage',
@@ -186,7 +186,7 @@ export const MarketWizard = ({ walletAddress, onSuccess }: { walletAddress?: str
     const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-[#0b0c15]/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
+        <div className="w-full max-w-2xl mx-auto bg-[#121212]/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
             {/* Header Progress */}
             <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-4 w-full">

@@ -22,10 +22,11 @@ const BACKGROUND_REFRESH_THRESHOLD = 2 * 60 * 1000; // 2 minutes
 // Type definitions for savings data structure
 export interface SavingsPlan {
   id: string;
-  address: string;
+  address?: string;
   name: string;
   currentAmount: string;
-  targetAmount: string;
+  targetAmount?: string;
+  amount?: string;
   progress: number;
   isEth: boolean;
   isGToken?: boolean;
@@ -36,8 +37,10 @@ export interface SavingsPlan {
   tokenName?: string;
   tokenLogo?: string;
   network?: string;
-  chainId?: bigint | string;
+  chainId?: bigint | string | number;
   contractAddress?: string;
+  status?: string;
+  isWithdrawn?: boolean;
   isShared?: boolean;
   sharedBy?: string;
 }

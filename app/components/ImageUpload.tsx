@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 
 interface ImageUploadProps {
   onChange: (url: string) => void;
@@ -60,8 +61,19 @@ export default function ImageUpload({
     reader.readAsDataURL(file);
 
     try {
+      // Compress the image before uploading
+      const options = {
+        maxSizeMB: 1, // Max size 1MB
+        maxWidthOrHeight: 1200, // Max dimension 1200px
+        useWebWorker: true,
+        fileType: 'image/webp' as const
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', compressedFile, file.name.replace(/\.[^/.]+$/, '.webp'));
+      formData.append('originalSize', file.size.toString());
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {

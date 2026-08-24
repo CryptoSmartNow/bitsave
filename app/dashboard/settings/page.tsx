@@ -1,14 +1,19 @@
 'use client';
 
-import { Tick01Icon, Activity01Icon, Link01Icon, UserMultipleIcon } from "hugeicons-react";
+import { 
+  Tick02Icon, Activity01Icon, Link01Icon, UserMultipleIcon, 
+  UserCircleIcon, Settings01Icon, SparklesIcon, Wallet01Icon, 
+  Notification01Icon, GlobalIcon, Mail01Icon, Moon02Icon, 
+  ArrowRight01Icon, BotIcon, Notification02Icon, Copy01Icon,
+  Cancel01Icon
+} from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { usePrivy, useWallets, WalletWithMetadata } from '@privy-io/react-auth';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useNetworkSync } from '@/hooks/useNetworkSync';
-import { Exo } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageShimmer } from '@/components/ShimmerLoading';
+import ThemeSelector from '@/components/ThemeSelector';
 import toast from 'react-hot-toast';
 import NetworkDetection from '@/components/NetworkDetection';
 import ENSLinking from '@/components/ENSLinking';
@@ -18,43 +23,16 @@ import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
 
-// Initialize Space Grotesk font
-const exo = Exo({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk',
-});
-
 export default function Settings() {
   const { address: wagmiAddress } = useAccount();
   const { user } = usePrivy();
-  const { publicKey } = useWallet();
   const { currentNetworkName: currentNetwork } = useNetworkSync();
-  
-  const solanaWalletAdapterAddress = publicKey?.toBase58();
-  const { wallets } = useWallets();
-  const privySolanaWallet = wallets?.find((w: any) => {
-    if (w.chainType === 'solana') return true;
-    if (['phantom', 'solflare', 'backpack'].includes(w.walletClientType)) return true;
-    if (w.chainId && String(w.chainId).startsWith('solana')) return true;
-    if (w.address && !w.address.startsWith('0x') && w.address.length >= 32 && w.address.length <= 44) return true;
-    return false;
-  });
-  const privyLinkedSolanaAddress = (user as any)?.linkedAccounts?.find(
-    (account: any) => (account.type === 'wallet' && account.chainType === 'solana') || account.chainId === 'solana:mainnet'
-  )?.address;
-  const solanaAddress = solanaWalletAdapterAddress || privySolanaWallet?.address || privyLinkedSolanaAddress;
-  const evmAddress = wagmiAddress || user?.wallet?.address;
-  
-  // Directly prioritize solana address if it exists, to avoid hydration race conditions with currentNetwork
-  const address = solanaAddress || evmAddress;
+  const address = wagmiAddress || user?.wallet?.address;
 
   const { ensName, getDisplayName, hasENS } = useENSData(address);
   const [mounted, setMounted] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'Profile' | 'Language' | 'Appearance' | 'Notifications'>('Profile');
-  const tabs = ['Profile', 'Language', 'Appearance', 'Notifications'] as const;
+  const [activeModal, setActiveModal] = useState<'none' | 'savvyName' | 'ens' | 'socials' | 'language' | 'email'>('none');
 
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [email, setEmail] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -62,7 +40,7 @@ export default function Settings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isEmailConnected, setIsEmailConnected] = useState(false);
 
-  // Cancel01Icon/TwitterIcon authentication state
+  // Twitter / X connection state
   const [isXConnected, setIsXConnected] = useState(false);
   const [xUsername, setXUsername] = useState('');
   const [isConnectingX, setIsConnectingX] = useState(false);
@@ -114,7 +92,6 @@ export default function Settings() {
       const registration = await navigator.serviceWorker.ready;
 
       if (isPushEnabled) {
-        // Unsubscribe
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
           await subscription.unsubscribe();
@@ -127,7 +104,6 @@ export default function Settings() {
         setIsPushEnabled(false);
         toast.success('Push notifications disabled.');
       } else {
-        // Subscribe
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
           toast.error('Permission denied for push notifications.');
@@ -169,7 +145,6 @@ export default function Settings() {
     }
   };
 
-  // Component mount effect
   useEffect(() => {
     setMounted(true);
   }, [address]);
@@ -193,7 +168,6 @@ export default function Settings() {
     fetchSavvyName();
   }, [address]);
 
-  // Handlers for Savvy Name
   const handleSaveSavvyName = async () => {
     if (!savvyNameInput.trim()) return toast.error('Savvy Name cannot be empty');
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(savvyNameInput)) {
@@ -216,10 +190,10 @@ export default function Settings() {
         setShowConfetti(true);
         setTimeout(() => {
           setShowShareModal(true);
-        }, 1200); // Pop modal shortly after confetti begins
+        }, 1200);
         setTimeout(() => {
           setShowConfetti(false);
-        }, 6000); // Stop generating new confetti after 6 seconds
+        }, 6000);
       } else {
         toast.error(data.error || 'Failed to update Savvy Name');
       }
@@ -230,13 +204,23 @@ export default function Settings() {
     }
   };
 
-  // Add a function to copy wallet address with feedback
   const copyToClipboard = async () => {
     if (address) {
       try {
         await navigator.clipboard.writeText(address);
-        setShowCopyNotification(true);
-        setTimeout(() => setShowCopyNotification(false), 5000);
+        toast.custom((t) => (
+          <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-white dark:bg-[#161616] shadow-xl rounded-2xl pointer-events-auto flex p-4 border border-gray-200/70 dark:border-white/10`}>
+            <div className="flex items-center gap-3 w-full">
+               <div className="w-9 h-9 rounded-xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0">
+                  <Tick02Icon className="w-5 h-5 text-[#81D7B4]" />
+               </div>
+               <div className="flex-1">
+                 <p className="text-xs font-bold text-gray-900 dark:text-white">Address Copied!</p>
+                 <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{address.slice(0, 6)}...{address.slice(-4)} is now in your clipboard</p>
+               </div>
+            </div>
+          </div>
+        ), { duration: 3000, position: 'bottom-center' });
       } catch (err) {
         console.error('Failed to copy address: ', err);
       }
@@ -253,9 +237,7 @@ export default function Settings() {
     try {
       const response = await fetch('/api/email/connect', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
           action: 'send_otp',
@@ -285,7 +267,6 @@ export default function Settings() {
       newOtp[index] = value;
       setOtp(newOtp);
 
-      // Auto-focus next input
       if (value && index < 5) {
         const nextInput = document.getElementById(`otp-${index + 1}`);
         nextInput?.focus();
@@ -311,9 +292,7 @@ export default function Settings() {
     try {
       const response = await fetch('/api/email/connect', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
           action: 'verify_otp',
@@ -352,9 +331,7 @@ export default function Settings() {
     try {
       const response = await fetch('/api/email/connect', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
           action: 'send_otp',
@@ -366,7 +343,6 @@ export default function Settings() {
 
       if (response.ok && data.success) {
         toast.success('New verification code sent to your email!');
-        // Clear existing OTP inputs
         setOtp(['', '', '', '', '', '']);
       } else {
         toast.error(data.error || 'Failed to resend verification code');
@@ -379,19 +355,16 @@ export default function Settings() {
     }
   };
 
-  // Cancel01Icon/TwitterIcon authentication function
   const handleConnectX = async () => {
     setIsConnectingX(true);
 
     try {
-      // Generate PKCE code verifier and challenge for security
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
 
       localStorage.setItem('twitter_code_verifier', codeVerifier);
       localStorage.setItem('twitter_state', generateRandomString(32));
 
-      // Twitter OAuth 2.0 authorization URL
       const authUrl = new URL('https://twitter.com/i/oauth2/authorize');
       authUrl.searchParams.append('response_type', 'code');
       authUrl.searchParams.append('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '');
@@ -401,14 +374,12 @@ export default function Settings() {
       authUrl.searchParams.append('code_challenge', codeChallenge);
       authUrl.searchParams.append('code_challenge_method', 'S256');
 
-      // Open popup window for OAuth
       const popup = window.open(
         authUrl.toString(),
         'twitter-oauth',
         'width=500,height=600,scrollbars=yes,resizable=yes'
       );
 
-      // Listen for the OAuth callback
       const checkClosed = setInterval(() => {
         if (popup?.closed) {
           clearInterval(checkClosed);
@@ -416,7 +387,6 @@ export default function Settings() {
         }
       }, 1000);
 
-      // Listen for messages from the popup
       const messageListener = (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
 
@@ -424,11 +394,9 @@ export default function Settings() {
           clearInterval(checkClosed);
           popup?.close();
 
-          // Handle successful authentication
           setXUsername(event.data.username);
           setIsXConnected(true);
 
-          // Store in localStorage for persistence
           localStorage.setItem('xUsername', event.data.username);
           localStorage.setItem('isXConnected', 'true');
           localStorage.setItem('xAccessToken', event.data.accessToken);
@@ -438,8 +406,7 @@ export default function Settings() {
         } else if (event.data.type === 'TWITTER_AUTH_ERROR') {
           clearInterval(checkClosed);
           popup?.close();
-          console.error('Twitter authentication failed:', event.data.error);
-          toast.error(`Cancel Connection Failed: ${event.data.error}`);
+          toast.error(`Twitter connection failed: ${event.data.error}`);
           setIsConnectingX(false);
           window.removeEventListener('message', messageListener);
         }
@@ -448,12 +415,11 @@ export default function Settings() {
       window.addEventListener('message', messageListener);
 
     } catch (error) {
-      console.error('Cancel01Icon/TwitterIcon authentication failed:', error);
+      console.error('Twitter authentication failed:', error);
       setIsConnectingX(false);
     }
   };
 
-  // Load Cancel01Icon/TwitterIcon connection status from localStorage
   useEffect(() => {
     const savedXUsername = localStorage.getItem('xUsername');
     const savedXConnected = localStorage.getItem('isXConnected');
@@ -463,7 +429,6 @@ export default function Settings() {
       setIsXConnected(true);
     }
 
-    // Load email connection status
     const savedEmailConnected = localStorage.getItem('emailConnected');
     const savedEmail = localStorage.getItem('connectedEmail');
 
@@ -473,16 +438,15 @@ export default function Settings() {
     }
   }, []);
 
-  // Function to disconnect Cancel01Icon/TwitterIcon
   const handleDisconnectX = () => {
     setIsXConnected(false);
     setXUsername('');
     localStorage.removeItem('xUsername');
     localStorage.removeItem('isXConnected');
     localStorage.removeItem('xAccessToken');
+    toast.success('Twitter / X disconnected');
   };
 
-  // Helper functions for PKCE
   const generateCodeVerifier = () => {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
@@ -512,342 +476,550 @@ export default function Settings() {
       .substring(0, length);
   };
 
+  // AI Widget Toggle State
+  const [showAiWidget, setShowAiWidget] = useState(true);
+  useEffect(() => {
+    const saved = localStorage.getItem('showAiWidget');
+    if (saved === 'false') setShowAiWidget(false);
+  }, []);
+
+  const toggleAiWidget = () => {
+    const newState = !showAiWidget;
+    setShowAiWidget(newState);
+    localStorage.setItem('showAiWidget', String(newState));
+    window.dispatchEvent(new CustomEvent('toggleAiWidget', { detail: { show: newState } }));
+    toast.success(newState ? 'SavvyBot widget enabled' : 'SavvyBot widget hidden');
+  };
+
   if (!mounted) {
     return <PageShimmer />;
   }
 
   return (
-    <div className={`${exo.variable} font-sans relative min-h-screen bg-[#f8faf9] overflow-hidden`}>
+    <div className="font-sans relative w-full h-full pb-20 px-2 sm:px-4 max-w-5xl mx-auto">
       <NetworkDetection />
+      
+      {/* Subtle Background Glow */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-[#81D7B4]/15 via-transparent to-transparent pointer-events-none blur-3xl opacity-60" />
+
+      {/* Header Subtitle (Duplicate h1 removed) */}
+      <div className="mb-8 pt-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Manage your on-chain identity, notification preferences, security verification, and interface settings.
+        </p>
+      </div>
+
+      <div className="space-y-10 relative z-10">
+        
+        {/* ACCOUNT OVERVIEW */}
+        <div>
+          <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white font-instrument mb-4 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-[#81D7B4] rounded-full"></span>
+            Account Overview
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             
-      <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-        {/* Minimal Pill Tabs */}
-        <div className="flex overflow-x-auto hide-scrollbar mb-8 p-1.5 bg-white border border-gray-100 rounded-[1.2rem] w-full sm:w-fit max-w-full shadow-sm">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setSelectedTab(tab)}
-              className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all whitespace-nowrap tracking-wide ${selectedTab === tab ? 'bg-[#81D7B4] text-white shadow-md' : 'text-[#64748b] hover:text-[#0f172a] hover:bg-gray-50'}`}
+            {/* Wallet Address */}
+            <div 
+              onClick={copyToClipboard}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
             >
-              {tab}
-            </button>
-          ))}
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <Wallet01Icon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Wallet Address</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5 font-mono">
+                    {address ? `${address.slice(0, 10)}...${address.slice(-8)}` : 'Not connected'}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 group-hover:bg-[#81D7B4]/15 group-hover:text-[#81D7B4] text-gray-400 flex items-center justify-center transition-colors">
+                  <Copy01Icon className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Savvy Name */}
+            <div 
+              onClick={() => setActiveModal('savvyName')}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <UserCircleIcon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">BitSave Savvy Name</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-xs font-bold text-[#81D7B4] truncate">
+                      {currentSavvyName ? `@${currentSavvyName}` : 'Claim your username'}
+                    </span>
+                    {currentSavvyName && <Tick02Icon className="w-3.5 h-3.5 text-[#81D7B4] shrink-0" />}
+                  </div>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <ArrowRight01Icon className="w-5 h-5 text-gray-400 group-hover:text-[#81D7B4] group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+
+            {/* Social Connections */}
+            <div 
+              onClick={() => setActiveModal('socials')}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <UserMultipleIcon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Social Connections</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">
+                    {isXConnected && xUsername ? `@${xUsername}` : 'Link social accounts'}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <ArrowRight01Icon className="w-5 h-5 text-gray-400 group-hover:text-[#81D7B4] group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+
+            {/* ENS Identity */}
+            <div 
+              onClick={() => setActiveModal('ens')}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <Link01Icon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">ENS Identity</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">
+                    {ensName || 'Link your Ethereum Name Service'}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <ArrowRight01Icon className="w-5 h-5 text-gray-400 group-hover:text-[#81D7B4] group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        {/* Content Container */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.03)] overflow-hidden">
+        {/* SECURITY & CONTACT */}
+        <div>
+          <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white font-instrument mb-4 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-[#81D7B4] rounded-full"></span>
+            Security & Contact
+          </h2>
           
-          {/* PROFILE TAB */}
-          {selectedTab === 'Profile' && (
-            <div className="divide-y divide-gray-100">
-               {/* Wallet & ENS Section */}
-               <div className="p-6 sm:p-10">
-                  <h2 className="text-xl font-bold text-[#0f172a] mb-6 tracking-tight">Wallet & Identity</h2>
-                  
-                  {/* Address */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9] hover:border-gray-200 transition-colors">
-                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100 shrink-0">
-                           <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
-                        </div>
-                        <div className="overflow-hidden">
-                           <p className="font-bold text-[#0f172a] text-[15px]">Wallet Address</p>
-                           <p className="text-[13px] text-[#64748b] font-medium mt-0.5 font-mono truncate">{address || 'Not connected'}</p>
-                        </div>
-                     </div>
-                     <button onClick={copyToClipboard} className="text-[13px] font-bold text-[#0f172a] bg-white border border-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm shrink-0">
-                       Copy
-                     </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            
+            {/* Email Verification */}
+            <div 
+              onClick={() => setActiveModal('email')}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <Mail01Icon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Email Verification</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
+                      {isEmailConnected ? email : 'Connect your email for alerts'}
+                    </span>
+                    {isEmailConnected && <Tick02Icon className="w-3.5 h-3.5 text-[#81D7B4] shrink-0" />}
                   </div>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <ArrowRight01Icon className="w-5 h-5 text-gray-400 group-hover:text-[#81D7B4] group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
 
-                  {/* ENS */}
-                  <div className="-mx-10 px-10">
-                     <ENSLinking 
-                       walletAddress={address}
-                       isSolanaNetwork={currentNetwork === 'solana' || (address !== undefined && !address.startsWith('0x') && address.length >= 32)}
+          </div>
+        </div>
+
+        {/* PREFERENCES & DISPLAY */}
+        <div>
+          <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white font-instrument mb-4 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-[#81D7B4] rounded-full"></span>
+            Preferences & Display
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            
+            {/* Color Theme Selector */}
+            <div className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs">
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <Moon02Icon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Color Theme</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">Switch between light, dark, and system</p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <ThemeSelector variant="icon-only" />
+              </div>
+            </div>
+
+            {/* Language */}
+            <div 
+              onClick={() => setActiveModal('language')}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <GlobalIcon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Language</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">Select interface language</p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <ArrowRight01Icon className="w-5 h-5 text-gray-400 group-hover:text-[#81D7B4] group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+
+            {/* SavvyBot Widget Toggle */}
+            <div 
+              onClick={toggleAiWidget}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <BotIcon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Savvy Bot Widget</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">Show AI assistant button in corner</p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${showAiWidget ? 'bg-[#81D7B4]' : 'bg-gray-200 dark:bg-white/10'}`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-xs transform transition-transform ${showAiWidget ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </div>
+            </div>
+
+            {/* Announcements Toggle */}
+            <div 
+              onClick={() => setIsMarketingEnabled(!isMarketingEnabled)}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <Notification01Icon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Announcements</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">Receive protocol news and updates</p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${isMarketingEnabled ? 'bg-[#81D7B4]' : 'bg-gray-200 dark:bg-white/10'}`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-xs transform transition-transform ${isMarketingEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </div>
+            </div>
+
+            {/* Push Alerts */}
+            <div 
+              onClick={handlePushToggle}
+              className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-5 flex items-center justify-between gap-4 transition-all hover:border-[#81D7B4]/50 shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 truncate">
+                <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center shrink-0 text-[#81D7B4]">
+                  <Notification02Icon className="w-5 h-5" />
+                </div>
+                <div className="truncate">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">Push Alerts</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">Receive instant browser notifications</p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center justify-end">
+                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${isPushEnabled ? 'bg-[#81D7B4]' : 'bg-gray-200 dark:bg-white/10'}`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-xs transform transition-transform ${isPushEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+      
+      {/* GLOBAL MODALS */}
+      <AnimatePresence>
+        {activeModal !== 'none' && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" 
+            onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('none'); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-200/70 dark:border-white/10 relative overflow-hidden"
+            >
+              <button 
+                onClick={() => setActiveModal('none')} 
+                className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-white/10 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <Cancel01Icon className="w-4 h-4" />
+              </button>
+
+              {/* Savvy Name Modal */}
+              {activeModal === 'savvyName' && (
+                <div>
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white font-instrument mb-1">
+                     BitSave Savvy Name
+                   </h3>
+                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                     Claim your unique username within the BitSave ecosystem for peer-to-peer sharing and referrals.
+                   </p>
+                   
+                   <div className="relative mb-4">
+                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">@</span>
+                     <input
+                       type="text"
+                       value={savvyNameInput}
+                       onChange={(e) => setSavvyNameInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                       className="w-full pl-8 pr-16 py-3 rounded-2xl border border-gray-200/70 dark:border-white/10 focus:border-[#81D7B4] outline-none text-sm font-bold text-gray-900 dark:text-white transition-all bg-gray-50 dark:bg-white/5"
+                       placeholder="your_username"
                      />
-                  </div>
-               </div>
+                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs pointer-events-none select-none">.savvy</span>
+                   </div>
+                   
+                   <button
+                     onClick={handleSaveSavvyName}
+                     disabled={isSavingSavvyName || `${savvyNameInput}.savvy` === currentSavvyName}
+                     className="w-full py-3 bg-[#81D7B4] hover:opacity-90 text-white font-bold rounded-2xl shadow-xs transition-all disabled:opacity-50 text-xs cursor-pointer"
+                   >
+                     {isSavingSavvyName ? 'Saving...' : (currentSavvyName && `${savvyNameInput}.savvy` === currentSavvyName ? 'Current Active Name' : 'Update Savvy Name')}
+                   </button>
 
-               {/* Socials & Display Name */}
-               <div className="p-6 sm:p-10">
-                  <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Social Connections</h2>
-                  <p className="text-[#64748b] text-[14px] mb-8 font-medium">Link your social accounts to use as your display name or enable extra features.</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     {/* Twitter */}
-                     <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-white hover:border-gray-200 transition-colors shadow-sm">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center font-bold text-xl">𝕏</div>
+                   {currentSavvyName && (
+                      <p className="mt-3 text-[11px] text-[#81D7B4] font-bold uppercase tracking-wider flex items-center justify-center gap-1">
+                        <Tick02Icon className="w-3.5 h-3.5" /> Active: @{currentSavvyName}
+                      </p>
+                   )}
+                </div>
+              )}
+
+              {/* ENS Modal */}
+              {activeModal === 'ens' && (
+                <div>
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white font-instrument mb-1">
+                     ENS Identity
+                   </h3>
+                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                     Link your Ethereum Name Service domain to your wallet address.
+                   </p>
+                   <ENSLinking 
+                     walletAddress={address}
+                     isSolanaNetwork={false}
+                   />
+                </div>
+              )}
+
+              {/* Socials Modal */}
+              {activeModal === 'socials' && (
+                <div>
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white font-instrument mb-1">
+                     Social Connections
+                   </h3>
+                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                     Connect your social identity for reputation and ecosystem rewards.
+                   </p>
+                   
+                   <div className="space-y-3">
+                     <div className="flex items-center justify-between p-4 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                        <div className="flex items-center gap-3">
+                           <div className="w-9 h-9 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center font-black text-base shrink-0">
+                             𝕏
+                           </div>
                            <div>
-                              <p className="font-bold text-[#0f172a] text-[15px]">Cancel (Twitter)</p>
-                              <p className="text-[13px] text-[#64748b] font-medium mt-0.5">{isXConnected && xUsername ? `@${xUsername}` : 'Not connected'}</p>
+                              <p className="font-bold text-gray-900 dark:text-white text-xs">Twitter / X</p>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                                {isXConnected && xUsername ? `@${xUsername}` : 'Not connected'}
+                              </p>
                            </div>
                         </div>
                         {isXConnected && xUsername ? (
-                           <button onClick={handleDisconnectX} className="text-[13px] font-bold text-[#ea580c] hover:bg-orange-50 bg-white border border-gray-100 px-4 py-2 rounded-xl transition-colors">Disconnect</button>
+                           <button 
+                             onClick={handleDisconnectX} 
+                             className="text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/30 transition-colors cursor-pointer"
+                           >
+                             Disconnect
+                           </button>
                         ) : (
-                           <button onClick={handleConnectX} disabled={isConnectingX} className="text-[13px] font-bold text-[#81D7B4] bg-[#81D7B4]/20 hover:bg-[#81D7B4]/30 px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50">
+                           <button 
+                             onClick={handleConnectX} 
+                             disabled={isConnectingX} 
+                             className="text-xs font-bold text-white bg-[#81D7B4] hover:opacity-90 px-3 py-1.5 rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+                           >
                              {isConnectingX ? 'Connecting...' : 'Connect'}
                            </button>
                         )}
                      </div>
 
-                     {/* Farcaster */}
-                     <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-white shadow-sm opacity-60 grayscale cursor-not-allowed">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 bg-[#8a63d2] text-white rounded-xl flex items-center justify-center font-bold text-sm">FC</div>
+                     <div className="flex items-center justify-between p-4 rounded-2xl border border-gray-200/50 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] opacity-70">
+                        <div className="flex items-center gap-3">
+                           <div className="w-9 h-9 bg-[#229ED9]/15 text-[#229ED9] rounded-xl flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                              </svg>
+                           </div>
                            <div>
-                              <p className="font-bold text-[#0f172a] text-[15px]">Farcaster</p>
-                              <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Coming soon</p>
+                              <p className="font-bold text-gray-900 dark:text-white text-xs">Telegram Community</p>
+                              <p className="text-[11px] text-gray-400 font-medium">Coming soon</p>
                            </div>
                         </div>
                      </div>
-                  </div>
-               </div>
+                   </div>
+                </div>
+              )}
 
-               {/* Bitsave Savvy Name */}
-               <div className="p-6 sm:p-10">
-                  <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Bitsave Savvy Name</h2>
-                  <p className="text-[#64748b] text-[14px] mb-8 font-medium max-w-2xl">Claim your unique username within the Bitsave ecosystem for peer-to-peer sharing and easier transfers.</p>
-                  
-                  <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
-                     <div className="relative flex-1">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">@</span>
-                        <input
-                          type="text"
-                          value={savvyNameInput}
-                          onChange={(e) => setSavvyNameInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                          className="w-full pl-10 pr-20 py-3.5 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-[15px] font-bold text-[#0f172a] shadow-sm transition-all bg-white"
-                          placeholder="your_username"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[15px] pointer-events-none select-none">.savvy</span>
+              {/* Language Modal */}
+              {activeModal === 'language' && (
+                <div>
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white font-instrument mb-1">
+                     Language Preferences
+                   </h3>
+                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                     Select your preferred interface language.
+                   </p>
+                   <LanguageSelector />
+                </div>
+              )}
+
+              {/* Email Modal */}
+              {activeModal === 'email' && (
+                <div>
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white font-instrument mb-1">
+                     Email Connection
+                   </h3>
+                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                     Connect your email address to receive critical maturity alerts.
+                   </p>
+                   
+                   <div className="relative mb-4">
+                     <input
+                       type="email"
+                       value={email}
+                       onChange={(e) => setEmail(e.target.value)}
+                       disabled={isEmailConnected}
+                       placeholder="name@example.com"
+                       className="w-full px-4 py-3 rounded-2xl border border-gray-200/70 dark:border-white/10 focus:border-[#81D7B4] outline-none text-sm font-bold text-gray-900 dark:text-white transition-all bg-gray-50 dark:bg-white/5 disabled:opacity-60"
+                     />
+                   </div>
+
+                   {isEmailConnected ? (
+                     <div className="py-3 bg-[#81D7B4]/15 border border-[#81D7B4]/30 text-[#81D7B4] font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5">
+                        <Tick02Icon className="w-4 h-4" /> Email Verified & Linked
                      </div>
+                   ) : (
                      <button
-                        onClick={handleSaveSavvyName}
-                        disabled={isSavingSavvyName || `${savvyNameInput}.savvy` === currentSavvyName}
-                        className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 min-w-[140px]"
+                        onClick={handleConnectEmail}
+                        disabled={!email.trim() || isConnecting}
+                        className="w-full py-3 bg-[#81D7B4] hover:opacity-90 text-white font-bold rounded-2xl text-xs shadow-xs transition-all disabled:opacity-50 flex items-center justify-center cursor-pointer"
                      >
-                        {isSavingSavvyName ? 'Saving...' : (currentSavvyName && `${savvyNameInput}.savvy` === currentSavvyName ? 'Saved' : 'Update Name')}
+                        {isConnecting ? (
+                          <span className="flex items-center gap-2">
+                            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Sending Code...
+                          </span>
+                        ) : 'Connect Email'}
                      </button>
-                  </div>
-                  {currentSavvyName && (
-                     <p className="mt-4 text-[13px] text-[#81D7B4] font-black uppercase tracking-widest flex items-center gap-1.5">
-                       <Tick01Icon className="w-4 h-4" /> Active Savvy Name
-                     </p>
-                  )}
-               </div>
-            </div>
-          )}
-
-          {/* LANGUAGE TAB */}
-          {selectedTab === 'Language' && (
-            <div className="p-6 sm:p-10">
-               <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Language</h2>
-               <p className="text-[#64748b] text-[14px] mb-8 font-medium">Select your preferred interface language. This will update the entire application.</p>
-               
-               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9]">
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                        <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
-                     </div>
-                     <div>
-                        <p className="font-bold text-[#0f172a] text-[15px]">Interface Language</p>
-                        <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Currently available in select languages</p>
-                     </div>
-                  </div>
-                  <div className="w-full sm:w-64">
-                     <LanguageSelector />
-                  </div>
-               </div>
-            </div>
-          )}
-
-          {/* APPEARANCE TAB */}
-          {selectedTab === 'Appearance' && (
-            <div className="p-6 sm:p-10">
-               <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Appearance</h2>
-               <p className="text-[#64748b] text-[14px] mb-8 font-medium">Customize the look and feel of your layout.</p>
-               
-               <div className="flex items-center justify-between p-5 rounded-[1.5rem] border border-gray-100 bg-[#f8faf9]">
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                        <Activity01Icon className="w-6 h-6 text-[#81D7B4]" />
-                     </div>
-                     <div>
-                        <div className="flex items-center gap-2">
-                           <p className="font-bold text-[#0f172a] text-[15px]">Dark Theme</p>
-                           <span className="text-[10px] bg-slate-200 text-slate-600 font-black uppercase tracking-widest px-2 py-0.5 rounded-md">Coming Soon</span>
-                        </div>
-                        <p className="text-[13px] text-[#64748b] font-medium mt-0.5">A more soothing visual experience for low light.</p>
-                     </div>
-                  </div>
-                  <div className="relative opacity-50 cursor-not-allowed hidden sm:block">
-                     <div className="w-12 h-6 bg-gray-300 rounded-full shadow-inner">
-                        <div className="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 translate-x-0.5 translate-y-0.5"></div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-          )}
-
-          {/* NOTIFICATIONS TAB */}
-          {selectedTab === 'Notifications' && (
-            <div className="divide-y divide-gray-100">
-               <div className="p-6 sm:p-10">
-                  <h2 className="text-xl font-bold text-[#0f172a] mb-2 tracking-tight">Email Notifications</h2>
-                  <p className="text-[#64748b] text-[14px] mb-8 font-medium">Connect your email to receive important account alerts and transaction updates.</p>
-                  
-                  <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
-                     <div className="relative flex-1">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                           <Activity01Icon className="w-5 h-5" />
-                        </span>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          disabled={isEmailConnected}
-                          placeholder="name@example.com"
-                          className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 outline-none text-[15px] font-bold text-[#0f172a] shadow-sm transition-all bg-white disabled:bg-gray-50 disabled:text-gray-500"
-                        />
-                     </div>
-                     {isEmailConnected ? (
-                        <div className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] font-black rounded-xl flex items-center justify-center gap-2 min-w-[160px]">
-                           <Tick01Icon className="w-5 h-5 stroke-[3]" /> Verified
-                        </div>
-                     ) : (
-                        <button
-                           onClick={handleConnectEmail}
-                           disabled={!email.trim() || isConnecting}
-                           className="px-4 sm:px-8 py-3 sm:py-3.5 bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white font-black rounded-xl shadow-md transition-all min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                        >
-                           {isConnecting ? (
-                             <>
-                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                               Sending...
-                             </>
-                           ) : 'Connect Email'}
-                        </button>
-                     )}
-                  </div>
-               </div>
-
-               <div className="p-6 sm:p-10 bg-[#f8faf9]">
-                  <div className="space-y-6 max-w-2xl">
-                     <div className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-gray-100 shadow-sm">
-                        <div>
-                           <p className="font-bold text-[#0f172a] text-[15px]">Marketing Announcements</p>
-                           <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Receive news and promotional offers</p>
-                        </div>
-                        <div 
-                           className="relative cursor-pointer"
-                           onClick={() => setIsMarketingEnabled(!isMarketingEnabled)}
-                        >
-                           <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${isMarketingEnabled ? 'bg-[#81D7B4]' : 'bg-gray-200'}`}>
-                              <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform translate-y-0.5 ${isMarketingEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
-                           </div>
-                        </div>
-                     </div>
-                     <div className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-gray-100 shadow-sm">
-                        <div>
-                           <p className="font-bold text-[#0f172a] text-[15px]">Push Notifications</p>
-                           <p className="text-[13px] text-[#64748b] font-medium mt-0.5">Receive alerts in your browser</p>
-                        </div>
-                        <div 
-                           className="relative cursor-pointer"
-                           onClick={handlePushToggle}
-                        >
-                           <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 ${isPushEnabled ? 'bg-[#299532]' : 'bg-gray-200'}`}>
-                             <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isPushEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-          )}
-        </div>
-        
-        {/* OTP Modal */}
-        <AnimatePresence>
-          {showOtpModal && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="bg-white rounded-[2rem] p-8 sm:p-10 max-w-[400px] w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-gray-100"
-              >
-                <div className="bg-[#81D7B4]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Activity01Icon className="w-8 h-8 text-[#81D7B4]" />
+                   )}
                 </div>
-                <h3 className="text-[24px] font-black text-center text-[#0f172a] mb-2 tracking-tight">Verify Email</h3>
-                <p className="text-center text-[#64748b] text-[14px] font-medium mb-8 leading-relaxed">Enter the 6-digit code sent to<br/><span className="text-[#0f172a] font-bold">{email}</span></p>
+              )}
 
-                <div className="flex justify-between gap-2 sm:gap-3 mb-8">
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      id={`otp-${index}`}
-                      type="text"
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-black text-[#0f172a] bg-gray-50 border border-gray-200 focus:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/20 rounded-xl outline-none transition-all shadow-inner"
-                      maxLength={1}
-                    />
-                  ))}
-                </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={handleVerifyOtp}
-                    disabled={otp.some(digit => !digit) || isVerifying}
-                    className="w-full bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0f172a] text-white py-3.5 rounded-xl font-black tracking-wide transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:text-gray-500 shadow-md"
-                  >
-                    {isVerifying ? 'Verifying...' : 'Verify Email'}
-                  </button>
-                  <button
-                    onClick={() => setShowOtpModal(false)}
-                    className="w-full bg-white border border-gray-200 text-[#0f172a] py-3.5 rounded-xl font-bold hover:bg-gray-50 transition-all"
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={handleResendCode}
-                    disabled={isConnecting}
-                    className="text-[13px] font-bold text-[#64748b] hover:text-[#0f172a] transition-colors"
-                  >
-                    {isConnecting ? 'Sending...' : 'Resend Code'}
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
-      
-      {/* Copy Notification Toast */}
+      {/* OTP Verification Modal */}
       <AnimatePresence>
-        {showCopyNotification && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-8 left-1/2 z-50 bg-[#0f172a] text-white px-5 py-3 rounded-full font-bold text-[14px] shadow-xl flex items-center gap-2"
-          >
-            <Tick01Icon className="w-5 h-5 text-[#81D7B4]" /> Address copied!
-          </motion.div>
+        {showOtpModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[60] p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-200/70 dark:border-white/10"
+            >
+              <div className="bg-[#81D7B4]/15 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#81D7B4]">
+                <Mail01Icon className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-black text-center text-gray-900 dark:text-white font-instrument mb-1">
+                Verify Email
+              </h3>
+              <p className="text-center text-gray-500 dark:text-gray-400 text-xs mb-6">
+                Enter the 6-digit verification code sent to <span className="text-gray-900 dark:text-white font-bold">{email}</span>
+              </p>
+
+              <div className="flex justify-between gap-1.5 sm:gap-2 mb-6">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`otp-${index}`}
+                    type="text"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className="w-10 h-12 sm:w-11 sm:h-12 text-center text-base font-black text-gray-900 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 focus:border-[#81D7B4] rounded-xl outline-none transition-all"
+                    maxLength={1}
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={otp.some(digit => !digit) || isVerifying}
+                  className="w-full bg-[#81D7B4] hover:opacity-90 text-white py-3 rounded-2xl font-bold text-xs transition-all disabled:opacity-50 shadow-xs cursor-pointer"
+                >
+                  {isVerifying ? 'Verifying...' : 'Verify Code'}
+                </button>
+                <button
+                  onClick={() => setShowOtpModal(false)}
+                  className="w-full bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 py-3 rounded-2xl font-bold text-xs hover:bg-gray-200 dark:hover:bg-white/10 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleResendCode}
+                  disabled={isConnecting}
+                  className="text-xs font-bold text-gray-400 hover:text-[#81D7B4] transition-colors cursor-pointer"
+                >
+                  {isConnecting ? 'Sending...' : 'Resend Code'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
       {/* Confetti Animation */}
       {showConfetti && (
-        <div className="fixed inset-0 z-[60] pointer-events-none">
+        <div className="fixed inset-0 z-[70] pointer-events-none">
           <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.15} />
         </div>
       )}
@@ -855,39 +1027,39 @@ export default function Settings() {
       {/* Savvy Name Success Share Modal */}
       <AnimatePresence>
         {showShareModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-[2rem] p-8 max-w-[400px] w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-gray-100 relative overflow-hidden"
+              className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-200/70 dark:border-white/10 relative overflow-hidden"
             >
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#81D7B4]/10 rounded-full blur-2xl"></div>
-              
-              <div className="w-16 h-16 rounded-full bg-[#81D7B4]/10 flex items-center justify-center mb-6 border border-[#81D7B4]/20">
-                <span className="text-3xl">🎉</span>
+              <div className="w-12 h-12 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center mb-4 text-2xl">
+                🎉
               </div>
               
-              <h3 className="text-[24px] font-black text-[#0f172a] mb-2 tracking-tight">Identity Secured!</h3>
-              <p className="text-[#64748b] text-[15px] font-medium mb-6">
-                You successfully claimed <span className="font-bold text-[#81D7B4]">{currentSavvyName}</span>. Share the good news with your network!
+              <h3 className="text-xl font-black text-gray-900 dark:text-white font-instrument mb-1">
+                Identity Secured!
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mb-6 leading-relaxed">
+                You successfully claimed <span className="font-bold text-[#81D7B4]">@{currentSavvyName}</span>. Share the good news with your network!
               </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5">
                 <a
                   href={getTweetButtonProps('savvy-name', { savvyName: currentSavvyName }).href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md"
+                  className="w-full bg-black dark:bg-white dark:text-black text-white py-3 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-xs hover:opacity-90"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
-                  Share on Cancel
+                  Share on X
                 </a>
                 <button
                   onClick={() => setShowShareModal(false)}
-                  className="w-full bg-white border border-gray-200 text-[#0f172a] py-3.5 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                  className="w-full bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 py-3 rounded-2xl font-bold text-xs hover:bg-gray-200 dark:hover:bg-white/10 transition-all cursor-pointer"
                 >
                   Close
                 </button>

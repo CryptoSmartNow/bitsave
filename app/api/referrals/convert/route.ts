@@ -35,18 +35,17 @@ export async function POST(request: NextRequest) {
     }
     
     // Don't allow self-referrals
-    if (referrer.walletAddress === newUserWalletAddress) {
+    if (referrer.walletAddress?.toLowerCase() === newUserWalletAddress.toLowerCase()) {
       return NextResponse.json(
         { error: 'Self-referral not allowed' },
         { status: 400 }
       );
     }
     
-    // Tick if this user has created savings before (only new users should count as referrals)
+    // Check if this user has created savings before (only new users should count as referrals)
     try {
       const transactionsCollection = await getTransactionsCollection();
       if (transactionsCollection) {
-        // Tick local transactions
         const existingTx = await transactionsCollection.findOne({ 
           useraddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') } 
         });
@@ -60,13 +59,12 @@ export async function POST(request: NextRequest) {
       }
     } catch (dbError) {
       console.warn('Could not check user savings history:', dbError);
-      // Continue with referral conversion if check fails
     }
     
-    // Tick if this user was already converted through this referral
+    // Check if this user was already converted through this referral
     const existingConversion = await referralVisitsCollection.findOne({
       referralCode,
-      visitorWalletAddress: newUserWalletAddress,
+      visitorWalletAddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') },
       converted: true
     });
     
@@ -82,18 +80,18 @@ export async function POST(request: NextRequest) {
       {
         referralCode,
         $or: [
-          { visitorWalletAddress: newUserWalletAddress },
-          { visitorWalletAddress: null } // For cases where wallet wasn't connected during visit
+          { visitorWalletAddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') } },
+          { visitorWalletAddress: null }
         ]
       },
       {
         $set: {
           converted: true,
-          visitorWalletAddress: newUserWalletAddress,
+          visitorWalletAddress: newUserWalletAddress.toLowerCase(),
           conversionTimestamp: new Date().toISOString()
         }
       },
-      { sort: { timestamp: -1 } } // Update the most recent visit
+      { sort: { timestamp: -1 } }
     );
     
     // If no existing visit found, create a new conversion record

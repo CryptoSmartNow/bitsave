@@ -114,11 +114,9 @@ export async function POST(request: Request) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('ChainGPT BizFi API error:', response.status, errorText);
-            return NextResponse.json(
-                { error: 'Failed to get response from BizFi AI' },
-                { status: response.status }
-            );
+            console.warn('ChainGPT API issue for BizFi, providing instant guidance:', response.status, errorText);
+            const fallbackReply = `Welcome to **BizFi by BitSave**! 🚀\n\n- **Tokenize & Raise**: Tokenize business revenue or equity onchain via EAS verification on Base and Celo.\n- **BizShares**: Investors purchase verifiable shares directly with instant yield.\n- **Merchant Program**: Qualify for monthly liquidity incentives up to $1,000.\n\nLet me know if you need help drafting a business proposal, estimating valuation, or setting up your first tokenized vault!`;
+            return NextResponse.json({ reply: fallbackReply, status: 'success', fallback: true });
         }
 
         const contentType = response.headers.get('content-type') || '';

@@ -178,13 +178,13 @@ export default function BizFiBusinessesPage() {
         {/* Filters Bar */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7B8B9A]" />
+            <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search by business, owner, email, or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#1A2538]/30 backdrop-blur-md border border-[#7B8B9A]/10 rounded-xl pl-12 pr-4 py-3.5 text-sm text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all placeholder:text-[#7B8B9A]/50 shadow-sm"
+              className="w-full bg-[#1A2538]/30 backdrop-blur-md border border-[#7B8B9A]/10 rounded-xl pl-12 pr-4 py-3.5 text-sm text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:ring-1 focus:ring-[#81D7B4]/50 transition-all placeholder:text-gray-400/50 shadow-sm"
             />
           </div>
           <div className="relative w-full md:w-64">
@@ -198,7 +198,7 @@ export default function BizFiBusinessesPage() {
               <option value="approved">Verified</option>
               <option value="rejected">Rejected</option>
             </select>
-            <FilterIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
+            <FilterIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
         </div>
 
@@ -250,7 +250,7 @@ export default function BizFiBusinessesPage() {
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-[#9BA8B5] bg-[#0F1825]/50 px-2 py-1 rounded-md border border-[#7B8B9A]/10">
+                        <span className="font-mono text-xs text-[#9BA8B5] bg-[#121212]/50 px-2 py-1 rounded-md border border-[#7B8B9A]/10">
                           {biz.owner.substring(0, 6)}...{biz.owner.substring(biz.owner.length - 4)}
                         </span>
                       </div>
@@ -289,7 +289,7 @@ export default function BizFiBusinessesPage() {
                           <option value="approved">Approved</option>
                           <option value="rejected">Rejected</option>
                         </select>
-                        <button className="p-2 rounded-lg hover:bg-[#1A2538] text-[#7B8B9A] group-hover/action:text-[#81D7B4] group-hover/action:bg-[#81D7B4]/10 transition-all">
+                        <button className="p-2 rounded-lg hover:bg-[#1A2538] text-gray-400 group-hover/action:text-[#81D7B4] group-hover/action:bg-[#81D7B4]/10 transition-all">
                           <MoreVerticalIcon className="w-4 h-4" />
                         </button>
                       </div>
@@ -325,7 +325,7 @@ export default function BizFiBusinessesPage() {
                       <div>
                         <h4 className="font-bold text-[#F9F9FB] text-lg leading-tight">{biz.businessName}</h4>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-mono text-[#9BA8B5] bg-[#0F1825] px-1.5 py-0.5 rounded border border-[#7B8B9A]/10">
+                          <span className="text-[10px] font-mono text-[#9BA8B5] bg-[#121212] px-1.5 py-0.5 rounded border border-[#7B8B9A]/10">
                             {biz.owner.substring(0, 6)}...
                           </span>
                         </div>
@@ -347,7 +347,7 @@ export default function BizFiBusinessesPage() {
                         }`}></span>
                       <span className="capitalize">{biz.status || 'Unknown'}</span>
                     </div>
-                    <span className="text-xs text-[#7B8B9A] font-medium whitespace-nowrap">
+                    <span className="text-xs text-gray-400 font-medium whitespace-nowrap">
                       {biz.createdAt ? format(new Date(biz.createdAt), 'MMM d, yyyy') : '-'}
                     </span>
                   </div>

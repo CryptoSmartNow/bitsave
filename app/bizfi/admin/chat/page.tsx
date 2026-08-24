@@ -251,7 +251,7 @@ export default function AdminChatPage() {
                         <input
                             type="text"
                             placeholder="Search businesses..."
-                            className="w-full pl-11 pr-4 py-3 bg-[#0F1825]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] placeholder-[#9BA8B5] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#0F1825] transition-all text-sm"
+                            className="w-full pl-11 pr-4 py-3 bg-[#121212]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] placeholder-[#9BA8B5] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#121212] transition-all text-sm"
                         />
                     </div>
                 </div>
@@ -291,11 +291,11 @@ export default function AdminChatPage() {
                                             }`}>
                                             {conv.businessName}
                                         </h3>
-                                        <span className="text-[10px] text-[#7B8B9A] font-mono">
+                                        <span className="text-[10px] text-gray-400 font-mono">
                                             {conv.lastMessage && format(new Date(conv.lastMessage.timestamp), 'HH:mm')}
                                         </span>
                                     </div>
-                                    <p className={`text-xs truncate transition-colors ${selectedConversation?.businessId === conv.businessId ? 'text-[#F9F9FB]/70' : 'text-[#7B8B9A] group-hover:text-[#9BA8B5]'
+                                    <p className={`text-xs truncate transition-colors ${selectedConversation?.businessId === conv.businessId ? 'text-[#F9F9FB]/70' : 'text-gray-400 group-hover:text-[#9BA8B5]'
                                         }`}>
                                         {conv.lastMessage?.sender === 'admin' ? 'You: ' : ''}{conv.lastMessage?.content}
                                     </p>
@@ -307,7 +307,7 @@ export default function AdminChatPage() {
             </div>
 
             {/* Chat Area */}
-            <div className={`flex-1 flex flex-col bg-[#0F1825] relative w-full md:w-auto h-full absolute md:relative z-10 transition-transform duration-300 ${!selectedConversation ? 'translate-x-full md:translate-x-0' : 'translate-x-0'}`}>
+            <div className={`flex-1 flex flex-col bg-[#121212] relative w-full md:w-auto h-full absolute md:relative z-10 transition-transform duration-300 ${!selectedConversation ? 'translate-x-full md:translate-x-0' : 'translate-x-0'}`}>
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+')]"></div>
 
@@ -370,7 +370,7 @@ export default function AdminChatPage() {
                                             ) : null}
                                             {msg.content && <p>{msg.content}</p>}
                                         </div>
-                                        <p className="text-[10px] text-[#7B8B9A] mt-1.5 font-medium px-1 flex items-center gap-1">
+                                        <p className="text-[10px] text-gray-400 mt-1.5 font-medium px-1 flex items-center gap-1">
                                             {format(new Date(msg.timestamp), 'h:mm a')}
                                             {msg.sender === 'admin' && (
                                                 <span className="text-[#81D7B4]">✓</span>
@@ -416,20 +416,20 @@ export default function AdminChatPage() {
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={uploading}
-                                        className="p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                        className="p-2 md:p-2.5 hover:bg-[#121212] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                                     >
                                         <Activity01Icon className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => setShowDoodle(true)}
                                         disabled={uploading}
-                                        className="hidden sm:block p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
+                                        className="hidden sm:block p-2 md:p-2.5 hover:bg-[#121212] rounded-lg transition-colors text-[#9BA8B5] hover:text-[#81D7B4] disabled:opacity-50 group relative"
                                     >
                                         <Edit02Icon className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => setShowEmoji(!showEmoji)}
-                                        className={`p-2 md:p-2.5 hover:bg-[#0F1825] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#0F1825]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
+                                        className={`p-2 md:p-2.5 hover:bg-[#121212] rounded-lg transition-colors ${showEmoji ? 'text-[#81D7B4] bg-[#121212]' : 'text-[#9BA8B5] hover:text-[#81D7B4]'} group relative`}
                                     >
                                         <Activity01Icon className="w-5 h-5" />
                                     </button>
@@ -478,7 +478,7 @@ export default function AdminChatPage() {
                             <SentIcon className="w-8 h-8 md:w-10 md:h-10 transform -rotate-45 text-[#81D7B4]/50" />
                         </div>
                         <h3 className="text-xl md:text-2xl font-bold text-[#F9F9FB] mb-3">Select a Conversation</h3>
-                        <p className="text-[#7B8B9A] max-w-xs text-center leading-relaxed text-sm md:text-base">Choose a business from the sidebar to start messaging and manage support requests.</p>
+                        <p className="text-gray-400 max-w-xs text-center leading-relaxed text-sm md:text-base">Choose a business from the sidebar to start messaging and manage support requests.</p>
                     </div>
                 )}
             </div>

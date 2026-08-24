@@ -10,7 +10,7 @@ export async function GET(request: Request) {
         const source = searchParams.get('source');
 
         // Always prefer the live CHAINRAILS_API_KEY, falling back to source-specific key
-        const CHAINRAILS_API_KEY = LIVE_API_KEY || (source === 'bizswap' ? BIZSWAP_API_KEY : DEFAULT_API_KEY);
+        const CHAINRAILS_API_KEY = LIVE_API_KEY || BIZSWAP_API_KEY;
 
         if (!CHAINRAILS_API_KEY) {
             return NextResponse.json({ error: 'ChainRails is not configured' }, { status: 503 });

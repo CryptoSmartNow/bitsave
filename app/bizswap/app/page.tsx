@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon, Clock01Icon, GiftIcon } from "hugeicons-react";
+import Link from 'next/link';
+import { Activity01Icon, Calendar01Icon, ArrowDown01Icon, Download01Icon, Notification01Icon, Tick01Icon, ChartAverageIcon, Shield01Icon, Dollar01Icon, InformationCircleIcon, Cancel01Icon, Clock01Icon, GiftIcon, LinkSquare01Icon, Copy01Icon } from "hugeicons-react";
 import { usePrivy } from '@privy-io/react-auth';
 import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
@@ -187,14 +188,15 @@ export default function BizSwapStandaloneDashboard() {
     if (!h.purchaseDate || !h.apr) return sum;
     const purchaseDate = new Date(h.purchaseDate);
     const now = new Date();
-    const msElapsed = now.getTime() - purchaseDate.getTime();
+    const msElapsed = Math.max(0, now.getTime() - purchaseDate.getTime());
     const daysElapsed = Math.max(0, msElapsed / (1000 * 60 * 60 * 24));
     
-    const aprStr = h.apr.replace('%', '');
+    const aprStr = (h.apr || '').replace('%', '');
     const aprNum = parseFloat(aprStr) || 0;
     
     const dailyRate = (aprNum / 100) / 365;
-    return sum + (h.investmentAmount * dailyRate * daysElapsed);
+    const itemYield = (h.investmentAmount || 0) * (isNaN(dailyRate) ? 0 : dailyRate) * daysElapsed;
+    return sum + (isNaN(itemYield) ? 0 : itemYield);
   }, 0) - totalEarned);
 
   const getNextPaymentDate = (purchaseDate: string, frequency: string) => {
@@ -399,7 +401,7 @@ export default function BizSwapStandaloneDashboard() {
           <div className="bg-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-xl">
             <div className="p-6 border-b border-[#1E2F45] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 bg-gradient-to-r from-[#0D1724] to-[#0A1019]">
               <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB] flex items-center gap-2">Active Holdings Overview</h3>
-              <button className="text-xs font-bold text-[#81D7B4] hover:underline">View all holdings details →</button>
+              <Link href="/bizswap/app/holdings" className="text-xs font-bold text-[#81D7B4] hover:underline">View all holdings details →</Link>
             </div>
             {loading ? (
               <div className="p-8 text-center text-[#7B8B9A]">Loading holdings...</div>
@@ -466,7 +468,11 @@ export default function BizSwapStandaloneDashboard() {
                           {h.instrument === 'BizYield' ? 'Variable' : `~${(h.investmentAmount * 0.05).toFixed(2)}`}
                         </td>
                         <td className="px-5 py-4">
-                          <button className="w-8 h-8 rounded-lg bg-[#1C2538] hover:bg-[#2C3E5D] flex items-center justify-center text-[#7B8B9A] transition-colors border border-[#2C3E5D]">
+                          <button 
+                            onClick={() => setSelectedCert(h)}
+                            title="View Certificate"
+                            className="w-8 h-8 rounded-lg bg-[#1C2538] hover:bg-[#2C3E5D] flex items-center justify-center text-[#81D7B4] hover:text-white transition-colors border border-[#2C3E5D] cursor-pointer"
+                          >
                             <ArrowDown01Icon className="w-4 h-4" />
                           </button>
                         </td>
@@ -521,86 +527,132 @@ export default function BizSwapStandaloneDashboard() {
             )}
           </div>
 
-          {/* REFERRALS SECTION - PATTERNED & CONCISE */}
-          <div className="relative bg-[#0A1019] border border-[#1E2F45] rounded-3xl overflow-hidden shadow-xl">
-            {/* Pattern Background */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#81D7B4 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}></div>
-            
-            {/* Gradient Overlay to fade pattern appropriately */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1019]/40 via-[#0A1019]/80 to-[#0A1019] pointer-events-none"></div>
+          {/* REFERRALS SECTION - SLEEK, BALANCED & PRODUCTION-READY */}
+          <div className="relative bg-[#0A1019] border border-[#1C2538] hover:border-[#2C3E5D] rounded-3xl overflow-hidden shadow-2xl transition-all">
+            {/* Ambient Background Accent */}
+            <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#81D7B4]/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div className="relative z-10 p-6 md:p-8 flex flex-col xl:flex-row items-center justify-between gap-8">
+            <div className="relative z-10 p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
-              {/* Left: Info */}
-              <div className="flex-1 text-center xl:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-3">
-                  <GiftIcon className="w-4 h-4 text-[#81D7B4]" />
-                  <span className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-widest">Refer & Earn</span>
+              {/* Left Column: Info & Share Link (7 cols on desktop) */}
+              <div className="lg:col-span-7 flex flex-col items-start text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-3.5">
+                  <GiftIcon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                  <span className="text-[11px] font-bold text-[#81D7B4] uppercase tracking-wider">Referral Program</span>
                 </div>
-                <h3 className="text-2xl font-black text-[#F9F9FB] mb-2" style={{ fontFamily: 'var(--font-display)' }}>Earn 0.1% Forever</h3>
-                <p className="text-sm text-[#7B8B9A] max-w-sm mx-auto xl:mx-0">
-                  Share your code. Earn instantly when they invest.
+                
+                <h3 className="text-2xl sm:text-3xl font-black text-[#F9F9FB] tracking-tight mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                  Earn 0.1% Commission Forever
+                </h3>
+                
+                <p className="text-sm text-[#7B8B9A] leading-relaxed mb-6 max-w-xl">
+                  Share your personal link. Whenever someone mints an RWA yield certificate, you earn <strong className="text-[#F9F9FB]">0.1% USDC</strong> instantly in your account.
                 </p>
+
+                {/* Share Link Box */}
+                <div className="w-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A]">Your Personal Referral Link</span>
+                    {referralData?.bizswapReferralCode && (
+                      <span className="text-[11px] font-semibold text-[#81D7B4] flex items-center gap-1">
+                        <Tick01Icon className="w-3.5 h-3.5" /> Auto-tracks clicks & mints
+                      </span>
+                    )}
+                  </div>
+
+                  {refLoading ? (
+                    <div className="h-12 bg-[#121A27] animate-pulse rounded-2xl w-full border border-[#1C2538]"></div>
+                  ) : referralData?.bizswapReferralCode ? (
+                    <div className="flex flex-col sm:flex-row items-stretch gap-2.5 w-full">
+                      <div 
+                        title="Click to copy link"
+                        onClick={() => {
+                          const fullUrl = `https://bitsave.io/bizswap/buy?ref=${referralData.bizswapReferralCode}`;
+                          navigator.clipboard.writeText(fullUrl);
+                          toast.success('Referral link copied to clipboard!');
+                        }}
+                        className="group flex-1 flex items-center gap-3 bg-[#070A0F] hover:bg-[#0E1522] border border-[#1C2538] hover:border-[#81D7B4]/40 rounded-2xl px-4 py-3 cursor-pointer transition-all shadow-inner overflow-hidden"
+                      >
+                        <LinkSquare01Icon className="w-4 h-4 text-[#81D7B4] shrink-0 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-mono font-medium text-[#81D7B4] truncate">
+                          bitsave.io/bizswap/buy?ref={referralData.bizswapReferralCode}
+                        </span>
+                      </div>
+                      
+                      <button 
+                        onClick={() => {
+                          const fullUrl = `https://bitsave.io/bizswap/buy?ref=${referralData.bizswapReferralCode}`;
+                          navigator.clipboard.writeText(fullUrl);
+                          toast.success('Referral link copied to clipboard!');
+                        }}
+                        className="px-6 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#070A0F] text-xs font-black rounded-2xl transition-all shadow-lg hover:shadow-[#81D7B4]/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                      >
+                        <Copy01Icon className="w-4 h-4" />
+                        <span>Copy Link</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={generateReferralCode}
+                      className="px-6 py-3.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#070A0F] text-xs font-black rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer"
+                    >
+                      Activate My Referral Link
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Center: Code */}
-              <div className="flex-1 w-full xl:w-auto flex flex-col items-center xl:items-start">
-                <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-3">Your Code</p>
-                {refLoading ? (
-                  <div className="h-12 bg-[#1C2538]/50 animate-pulse rounded-xl w-full max-w-xs"></div>
-                ) : referralData?.bizswapReferralCode ? (
-                  <div className="flex items-stretch gap-2 w-full max-w-xs">
-                    <div className="flex-1 bg-[#121A27]/80 backdrop-blur-sm border border-[#1C2538] rounded-xl px-4 py-3 text-lg font-black tracking-[0.2em] text-[#81D7B4] text-center overflow-hidden text-ellipsis shadow-inner">
-                      {referralData.bizswapReferralCode}
+              {/* Right Column: Earnings Card (5 cols on desktop) */}
+              <div className="lg:col-span-5 w-full">
+                <div className="bg-[#070A0F]/90 backdrop-blur-md border border-[#1C2538] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest whitespace-nowrap">Available Earnings</span>
+                    <span className="text-[11px] font-semibold text-[#81D7B4] bg-[#81D7B4]/10 border border-[#81D7B4]/20 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                      Lifetime: ${(referralData?.bizswapTotalUsdcEarned || 0).toFixed(2)} USDC
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className="text-3xl sm:text-4xl font-black text-[#F9F9FB] tracking-tight whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
+                      ${(referralData?.bizswapPendingUsdcEarnings || 0).toFixed(2)}
+                    </span>
+                    <span className="text-xs font-bold text-[#81D7B4] uppercase tracking-wider whitespace-nowrap">USDC</span>
+                  </div>
+
+                  {/* Withdrawal Input & Button Group */}
+                  <div className="pt-3 border-t border-[#1C2538] flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative flex-1">
+                      <input 
+                        type="number"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        placeholder="Amount"
+                        max={referralData?.bizswapPendingUsdcEarnings || 0}
+                        className="w-full bg-[#0A1019] border border-[#1C2538] focus:border-[#81D7B4]/50 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#F9F9FB] outline-none placeholder:text-[#3B4C68] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-inner"
+                      />
+                      {(referralData?.bizswapPendingUsdcEarnings || 0) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setWithdrawAmount((referralData?.bizswapPendingUsdcEarnings || 0).toString())}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#81D7B4] hover:underline cursor-pointer"
+                        >
+                          MAX
+                        </button>
+                      )}
                     </div>
+                    
                     <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(referralData.bizswapReferralCode);
-                        toast.success('Copied!');
-                      }}
-                      className="px-5 py-3 bg-[#1C2538] hover:bg-[#2C3E5D] text-[#F9F9FB] text-sm font-bold rounded-xl transition-colors border border-[#2C3E5D] shadow-sm active:scale-95"
+                      onClick={handleWithdraw}
+                      disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (referralData?.bizswapPendingUsdcEarnings || 0)}
+                      className="px-5 py-2.5 bg-[#81D7B4] hover:bg-[#6BC4A0] disabled:bg-[#121A27] disabled:text-[#3B4C68] text-[#070A0F] text-xs font-black rounded-xl transition-all shadow-md active:scale-95 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
                     >
-                      Copy
+                      {isWithdrawing ? 'Processing...' : 'Withdraw'}
                     </button>
                   </div>
-                ) : (
-                  <button 
-                    onClick={generateReferralCode}
-                    className="w-full max-w-xs px-6 py-3 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] text-sm font-bold rounded-xl transition-colors shadow-sm"
-                  >
-                    Generate Code
-                  </button>
-                )}
-              </div>
 
-              {/* Right: Earnings */}
-              <div className="flex-1 w-full xl:w-auto xl:border-l border-t xl:border-t-0 border-[#1E2F45] pt-6 xl:pt-0 xl:pl-8 flex flex-col items-center xl:items-start">
-                 <p className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-1">Available</p>
-                 <div className="flex items-baseline gap-1 mb-4">
-                   <span className="text-3xl font-black text-[#F9F9FB]">${(referralData?.bizswapPendingUsdcEarnings || 0).toFixed(2)}</span>
-                   <span className="text-xs text-[#4B5A75] font-bold">USDC</span>
-                 </div>
-                 
-                 <div className="flex items-center gap-2 w-full max-w-xs">
-                   <input 
-                     type="number"
-                     value={withdrawAmount}
-                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                     placeholder="Amt"
-                     max={referralData?.bizswapPendingUsdcEarnings || 0}
-                     className="w-full min-w-[70px] flex-1 bg-[#121A27]/80 backdrop-blur-sm border border-[#1C2538] rounded-xl px-3 py-2 text-sm font-bold text-[#F9F9FB] outline-none placeholder:text-[#4B5A75] focus:border-[#81D7B4]/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-inner"
-                   />
-                   <button 
-                     onClick={handleWithdraw}
-                     disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (referralData?.bizswapPendingUsdcEarnings || 0)}
-                     className="px-5 py-2 bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 disabled:grayscale text-[#F9F9FB] text-sm font-bold rounded-xl transition-colors shadow-sm active:scale-95"
-                   >
-                     {isWithdrawing ? '...' : 'Withdraw'}
-                   </button>
-                 </div>
-                 <p className="text-[10px] font-medium text-[#4B5A75] mt-2">
-                   Lifetime: ${(referralData?.bizswapTotalUsdcEarned || 0).toFixed(2)}
-                 </p>
+                </div>
               </div>
 
             </div>
@@ -690,7 +742,7 @@ export default function BizSwapStandaloneDashboard() {
                 </tbody>
               </table>
               <div className="p-4 text-center border-t border-[#1C2538] bg-[#0A0F17]">
-                <button className="text-xs font-bold text-[#81D7B4] hover:underline">View full payment history →</button>
+                <Link href="/bizswap/app/history" className="text-xs font-bold text-[#81D7B4] hover:underline">View full payment history →</Link>
               </div>
             </div>
           </div>
@@ -699,7 +751,7 @@ export default function BizSwapStandaloneDashboard() {
           <div className="bg-[#121A27] border border-[#1C2538] rounded-2xl overflow-hidden">
             <div className="p-5 border-b border-[#1C2538] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
               <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB]">Alerts & Notifications</h3>
-              <button className="text-xs font-bold text-[#81D7B4] hover:underline">View all alerts →</button>
+              <Link href="/bizswap/app/alerts" className="text-xs font-bold text-[#81D7B4] hover:underline">View all alerts →</Link>
             </div>
             <div className="p-8 text-center text-[#7B8B9A]">
               No new alerts.
@@ -752,7 +804,7 @@ export default function BizSwapStandaloneDashboard() {
                 })
               )}
               <div className="p-4 text-center bg-[#0A0F17]">
-                <button className="text-xs font-bold text-[#81D7B4] hover:underline">View full payment calendar →</button>
+                <Link href="/bizswap/app/calendar" className="text-xs font-bold text-[#81D7B4] hover:underline">View full payment calendar →</Link>
               </div>
             </div>
           </div>
@@ -766,7 +818,7 @@ export default function BizSwapStandaloneDashboard() {
               <h3 className="font-bold text-sm tracking-wider uppercase text-[#F9F9FB] flex items-center gap-2">
                 <Tick01Icon className="w-5 h-5 text-[#81D7B4]" /> Certificate Vault
               </h3>
-              <a href="/bizswap/dashboard/certificates" className="text-xs font-bold text-[#81D7B4] hover:text-[#F9F9FB] transition-colors hover:underline">View Gallery →</a>
+              <Link href="/bizswap/app/certificates" className="text-xs font-bold text-[#81D7B4] hover:text-[#F9F9FB] transition-colors hover:underline">View Gallery →</Link>
             </div>
             
             <div className="p-6 sm:p-8 relative z-10 flex-1 flex flex-col">

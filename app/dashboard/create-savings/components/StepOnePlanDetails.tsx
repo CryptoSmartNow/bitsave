@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { ArrowDown01Icon, Cancel01Icon } from "hugeicons-react";
+import React from "react";
+import { ArrowRight01Icon, CheckmarkBadge01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from 'next/image';
 
@@ -41,12 +41,7 @@ export default function StepOnePlanDetails({
   ensureImageUrl,
   handleNext,
 }: StepOnePlanDetailsProps) {
-  const [isNetworkOpen, setIsNetworkOpen] = useState(false);
-  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
-
-  const selectedChainObj = chains.find((c) => c.id === chain);
   const availableTokens = NETWORKS.find((n) => n.id === chain)?.tokens || [];
-  const selectedTokenObj = availableTokens.find((t) => t.symbol === currency);
 
   const getCurrencyImage = (sym: string) => {
     if (sym === "Gooddollar") return "/$g.png";
@@ -60,281 +55,149 @@ export default function StepOnePlanDetails({
   return (
     <motion.div
       key="step1"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-10"
     >
       {/* Plan Name Section */}
-      <div className="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 px-3 py-6 sm:p-8 lg:p-10 text-center">
-        <label className="block text-xs sm:text-sm font-bold text-[#81D7B4] uppercase tracking-wider mb-2">
+      <div>
+        <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
           Plan Name
         </label>
-        <p className="text-xs sm:text-sm text-gray-500 mb-6">
-          Give your savings goal a unique name, or pick a preset.
-        </p>
-
+        
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Vacation Fund"
-          className={`w-full rounded-[16px] border bg-white px-4 py-3 sm:px-5 sm:py-3.5 text-base text-[#0f172a] font-bold placeholder:text-gray-400 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/30 focus:border-[#81D7B4] transition-all shadow-inner ${errors.name ? "border-red-300 bg-red-50/30" : "border-gray-200"}`}
+          placeholder="What are you saving for?"
+          className="w-full bg-transparent text-3xl md:text-4xl lg:text-[40px] font-normal font-instrument text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-white/20 border-b-2 border-gray-200 dark:border-white/10 focus:border-[#81D7B4] dark:focus:border-[#81D7B4] pb-3 transition-colors outline-none tracking-tight"
         />
-
-        <div className="mt-4">
-          <p className="text-xs font-bold text-[#64748b] uppercase tracking-widest mb-3">
-            Quick Presets
-          </p>
-          <div className="flex overflow-x-auto hide-scrollbar gap-2.5 pb-2 w-full">
-            {planNamePresets.map((preset) => (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                key={preset}
-                type="button"
-                onClick={() => setName(preset)}
-                className={`shrink-0 px-4 py-2.5 rounded-xl text-sm font-bold border transition-colors duration-200 ${
-                  name === preset
-                    ? "bg-[#81D7B4] border-[#81D7B4] text-white shadow-sm"
-                    : "bg-[#f8faf9] border-gray-100 text-[#64748b] hover:border-[#81D7B4]/30 hover:bg-[#81D7B4]/5 hover:text-[#0f172a]"
-                }`}
-              >
-                {preset}
-              </motion.button>
-            ))}
-          </div>
-        </div>
         {errors.name && (
-          <p className="mt-2 text-sm text-red-500 font-bold">{errors.name}</p>
+          <p className="mt-2 text-xs text-red-500 font-bold">{errors.name}</p>
         )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full relative z-20">
-        {/* Network Selection */}
-        <div className="bg-white rounded-[24px] shadow-[0_4px_24px_rgb(0,0,0,0.03)] border border-gray-100 px-3 py-6 sm:p-8 text-center">
-          <label className="block text-xs sm:text-sm font-bold text-[#81D7B4] uppercase tracking-wider mb-2">
-            Network
-          </label>
-          <p className="text-xs sm:text-sm text-gray-500 mb-5">Select your blockchain.</p>
-
-          <button
-            type="button"
-            onClick={() => chain !== 'solana' && setIsNetworkOpen(true)}
-            className={`w-full flex items-center justify-between bg-white border border-gray-200 px-5 py-4 rounded-[16px] transition-all focus:outline-none shadow-sm ${chain === 'solana' ? 'cursor-default opacity-90' : 'hover:border-[#81D7B4] focus:ring-2 focus:ring-[#81D7B4]/30'}`}
-          >
-            {selectedChainObj ? (
-              <div className="flex items-center gap-3">
-                <Image
-                  src={ensureImageUrl(selectedChainObj.logo)}
-                  alt={selectedChainObj.name}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
-                <span className="font-bold text-[#0f172a] text-base">
-                  {selectedChainObj.name}
-                </span>
-              </div>
-            ) : (
-              <span className="font-medium text-gray-400">Select Network</span>
-            )}
-            {chain !== 'solana' && <ArrowDown01Icon className="w-5 h-5 text-gray-500 transition-transform" />}
-          </button>
-        </div>
-
-        {/* Currency Selection */}
-        <div className="bg-white rounded-[24px] shadow-[0_4px_24px_rgb(0,0,0,0.03)] border border-gray-100 px-3 py-6 sm:p-8 text-center">
-          <label className="block text-xs sm:text-sm font-bold text-[#81D7B4] uppercase tracking-wider mb-2">
-            Currency
-          </label>
-          <p className="text-xs sm:text-sm text-gray-500 mb-5">
-            Pick the stablecoin to save in.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => setIsCurrencyOpen(true)}
-            className="w-full flex items-center justify-between bg-white border border-gray-200 hover:border-[#81D7B4] px-5 py-4 rounded-[16px] transition-all focus:outline-none focus:ring-2 focus:ring-[#81D7B4]/30 shadow-sm"
-          >
-            {selectedTokenObj ? (
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full relative overflow-hidden flex items-center justify-center bg-transparent shrink-0">
-                  <Image
-                    src={getCurrencyImage(selectedTokenObj.symbol)}
-                    alt={selectedTokenObj.symbol}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <span className="font-bold text-[#0f172a] text-base">
-                  {selectedTokenObj.symbol}
-                </span>
-              </div>
-            ) : (
-              <span className="font-medium text-gray-400">Select Currency</span>
-            )}
-            <ArrowDown01Icon className="w-5 h-5 text-gray-500 transition-transform" />
-          </button>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {planNamePresets.map((preset) => (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              key={preset}
+              type="button"
+              onClick={() => setName(preset)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer ${
+                name === preset
+                  ? "bg-[#81D7B4] text-gray-900 shadow-sm"
+                  : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+              }`}
+            >
+              {preset}
+            </motion.button>
+          ))}
         </div>
       </div>
 
-      {/* Next Button */}
-      <div className="flex justify-end pt-4">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={handleNext}
-          disabled={!name.trim()}
-          className={`bg-[#81D7B4] hover:bg-[#6BC7A0] text-white px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 shadow-[0_4px_14px_rgb(129,215,180,0.3)] hover:shadow-[0_6px_20px_rgb(129,215,180,0.4)] inline-flex items-center gap-2 whitespace-nowrap ${!name.trim() ? "opacity-50 cursor-not-allowed shadow-none" : ""}`}
-        >
-          Continue
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-        </motion.button>
+      <div className="h-px w-full bg-gray-100 dark:bg-white/5 my-6"></div>
+
+      {/* Network & Asset Selection Flow */}
+      <div className="space-y-4">
+        <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
+          Select Network & Asset
+        </label>
+
+        {chains.filter(c => !c.isComingSoon && c.id !== 'solana').map((c) => {
+           const isSelected = chain === c.id;
+           
+           return (
+             <div 
+               key={c.id} 
+               className={`relative overflow-hidden rounded-[2rem] border transition-all duration-300 ${isSelected ? 'border-[#81D7B4] bg-[#81D7B4]/5 shadow-sm' : 'border-gray-200/80 dark:border-white/5 bg-white dark:bg-[#0c121e] hover:border-gray-300 dark:hover:border-white/20'}`}
+             >
+               <button
+                 type="button"
+                 onClick={() => {
+                   setChain(c.id);
+                   switchToNetwork(c.id);
+                   const tokens = NETWORKS.find((n) => n.id === c.id)?.tokens;
+                   if (tokens && tokens.length > 0) setCurrency(tokens[0].symbol);
+                 }}
+                 className="w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between cursor-pointer"
+               >
+                 <div className="flex items-center gap-3.5">
+                   <div className="w-11 h-11 rounded-full bg-white dark:bg-[#182436] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/10 shrink-0">
+                     <Image src={ensureImageUrl(c.logo)} alt={c.name} width={24} height={24} className="rounded-full object-contain shrink-0" />
+                   </div>
+                   <div className="text-left">
+                     <h4 className={`text-base sm:text-lg font-bold ${isSelected ? 'text-[#81D7B4]' : 'text-gray-900 dark:text-white'}`}>{c.name}</h4>
+                     <p className="text-xs text-gray-500 font-medium">
+                        {isSelected ? 'Active Network' : 'Click to select'}
+                     </p>
+                   </div>
+                 </div>
+                 
+                 <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all shrink-0 ${isSelected ? 'bg-[#81D7B4] text-gray-900 shadow-sm' : 'bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500'}`}>
+                    <CheckmarkBadge01Icon className="w-4 h-4" />
+                 </div>
+               </button>
+
+               {/* Asset Selection (Clean Wrap Grid - No Horizontal Cutoff) */}
+               <AnimatePresence>
+                 {isSelected && (
+                   <motion.div 
+                     initial={{ opacity: 0, height: 0 }}
+                     animate={{ opacity: 1, height: 'auto' }}
+                     exit={{ opacity: 0, height: 0 }}
+                     className="px-4 sm:px-6 pb-6 pt-0 border-t border-[#81D7B4]/20 mx-4 sm:mx-6 mt-1"
+                   >
+                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 mt-4">
+                       Choose Asset to Lock
+                     </p>
+                     
+                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                       {availableTokens.map((curr) => {
+                         const isTokenSelected = currency === curr.symbol;
+                         return (
+                           <button
+                             key={curr.symbol}
+                             type="button"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setCurrency(curr.symbol);
+                             }}
+                             className={`relative px-3.5 py-3 rounded-2xl border transition-all duration-200 flex items-center gap-2.5 cursor-pointer ${
+                               isTokenSelected
+                                 ? 'border-[#81D7B4] bg-[#81D7B4]/15 shadow-sm ring-1 ring-[#81D7B4] text-gray-900 dark:text-white'
+                                 : 'border-gray-200/60 dark:border-white/5 bg-white dark:bg-[#141d2d] shadow-sm hover:border-gray-300 dark:hover:border-white/20 text-gray-700 dark:text-gray-300'
+                             }`}
+                           >
+                             <div className="w-6 h-6 rounded-full relative flex items-center justify-center bg-white shadow-sm shrink-0 overflow-hidden">
+                               <Image 
+                                 src={getCurrencyImage(curr.symbol)} 
+                                 alt={curr.symbol} 
+                                 width={24} 
+                                 height={24} 
+                                 className="object-cover rounded-full" 
+                               />
+                             </div>
+                             <span className={`text-xs sm:text-sm font-bold truncate ${isTokenSelected ? 'text-[#1c4b38] dark:text-[#81D7B4]' : ''}`}>
+                               {curr.symbol}
+                             </span>
+                             {isTokenSelected && (
+                               <div className="ml-auto text-[#81D7B4] shrink-0">
+                                 <CheckmarkBadge01Icon className="w-4 h-4" />
+                               </div>
+                             )}
+                           </button>
+                         );
+                       })}
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+             </div>
+           );
+        })}
       </div>
-
-      {/* Network Modal Popup */}
-      <AnimatePresence>
-        {isNetworkOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsNetworkOpen(false)}
-              className="fixed inset-0 bg-[#0f172a]/40 backdrop-blur-sm z-[9998]"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-[24px] shadow-2xl z-[9999] overflow-hidden flex flex-col max-h-[85vh]"
-            >
-              <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-[#F8FAF9]">
-                <h3 className="font-bold text-lg text-[#0f172a]">
-                  Select Network
-                </h3>
-                <button
-                  onClick={() => setIsNetworkOpen(false)}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
-                >
-                  <Cancel01Icon className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="overflow-y-auto p-3">
-                {chains
-                  .filter((c) => !c.isComingSoon)
-                  .map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => {
-                        setChain(c.id);
-                        switchToNetwork(c.id);
-                        const tokens = NETWORKS.find(
-                          (n) => n.id === c.id,
-                        )?.tokens;
-                        if (tokens && tokens.length > 0)
-                          setCurrency(tokens[0].symbol);
-                        setIsNetworkOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl hover:bg-[#81D7B4]/10 transition-colors mb-1 ${chain === c.id ? "bg-[#f4fbf8] ring-1 ring-[#81D7B4]" : ""}`}
-                    >
-                      <Image
-                        src={ensureImageUrl(c.logo)}
-                        alt={c.name}
-                        width={28}
-                        height={28}
-                        className="rounded-full shadow-sm"
-                      />
-                      <span
-                        className={`font-bold text-base ${chain === c.id ? "text-[#81D7B4]" : "text-[#0f172a]"}`}
-                      >
-                        {c.name}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Currency Modal Popup */}
-      <AnimatePresence>
-        {isCurrencyOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsCurrencyOpen(false)}
-              className="fixed inset-0 bg-[#0f172a]/40 backdrop-blur-sm z-[9998]"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-[24px] shadow-2xl z-[9999] overflow-hidden flex flex-col max-h-[85vh]"
-            >
-              <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-[#F8FAF9]">
-                <h3 className="font-bold text-lg text-[#0f172a]">
-                  Select Currency
-                </h3>
-                <button
-                  onClick={() => setIsCurrencyOpen(false)}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
-                >
-                  <Cancel01Icon className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="overflow-y-auto p-3">
-                {availableTokens.map((curr) => (
-                  <button
-                    key={curr.symbol}
-                    type="button"
-                    onClick={() => {
-                      setCurrency(curr.symbol);
-                      setIsCurrencyOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl hover:bg-[#81D7B4]/10 transition-colors mb-1 ${currency === curr.symbol ? "bg-[#f4fbf8] ring-1 ring-[#81D7B4]" : ""}`}
-                  >
-                    <div className="w-7 h-7 rounded-full relative overflow-hidden flex items-center justify-center bg-transparent shrink-0 shadow-sm border border-gray-100">
-                      <Image
-                        src={getCurrencyImage(curr.symbol)}
-                        alt={curr.symbol}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <span
-                      className={`font-bold text-base ${currency === curr.symbol ? "text-[#81D7B4]" : "text-[#0f172a]"}`}
-                    >
-                      {curr.symbol}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

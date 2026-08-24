@@ -135,7 +135,19 @@ export default function BizSwapLandingPage() {
   const { login, authenticated } = usePrivy();
   const router = useRouter();
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ref = urlParams.get('ref') || urlParams.get('referral');
+      if (ref) {
+        const clean = ref.trim().toUpperCase();
+        localStorage.setItem('bizswapPendingReferralCode', clean);
+        localStorage.setItem('pendingReferralCode', clean);
+        localStorage.setItem('bitsave_referral_code', clean);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (authenticated) {

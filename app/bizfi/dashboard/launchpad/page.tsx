@@ -243,7 +243,7 @@ export default function LaunchPadPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-[#0F1825] p-5 rounded-2xl border border-gray-800 relative h-[140px] flex flex-col justify-between"
+                        className="bg-[#121212] p-5 rounded-2xl border border-gray-800 relative h-[140px] flex flex-col justify-between"
                     >
                         {/* Top Row: Icon and Change/Status */}
                         <div className="flex justify-between items-start">

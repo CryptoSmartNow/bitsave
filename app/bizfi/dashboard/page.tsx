@@ -157,14 +157,14 @@ export default function BizFiDashboardPage() {
 
     if (!mounted) {
         return (
-            <div className="font-sans min-h-screen flex items-center justify-center bg-[#0F1825]">
+            <div className="font-sans min-h-screen flex items-center justify-center bg-[#121212]">
                 <div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-[#81D7B4] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className="font-sans bg-[#0F1825] min-h-screen text-[#F9F9FB] w-full overflow-x-hidden">
+        <div className="font-sans bg-[#121212] min-h-screen text-[#F9F9FB] w-full overflow-x-hidden">
             <style dangerouslySetInnerHTML={{ __html: `
                 @media (min-width: 1024px) {
                     html { font-size: 90% !important; }
@@ -176,7 +176,7 @@ export default function BizFiDashboardPage() {
                         <h1 className="text-3xl sm:text-[40px] md:text-[56px] font-extrabold tracking-tight leading-[1.1] text-[#F9F9FB] break-words" style={{ fontFamily: "var(--font-display)" }}>
                             BUSINESS <span className="text-[#81D7B4]">DASHBOARD</span>
                         </h1>
-                        <p className="text-base md:text-lg font-medium text-[#7B8B9A]">Manage your business listing and track performance.</p>
+                        <p className="text-base md:text-lg font-medium text-gray-400">Manage your business listing and track performance.</p>
                     </div>
                     <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-start md:justify-end gap-3 sm:gap-4">
                         <button
@@ -192,7 +192,7 @@ export default function BizFiDashboardPage() {
                                 </span>
                                 <button
                                     onClick={() => handleLogout()}
-                                    className="px-4 py-3 bg-transparent text-[#7B8B9A] hover:text-red-400 font-bold text-sm tracking-wide uppercase transition-colors text-center border sm:border-none border-[#1E2F45] sm:bg-transparent bg-[#0D1724]"
+                                    className="px-4 py-3 bg-transparent text-gray-400 hover:text-red-400 font-bold text-sm tracking-wide uppercase transition-colors text-center border sm:border-none border-[#1E2F45] sm:bg-transparent bg-[#0D1724]"
                                 >
                                     LOGOUT
                                 </button>
@@ -207,7 +207,7 @@ export default function BizFiDashboardPage() {
                     className="mb-12"
                 >
                     <div className="inline-block w-full sm:w-auto px-4 sm:px-6 py-4 bg-[#0D1724] border border-[#1E2F45]">
-                        <p className="text-xs sm:text-sm md:text-base font-medium tracking-wide uppercase text-[#7B8B9A] text-center sm:text-left">
+                        <p className="text-xs sm:text-sm md:text-base font-medium tracking-wide uppercase text-gray-400 text-center sm:text-left">
                             <span className="text-[#81D7B4] font-bold text-lg mr-2 inline-block">{(1000 + businessCount).toLocaleString()}</span> 
                             REAL WORLD BUSINESSES LISTED ONCHAIN
                         </p>
@@ -218,7 +218,7 @@ export default function BizFiDashboardPage() {
                     <div className="flex flex-col items-center justify-center py-12 sm:py-20 px-0 sm:px-4">
                         <div className="bg-[#0D1724] border border-[#1E2F45] p-6 sm:p-12 max-w-xl w-full text-center">
                             <h2 className="text-2xl sm:text-[32px] font-extrabold mb-4 tracking-tight" style={{ fontFamily: "var(--font-display)" }}>ACCESS BIZFI</h2>
-                            <p className="mb-8 sm:mb-10 text-[#7B8B9A] leading-relaxed text-sm sm:text-base">
+                            <p className="mb-8 sm:mb-10 text-gray-400 leading-relaxed text-sm sm:text-base">
                                 Log in with your email or social accounts to list your business and access the dashboard features.
                             </p>
                             <div className="flex justify-center w-full">
@@ -232,11 +232,11 @@ export default function BizFiDashboardPage() {
                             <div className="bg-[#0D1724] border border-[#1E2F45] p-3 sm:p-8 md:p-10">
                                 <div className="mb-6 sm:mb-8">
                                     <h2 className="text-2xl sm:text-[32px] font-extrabold tracking-tight mb-2" style={{ fontFamily: "var(--font-display)" }}>LIST YOUR BUSINESS</h2>
-                                    <p className="text-[#7B8B9A]">Fill the form to bring your business onchain, raise capital, and expand globally.</p>
+                                    <p className="text-gray-400">Fill the form to bring your business onchain, raise capital, and expand globally.</p>
                                 </div>
 
                                 <div className="mb-10">
-                                    <label className="block text-xs font-bold tracking-widest uppercase mb-4 text-[#7B8B9A]">SELECT YOUR BUSINESS TIER</label>
+                                    <label className="block text-xs font-bold tracking-widest uppercase mb-4 text-gray-400">SELECT YOUR BUSINESS TIER</label>
                                     <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                         {TIERS.map((tier) => (
                                             <button
@@ -253,7 +253,7 @@ export default function BizFiDashboardPage() {
                                                     </span>
                                                     <span className="text-base sm:text-lg font-mono font-bold text-[#F9F9FB] flex-shrink-0">${tier.price}</span>
                                                 </div>
-                                                <p className="text-sm leading-relaxed text-[#7B8B9A]">{tier.description}</p>
+                                                <p className="text-sm leading-relaxed text-gray-400">{tier.description}</p>
                                             </button>
                                         ))}
                                     </div>
@@ -268,7 +268,7 @@ export default function BizFiDashboardPage() {
                                             SAVE UP TO 40%
                                         </span>
                                     </div>
-                                    <p className="text-sm mb-4 text-[#7B8B9A]">
+                                    <p className="text-sm mb-4 text-gray-400">
                                         Don't have one?{' '}
                                         <Link href="/dashboard/referrals" className="text-[#81D7B4] hover:underline font-bold uppercase tracking-wide">
                                             GET ONE HERE
@@ -283,7 +283,7 @@ export default function BizFiDashboardPage() {
                                             className="flex-1 min-w-0 px-4 py-3 bg-[#0D1724] border border-[#1E2F45] text-white focus:border-[#81D7B4] focus:outline-none font-mono uppercase text-sm sm:text-base"
                                         />
                                         {validatingReferral && (
-                                            <div className="flex items-center gap-2 px-4 text-[#7B8B9A] uppercase tracking-widest text-xs font-bold">
+                                            <div className="flex items-center gap-2 px-4 text-gray-400 uppercase tracking-widest text-xs font-bold">
                                                 VALIDATING...
                                             </div>
                                         )}
@@ -320,22 +320,22 @@ export default function BizFiDashboardPage() {
                                 <div className="space-y-6">
                                     <div className="border-l-2 border-[#81D7B4] pl-4">
                                         <h4 className="font-bold text-[#F9F9FB] mb-1">GLOBAL ACCESS</h4>
-                                        <p className="text-sm text-[#7B8B9A]">Connect with investors from the web3 space.</p>
+                                        <p className="text-sm text-gray-400">Connect with investors from the web3 space.</p>
                                     </div>
                                     <div className="border-l-2 border-[#81D7B4] pl-4">
                                         <h4 className="font-bold text-[#F9F9FB] mb-1">EASY TOKENIZATION</h4>
-                                        <p className="text-sm text-[#7B8B9A]">Tokenize equity or revenue streams seamlessly.</p>
+                                        <p className="text-sm text-gray-400">Tokenize equity or revenue streams seamlessly.</p>
                                     </div>
                                     <div className="border-l-2 border-[#81D7B4] pl-4">
                                         <h4 className="font-bold text-[#F9F9FB] mb-1">AUTOMATED COMPLIANCE</h4>
-                                        <p className="text-sm text-[#7B8B9A]">Built-in investor management and compliance.</p>
+                                        <p className="text-sm text-gray-400">Built-in investor management and compliance.</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-[#0D1724] border border-[#1E2F45] p-3 sm:p-8">
                                 <h3 className="text-base sm:text-lg font-bold mb-4 tracking-wide uppercase text-[#F9F9FB]">NEED HELP?</h3>
-                                <p className="text-sm text-[#7B8B9A] mb-8 leading-relaxed">
+                                <p className="text-sm text-gray-400 mb-8 leading-relaxed">
                                     Not sure which tier fits you? Book a free consultancy session with our experts.
                                 </p>
                                 <a
@@ -347,7 +347,7 @@ export default function BizFiDashboardPage() {
                                     SCHEDULE CALL
                                 </a>
                                 <div className="pt-8 mt-8 border-t border-[#1E2F45]">
-                                    <p className="text-xs font-bold tracking-widest uppercase mb-4 text-[#7B8B9A]">COMMUNITY SUPPORT</p>
+                                    <p className="text-xs font-bold tracking-widest uppercase mb-4 text-gray-400">COMMUNITY SUPPORT</p>
                                     <div className="space-y-3">
                                         <a
                                             href="https://t.me/bitsaveprotocol"
@@ -394,16 +394,16 @@ export default function BizFiDashboardPage() {
                                 <h2 className="text-lg sm:text-xl font-bold tracking-wide uppercase text-[#F9F9FB]" style={{ fontFamily: "var(--font-display)" }}>BOOK CONSULTANCY</h2>
                                 <button
                                     onClick={() => setShowConsultancyModal(false)}
-                                    className="text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors text-sm font-bold tracking-widest uppercase"
+                                    className="text-gray-400 hover:text-[#F9F9FB] transition-colors text-sm font-bold tracking-widest uppercase"
                                 >
                                     CLOSE
                                 </button>
                             </div>
-                            <p className="mb-8 text-[#7B8B9A] leading-relaxed">
+                            <p className="mb-8 text-gray-400 leading-relaxed">
                                 Schedule a 15-minute call with a BizFi representative to discuss your business needs and listing strategy.
                             </p>
                             <div className="h-64 flex items-center justify-center mb-8 bg-[#080E18] border border-[#1E2F45]">
-                                <p className="text-sm font-bold tracking-widest uppercase text-[#7B8B9A]">CALENDAR LOADING...</p>
+                                <p className="text-sm font-bold tracking-widest uppercase text-gray-400">CALENDAR LOADING...</p>
                             </div>
                             <button
                                 onClick={() => setShowConsultancyModal(false)}

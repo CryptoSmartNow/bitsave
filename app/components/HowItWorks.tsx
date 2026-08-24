@@ -140,7 +140,7 @@ export default function HowItWorks() {
           className="mt-20 md:mt-28 relative z-20"
         >
           <Link
-            href="/dashboard/create-savings"
+            href="/dashboard"
             className="group flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#81D7B4] to-[#5fb392] rounded-xl text-[#050B14] font-display text-lg font-bold hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(129,215,180,0.25)] hover:shadow-[0_0_40px_rgba(129,215,180,0.4)]"
           >
             <span>Start Saving Now</span>

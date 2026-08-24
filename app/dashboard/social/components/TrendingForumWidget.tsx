@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Activity01Icon } from "hugeicons-react";
+import { Activity01Icon, BubbleChatIcon, ArrowRight01Icon, FireIcon } from "hugeicons-react";
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
@@ -37,58 +37,72 @@ export default function TrendingForumWidget() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-            <span className="w-2 h-8 bg-[#81D7B4] rounded-full"></span>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight font-instrument flex items-center gap-2.5">
+            <span className="w-2.5 h-7 bg-[#81D7B4] rounded-full"></span>
             Trending in Forum
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 ml-4 text-sm">Join the latest conversations in the BitSave community</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 ml-5">
+            Join the latest discussions and ideas from the BitSave community.
+          </p>
         </div>
-        <Link href="/dashboard/forum" className="text-[#81D7B4] font-bold text-sm hover:underline">View All</Link>
+        <Link 
+          href="/dashboard/forum" 
+          className="text-xs font-bold text-[#81D7B4] hover:underline flex items-center gap-1 shrink-0"
+        >
+          <span>View All</span>
+          <ArrowRight01Icon className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col gap-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-[88px] bg-white dark:bg-[#161616] rounded-2xl animate-pulse border border-gray-100 dark:border-white/5" />)}
+        <div className="flex flex-col gap-3.5">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-20 bg-gray-100 dark:bg-white/5 rounded-3xl animate-pulse border border-gray-200/50 dark:border-white/5" />
+          ))}
         </div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-10 bg-white dark:bg-[#161616] rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">No trending discussions yet.</p>
+        <div className="text-center py-10 bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 shadow-sm">
+          <BubbleChatIcon className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-bold">No trending discussions yet.</p>
+          <Link href="/dashboard/forum" className="text-[#81D7B4] text-xs font-bold hover:underline mt-1 inline-block">
+            Start the first conversation &rarr;
+          </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3.5">
           {posts.map((post, i) => (
             <Link href={`/dashboard/forum/${post._id}`} key={post._id}>
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white dark:bg-[#161616] rounded-2xl border border-gray-100 dark:border-white/5 p-4 sm:p-5 hover:border-[#81D7B4]/40 dark:hover:border-[#81D7B4]/40 hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-4"
+                transition={{ delay: i * 0.08 }}
+                className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 p-4 sm:p-5 hover:border-[#81D7B4]/50 hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-4"
               >
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  {/* Avatar */}
-                  <div className="w-11 h-11 shrink-0 rounded-full bg-[#81D7B4]/10 border border-[#81D7B4]/20 flex items-center justify-center text-[#81D7B4] font-black text-sm shadow-sm">
+                <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                  {/* User Initial Avatar */}
+                  <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#81D7B4]/15 border border-[#81D7B4]/30 flex items-center justify-center text-[#81D7B4] font-black text-xs shadow-xs">
                     {post.savvyName ? post.savvyName.slice(0, 2).toUpperCase() : post.walletAddress.slice(2, 4).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg leading-snug mb-1 group-hover:text-[#2D5A4A] dark:group-hover:text-[#81D7B4] transition-colors truncate">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base leading-snug mb-0.5 group-hover:text-[#81D7B4] transition-colors truncate">
                       {post.title}
                     </h3>
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {post.savvyName ? `@${post.savvyName}` : `${post.walletAddress.slice(0, 6)}...`}
+                    <span className="text-[11px] font-bold text-gray-400">
+                      {post.savvyName ? `@${post.savvyName}` : `${post.walletAddress.slice(0, 6)}...${post.walletAddress.slice(-4)}`}
                     </span>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 shrink-0 bg-gray-50 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-gray-100 dark:border-white/5">
-                  <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 font-bold text-sm">
-                    <Activity01Icon className="w-4 h-4 text-[#81D7B4]" /> 
+                <div className="flex items-center gap-3 shrink-0 bg-gray-50 dark:bg-white/5 px-3.5 py-1.5 rounded-2xl border border-gray-200/50 dark:border-white/5">
+                  <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 font-bold text-xs">
+                    <FireIcon className="w-3.5 h-3.5 text-[#81D7B4]" /> 
                     <span>{post.likes || 0}</span>
                   </div>
-                  <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700"></div>
-                  <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 font-bold text-sm">
-                    <svg className="w-4 h-4 text-[#81D7B4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  <div className="w-[1px] h-3 bg-gray-200 dark:bg-white/10"></div>
+                  <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 font-bold text-xs">
+                    <BubbleChatIcon className="w-3.5 h-3.5 text-[#81D7B4]" />
                     <span>{post.replyCount || 0}</span>
                   </div>
                 </div>

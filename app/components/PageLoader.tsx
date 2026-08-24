@@ -8,7 +8,7 @@ export default function PageLoader() {
     const isBizFi = pathname?.startsWith('/bizfi');
 
     // BizFi Colors
-    const bgColor = isBizFi ? 'bg-[#0F1825]' : 'bg-white';
+    const bgColor = isBizFi ? 'bg-[#121212]' : 'bg-white';
     const circleBg = isBizFi ? 'bg-[#1A2538]' : 'bg-white';
     const progressBg = isBizFi ? 'bg-[#1A2538]' : 'bg-gray-100';
 

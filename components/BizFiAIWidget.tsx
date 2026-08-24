@@ -100,7 +100,7 @@ export default function BizFiAIWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-6 right-6 z-[90] w-[360px] max-w-[calc(100vw-3rem)] h-[500px] max-h-[70vh] bg-[#0F1825] rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-[#7B8B9A]/20 flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-[90] w-[360px] max-w-[calc(100vw-3rem)] h-[500px] max-h-[70vh] bg-[#121212] rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-[#7B8B9A]/20 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#0F1825] to-[#1A2538]">
@@ -127,7 +127,7 @@ export default function BizFiAIWidget() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
               {messages.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-sm text-[#7B8B9A] font-medium">Ask about BizShares, tokenization, or business strategy!</p>
+                  <p className="text-sm text-gray-400 font-medium">Ask about BizShares, tokenization, or business strategy!</p>
                 </div>
               )}
               {messages.map(msg => (

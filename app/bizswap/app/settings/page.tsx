@@ -1,8 +1,8 @@
 'use client';
 
-import { Wallet01Icon, Money01Icon, File01Icon, Refresh01Icon, Notification01Icon, Megaphone01Icon } from "hugeicons-react";
+import { Wallet01Icon, Money01Icon, File01Icon, Refresh01Icon, Notification01Icon, Megaphone01Icon, Logout01Icon } from "hugeicons-react";
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import { Exo } from 'next/font/google';
 import toast from 'react-hot-toast';
@@ -16,7 +16,8 @@ const exo = Exo({
 
 export default function BizSwapSettings() {
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
-  const { user } = usePrivy();
+  const { user, logout } = usePrivy();
+  const { disconnect } = useDisconnect();
   
   const privyEvmWallet = user?.wallet?.address || (user?.linkedAccounts?.find(
     (account: any) => account.type === 'wallet' && account.chainType !== 'solana'
@@ -50,6 +51,17 @@ export default function BizSwapSettings() {
       } catch (err) {
         toast.error('Failed to copy address');
       }
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      if (disconnect) disconnect();
+      await logout();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      window.location.href = '/bizswap';
     }
   };
 
@@ -99,9 +111,15 @@ export default function BizSwapSettings() {
                            <p className="text-[13px] text-[#7B8B9A] font-medium mt-0.5 font-mono truncate">{address || 'Not connected'}</p>
                         </div>
                      </div>
-                     <button onClick={copyToClipboard} className="text-[13px] font-bold text-[#F9F9FB] bg-[#1A2538] border border-[#2C3E5D] px-5 py-2.5 rounded-xl hover:bg-[#121A27] transition-colors shadow-sm shrink-0">
-                       Copy
-                     </button>
+                     <div className="flex items-center gap-2 shrink-0">
+                       <button onClick={copyToClipboard} className="text-[13px] font-bold text-[#F9F9FB] bg-[#1A2538] border border-[#2C3E5D] px-4 py-2.5 rounded-xl hover:bg-[#121A27] transition-colors shadow-sm cursor-pointer">
+                         Copy
+                       </button>
+                       <button onClick={handleDisconnect} className="text-[13px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-xl hover:bg-red-500/20 transition-colors shadow-sm cursor-pointer flex items-center gap-1.5">
+                         <Logout01Icon className="w-4 h-4" />
+                         <span>Disconnect</span>
+                       </button>
+                     </div>
                   </div>
                </div>
 
@@ -157,33 +175,39 @@ export default function BizSwapSettings() {
                   <p className="text-[#7B8B9A] text-[14px] mb-6 font-medium">Earn 0.1% of every purchase made through your link.</p>
 
                   <div className="p-5 rounded-[1.5rem] border border-[#2C3E5D] bg-[#0A0F17]">
-                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/5 flex items-center justify-center border border-[#81D7B4]/20 shadow-[0_0_20px_rgba(129,215,180,0.08)]">
-                              <Megaphone01Icon className="w-6 h-6 text-[#81D7B4]" />
-                           </div>
-                           <div>
-                              <p className="font-bold text-[#F9F9FB] text-[15px]">Your Referral Code</p>
-                              <p className="text-[13px] text-[#7B8B9A] font-medium mt-0.5">Share with friends to earn commissions.</p>
-                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                           {referralCode ? (
-                             <>
-                               <span className="font-mono font-bold text-[#81D7B4] text-[15px] bg-[#81D7B4]/10 px-4 py-2 rounded-xl border border-[#81D7B4]/20">{referralCode}</span>
-                               <button 
-                                 onClick={() => { navigator.clipboard.writeText(`https://bitsave.io/bizswap/buy?ref=${referralCode}`); toast.success('Referral link copied!'); }}
-                                 className="text-[13px] font-bold text-[#F9F9FB] bg-[#1A2538] border border-[#2C3E5D] px-4 py-2.5 rounded-xl hover:bg-[#121A27] transition-colors"
-                               >
-                                 Copy Link
-                               </button>
-                             </>
-                           ) : (
-                             <span className="text-[13px] text-[#7B8B9A] font-medium italic">Visit the dashboard to generate your code.</span>
-                           )}
-                        </div>
-                     </div>
-                  </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                         <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/5 flex items-center justify-center border border-[#81D7B4]/20 shadow-[0_0_20px_rgba(129,215,180,0.08)]">
+                               <Megaphone01Icon className="w-6 h-6 text-[#81D7B4]" />
+                            </div>
+                            <div>
+                               <p className="font-bold text-[#F9F9FB] text-[15px]">Your Referral Link</p>
+                               <p className="text-[13px] text-[#7B8B9A] font-medium mt-0.5">Share your link to automatically track invites and earn 0.1% USDC.</p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            {referralCode ? (
+                              <>
+                                <span className="font-mono font-bold text-[#81D7B4] text-xs bg-[#81D7B4]/10 px-3.5 py-2 rounded-xl border border-[#81D7B4]/20 max-w-[240px] truncate">
+                                  bitsave.io/bizswap/buy?ref={referralCode}
+                                </span>
+                                <button 
+                                  onClick={() => { 
+                                    const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://bitsave.io'}/bizswap/buy?ref=${referralCode}`;
+                                    navigator.clipboard.writeText(fullUrl); 
+                                    toast.success('Referral link copied to clipboard!'); 
+                                  }}
+                                  className="text-[13px] font-bold text-[#0F1825] bg-[#81D7B4] hover:bg-[#6BC4A0] px-4 py-2.5 rounded-xl transition-colors cursor-pointer shadow-sm"
+                                >
+                                  Copy Link
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-[13px] text-[#7B8B9A] font-medium italic">Visit the dashboard to activate your link.</span>
+                            )}
+                         </div>
+                      </div>
+                   </div>
                </div>
             </div>
           )}

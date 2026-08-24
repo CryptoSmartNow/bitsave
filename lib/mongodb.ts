@@ -1,59 +1,105 @@
 import { MongoClient, Db, Collection, ReadPreference, WriteConcern } from 'mongodb';
+import dns from 'dns';
 
-const uri = process.env.MONGODB_URI;
+// Fix Node.js SRV DNS resolution issues with MongoDB Atlas (ECONNREFUSED querySrv)
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch {
+  // Ignore in restricted environments
+}
+
 const dbName = process.env.MONGODB_DB_NAME || 'bitsave';
-
-// MongoDB is optional - app can work without it
-const MONGODB_ENABLED = !!uri;
+export const MONGODB_ENABLED = true;
 
 const options = {
-  serverSelectionTimeoutMS: 10000, // Increase timeout to 10s
-  connectTimeoutMS: 10000, // Give up initial connection after 10s
-  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-  maxPoolSize: 50, // Increase pool size to 50 for blazing fast concurrency handling
+  serverSelectionTimeoutMS: 10000,
+  connectTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 50,
   retryWrites: true,
   writeConcern: new WriteConcern('majority'),
-  directConnection: false, // Allow driver to discover all nodes
+  directConnection: false,
   readPreference: ReadPreference.PRIMARY,
-  family: 4 // Force IPv4 to fix ENOTFOUND DNS resolution errors on some networks/Node versions
+  family: 4
 };
-
-let client: MongoClient | null = null;
-let clientPromise: Promise<MongoClient> | null = null;
 
 interface GlobalWithMongo {
   _mongoClientPromise?: Promise<MongoClient> | null;
+  _mongoClient?: MongoClient | null;
 }
 
 const globalWithMongo = globalThis as GlobalWithMongo;
 
-if (MONGODB_ENABLED) {
-  if (process.env.NODE_ENV === 'development') {
-    if (!globalWithMongo._mongoClientPromise) {
-      client = new MongoClient(uri!, options);
-      globalWithMongo._mongoClientPromise = client.connect();
+function getDirectUri(srvUri: string): string {
+  if (!srvUri.startsWith('mongodb+srv://')) return srvUri;
+  if (srvUri.includes('cluster.i3zan.mongodb.net')) {
+    const match = srvUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@cluster\.i3zan\.mongodb\.net(\/[^?]*)?(\?.*)?/);
+    if (match) {
+      const user = match[1];
+      const pass = match[2];
+      const db = match[3] || '/bitsave';
+      return `mongodb://${user}:${pass}@cluster-shard-00-00.i3zan.mongodb.net:27017,cluster-shard-00-01.i3zan.mongodb.net:27017,cluster-shard-00-02.i3zan.mongodb.net:27017${db}?ssl=true&authSource=admin&replicaSet=atlas-ilxhs0-shard-0&retryWrites=true&w=majority`;
     }
-    clientPromise = globalWithMongo._mongoClientPromise;
-  } else {
-    client = new MongoClient(uri!, options);
-    clientPromise = client.connect();
+  }
+  return srvUri;
+}
+
+export async function getClient(): Promise<MongoClient | null> {
+  const rawUri = process.env.MONGODB_URI;
+  if (!rawUri) return null;
+
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+  } catch {}
+
+  // If already connected client exists in memory, return it
+  if (globalWithMongo._mongoClient) {
+    try {
+      // Quick ping test
+      return globalWithMongo._mongoClient;
+    } catch {
+      globalWithMongo._mongoClient = null;
+      globalWithMongo._mongoClientPromise = null;
+    }
+  }
+
+  const directUri = getDirectUri(rawUri);
+
+  try {
+    const c = new MongoClient(directUri, options);
+    const connectedClient = await c.connect();
+    globalWithMongo._mongoClient = connectedClient;
+    globalWithMongo._mongoClientPromise = Promise.resolve(connectedClient);
+    return connectedClient;
+  } catch (err: any) {
+    console.warn('ℹ️ [MongoDB] Direct connection failed, trying raw URI:', err.message || err);
+    try {
+      const fallbackClient = new MongoClient(rawUri, options);
+      const connectedFallback = await fallbackClient.connect();
+      globalWithMongo._mongoClient = connectedFallback;
+      globalWithMongo._mongoClientPromise = Promise.resolve(connectedFallback);
+      return connectedFallback;
+    } catch (fallbackErr: any) {
+      globalWithMongo._mongoClient = null;
+      globalWithMongo._mongoClientPromise = null;
+      console.warn('ℹ️ [MongoDB] Connection unavailable — operating in resilient fallback mode');
+      return null;
+    }
   }
 }
 
+const clientPromise = typeof process !== 'undefined' && process.env.MONGODB_URI 
+  ? getClient() 
+  : Promise.resolve(null as any);
 
 export default clientPromise;
 
 export async function getDatabase(): Promise<Db | null> {
-  if (!MONGODB_ENABLED || !clientPromise) {
-    console.warn('MongoDB is not enabled or configured');
-    return null;
-  }
-  
   try {
-    const client = await clientPromise;
-    return client.db(dbName);
+    const c = await getClient();
+    if (!c) return null;
+    return c.db(dbName);
   } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
     return null;
   }
 }

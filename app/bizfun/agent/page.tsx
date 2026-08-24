@@ -134,9 +134,9 @@ export default function AgentPage() {
     const activeAddress = isConnected ? address : (ready && authenticated ? user?.wallet?.address : undefined);
 
     return (
-        <div className={`${exo.variable} font-[family-name:var(--font-exo)] min-h-screen text-white bg-[#0b0c15] selection:bg-[#81D7B4]/30 selection:text-white overflow-hidden flex flex-col`}>
+        <div className={`${exo.variable} font-[family-name:var(--font-exo)] min-h-screen text-white bg-[#121212] selection:bg-[#81D7B4]/30 selection:text-white overflow-hidden flex flex-col`}>
             {/* Header */}
-            <header className="shrink-0 bg-[#0b0c15]/80 backdrop-blur-xl border-b border-white/5 py-4 z-50">
+            <header className="shrink-0 bg-[#121212]/80 backdrop-blur-xl border-b border-white/5 py-4 z-50">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex justify-between items-center">
                     <div className="flex items-center gap-8">
                         <Link href="/bizfun" className="flex items-center gap-2 group">

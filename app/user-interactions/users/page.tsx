@@ -1,7 +1,24 @@
 'use client';
 
-import { Search01Icon, UserIcon, Calendar01Icon, Clock01Icon, Activity01Icon, ArrowRight01Icon, Wallet01Icon, LinkSquare01Icon, Shield01Icon, FilterIcon, ArrowLeft01Icon } from "hugeicons-react";
-import { useState, useEffect } from 'react';
+import { 
+  Search01Icon, 
+  UserIcon, 
+  Calendar01Icon, 
+  Clock01Icon, 
+  Activity01Icon, 
+  ArrowRight01Icon, 
+  Wallet01Icon, 
+  LinkSquare01Icon, 
+  Shield01Icon, 
+  FilterIcon, 
+  ArrowLeft01Icon,
+  Copy01Icon,
+  CheckmarkCircle01Icon,
+  Download01Icon,
+  Alert02Icon,
+  Coins01Icon
+} from "hugeicons-react";
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
@@ -21,20 +38,16 @@ interface UserProfile {
 }
 
 const CHAIN_EXPLORERS: Record<string, string> = {
-  'ethereum': 'https://etherscan.io',
-  'sepolia': 'https://sepolia.etherscan.io',
   'base': 'https://basescan.org',
   'celo': 'https://celoscan.io',
   'bsc': 'https://bscscan.com',
   'lisk': 'https://blockscout.lisk.com',
   'avalanche': 'https://snowtrace.io',
-  'optimism': 'https://optimistic.etherscan.io',
-  'arbitrum': 'https://arbiscan.io',
-  'polygon': 'https://polygonscan.com',
+  'ethereum': 'https://etherscan.io',
 };
 
 const getExplorerUrl = (chain: string, address: string) => {
-  const baseUrl = CHAIN_EXPLORERS[chain.toLowerCase()] || CHAIN_EXPLORERS['ethereum'];
+  const baseUrl = CHAIN_EXPLORERS[chain.toLowerCase()] || CHAIN_EXPLORERS['base'];
   return `${baseUrl}/address/${address}`;
 };
 
@@ -46,14 +59,15 @@ export default function UserManagementPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [sortType, setSortType] = useState<'recent' | 'active' | 'errors'>('recent');
   const [isChainModalOpen, setIsChainModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchInteractions = async () => {
       try {
-        const response = await fetch('/api/user-interactions?limit=1000');
-        const data: UserInteraction[] = await response.json();
+        const response = await fetch('/api/user-interactions?limit=2000');
+        const raw = await response.json();
+        const data: UserInteraction[] = Array.isArray(raw) ? raw : raw.interactions || [];
         
-        // Aggregate data into user profiles
         const userMap = new Map<string, UserProfile>();
         
         data.forEach(interaction => {
@@ -73,8 +87,7 @@ export default function UserManagementPage() {
           
           const profile = userMap.get(address)!;
           
-          // Track chains
-          let chain = (interaction.data as any).chain || (interaction.data as any).network;
+          let chain = (interaction.data as any)?.chain || (interaction.data as any)?.network;
           if (chain) {
             chain = chain.toLowerCase();
             if (!profile.chains.includes(chain)) {
@@ -96,14 +109,13 @@ export default function UserManagementPage() {
           profile.interactions.push(interaction);
         });
 
-        // Sort interactions for each user
         userMap.forEach(profile => {
           profile.interactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         });
 
         setProfiles(Array.from(userMap.values()));
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching user profiles:', error);
       } finally {
         setLoading(false);
       }
@@ -119,7 +131,6 @@ export default function UserManagementPage() {
       const user = profiles.find(p => p.address.toLowerCase() === addressParam.toLowerCase());
       if (user) {
         setSelectedUser(user);
-        // Also update search term to make it easier to find in the list
         setSearchTerm(addressParam);
       }
     }
@@ -131,85 +142,50 @@ export default function UserManagementPage() {
     setSortType(types[nextIndex]);
   };
 
+  const copyAddress = (addr: string) => {
+    navigator.clipboard.writeText(addr);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleExport = () => {
     if (!selectedUser) return;
     
     const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(22);
-    doc.setTextColor(44, 62, 80);
-    doc.text('Bitsave User Profile Report', 14, 22);
-    
-    // User Details Section
-    doc.setFontSize(16);
-    doc.setTextColor(44, 62, 80);
-    doc.text('User Details', 14, 40);
+    doc.setFontSize(20);
+    doc.text('BitSave User Activity Report', 14, 22);
     
     doc.setFontSize(11);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Wallet Address:`, 14, 50);
-    doc.setTextColor(0, 0, 0);
-    doc.text(selectedUser.address, 50, 50);
-    
-    doc.setTextColor(100, 100, 100);
-    doc.text(`First Seen:`, 14, 58);
-    doc.setTextColor(0, 0, 0);
-    doc.text(new Date(selectedUser.firstSeen).toLocaleString(), 50, 58);
-    
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Last Active:`, 14, 66);
-    doc.setTextColor(0, 0, 0);
-    doc.text(new Date(selectedUser.lastSeen).toLocaleString(), 50, 66);
-    
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Total Interactions:`, 14, 74);
-    doc.setTextColor(0, 0, 0);
-    doc.text(selectedUser.interactionCount.toString(), 50, 74);
-    
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Error Rate:`, 14, 82);
-    const errorRate = ((selectedUser.errorCount / selectedUser.interactionCount) * 100).toFixed(1);
-    if (parseFloat(errorRate) > 0) {
-      doc.setTextColor(220, 53, 69); // Red
-    } else {
-      doc.setTextColor(40, 167, 69); // Green
-    }
-    doc.text(`${errorRate}%`, 50, 82);
-    
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Chains Used:`, 14, 90);
-    doc.setTextColor(0, 0, 0);
-    doc.text(selectedUser.chains?.join(', ') || 'N/A', 50, 90);
+    doc.text(`Wallet Address: ${selectedUser.address}`, 14, 34);
+    doc.text(`First Seen: ${new Date(selectedUser.firstSeen).toLocaleString()}`, 14, 42);
+    doc.text(`Last Active: ${new Date(selectedUser.lastSeen).toLocaleString()}`, 14, 50);
+    doc.text(`Total Operations: ${selectedUser.interactionCount}`, 14, 58);
+    doc.text(`Errors Logged: ${selectedUser.errorCount}`, 14, 66);
+    doc.text(`Chains Interacted: ${selectedUser.chains?.join(', ') || 'Base'}`, 14, 74);
 
-    // Interaction Table
     const tableData = selectedUser.interactions.map(i => [
       new Date(i.timestamp).toLocaleString(),
       i.type.replace(/_/g, ' '),
-      ((i.data as any).chain || (i.data as any).network || '-').toString(),
-      JSON.stringify(i.data).length > 50 
-        ? JSON.stringify(i.data).substring(0, 50) + '...' 
-        : JSON.stringify(i.data)
+      ((i.data as any)?.chain || '-').toString(),
+      JSON.stringify(i.data || {}).substring(0, 60)
     ]);
 
     autoTable(doc, {
-      startY: 100,
-      head: [['Timestamp', 'Type', 'Chain', 'Details']],
+      startY: 84,
+      head: [['Timestamp', 'Action', 'Chain', 'Context']],
       body: tableData,
-      headStyles: { fillColor: [129, 215, 180] }, // #81D7B4
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      styles: { fontSize: 9 },
+      headStyles: { fillColor: [129, 215, 180] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { fontSize: 8 },
     });
 
-    doc.save(`user-report-${selectedUser.address.slice(0, 8)}.pdf`);
+    doc.save(`bitsave-profile-${selectedUser.address.slice(0, 8)}.pdf`);
   };
 
   const handleExternalLink = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
-    
-    const chains = selectedUser.chains?.length ? selectedUser.chains : ['ethereum'];
-    
+    const chains = selectedUser.chains?.length ? selectedUser.chains : ['base'];
     if (chains.length === 1) {
       window.open(getExplorerUrl(chains[0], selectedUser.address), '_blank');
     } else {
@@ -217,227 +193,292 @@ export default function UserManagementPage() {
     }
   };
 
-  const filteredProfiles = profiles
-    .filter(p => p.address.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => {
-      if (sortType === 'active') return b.interactionCount - a.interactionCount;
-      if (sortType === 'errors') return b.errorCount - a.errorCount;
-      return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime(); // recent
-    });
+  const filteredProfiles = useMemo(() => {
+    return profiles
+      .filter(p => p.address.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => {
+        if (sortType === 'active') return b.interactionCount - a.interactionCount;
+        if (sortType === 'errors') return b.errorCount - a.errorCount;
+        return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
+      });
+  }, [profiles, searchTerm, sortType]);
 
   if (loading) {
     return <DashboardSkeleton />;
   }
 
   return (
-    <div className="space-y-8 h-[calc(100vh-100px)] flex flex-col">
-      <div className="flex-shrink-0">
-        <h1 className="text-3xl font-bold text-slate-900">User Management</h1>
-        <p className="text-slate-500 mt-1">Search and view detailed user profiles and history.</p>
+    <div className="font-sans text-gray-900 dark:text-white space-y-6 pb-20">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-200/80 dark:border-white/10">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-lg bg-blue-500/15 text-blue-500 border border-blue-500/25 text-[10px] font-black uppercase tracking-wider">
+              Identity & Wallets
+            </span>
+            <span className="text-xs text-gray-400">User Intelligence</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 dark:text-white font-display">
+            User Management & Profiles
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Search wallet addresses, view lifetime transactions, and inspect individual telemetry history.
+          </p>
+        </div>
       </div>
 
-      <div className="flex-1 flex gap-6 min-h-0">
-        {/* User ListView Panel */}
-        <div className={`w-full lg:w-1/3 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden ${selectedUser ? 'hidden lg:flex' : 'flex'}`}>
-          <div className="p-4 border-b border-gray-100 space-y-3">
+      {/* ── Main Split View ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[650px]">
+        {/* Left Column: User List (5 cols) */}
+        <div className={`lg:col-span-4 bg-white dark:bg-[#0c121e] rounded-3xl border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col overflow-hidden ${selectedUser ? 'hidden lg:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-gray-100 dark:border-white/5 space-y-3 bg-gray-50/50 dark:bg-white/[0.02]">
             <div className="relative">
-              <Search01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input 
+              <Search01Icon className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
                 type="text"
-                placeholder="Search wallet address..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#81D7B4]"
+                placeholder="Search wallet (0x...)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 rounded-xl text-xs bg-white dark:bg-[#141d2d] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#81D7B4]"
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-500 px-1">
-              <span>{filteredProfiles.length} UserMultiple Found</span>
-              <button 
-                className="flex items-center hover:text-slate-900"
+
+            <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+              <span className="font-bold text-gray-700 dark:text-gray-300 font-mono text-[11px]">{filteredProfiles.length} Wallets</span>
+              <button
+                type="button"
                 onClick={toggleSort}
+                className="flex items-center gap-1 hover:text-[#81D7B4] text-[11px] font-bold cursor-pointer transition-colors"
               >
-                <FilterIcon className="w-3 h-3 mr-1" /> 
-                Sort: {sortType.charAt(0).toUpperCase() + sortType.slice(1)}
+                <FilterIcon className="w-3 h-3" />
+                <span>Sort: {sortType.toUpperCase()}</span>
               </button>
             </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto divide-y divide-gray-50 p-2">
-            {filteredProfiles.map(profile => (
-              <div 
-                key={profile.address}
-                onClick={() => setSelectedUser(profile)}
-                className={`p-3 rounded-xl cursor-pointer transition-all ${
-                  selectedUser?.address === profile.address 
-                    ? 'bg-[#81D7B4]/10 border-[#81D7B4]/20 ring-1 ring-[#81D7B4]/20' 
-                    : 'hover:bg-gray-50 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-                      <UserIcon className="w-4 h-4" />
-                    </div>
-                    <span className="font-mono text-sm text-slate-700 font-medium">
-                      {profile.address.slice(0, 6)}...{profile.address.slice(-4)}
-                    </span>
-                  </div>
-                  <ArrowRight01Icon className={`w-4 h-4 text-gray-400 ${selectedUser?.address === profile.address ? 'text-[#81D7B4]' : ''}`} />
-                </div>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div className="text-xs text-slate-500 bg-gray-50 px-2 py-1 rounded-lg">
-                    {profile.interactionCount} Actions
-                  </div>
-                  <div className="text-xs text-slate-500 bg-gray-50 px-2 py-1 rounded-lg text-right">
-                    {new Date(profile.lastSeen).toLocaleDateString()}
-                  </div>
-                </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5 p-2 custom-scrollbar">
+            {filteredProfiles.length === 0 ? (
+              <div className="p-12 text-center text-xs text-gray-400">
+                No wallet addresses found.
               </div>
-            ))}
+            ) : (
+              filteredProfiles.map((profile) => {
+                const isSelected = selectedUser?.address === profile.address;
+                const isAnon = profile.address === 'Anonymous';
+
+                return (
+                  <div
+                    key={profile.address}
+                    onClick={() => setSelectedUser(profile)}
+                    className={`p-3.5 rounded-2xl cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-[#81D7B4]/15 border border-[#81D7B4]/40 shadow-xs'
+                        : 'hover:bg-gray-50 dark:hover:bg-white/[0.02] border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-xl bg-[#81D7B4]/20 text-[#1c4b38] dark:text-[#81D7B4] flex items-center justify-center font-bold text-[10px] shrink-0 font-mono">
+                          {isAnon ? 'GU' : profile.address.slice(2, 4)}
+                        </div>
+                        <span className="font-mono text-xs font-bold text-gray-900 dark:text-white truncate">
+                          {isAnon ? 'Guest User' : `${profile.address.slice(0, 6)}...${profile.address.slice(-4)}`}
+                        </span>
+                      </div>
+                      <ArrowRight01Icon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-[#81D7B4]' : 'text-gray-400'}`} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[10.5px] mt-2">
+                      <div className="px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 font-medium">
+                        {profile.interactionCount} Events
+                      </div>
+                      <div className="px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 font-medium text-right">
+                        {new Date(profile.lastSeen).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* Detail Panel */}
-        <div className={`flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col ${!selectedUser ? 'hidden lg:flex' : 'flex'}`}>
+        {/* Right Column: User Profile Details (7 cols) */}
+        <div className={`lg:col-span-8 bg-white dark:bg-[#0c121e] rounded-3xl border border-gray-200/80 dark:border-white/10 shadow-xs overflow-hidden flex flex-col ${!selectedUser ? 'hidden lg:flex' : 'flex'}`}>
           {selectedUser ? (
             <div className="flex flex-col h-full">
-              {/* Detail Header */}
-              <div className="p-4 sm:p-6 border-b border-gray-100 bg-gray-50/50">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <button 
-                      onClick={() => setSelectedUser(null)}
-                      className="lg:hidden mb-4 flex items-center text-slate-500 hover:text-slate-900 transition-colors"
-                    >
-                      <ArrowLeft01Icon className="w-4 h-4 mr-1" />
-                      Back to ListView
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg sm:text-xl font-bold text-slate-900 font-mono truncate" title={selectedUser.address}>
-                        {selectedUser.address.length > 20 
-                          ? `${selectedUser.address.slice(0, 8)}...${selectedUser.address.slice(-6)}`
-                          : selectedUser.address}
+              {/* Profile Header */}
+              <div className="p-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(null)}
+                  className="lg:hidden mb-4 flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <ArrowLeft01Icon className="w-3.5 h-3.5" />
+                  <span>Back to User List</span>
+                </button>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base sm:text-lg font-black font-mono text-gray-900 dark:text-white truncate">
+                        {selectedUser.address}
                       </h2>
-                      <button onClick={handleExternalLink} className="flex-shrink-0 text-gray-400 hover:text-[#81D7B4]">
-                        <LinkSquare01Icon className="w-4 h-4" />
-                      </button>
+                      {selectedUser.address !== 'Anonymous' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => copyAddress(selectedUser.address)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-[#81D7B4] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                            title="Copy Wallet Address"
+                          >
+                            {copied ? <CheckmarkCircle01Icon className="w-4 h-4 text-emerald-500" /> : <Copy01Icon className="w-4 h-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleExternalLink}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-[#81D7B4] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                            title="Open Explorer"
+                          >
+                            <LinkSquare01Icon className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">Bitsave User Profile</p>
+                    <p className="text-xs text-gray-400 mt-1 font-medium">
+                      BitSave Protocol Onchain User Profile
+                    </p>
                   </div>
-                  <div className="flex gap-2 mt-2 sm:mt-0">
-                    <button 
-                      onClick={handleExport}
-                      className="flex-1 sm:flex-none px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-gray-50 flex items-center justify-center gap-2"
-                    >
-                      <span>Export Data</span>
-                    </button>
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleExport}
+                    className="px-4 py-2 rounded-2xl bg-white dark:bg-[#141d2d] border border-gray-200 dark:border-white/10 hover:border-[#81D7B4] text-xs font-bold text-gray-800 dark:text-gray-200 transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto"
+                  >
+                    <Download01Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                    <span>Export PDF Report</span>
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white p-4 rounded-xl border border-gray-100">
-                    <div className="text-xs text-gray-500 mb-1">First Seen</div>
-                    <div className="font-medium text-slate-900">{new Date(selectedUser.firstSeen).toLocaleDateString()}</div>
+                {/* KPI Metrics */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#141d2d] border border-gray-200/70 dark:border-white/10">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">First Seen</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">{new Date(selectedUser.firstSeen).toLocaleDateString()}</span>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-100">
-                    <div className="text-xs text-gray-500 mb-1">Last Active</div>
-                    <div className="font-medium text-slate-900">{new Date(selectedUser.lastSeen).toLocaleDateString()}</div>
+
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#141d2d] border border-gray-200/70 dark:border-white/10">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Last Active</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">{new Date(selectedUser.lastSeen).toLocaleDateString()}</span>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-100">
-                    <div className="text-xs text-gray-500 mb-1">Total Interactions</div>
-                    <div className="font-medium text-slate-900">{selectedUser.interactionCount}</div>
+
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#141d2d] border border-gray-200/70 dark:border-white/10">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Lifetime Events</span>
+                    <span className="text-base font-black font-instrument text-gray-900 dark:text-white">{selectedUser.interactionCount}</span>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-100">
-                    <div className="text-xs text-gray-500 mb-1">Error Rate</div>
-                    <div className={`font-medium ${selectedUser.errorCount > 0 ? 'text-red-600' : 'text-[#81D7B4]'}`}>
-                      {((selectedUser.errorCount / selectedUser.interactionCount) * 100).toFixed(1)}%
-                    </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-[#141d2d] border border-gray-200/70 dark:border-white/10">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Error Rate</span>
+                    <span className={`text-base font-black font-instrument ${selectedUser.errorCount > 0 ? 'text-red-500' : 'text-[#81D7B4]'}`}>
+                      {((selectedUser.errorCount / Math.max(1, selectedUser.interactionCount)) * 100).toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Activity Timeline */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
-                  <Activity01Icon className="w-4 h-4 mr-2" />
-                  Activity History
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Activity01Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                  <span>Telemetry Timeline ({selectedUser.interactions.length})</span>
                 </h3>
-                <div className="relative pl-6 border-l-2 border-gray-100 space-y-8">
-                  {selectedUser.interactions.map((interaction, idx) => (
-                    <div key={idx} className="relative">
-                      <div className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 border-white ${
-                        interaction.type.includes('error') ? 'bg-red-500' : 'bg-[#81D7B4]'
-                      }`}></div>
-                      <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-medium text-slate-900">{interaction.type.replace(/_/g, ' ')}</span>
-                          <span className="text-xs text-gray-500">{new Date(interaction.timestamp).toLocaleString()}</span>
+
+                <div className="space-y-4">
+                  {selectedUser.interactions.map((interaction, idx) => {
+                    const isError = interaction.type.includes('error') || (interaction.data as any)?.error;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200/60 dark:border-white/5 hover:border-gray-300 dark:hover:border-white/10 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="text-xs font-bold text-gray-900 dark:text-white capitalize flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${isError ? 'bg-red-500' : 'bg-[#81D7B4]'}`} />
+                            <span>{interaction.type.replace(/_/g, ' ')}</span>
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-mono">
+                            {new Date(interaction.timestamp).toLocaleString()}
+                          </span>
                         </div>
+
                         {interaction.data && Object.keys(interaction.data).length > 0 && (
-                          <pre className="text-xs bg-white p-2 rounded-lg border border-gray-200 text-gray-600 overflow-x-auto">
+                          <pre className="p-3 rounded-xl bg-white dark:bg-[#141d2d] border border-gray-200/70 dark:border-white/10 text-[11px] font-mono text-gray-700 dark:text-gray-300 overflow-x-auto custom-scrollbar">
                             {JSON.stringify(interaction.data, null, 2)}
                           </pre>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <UserIcon className="w-8 h-8 text-gray-300" />
+            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-gray-400">
+              <div className="w-16 h-16 rounded-3xl bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4">
+                <UserIcon className="w-8 h-8 text-gray-400" />
               </div>
-              <p>Select a user to view detailed profile</p>
+              <h3 className="text-base font-black text-gray-900 dark:text-white font-display">Select a Wallet Address</h3>
+              <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                Choose a wallet from the left panel or use the search bar to inspect its lifetime telemetry and execution history.
+              </p>
             </div>
           )}
         </div>
       </div>
-      {/* Chain Selection Modal */}
+
+      {/* Chain Selector Modal */}
       <AnimatePresence>
         {isChainModalOpen && selectedUser && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setIsChainModalOpen(false)}
-          >
+          <>
             <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50"
+              onClick={() => setIsChainModalOpen(false)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="fixed inset-0 m-auto w-full max-w-sm h-fit bg-white dark:bg-[#0c121e] rounded-3xl p-6 shadow-2xl border border-gray-200 dark:border-white/10 z-50"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-lg font-bold text-slate-900 mb-4">View on Explorer</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                This user has interacted with multiple chains. Select which chain explorer you want to view.
+              <h3 className="text-base font-black font-display text-gray-900 dark:text-white mb-1">
+                View on Block Explorer
+              </h3>
+              <p className="text-xs text-gray-400 mb-4">
+                Select which network explorer to view this wallet address on:
               </p>
+
               <div className="space-y-2">
-                {selectedUser.chains?.map(chain => (
+                {(selectedUser.chains?.length ? selectedUser.chains : ['base', 'celo', 'lisk', 'bsc', 'avalanche']).map(chain => (
                   <a
                     key={chain}
                     href={getExplorerUrl(chain, selectedUser.address)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between w-full p-3 rounded-xl bg-gray-50 hover:bg-[#81D7B4]/10 hover:text-[#81D7B4] transition-colors"
+                    className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-white/5 hover:bg-[#81D7B4]/15 hover:text-[#81D7B4] transition-colors text-xs font-bold text-gray-900 dark:text-white"
                     onClick={() => setIsChainModalOpen(false)}
                   >
-                    <span className="capitalize font-medium">{chain}</span>
-                    <LinkSquare01Icon className="w-4 h-4" />
+                    <span className="capitalize">{chain} Network</span>
+                    <LinkSquare01Icon className="w-3.5 h-3.5" />
                   </a>
                 ))}
               </div>
-              <button
-                onClick={() => setIsChainModalOpen(false)}
-                className="w-full mt-4 py-2 text-sm text-gray-500 hover:text-slate-900"
-              >
-                Cancel
-              </button>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

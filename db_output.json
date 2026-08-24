@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "6a831392c031bb08d436ee63",
+    "wallet": "0x9690715F960FF98E66728dcCa5155008Ee623462",
+    "investmentAmount": 2000,
+    "purchaseDate": "2026-08-17T13:58:42.276Z"
+  },
+  {
+    "_id": "6a831392c031bb08d436ee64",
+    "wallet": "0x9690715F960FF98E66728dcCa5155008Ee623462",
+    "investmentAmount": 2000,
+    "purchaseDate": "2026-08-17T13:58:42.647Z"
+  },
+  {
+    "_id": "6a831393c031bb08d436ee65",
+    "wallet": "0x9690715F960FF98E66728dcCa5155008Ee623462",
+    "investmentAmount": 2000,
+    "purchaseDate": "2026-08-17T13:58:43.113Z"
+  },
+  {
+    "_id": "6a831393c031bb08d436ee66",
+    "wallet": "0x9690715F960FF98E66728dcCa5155008Ee623462",
+    "investmentAmount": 2000,
+    "purchaseDate": "2026-08-17T13:58:43.475Z"
+  },
+  {
+    "_id": "6a831393c031bb08d436ee67",
+    "wallet": "0x9690715F960FF98E66728dcCa5155008Ee623462",
+    "investmentAmount": 2000,
+    "purchaseDate": "2026-08-17T13:58:43.855Z"
+  },
+  {
+    "_id": "6a861137bcc817ef8a97629e",
+    "wallet": "0xa1081CFa550f725611D9a16370c315918970b974",
+    "investmentAmount": 140840.7,
+    "purchaseDate": "2026-08-19T20:25:27.793Z"
+  },
+  {
+    "_id": "6a86113abcc817ef8a97629f",
+    "wallet": "0xd2b409b3c1C421959B9beD92c5F35b80EA0B3AC7",
+    "investmentAmount": 14104.1901,
+    "purchaseDate": "2026-08-19T20:25:30.644Z"
+  },
+  {
+    "_id": "6a86113fbcc817ef8a9762a0",
+    "wallet": "0xa8aC222deece52ed99e08C10C482dedb9638005a",
+    "investmentAmount": 14094.13005,
+    "purchaseDate": "2026-08-19T20:25:35.628Z"
+  },
+  {
+    "_id": "6a86114fbcc817ef8a9762a1",
+    "wallet": "0x4C4C38633e60bC6B566282dd9172b6E4B8521570",
+    "investmentAmount": 13953.28935,
+    "purchaseDate": "2026-08-19T20:25:51.786Z"
+  },
+  {
+    "_id": "6a861154bcc817ef8a9762a2",
+    "wallet": "0x65ddbA53072ce03696D82bA82d7fDe5882F74735",
+    "investmentAmount": 13993.52955,
+    "purchaseDate": "2026-08-19T20:25:56.169Z"
+  }
+]

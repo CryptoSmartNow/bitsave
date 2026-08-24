@@ -147,7 +147,7 @@ export default function MarketDetailPage() {
 
     if (loading) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0b0c15] flex items-center justify-center`}>
+            <div className={`${exo.variable} font-sans min-h-screen bg-[#121212] flex items-center justify-center`}>
                 <div className="animate-spin w-12 h-12 border-2 border-[#81D7B4] border-t-transparent rounded-full"></div>
             </div>
         );
@@ -155,7 +155,7 @@ export default function MarketDetailPage() {
 
     if (!market) {
         return (
-            <div className={`${exo.variable} font-sans min-h-screen bg-[#0b0c15] flex flex-col items-center justify-center text-white`}>
+            <div className={`${exo.variable} font-sans min-h-screen bg-[#121212] flex flex-col items-center justify-center text-white`}>
                 <h1 className="text-2xl font-bold mb-4">Market Not Found</h1>
                 <Link href="/bizfun/market" className="text-[#81D7B4] hover:underline">Back to Markets</Link>
             </div>
@@ -163,9 +163,9 @@ export default function MarketDetailPage() {
     }
 
     return (
-        <div className={`${exo.variable} font-sans min-h-screen bg-[#0b0c15] text-white selection:bg-[#81D7B4] selection:text-[#0b0c15]`}>
+        <div className={`${exo.variable} font-sans min-h-screen bg-[#121212] text-white selection:bg-[#81D7B4] selection:text-[#0b0c15]`}>
             {/* Header */}
-            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0b0c15]/80 backdrop-blur-md">
+            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#121212]/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href="/bizfun/market" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                         <Activity01Icon className="w-5 h-5" />
@@ -194,7 +194,7 @@ export default function MarketDetailPage() {
                     </div>
 
                     <div className="space-y-6">
-                        <div className="bg-[#0b0c15] border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                        <div className="bg-[#121212] border border-white/10 rounded-xl p-3 flex items-center gap-3">
                             <div className="bg-[#81D7B4]/10 p-2 rounded-lg">
                                 <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
                             </div>
@@ -327,7 +327,7 @@ export default function MarketDetailPage() {
                                                     value={newComment}
                                                     onChange={(e) => setNewComment(e.target.value)}
                                                     placeholder="Share your analysis..."
-                                                    className="w-full bg-[#0b0c15] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-all resize-none h-32"
+                                                    className="w-full bg-[#121212] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] transition-all resize-none h-32"
                                                 />
                                                 <div className="flex justify-end">
                                                     <button
@@ -403,11 +403,11 @@ export default function MarketDetailPage() {
                             </h2>
 
                             <div className="grid grid-cols-2 gap-4 mb-6">
-                                <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#0b0c15] border border-green-500/30 hover:bg-green-500/10 transition-all group">
+                                <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#121212] border border-green-500/30 hover:bg-green-500/10 transition-all group">
                                     <span className="text-green-400 font-bold text-xl mb-1 group-hover:scale-110 transition-transform">YES</span>
                                     <span className="text-xs text-gray-500">$0.50</span>
                                 </button>
-                                <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#0b0c15] border border-red-500/30 hover:bg-red-500/10 transition-all group">
+                                <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#121212] border border-red-500/30 hover:bg-red-500/10 transition-all group">
                                     <span className="text-red-400 font-bold text-xl mb-1 group-hover:scale-110 transition-transform">NO</span>
                                     <span className="text-xs text-gray-500">$0.50</span>
                                 </button>

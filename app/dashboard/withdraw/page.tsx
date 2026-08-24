@@ -1,236 +1,377 @@
 'use client';
 
-import { Activity01Icon, Download01Icon, Tick01Icon, Alert02Icon } from "hugeicons-react";
-import { useState } from 'react';
-import { useAccount, useChainId } from 'wagmi';
-import { ethers } from 'ethers';
-import BitSaveABI from '../../abi/contractABI.js';
-import { handleContractError } from '../../../lib/contractErrorHandler';
+import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft01Icon, 
+  PiggyBankIcon, 
+  Coins01Icon, 
+  ArrowRight01Icon, 
+  Clock01Icon, 
+  AlertCircleIcon, 
+  Tick01Icon, 
+  PlusSignIcon, 
+  SecurityCheckIcon,
+  Wallet02Icon,
+  Search01Icon
+} from "hugeicons-react";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAccount } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useSavingsData } from '@/hooks/useSavingsData';
+import WithdrawModal from '@/components/WithdrawModal';
+import { formatTimestamp } from '@/utils/dateUtils';
+import { fetchMultipleNetworkLogos, NetworkLogoData } from '@/utils/networkLogos';
 
-const BASE_CONTRACT_ADDRESS = "0x3593546078eecd0ffd1c19317f53ee565be6ca13";
-const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
-const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
-const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
-
-const BASE_CHAIN_ID = BigInt(8453);
-const CELO_CHAIN_ID = BigInt(42220);
-const LISK_CHAIN_ID = BigInt(1135);
-const AVALANCHE_CHAIN_ID = BigInt(43114);
+function getTokenLogo(tokenName?: string, tokenLogo?: string) {
+  if (tokenLogo) return tokenLogo;
+  if (!tokenName) return '/usdclogo.png';
+  if (tokenName === 'cUSD') return '/cusd.png';
+  if (tokenName === 'cNGN') return '/cngn.png';
+  if (tokenName === 'USDGLO') return '/usdglo.png';
+  if (tokenName === 'Gooddollar' || tokenName === '$G') return '/$g.png';
+  if (tokenName === 'USDC') return '/usdclogo.png';
+  return `/${tokenName.toLowerCase()}.png`;
+}
 
 export default function WithdrawPage() {
-  const [savingName, setSavingName] = useState('');
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { address: wagmiAddress, isConnected, isConnecting, isReconnecting } = useAccount();
+  const { user, ready, authenticated } = usePrivy();
+  const privyEvmWallet = user?.linkedAccounts?.find(
+    (account: any) => account.type === 'wallet' && account.chainType === 'ethereum'
+  ) as { address: string } | undefined;
+  const address = wagmiAddress || privyEvmWallet?.address || user?.wallet?.address;
 
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
+  // True while Privy or Wagmi is rehydrating authentication state
+  const isAuthHydrating = (!ready && !isConnected) || isConnecting || isReconnecting;
 
-  const getContractAddress = (cid: number) => {
-    const chainIdBig = BigInt(cid);
-    if (chainIdBig === BASE_CHAIN_ID) return BASE_CONTRACT_ADDRESS;
-    if (chainIdBig === CELO_CHAIN_ID) return CELO_CONTRACT_ADDRESS;
-    if (chainIdBig === LISK_CHAIN_ID) return LISK_CONTRACT_ADDRESS;
-    if (chainIdBig === AVALANCHE_CHAIN_ID) return AVALANCHE_CONTRACT_ADDRESS;
-    return CELO_CONTRACT_ADDRESS;
+  const { savingsData, isLoading, isBackgroundLoading, refetch } = useSavingsData();
+  const [networkLogos, setNetworkLogos] = useState<NetworkLogoData>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
+
+  const [withdrawModal, setWithdrawModal] = useState<{
+    isOpen: boolean;
+    planName: string;
+    isEth: boolean;
+    amount?: string;
+    penaltyPercentage: number;
+    tokenName: string;
+    isCompleted: boolean;
+    maturityTime?: number;
+    contractAddress?: string;
+    network?: string;
+    startTime?: number;
+  }>({
+    isOpen: false,
+    planName: '',
+    isEth: false,
+    amount: '0',
+    penaltyPercentage: 0,
+    tokenName: 'USDC',
+    isCompleted: false,
+  });
+
+  useEffect(() => {
+    fetchMultipleNetworkLogos(['base', 'celo', 'lisk', 'avalanche', 'bsc'])
+      .then(setNetworkLogos)
+      .catch(() => {});
+  }, []);
+
+  const currentPlans = savingsData?.currentPlans || [];
+  const completedPlans = savingsData?.completedPlans || [];
+  const allWithdrawablePlans = [...currentPlans, ...completedPlans.filter(p => !p.isWithdrawn && p.status !== 'Withdrawn')];
+
+  const filteredPlans = allWithdrawablePlans.filter(plan => {
+    const matchesSearch = plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (plan.tokenName && plan.tokenName.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesNetwork = selectedNetwork === 'all' || (plan.network && plan.network.toLowerCase() === selectedNetwork.toLowerCase());
+    return matchesSearch && matchesNetwork;
+  });
+
+  const openWithdrawModal = (plan: any) => {
+    const isCompleted = plan.status === 'Completed' || (plan.maturityTime ? Date.now() / 1000 >= plan.maturityTime : false);
+    setWithdrawModal({
+      isOpen: true,
+      planName: plan.name,
+      isEth: plan.isEth || false,
+      amount: plan.currentAmount || plan.amount || '0',
+      penaltyPercentage: plan.penaltyPercentage || 0,
+      tokenName: plan.tokenName || (plan.isEth ? 'ETH' : 'USDC'),
+      isCompleted: isCompleted,
+      maturityTime: plan.maturityTime,
+      contractAddress: plan.contractAddress,
+      network: plan.network,
+      startTime: plan.startTime,
+    });
   };
 
-  const handleWithdraw = async () => {
-    if (!savingName || !address || !isConnected) return;
-    try {
-      setIsWithdrawing(true);
-      setError('');
-      setSuccess('');
-
-      const contractAddress = getContractAddress(chainId);
-      const walletProvider = new ethers.BrowserProvider((window as any).ethereum);
-      const signer = await walletProvider.getSigner();
-
-      const mainContract = new ethers.Contract(contractAddress, BitSaveABI, signer);
-      const tx = await mainContract.withdrawSaving(savingName);
-      const receipt = await tx.wait();
-      setSuccess(`Successfully withdrew from "${savingName}". Tx: ${receipt.hash}`);
-      setSavingName('');
-    } catch (error) {
-      setError(`Withdrawal failed: ${handleContractError(error)}`);
-    } finally {
-      setIsWithdrawing(false);
-    }
-  };
-
-  if (!isConnected) {
+  // If auth is still resolving or data is loading, show page skeleton instead of false "Connect Wallet" screen
+  if (!isAuthHydrating && ready && !authenticated && !isConnected && !address) {
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="min-h-screen flex items-center justify-center p-4 xs:p-6"
-      >
-        <div className="max-w-md w-full mx-auto">
-          <motion.div 
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl xs:rounded-3xl shadow-2xl p-6 xs:p-8 text-center border border-white/20"
+      <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-white dark:bg-[#121212] backdrop-blur-2xl border border-gray-200/80 dark:border-white/10 rounded-3xl p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-[#81D7B4]/15 border border-[#81D7B4]/30 flex items-center justify-center mx-auto mb-5 text-[#81D7B4]">
+            <Wallet02Icon className="w-8 h-8 text-emerald-600 dark:text-[#81D7B4]" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+            Connect Your Wallet
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Please connect your wallet to view and withdraw your active savings.
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-5 bg-[#81D7B4] hover:bg-[#6BC7A0] text-white font-bold rounded-xl text-sm transition-all shadow-[0_4px_14px_rgba(129,215,180,0.35)]"
           >
-            <div className="w-16 h-16 xs:w-20 xs:h-20 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC7A0]/20 rounded-full flex items-center justify-center mx-auto mb-4 xs:mb-6">
-              <Activity01Icon className="w-8 h-8 xs:w-10 xs:h-10 text-[#81D7B4]" />
-            </div>
-            <h2 className="text-2xl xs:text-3xl font-bold bg-gradient-to-r from-[#2D5A4A] to-[#81D7B4] bg-clip-text text-transparent mb-3 xs:mb-4">
-              Connect Your Wallet
-            </h2>
-            <p className="text-gray-600 text-base xs:text-lg leading-relaxed">
-              Please connect your wallet to access withdrawal features
-            </p>
-          </motion.div>
-        </div>
-      </motion.div>
+            Go to Dashboard
+          </Link>
+        </motion.div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-4 xs:p-6 bg-gradient-to-br from-[#f8fffe] via-[#f0fffc] to-[#e8fffa]">
-      <div className="max-w-2xl mx-auto">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative"
+    <div className="min-h-screen pb-20 pt-2 px-2 sm:px-4 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Link 
+              href="/dashboard" 
+              className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-all inline-flex items-center justify-center"
+            >
+              <ArrowLeft01Icon className="w-4 h-4" />
+            </Link>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-[#81D7B4] bg-[#81D7B4]/15 px-3 py-1 rounded-full border border-[#81D7B4]/30">
+              SaveFi Protocol
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+            Withdraw <span className="font-instrument italic font-normal text-emerald-600 dark:text-[#81D7B4]">Savings</span>
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Select an active or completed savings plan to claim your funds.
+          </p>
+        </div>
+
+        <Link
+          href="/dashboard/create-savings"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#81D7B4] hover:bg-[#6BC7A0] text-white font-bold text-sm transition-all shadow-[0_4px_16px_rgba(129,215,180,0.35)] shrink-0 self-start md:self-auto"
         >
-          {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/10 to-[#6BC7A0]/10 rounded-2xl xs:rounded-3xl blur-3xl transform translate-y-8"></div>
-          
-          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl xs:rounded-3xl shadow-2xl overflow-hidden border border-white/30">
-            {/* Header with gradient background */}
-            <div className="bg-gradient-to-r from-[#81D7B4] to-[#6BC7A0] p-6 xs:p-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-              <div className="relative z-10">
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex items-center space-x-3 xs:space-x-4"
+          <PlusSignIcon className="w-4 h-4 text-white" />
+          <span>Create New Plan</span>
+        </Link>
+      </div>
+
+      {/* Filter & Search Bar */}
+      {allWithdrawablePlans.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search01Icon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search savings by name or token..."
+              className="w-full bg-white dark:bg-[#121212] border border-gray-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#81D7B4] transition-all shadow-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+            {['all', 'base', 'celo', 'lisk', 'avalanche', 'bsc'].map((net) => (
+              <button
+                key={net}
+                onClick={() => setSelectedNetwork(net)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold capitalize transition-all border shrink-0 ${
+                  selectedNetwork === net
+                    ? 'bg-[#81D7B4]/20 border-[#81D7B4]/50 text-emerald-700 dark:text-[#81D7B4]'
+                    : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/10'
+                }`}
+              >
+                {net}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Content Area */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-56 rounded-3xl bg-gray-100 dark:bg-[#121212] border border-gray-200 dark:border-white/5 animate-pulse p-6"></div>
+          ))}
+        </div>
+      ) : filteredPlans.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <AnimatePresence>
+            {filteredPlans.map((plan, index) => {
+              const currentAmt = parseFloat(plan.currentAmount || '0');
+              const targetAmt = parseFloat(plan.targetAmount || '0');
+              const progress = targetAmt > 0 ? Math.min(100, (currentAmt / targetAmt) * 100) : 100;
+              const isMature = plan.maturityTime ? (Date.now() / 1000 >= plan.maturityTime) : false;
+              const tokenLogo = getTokenLogo(plan.tokenName, plan.tokenLogo);
+              const networkKey = plan.network ? plan.network.toLowerCase() : 'celo';
+              const networkLogo = networkLogos[networkKey]?.logoUrl || `/${networkKey}.png`;
+
+              return (
+                <motion.div
+                  key={plan.id || `${plan.name}-${index}`}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="bg-white dark:bg-[#121212] backdrop-blur-xl border border-gray-200/80 dark:border-white/10 hover:border-[#81D7B4]/60 dark:hover:border-[#81D7B4]/40 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between group shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_32px_rgba(129,215,180,0.15)]"
                 >
-                  <div className="w-10 h-10 xs:w-12 xs:h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                    <Download01Icon className="w-5 h-5 xs:w-6 xs:h-6 text-white" />
-                  </div>
                   <div>
-                    <h1 className="text-2xl xs:text-3xl font-bold text-white mb-1">Withdraw Savings</h1>
-                    <p className="text-white/90 text-xs xs:text-sm">Access your saved funds securely</p>
+                    {/* Top Row: Token & Network Badges */}
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center p-1.5 shrink-0 shadow-sm">
+                          <Image
+                            src={tokenLogo}
+                            alt={plan.tokenName || 'Token'}
+                            width={24}
+                            height={24}
+                            className="object-contain"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-base font-black text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-[#81D7B4] transition-colors">
+                            {plan.name}
+                          </h3>
+                          <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {plan.tokenName || 'USDC'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/5 px-2.5 py-1 rounded-full shrink-0">
+                        <Image
+                          src={networkLogo}
+                          alt={plan.network || 'Network'}
+                          width={14}
+                          height={14}
+                          className="rounded-full"
+                        />
+                        <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300 capitalize">
+                          {plan.network || 'Celo'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Balance Display */}
+                    <div className="bg-gray-50 dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-white/5 mb-4">
+                      <div className="flex items-baseline justify-between gap-2 mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Available Balance</span>
+                        <span className="text-lg font-black text-emerald-600 dark:text-[#81D7B4] font-instrument">
+                          {currentAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {plan.tokenName || 'USDC'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden mt-2">
+                        <div 
+                          className="bg-gradient-to-r from-[#81D7B4] to-[#6BC7A0] h-full rounded-full transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Maturity & Penalty Status */}
+                    <div className="space-y-1.5 text-xs text-gray-500 dark:text-gray-400 mb-5">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1 text-[11px]">
+                          <Clock01Icon className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          Maturity:
+                        </span>
+                        <span className="font-bold text-gray-800 dark:text-gray-300 text-[11px]">
+                          {plan.maturityTime ? formatTimestamp(plan.maturityTime) : 'Flexible'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1 text-[11px]">
+                          <AlertCircleIcon className="w-3.5 h-3.5 text-amber-500" />
+                          Early Penalty:
+                        </span>
+                        <span className={`font-bold text-[11px] ${isMature ? 'text-emerald-600 dark:text-[#81D7B4]' : 'text-amber-500'}`}>
+                          {isMature ? '0% (Matured)' : `${plan.penaltyPercentage || 0}%`}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Withdraw Button */}
+                  <button
+                    onClick={() => openWithdrawModal(plan)}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#81D7B4] to-[#6BC7A0] hover:from-[#6BC7A0] hover:to-[#58B28D] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-[0_4px_14px_rgba(129,215,180,0.3)] hover:shadow-[0_6px_20px_rgba(129,215,180,0.4)] flex items-center justify-center gap-2 group-hover:scale-[1.01]"
+                  >
+                    <span>Withdraw Funds</span>
+                    <ArrowRight01Icon className="w-4 h-4 text-white" />
+                  </button>
                 </motion.div>
-              </div>
-            </div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      ) : (
+        /* Empty State embedded naturally on the page */
+        <motion.div 
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-lg mx-auto text-center py-16 px-4"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-[#81D7B4]/15 border border-[#81D7B4]/30 flex items-center justify-center mx-auto mb-4 text-[#81D7B4] shadow-[0_0_24px_rgba(129,215,180,0.15)]">
+            <PiggyBankIcon className="w-8 h-8 text-emerald-600 dark:text-[#81D7B4]" />
+          </div>
 
-            {/* Main content */}
-            <div className="p-6 xs:p-8 space-y-6 xs:space-y-8">
-              {/* Status messages */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl xs:rounded-2xl p-4 xs:p-6"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <Alert02Icon className="w-5 h-5 xs:w-6 xs:h-6 text-red-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-red-800 font-medium text-sm xs:text-base">{error}</p>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {success && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl xs:rounded-2xl p-4 xs:p-6"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <Tick01Icon className="w-5 h-5 xs:w-6 xs:h-6 text-green-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-green-800 font-medium text-sm xs:text-base">{success}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+          <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+            No Savings to Withdraw
+          </h3>
+          
+          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
+            You don&apos;t have any active or completed savings plans ready for withdrawal yet. Lock crypto into high-yield SaveFi child vaults and start earning today.
+          </p>
 
-              {/* Input section */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-4 xs:space-y-6"
-              >
-                <div className="relative">
-                  <label htmlFor="saving-name" className="block text-sm font-bold text-gray-700 mb-2 xs:mb-3">
-                    Savings Plan Name
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="saving-name"
-                      type="text"
-                      value={savingName}
-                      onChange={(e) => setSavingName(e.target.value)}
-                      placeholder="Enter your savings plan name"
-                      className="w-full px-4 xs:px-6 py-3 xs:py-4 text-base xs:text-lg border-2 border-gray-200 rounded-xl xs:rounded-2xl focus:ring-4 focus:ring-[#81D7B4]/20 focus:border-[#81D7B4] transition-all duration-300 bg-white/80 backdrop-blur-sm min-h-[48px] xs:min-h-[56px]"
-                      autoComplete="off"
-                      autoCapitalize="none"
-                      spellCheck="false"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4]/5 to-[#6BC7A0]/5 rounded-xl xs:rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </div>
-                </div>
-
-                {/* Withdraw button */}
-                <motion.button
-                  onClick={handleWithdraw}
-                  disabled={!savingName || isWithdrawing}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full relative overflow-hidden disabled:cursor-not-allowed group min-h-[56px] xs:min-h-[60px] touch-manipulation rounded-2xl xs:rounded-3xl"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-r from-[#81D7B4] to-[#6BC7A0] transition-all duration-300 ${!savingName || isWithdrawing ? 'opacity-50' : 'opacity-100'}`}></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative z-10 text-white font-bold py-3 xs:py-4 px-6 xs:px-8 rounded-2xl xs:rounded-3xl flex items-center justify-center space-x-2 xs:space-x-3 min-h-[56px] xs:min-h-[60px]">
-                    {isWithdrawing ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 xs:h-5 w-4 xs:w-5 border-2 border-white border-t-transparent"></div>
-                        <span className="text-sm xs:text-base">Processing Withdrawal...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download01Icon className="w-4 h-4 xs:w-5 xs:h-5 flex-shrink-0" />
-                        <span className="text-sm xs:text-base">Withdraw Savings</span>
-                      </>
-                    )}
-                  </div>
-                </motion.button>
-              </motion.div>
-
-              {/* Info card */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gradient-to-r from-[#81D7B4]/10 to-[#6BC7A0]/10 rounded-xl xs:rounded-2xl p-4 xs:p-6 border border-white/50"
-              >
-                <div className="flex items-start space-x-3 xs:space-x-4">
-                  <div className="w-8 h-8 xs:w-10 xs:h-10 bg-gradient-to-br from-[#81D7B4]/20 to-[#6BC7A0]/20 rounded-lg xs:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Tick01Icon className="w-4 h-4 xs:w-5 xs:h-5 text-[#81D7B4]" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-800 mb-1 xs:mb-2 text-base xs:text-lg">Secure Withdrawal</h3>
-                    <p className="text-gray-600 text-xs xs:text-sm leading-relaxed">
-                      Enter the exact name of your savings plan to initiate a secure withdrawal. 
-                      Your funds will be transferred directly to your connected wallet.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/dashboard/create-savings"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#81D7B4] hover:bg-[#6BC7A0] text-white font-bold text-sm transition-all shadow-[0_4px_16px_rgba(129,215,180,0.35)]"
+            >
+              <PlusSignIcon className="w-4 h-4 text-white" />
+              <span>Create Savings Plan</span>
+            </Link>
+            <Link
+              href="/dashboard"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white font-bold text-sm transition-all"
+            >
+              <span>Back to Dashboard</span>
+            </Link>
           </div>
         </motion.div>
-      </div>
+      )}
+
+      {/* Withdraw Modal Integration */}
+      <WithdrawModal
+        isOpen={withdrawModal.isOpen}
+        onClose={() => {
+          setWithdrawModal(prev => ({ ...prev, isOpen: false }));
+          refetch(true);
+        }}
+        planName={withdrawModal.planName}
+        isEth={withdrawModal.isEth}
+        amount={withdrawModal.amount}
+        penaltyPercentage={withdrawModal.penaltyPercentage}
+        tokenName={withdrawModal.tokenName}
+        isCompleted={withdrawModal.isCompleted}
+        maturityTime={withdrawModal.maturityTime}
+        networkLogos={networkLogos}
+        contractAddress={withdrawModal.contractAddress}
+        network={withdrawModal.network}
+        startTime={withdrawModal.startTime}
+      />
     </div>
   );
 }

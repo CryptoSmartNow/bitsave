@@ -56,26 +56,26 @@ export default function CalculatorPage() {
       <div className="w-full max-w-[1200px] space-y-8 min-w-0 relative z-10">
         
         {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-[#1C2538] pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-full mb-4 shadow-[0_0_15px_rgba(129,215,180,0.15)]">
               <CalculatorIcon className="w-4 h-4 text-[#81D7B4]" />
               <span className="text-[10px] font-bold text-[#81D7B4] uppercase tracking-widest">Projections</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-[#F9F9FB] tracking-tight">Yield Calculator</h1>
-            <p className="text-base text-[#7B8B9A] mt-2 max-w-md">Forecast your potential compound returns across different BizMarket real-world assets.</p>
+            <p className="text-base text-gray-400 mt-2 max-w-md">Forecast your potential compound returns across different BizMarket real-world assets.</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           
           {/* INPUT FORM (LEFT) */}
-          <div className="lg:col-span-5 space-y-6 sm:space-y-8 bg-gradient-to-br from-[#121A27] to-[#0A0F17] border border-[#1C2538] rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
+          <div className="lg:col-span-5 space-y-6 sm:space-y-8 bg-gradient-to-br from-[#121A27] to-[#0A0F17] border border-white/10 rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
             
             <div className="absolute inset-0 bg-gradient-to-tr from-[#81D7B4]/0 via-[#81D7B4]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
 
             <div className="relative z-10">
-              <label className="block text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-3 sm:mb-4">Select Instrument</label>
+              <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 sm:mb-4">Select Instrument</label>
               <div className="grid grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-2 sm:gap-3">
                 {INSTRUMENTS.map(inst => {
                   const isSelected = instrumentId === inst.id;
@@ -86,12 +86,12 @@ export default function CalculatorPage() {
                       className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 ${
                         isSelected 
                           ? 'border-[#81D7B4]/50 shadow-[0_0_20px_rgba(129,215,180,0.15)] scale-[1.02] sm:scale-[1.05]' 
-                          : 'bg-[#0A0F17] border-[#1C2538] hover:border-[#2C3E5D] hover:scale-[1.02] shadow-sm'
+                          : 'bg-[#0A0F17] border-white/10 hover:border-white/20 hover:scale-[1.02] shadow-sm'
                       }`}
                       style={isSelected ? { backgroundColor: `${inst.color}15`, borderColor: `${inst.color}60` } : {}}
                     >
                       <InstrumentIcon initials={inst.initials} color={isSelected ? inst.color : '#4B5A75'} size={24} />
-                      <span className={`text-[9px] sm:text-xs font-black tracking-wide ${isSelected ? 'text-[#F9F9FB]' : 'text-[#7B8B9A]'}`}>{inst.name}</span>
+                      <span className={`text-[9px] sm:text-xs font-black tracking-wide ${isSelected ? 'text-[#F9F9FB]' : 'text-gray-400'}`}>{inst.name}</span>
                     </button>
                   );
                 })}
@@ -99,11 +99,11 @@ export default function CalculatorPage() {
             </div>
 
             <div className="relative z-10">
-              <label className="block text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-3 sm:mb-4">Initial Investment</label>
+              <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 sm:mb-4">Initial Investment</label>
               <div className="relative group/input">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#81D7B4] to-[#3B82F6] rounded-2xl blur-md opacity-0 group-hover/input:opacity-20 transition-opacity duration-300"></div>
-                <div className="relative flex items-center bg-[#0A0F17] border border-[#1C2538] rounded-2xl overflow-hidden focus-within:border-[#81D7B4]/50 transition-colors shadow-inner">
-                  <span className="pl-4 sm:pl-6 text-[#7B8B9A] font-black text-lg sm:text-xl">$</span>
+                <div className="relative flex items-center bg-[#0A0F17] border border-white/10 rounded-2xl overflow-hidden focus-within:border-[#81D7B4]/50 transition-colors shadow-inner">
+                  <span className="pl-4 sm:pl-6 text-gray-400 font-black text-lg sm:text-xl">$</span>
                   <input 
                     type="number" 
                     value={amount}
@@ -117,8 +117,8 @@ export default function CalculatorPage() {
             </div>
 
             <div className="relative z-10">
-              <label className="block text-[10px] sm:text-xs font-bold text-[#7B8B9A] uppercase tracking-widest mb-3 sm:mb-4">Time Horizon</label>
-              <div className="flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 bg-[#0A0F17] border border-[#1C2538] rounded-xl sm:rounded-2xl shadow-inner">
+              <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 sm:mb-4">Time Horizon</label>
+              <div className="flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 bg-[#0A0F17] border border-white/10 rounded-xl sm:rounded-2xl shadow-inner">
                 {[1, 3, 5].map(y => (
                   <button
                     key={y}
@@ -126,7 +126,7 @@ export default function CalculatorPage() {
                     className={`flex-1 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-black transition-all duration-300 ${
                       years === y 
                         ? 'bg-[#1C2538] text-[#F9F9FB] shadow-md scale-[1.02]' 
-                        : 'text-[#4B5A75] hover:text-[#7B8B9A] hover:bg-[#121A27]'
+                        : 'text-[#4B5A75] hover:text-gray-400 hover:bg-[#1C2538]'
                     }`}
                   >
                     {y} {y === 1 ? 'Year' : 'Years'}
@@ -135,9 +135,9 @@ export default function CalculatorPage() {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-[#1C2538] relative z-10 flex flex-col gap-4">
-              <div className="flex justify-between items-center bg-[#0A0F17] p-4 rounded-xl border border-[#1C2538]">
-                <span className="text-xs font-bold text-[#7B8B9A] uppercase tracking-widest">Selected APR</span>
+            <div className="pt-6 border-t border-white/10 relative z-10 flex flex-col gap-4">
+              <div className="flex justify-between items-center bg-[#0A0F17] p-4 rounded-xl border border-white/10">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Selected APR</span>
                 <span className="text-xl font-black text-[#81D7B4] drop-shadow-[0_0_10px_rgba(129,215,180,0.3)]">
                   {selectedInstrument.isVariable ? 'Variable' : `${selectedInstrument.apr}%`}
                 </span>
@@ -153,17 +153,17 @@ export default function CalculatorPage() {
           <div className="lg:col-span-7 space-y-6 lg:space-y-8">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-              <div className="bg-gradient-to-br from-[#121A27] to-[#0A0F17] border border-[#1C2538] rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
+              <div className="bg-gradient-to-br from-[#121A27] to-[#0A0F17] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
                 <div className="absolute -right-6 -top-6 w-24 sm:w-32 h-24 sm:h-32 rounded-full bg-[#81D7B4]/5 blur-[30px] sm:blur-[40px] group-hover:bg-[#81D7B4]/15 transition-all duration-700"></div>
                 <div className="relative z-10">
-                  <p className="text-[9px] sm:text-[10px] font-bold text-[#7B8B9A] uppercase tracking-widest mb-2 sm:mb-3">Total Yield Earned</p>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 sm:mb-3">Total Yield Earned</p>
                   <p className="text-3xl sm:text-5xl font-black text-[#81D7B4] tracking-tight drop-shadow-[0_0_15px_rgba(129,215,180,0.2)]">
                     {selectedInstrument.isVariable ? 'VAR' : `+$${totalYield.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#1A2538] to-[#121A27] border border-[#2C3E5D] rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
+              <div className="bg-gradient-to-br from-[#1A2538] to-[#121A27] border border-white/20 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
                 <div className="absolute -right-6 -top-6 w-24 sm:w-32 h-24 sm:h-32 rounded-full bg-[#3B82F6]/5 blur-[30px] sm:blur-[40px] group-hover:bg-[#3B82F6]/15 transition-all duration-700"></div>
                 <div className="relative z-10">
                   <p className="text-[9px] sm:text-[10px] font-bold text-[#B8C5D6] uppercase tracking-widest mb-2 sm:mb-3">Projected Balance</p>
@@ -174,8 +174,8 @@ export default function CalculatorPage() {
               </div>
             </div>
 
-            <div className="bg-[#0A0F17]/80 backdrop-blur-xl border border-[#1C2538] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
-              <div className="p-5 sm:p-8 border-b border-[#1C2538] bg-[#121A27]">
+            <div className="bg-[#0A0F17]/80 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
+              <div className="p-5 sm:p-8 border-b border-white/10 bg-[#121A27]">
                 <h3 className="font-black text-xs sm:text-sm tracking-widest uppercase text-[#F9F9FB] flex items-center gap-3">
                   <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#81D7B4] shadow-[0_0_10px_rgba(129,215,180,0.8)]"></span>
                   Yearly Breakdown
@@ -196,21 +196,21 @@ export default function CalculatorPage() {
                       <tr>
                         <td colSpan={4} className="px-6 sm:px-8 py-16 text-center">
                           <p className="text-[#F9F9FB] font-bold text-lg mb-2">Variable APR</p>
-                          <p className="text-[#7B8B9A] text-sm">Returns depend entirely on monthly business revenue.</p>
+                          <p className="text-gray-400 text-sm">Returns depend entirely on monthly business revenue.</p>
                         </td>
                       </tr>
                     ) : projections.map((p) => {
                       const startBalance = p.totalBalance - p.yield;
                       return (
-                        <tr key={p.year} className="hover:bg-[#121A27] transition-colors group">
+                        <tr key={p.year} className="hover:bg-[#1C2538]/50 transition-colors group">
                           <td className="px-4 sm:px-8 py-4 sm:py-6 font-black text-[#F9F9FB] text-xs sm:text-sm">Year {p.year}</td>
-                          <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-bold text-[#7B8B9A] group-hover:text-[#F9F9FB] transition-colors text-xs sm:text-sm">
+                          <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-bold text-gray-400 group-hover:text-[#F9F9FB] transition-colors text-xs sm:text-sm">
                             ${startBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                           </td>
                           <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-black text-[#81D7B4] text-xs sm:text-sm">
                             +${p.yield.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                           </td>
-                          <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-black text-[#F9F9FB] bg-[#121A27]/50 text-xs sm:text-sm">
+                          <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-black text-[#F9F9FB] bg-[#1C2538]/30 text-xs sm:text-sm">
                             ${p.totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                           </td>
                         </tr>

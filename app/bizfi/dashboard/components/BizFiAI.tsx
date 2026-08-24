@@ -184,7 +184,7 @@ export default function BizFiAI() {
           </div>
         </div>
         {currentMessages.length > 0 && (
-          <button onClick={clearHistory} className="flex items-center gap-2 px-4 py-2 bg-[#1A2538] border border-[#7B8B9A]/30 text-[#7B8B9A] hover:text-red-400 hover:border-red-400/50 rounded-xl text-sm font-bold transition-all">
+          <button onClick={clearHistory} className="flex items-center gap-2 px-4 py-2 bg-[#1A2538] border border-[#7B8B9A]/30 text-gray-400 hover:text-red-400 hover:border-red-400/50 rounded-xl text-sm font-bold transition-all">
             <Delete02Icon className="w-4 h-4" /> Clear
           </button>
         )}
@@ -198,8 +198,8 @@ export default function BizFiAI() {
             onClick={() => setMode(m.key)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
               mode === m.key
-                ? 'bg-[#0F1825] border border-[#81D7B4]/30 text-[#81D7B4] shadow-md'
-                : 'text-[#7B8B9A] hover:text-[#F9F9FB]'
+                ? 'bg-[#121212] border border-[#81D7B4]/30 text-[#81D7B4] shadow-md'
+                : 'text-gray-400 hover:text-[#F9F9FB]'
             }`}
           >
             {m.icon} {m.label}
@@ -221,7 +221,7 @@ export default function BizFiAI() {
                 <button
                   key={p.label}
                   onClick={() => sendMessage(p.prompt)}
-                  className="flex items-center gap-3 px-4 py-3.5 bg-[#0F1825] border border-[#7B8B9A]/20 hover:border-[#81D7B4] hover:bg-[#81D7B4]/10 hover:shadow-[0_8px_25px_rgba(129,215,180,0.15)] rounded-2xl text-sm font-bold text-[#F9F9FB] transition-all group text-left"
+                  className="flex items-center gap-3 px-4 py-3.5 bg-[#121212] border border-[#7B8B9A]/20 hover:border-[#81D7B4] hover:bg-[#81D7B4]/10 hover:shadow-[0_8px_25px_rgba(129,215,180,0.15)] rounded-2xl text-sm font-bold text-[#F9F9FB] transition-all group text-left"
                 >
                   <div className="shrink-0 w-9 h-9 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-colors">
                     {p.icon}
@@ -246,7 +246,7 @@ export default function BizFiAI() {
                     className={`max-w-[85%] sm:max-w-[75%] px-5 py-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === 'user'
                         ? 'bg-[#81D7B4] text-white font-bold rounded-br-md'
-                        : 'bg-[#0F1825] text-white border border-[#7B8B9A]/20 font-medium rounded-bl-md markdown-content'
+                        : 'bg-[#121212] text-white border border-[#7B8B9A]/20 font-medium rounded-bl-md markdown-content'
                     }`}
                     dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? msg.content : marked.parse(msg.content) as string }}
                   />
@@ -256,7 +256,7 @@ export default function BizFiAI() {
 
             {isLoading && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                <div className="bg-[#0F1825] border border-[#7B8B9A]/20 px-5 py-4 rounded-2xl rounded-bl-md">
+                <div className="bg-[#121212] border border-[#7B8B9A]/20 px-5 py-4 rounded-2xl rounded-bl-md">
                   <div className="flex gap-1.5">
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -293,7 +293,7 @@ export default function BizFiAI() {
             <SentIcon className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-[10px] text-[#7B8B9A] text-center mt-2 font-medium">
+        <p className="text-[10px] text-gray-400 text-center mt-2 font-medium">
           BizFi AI provides general guidance, not financial or legal advice. Powered by ChainGPT.
         </p>
       </div>

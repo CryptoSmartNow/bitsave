@@ -1,6 +1,5 @@
-// Contract error handling utility focused on extracting precise contract errors
+// Contract error handling utility focused on extracting precise, user-friendly contract errors
 
-// Attempt to extract the most precise revert reason or custom error name
 const extractPreciseContractError = (error: unknown): string => {
   const e = error as Record<string, any> | undefined;
 
@@ -37,76 +36,55 @@ const extractPreciseContractError = (error: unknown): string => {
 };
 
 /**
- * Handles child contract custom errors and provides user-friendly error messages
- * @param error - The error object from the contract interaction
- * @returns A user-friendly error message
- */
-export const handleChildContractError = (error: unknown): string => {
-  // Prefer precise contract-derived reason or custom error name
-  const precise = extractPreciseContractError(error);
-  if (precise) return precise;
-
-  const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
-
-  // Solana specific errors
-  if (errorString.includes('custom program error: 0x0') || errorString.includes('error: 0x0') || errorString.includes('code: 0x0')) {
-    return 'Insufficient mock tokens (USDC/USDT/cNGN) or SOL in your Solana wallet to complete this savings plan.';
-  }
-  if (errorString.includes('attempt to debit an account')) {
-    return 'Your Solana wallet has zero SOL. Please request free SOL from the Devnet faucet (https://faucet.solana.com) to pay for transaction fees.';
-  }
-  if (errorString.includes('constrainttokenowner')) {
-    return 'ConstraintTokenOwner: Admin public key mismatch on-chain.';
-  }
-  if (errorString.includes('plugin closed')) {
-    return 'The transaction signing request was rejected or the wallet plugin was closed.';
-  }
-
-  // Short, non-verbose fallbacks
-  if (errorString.includes('callnotfrombitsave')) return 'CallNotFromBitsave';
-  if (errorString.includes('invalidsaving')) return 'InvalidSaving';
-  if (errorString.includes('invalidtime')) return 'InvalidTime';
-  if (errorString.includes('insufficient funds')) return 'Insufficient funds';
-  if (errorString.includes('user rejected') || errorString.includes('user denied')) return 'User rejected transaction';
-  if (errorString.includes('gas')) return 'Gas estimation failed';
-  if (errorString.includes('network')) return 'Network error';
-
-  return 'Transaction failed';
-};
-
-/**
- * Handles main contract custom errors and provides user-friendly error messages
- * @param error - The error object from the contract interaction
- * @returns A user-friendly error message
- */
-export const handleMainContractError = (error: unknown): string => {
-  // Prefer precise contract-derived reason or custom error name
-  const precise = extractPreciseContractError(error);
-  if (precise) return precise;
-
-  const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
-
-  // Short, non-verbose fallbacks for known custom errors
-  if (errorString.includes('amountnotenough')) return 'AmountNotEnough';
-  if (errorString.includes('cannotwithdrawtoken')) return 'CanNotWithdrawToken';
-  if (errorString.includes('mastercallrequired')) return 'MasterCallRequired';
-  if (errorString.includes('notenoughtopaygasfee')) return 'NotEnoughToPayGasFee';
-  if (errorString.includes('notsupported')) return 'NotSupported';
-  if (errorString.includes('usernotregistered')) return 'UserNotRegistered';
-
-  // Fall back to common short messages
-  return handleChildContractError(error);
-};
-
-/**
- * Determines which error handler to use based on the contract type
- * @param error - The error object from the contract interaction
- * @param contractType - 'main' or 'child' contract type
- * @returns A user-friendly error message
+ * Handles contract custom errors and converts technical RPC/EVM faults into crystal-clear explanations.
  */
 export const handleContractError = (error: unknown, contractType: 'main' | 'child' = 'main'): string => {
-  if (contractType === 'child') {
-    return handleChildContractError(error);
+  const precise = extractPreciseContractError(error);
+  const errorString = ((error as { message?: string })?.message || String(error || '')).toLowerCase();
+
+  // 1. User rejection
+  if (errorString.includes('user rejected') || errorString.includes('user denied') || errorString.includes('action_rejected')) {
+    return 'Transaction was cancelled in your wallet.';
   }
-  return handleMainContractError(error);
+
+  // 2. Insufficient token / native funds
+  if (errorString.includes('insufficient funds') || errorString.includes('insufficient balance') || errorString.includes('exceeds balance')) {
+    return 'Insufficient balance in your wallet to cover the deposit amount and gas fees.';
+  }
+
+  // 3. Known custom contract errors
+  if (precise === 'AmountNotEnough' || errorString.includes('amountnotenough')) {
+    return 'The savings amount entered is below the minimum required deposit for this plan.';
+  }
+  if (precise === 'NotEnoughToPayGasFee' || errorString.includes('notenoughtopaygasfee')) {
+    return 'Your wallet has insufficient native tokens to pay the protocol network fee.';
+  }
+  if (precise === 'InvalidTime' || errorString.includes('invalidtime')) {
+    return 'Target unlock date must be in the future.';
+  }
+  if (precise === 'CallNotFromBitsave' || precise === 'UserNotRegistered' || errorString.includes('callnotfrombitsave')) {
+    return 'Your BitSave vault account is not initialized yet. Please approve the initial vault setup transaction.';
+  }
+  if (precise === 'CanNotWithdrawToken' || errorString.includes('cannotwithdrawtoken')) {
+    return 'This token cannot be withdrawn at this time.';
+  }
+
+  // 4. Missing revert data (estimateGas failure / simulation revert)
+  if (errorString.includes('missing revert data') || errorString.includes('call_exception') || errorString.includes('cannot estimate gas')) {
+    return 'Transaction simulation failed. Please ensure your wallet has sufficient stablecoins and native tokens (ETH/CELO/BNB/AVAX) for gas fees.';
+  }
+
+  // 5. Network / RPC errors
+  if (errorString.includes('failed to fetch') || errorString.includes('econnrefused') || errorString.includes('network request failed') || errorString.includes('could not detect network') || (errorString.includes('network error') && !errorString.includes('switch'))) {
+    return 'Network connection issue with the blockchain RPC node. Please check your internet connection and try again.';
+  }
+
+  if (precise && precise.length > 3) {
+    return precise;
+  }
+
+  return ((error as { message?: string })?.message || 'Transaction failed onchain. Please check your wallet balance and try again.');
 };
+
+export const handleChildContractError = (error: unknown): string => handleContractError(error, 'child');
+export const handleMainContractError = (error: unknown): string => handleContractError(error, 'main');

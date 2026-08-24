@@ -74,7 +74,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex bg-[#0F1825] p-1 rounded-xl border border-[#7B8B9A]/10">
+            <div className="flex bg-[#121212] p-1 rounded-xl border border-[#7B8B9A]/10">
               <button
                 onClick={() => setStep('edit')}
                 className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${step === 'edit'
@@ -96,7 +96,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#0F1825] border border-[#7B8B9A]/10 text-[#9BA8B5] hover:text-[#F9F9FB] hover:border-[#81D7B4]/30 hover:bg-[#1A2538] transition-all"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#121212] border border-[#7B8B9A]/10 text-[#9BA8B5] hover:text-[#F9F9FB] hover:border-[#81D7B4]/30 hover:bg-[#1A2538] transition-all"
             >
               <Cancel01Icon className="w-5 h-5" />
             </button>
@@ -104,7 +104,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-[#0F1825]/50 relative">
+        <div className="flex-1 overflow-y-auto bg-[#121212]/50 relative">
           <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none" />
 
           {step === 'edit' ? (
@@ -135,7 +135,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
                         value={formData.borrowerAddress}
                         onChange={handleInputChange}
                         placeholder="Street, City, State"
-                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-[#7B8B9A]/30"
+                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-gray-400/30"
                       />
                     </div>
                   </div>
@@ -155,7 +155,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
                         value={formData.principalSum}
                         onChange={handleInputChange}
                         placeholder="e.g. $5,000"
-                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-[#7B8B9A]/30"
+                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-gray-400/30"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -166,7 +166,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
                         value={formData.tenor}
                         onChange={handleInputChange}
                         placeholder="e.g. 12 months"
-                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-[#7B8B9A]/30"
+                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-gray-400/30"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -177,7 +177,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
                         value={formData.interestRate}
                         onChange={handleInputChange}
                         placeholder="e.g. 5%"
-                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-[#7B8B9A]/30"
+                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-gray-400/30"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -198,7 +198,7 @@ export default function LoanAgreementEditor({ business, onClose, onSave }: LoanA
                         onChange={handleInputChange}
                         rows={4}
                         placeholder="Describe how the loan will be repaid..."
-                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-[#7B8B9A]/30 resize-none"
+                        className="w-full px-4 py-3 bg-[#1A2538]/50 border border-[#7B8B9A]/10 rounded-xl text-[#F9F9FB] focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#1A2538] transition-all placeholder:text-gray-400/30 resize-none"
                       />
                     </div>
                   </div>

@@ -136,17 +136,17 @@ export default function BizswapChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 w-[380px] h-[600px] max-h-[80vh] bg-[#0A0F17] border border-[#1C2538] rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 w-[380px] h-[600px] max-h-[80vh] bg-[#121212] border border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-[#1C2538] border-b border-[#2C3E5D]">
+            <div className="flex items-center justify-between p-4 bg-[#1C2538] border-b border-white/20">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#81D7B4]/10 rounded-full flex items-center justify-center border border-[#81D7B4]/20">
                   <BotIcon className="w-5 h-5 text-[#81D7B4]" />
                 </div>
                 <div>
                   <h3 className="text-[#F9F9FB] font-bold text-sm">BizAgent</h3>
-                  <p className="text-[#7B8B9A] text-xs flex items-center gap-1">
+                  <p className="text-gray-400 text-xs flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse"></span>
                     Online
                   </p>
@@ -154,7 +154,7 @@ export default function BizswapChatBot() {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#2C3E5D] rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-[#F9F9FB] hover:bg-[#2C3E5D] rounded-lg transition-colors"
               >
                 <Cancel01Icon className="w-5 h-5" />
               </button>
@@ -171,7 +171,7 @@ export default function BizswapChatBot() {
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
                       msg.role === 'user'
                         ? 'bg-[#81D7B4] text-[#0A0F17] rounded-br-sm'
-                        : 'bg-[#1C2538] text-[#F9F9FB] border border-[#2C3E5D] rounded-bl-sm'
+                        : 'bg-[#1C2538] text-[#F9F9FB] border border-white/20 rounded-bl-sm'
                     }`}
                   >
                     {msg.role === 'user' ? (
@@ -184,7 +184,7 @@ export default function BizswapChatBot() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#1C2538] border border-[#2C3E5D] text-[#F9F9FB] rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
+                  <div className="bg-[#1C2538] border border-white/20 text-[#F9F9FB] rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce"></span>
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce delay-100"></span>
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce delay-200"></span>
@@ -195,14 +195,14 @@ export default function BizswapChatBot() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-[#1C2538] bg-[#0A0F17]">
+            <div className="p-4 border-t border-white/10 bg-[#121212]">
               <form onSubmit={handleSubmit} className="relative">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask about BizShares..."
-                  className="w-full bg-[#1C2538] border border-[#2C3E5D] rounded-xl pl-4 pr-12 py-3 text-sm text-[#F9F9FB] placeholder:text-[#7B8B9A] focus:outline-none focus:border-[#81D7B4] transition-colors"
+                  className="w-full bg-[#1C2538] border border-white/20 rounded-xl pl-4 pr-12 py-3 text-sm text-[#F9F9FB] placeholder:text-gray-400 focus:outline-none focus:border-[#81D7B4] transition-colors"
                 />
                 <button
                   type="submit"

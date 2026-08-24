@@ -30,6 +30,7 @@ export default function HistoryPage() {
 
   const [instrumentFilter, setInstrumentFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,9 +57,15 @@ export default function HistoryPage() {
   };
 
   const filteredHistory = payments.filter(h => {
+    const matchSearch = !searchQuery ||
+      (h.instrument || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.txHash || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.status || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.currency || '').toLowerCase().includes(searchQuery.toLowerCase());
+    
     const matchInstrument = instrumentFilter === 'All' || h.instrument === instrumentFilter;
-    const isPending = h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying');
-    const isFailed = h.txHash.includes('Failed');
+    const isPending = h.txHash.includes('Pending') || h.txHash.includes('Processing') || h.txHash.includes('Retrying') || h.status === 'pending' || h.status === 'processing';
+    const isFailed = h.txHash.includes('Failed') || h.status === 'failed' || h.status === 'expired' || h.status === 'cancelled';
     const isCompleted = !isPending && !isFailed;
     
     const matchStatus = statusFilter === 'All' 
@@ -67,8 +74,29 @@ export default function HistoryPage() {
       : statusFilter === 'Pending' ? isPending
       : isFailed;
       
-    return matchInstrument && matchStatus;
+    return matchSearch && matchInstrument && matchStatus;
   });
+
+  const exportCSV = () => {
+    if (filteredHistory.length === 0) return;
+    const headers = ['Date', 'Instrument', 'Amount', 'Currency', 'Status', 'TxHash'];
+    const rows = filteredHistory.map(p => [
+      `"${new Date(p.date).toISOString()}"`,
+      `"${p.instrument}"`,
+      p.amount,
+      `"${p.currency || 'USDC'}"`,
+      `"${p.status || (p.txHash.includes('Pending') ? 'Pending' : p.txHash.includes('Failed') ? 'Failed' : 'Completed')}"`,
+      `"${p.txHash}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `bizswap_payment_history_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
@@ -150,6 +178,8 @@ export default function HistoryPage() {
               <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B5A75]" />
               <input 
                 type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search history..." 
                 className="w-full bg-[#0A0F17] border border-[#1C2538] rounded-xl pl-9 pr-4 py-2.5 text-sm font-bold text-[#F9F9FB] outline-none focus:border-[#81D7B4]/50 transition-colors shadow-inner placeholder:font-normal placeholder:text-[#4B5A75]"
               />
@@ -157,7 +187,7 @@ export default function HistoryPage() {
             <div className="bg-[#0A0F17] border border-[#1C2538] rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-inner w-full sm:w-auto">
               <FilterIcon className="w-4 h-4 text-[#4B5A75]" />
               <select 
-                className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none w-full"
+                className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none w-full cursor-pointer"
                 value={instrumentFilter}
                 onChange={(e) => setInstrumentFilter(e.target.value)}
               >
@@ -170,7 +200,7 @@ export default function HistoryPage() {
             <div className="bg-[#0A0F17] border border-[#1C2538] rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-inner w-full sm:w-auto">
               <Activity01Icon className="w-4 h-4 text-[#4B5A75]" />
               <select 
-                className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none w-full"
+                className="bg-transparent text-sm font-bold text-[#F9F9FB] outline-none w-full cursor-pointer"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -181,7 +211,11 @@ export default function HistoryPage() {
               </select>
             </div>
           </div>
-          <button className="flex items-center justify-center gap-2 text-xs font-bold text-[#F9F9FB] hover:text-[#81D7B4] border border-[#1C2538] bg-[#0A0F17] px-4 py-2.5 rounded-xl transition-colors shadow-sm w-full md:w-auto shrink-0">
+          <button 
+            onClick={exportCSV}
+            disabled={filteredHistory.length === 0}
+            className="flex items-center justify-center gap-2 text-xs font-bold text-[#F9F9FB] hover:text-[#81D7B4] border border-[#1C2538] bg-[#0A0F17] px-4 py-2.5 rounded-xl transition-colors shadow-sm w-full md:w-auto shrink-0 cursor-pointer disabled:opacity-50"
+          >
             <Download01Icon className="w-4 h-4" />
             Export CSV
           </button>

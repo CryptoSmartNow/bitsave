@@ -4,9 +4,11 @@ import { Menu01Icon, Cancel01Icon, ArrowUpRight01Icon } from "hugeicons-react";
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import LanguageSelector from '@/components/LanguageSelector';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePrivy, useLogin } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -19,8 +21,24 @@ const navLinks = [
 
 const Header = memo(function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { authenticated, ready } = usePrivy();
+  const { isConnected: isWagmiConnected } = useAccount();
+  const { login: privyLogin } = useLogin({
+    onComplete: () => {
+      router.push('/dashboard');
+    },
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const handleLaunchApp = () => {
+    if (ready && (authenticated || isWagmiConnected)) {
+      router.push('/dashboard');
+    } else {
+      privyLogin();
+    }
+  };
 
   // Handle scroll effect
   useEffect(() => {
@@ -57,8 +75,8 @@ const Header = memo(function Header() {
                 alt="BitSave logo"
                 width={140}
                 height={40}
-                className="h-8 w-auto sm:h-9 transition-transform duration-300 group-hover:scale-105"
                 priority
+                className="h-8 w-auto sm:h-9 transition-transform duration-300 group-hover:scale-105"
               />
             </div>
           </Link>
@@ -112,13 +130,12 @@ const Header = memo(function Header() {
           {/* Right Actions */}
           <div className="hidden xl:flex items-center space-x-4">
             <LanguageSelector />
-            <Link
-              href="/dashboard"
-              prefetch={false}
-              className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#5fb392] text-white px-5 py-2 text-[13px] rounded-xl font-bold transition-all duration-300 shadow-[0_4px_14px_rgba(129,215,180,0.4)] hover:shadow-[0_6px_20px_rgba(129,215,180,0.5)] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shimmer-btn tracking-wide"
+            <button
+              onClick={handleLaunchApp}
+              className="bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] hover:from-[#6BC5A0] hover:to-[#5fb392] text-white px-5 py-2 text-[13px] rounded-xl font-bold transition-all duration-300 shadow-[0_4px_14px_rgba(129,215,180,0.4)] hover:shadow-[0_6px_20px_rgba(129,215,180,0.5)] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shimmer-btn tracking-wide cursor-pointer"
             >
               Launch App
-            </Link>
+            </button>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -206,14 +223,15 @@ const Header = memo(function Header() {
               transition={{ delay: 0.5, type: "spring", damping: 20 }}
               className="mt-auto pt-8 flex flex-col gap-4"
             >
-              <Link
-                href="/dashboard"
-                prefetch={false}
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white text-center text-lg font-bold py-4 rounded-2xl shadow-xl shadow-[#81D7B4]/20 font-display"
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLaunchApp();
+                }}
+                className="w-full bg-gradient-to-r from-[#81D7B4] to-[#6BC5A0] text-white text-center text-lg font-bold py-4 rounded-2xl shadow-xl shadow-[#81D7B4]/20 font-display cursor-pointer"
               >
                 Launch App
-              </Link>
+              </button>
               <div className="flex justify-center py-4">
                 <LanguageSelector />
               </div>

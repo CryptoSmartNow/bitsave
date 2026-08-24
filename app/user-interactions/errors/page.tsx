@@ -1,7 +1,27 @@
 'use client';
 
-import { Alert01Icon, Shield01Icon, GlobeIcon, Wallet01Icon, FlashIcon, Tick01Icon, CloudServerIcon, Cancel01Icon, Search01Icon, FilterIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowLeft01Icon, ArrowRight01Icon } from "hugeicons-react";
-import { useState, useEffect } from 'react';
+import { 
+  Alert01Icon, 
+  Alert02Icon,
+  Shield01Icon, 
+  GlobeIcon, 
+  Wallet01Icon, 
+  FlashIcon, 
+  Tick01Icon, 
+  CloudServerIcon, 
+  Cancel01Icon, 
+  Search01Icon, 
+  FilterIcon, 
+  ArrowDown01Icon, 
+  ArrowUp01Icon, 
+  ArrowLeft01Icon, 
+  ArrowRight01Icon,
+  Copy01Icon,
+  CheckmarkCircle01Icon,
+  UserIcon,
+  RefreshIcon
+} from "hugeicons-react";
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserInteraction } from '@/lib/interactionTracker';
@@ -13,15 +33,15 @@ const categorizeError = (error: string): string => {
   if (lowerError.includes('gas') || lowerError.includes('fee')) return 'Gas/Fee';
   if (lowerError.includes('network') || lowerError.includes('connection') || lowerError.includes('rpc')) return 'Network';
   if (lowerError.includes('wallet') || lowerError.includes('metamask') || lowerError.includes('provider')) return 'Wallet';
-  if (lowerError.includes('contract') || lowerError.includes('revert') || lowerError.includes('execution')) return 'Smart Contract';
+  if (lowerError.includes('contract') || lowerError.includes('revert') || lowerError.includes('execution') || lowerError.includes('call_exception')) return 'Smart Contract';
   if (lowerError.includes('validation') || lowerError.includes('invalid')) return 'Validation';
-  if (lowerError.includes('api') || lowerError.includes('server') || lowerError.includes('500')) return 'API/CloudServerIcon';
-  return 'Unknown';
+  if (lowerError.includes('api') || lowerError.includes('server') || lowerError.includes('500')) return 'API/Server';
+  return 'General';
 };
 
 const isCriticalError = (error: string): boolean => {
   const lowerError = error.toLowerCase();
-  return lowerError.includes('revert') || lowerError.includes('failed') || lowerError.includes('rejected') || lowerError.includes('insufficient funds');
+  return lowerError.includes('revert') || lowerError.includes('call_exception') || lowerError.includes('rejected') || lowerError.includes('insufficient funds');
 };
 
 export default function ErrorAnalyticsPage() {
@@ -32,64 +52,75 @@ export default function ErrorAnalyticsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedError, setExpandedError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const itemsPerPage = 12;
+
+  const fetchErrors = async (manual = false) => {
+    if (manual) setIsRefreshing(true);
+    try {
+      const response = await fetch('/api/user-interactions?limit=1500');
+      const data = await response.json();
+      const rawList = Array.isArray(data) ? data : data.interactions || [];
+      const errorData = rawList.filter((i: UserInteraction) => 
+        i.type.includes('error') || (i.data as any)?.error
+      );
+      setInteractions(errorData);
+    } catch (error) {
+      console.error('Error fetching errors:', error);
+    } finally {
+      setLoading(false);
+      if (manual) setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchInteractions = async () => {
-      try {
-        const response = await fetch('/api/user-interactions?limit=1000');
-        const data = await response.json();
-        // Filter only interactions with errors
-        const errorData = data.filter((i: UserInteraction) => 
-          i.type.includes('error') || (i.data as any)?.error
-        );
-        setInteractions(errorData);
-      } catch (error) {
-        console.error('Error fetching interactions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInteractions();
+    fetchErrors();
   }, []);
 
-  const filteredErrors = interactions.filter(interaction => {
-    const errorMsg = (interaction.data as any)?.error || 'Unknown Error';
-    const category = categorizeError(errorMsg);
-    const matchesFilter = filter === 'All' || category === filter;
-    const matchesSearch = errorMsg.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (interaction.walletAddress || '').toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const errorCategories = useMemo(() => {
+    return interactions.reduce((acc, curr) => {
+      const errorMsg = (curr.data as any)?.error || curr.type || 'Unknown Error';
+      const category = categorizeError(errorMsg);
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [interactions]);
 
-  const totalPages = Math.ceil(filteredErrors.length / itemsPerPage);
+  const filteredErrors = useMemo(() => {
+    return interactions.filter(interaction => {
+      const errorMsg = (interaction.data as any)?.error || interaction.type || 'Unknown Error';
+      const category = categorizeError(errorMsg);
+      const matchesFilter = filter === 'All' || category === filter;
+      const matchesSearch = !searchTerm ||
+        errorMsg.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (interaction.walletAddress || '').toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+  }, [interactions, filter, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredErrors.length / itemsPerPage));
   const paginatedErrors = filteredErrors.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const errorCategories = interactions.reduce((acc, curr) => {
-    const errorMsg = (curr.data as any)?.error || 'Unknown Error';
-    const category = categorizeError(errorMsg);
-    acc[category] = (acc[category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Smart Contract': return <Shield01Icon className="w-5 h-5" />;
-      case 'Network': return <GlobeIcon className="w-5 h-5" />;
-      case 'Wallet': return <Wallet01Icon className="w-5 h-5" />;
-      case 'Gas/Fee': return <FlashIcon className="w-5 h-5" />;
-      case 'Validation': return <Tick01Icon className="w-5 h-5" />;
-      case 'API/CloudServerIcon': return <CloudServerIcon className="w-5 h-5" />;
-      default: return <Alert01Icon className="w-5 h-5" />;
+      case 'Smart Contract': return <Shield01Icon className="w-4 h-4" />;
+      case 'Network': return <GlobeIcon className="w-4 h-4" />;
+      case 'Wallet': return <Wallet01Icon className="w-4 h-4" />;
+      case 'Gas/Fee': return <FlashIcon className="w-4 h-4" />;
+      case 'Validation': return <Tick01Icon className="w-4 h-4" />;
+      case 'API/Server': return <CloudServerIcon className="w-4 h-4" />;
+      default: return <Alert01Icon className="w-4 h-4" />;
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    return 'bg-[#81D7B4]/10 text-[#81D7B4]';
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   if (loading) {
@@ -97,189 +128,268 @@ export default function ErrorAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Error Analytics</h1>
-        <p className="text-sm sm:text-base text-slate-500 mt-1">Diagnose and resolve system issues.</p>
-      </div>
-
-      {/* Error Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Object.entries(errorCategories).map(([category, count]) => (
-          <div key={category} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${getCategoryColor(category)}`}>
-                {getCategoryIcon(category)}
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-slate-700">{category}</h3>
-                <p className="text-xs text-slate-500">Errors</p>
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-slate-900">{count}</span>
+    <div className="font-sans text-gray-900 dark:text-white space-y-8 pb-20">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-200/80 dark:border-white/10">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-lg bg-red-500/15 text-red-500 border border-red-500/25 text-[10px] font-black uppercase tracking-wider">
+              Error Telemetry
+            </span>
+            <span className="text-xs text-gray-400">Crash & Revert Diagnostics</span>
           </div>
-        ))}
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 dark:text-white font-display">
+            Error Logs & Diagnostics
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Real-time exception tracking, EVM revert traces, and user failure analysis.
+          </p>
+        </div>
+
+        <button
+          onClick={() => fetchErrors(true)}
+          disabled={isRefreshing}
+          className="px-3.5 py-2 rounded-2xl bg-white dark:bg-[#0c121e] border border-gray-200/80 dark:border-white/10 hover:border-[#81D7B4] text-gray-700 dark:text-gray-200 text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+        >
+          <RefreshIcon className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#81D7B4]' : ''}`} />
+          <span>{isRefreshing ? 'Scanning...' : 'Scan Errors'}</span>
+        </button>
       </div>
 
-      {/* Main Content */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Controls */}
-        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full md:w-96">
-            <Search01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input 
+      {/* ── Category Breakdown Cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <button
+          type="button"
+          onClick={() => { setFilter('All'); setCurrentPage(1); }}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+            filter === 'All'
+              ? 'bg-[#81D7B4]/15 border-[#81D7B4] shadow-xs'
+              : 'bg-white dark:bg-[#0c121e] border-gray-200/80 dark:border-white/10 hover:border-[#81D7B4]/50'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">All Errors</span>
+            <Alert02Icon className="w-4 h-4 text-[#81D7B4]" />
+          </div>
+          <p className="text-xl font-black font-instrument text-gray-900 dark:text-white">
+            {interactions.length}
+          </p>
+        </button>
+
+        {Object.entries(errorCategories).map(([category, count]) => {
+          const isSelected = filter === category;
+          return (
+            <button
+              key={category}
+              type="button"
+              onClick={() => { setFilter(category); setCurrentPage(1); }}
+              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-red-500/15 border-red-500 shadow-xs'
+                  : 'bg-white dark:bg-[#0c121e] border-gray-200/80 dark:border-white/10 hover:border-red-500/50'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{category}</span>
+                <span className="text-red-500">{getCategoryIcon(category)}</span>
+              </div>
+              <p className="text-xl font-black font-instrument text-gray-900 dark:text-white">
+                {count}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Error Log Table / Feed Container ── */}
+      <div className="bg-white dark:bg-[#0c121e] rounded-3xl border border-gray-200/80 dark:border-white/10 shadow-xs overflow-hidden">
+        {/* Filter / Search Bar */}
+        <div className="p-5 border-b border-gray-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50/50 dark:bg-white/[0.02]">
+          <div className="relative w-full sm:w-80">
+            <Search01Icon className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
               type="text"
-              placeholder="Search by error message or wallet address..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#81D7B4]"
+              placeholder="Search error msg, address, or revert code..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-9 pr-3.5 py-2 rounded-xl text-xs bg-white dark:bg-[#141d2d] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#81D7B4]"
             />
           </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <FilterIcon className="w-4 h-4 text-gray-500" />
-            <select 
-              className="bg-gray-50 border border-gray-200 text-slate-700 text-sm rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="All">All Categories</option>
-              {Object.keys(errorCategories).map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto text-xs text-gray-400">
+            <span>Showing <strong className="text-gray-900 dark:text-white font-bold">{filteredErrors.length}</strong> matching records</span>
           </div>
         </div>
 
-        {/* Error ListView */}
-        <div className="divide-y divide-gray-100">
-          {filteredErrors.length === 0 ? (
-            <div className="p-12 text-center">
-              <Tick01Icon className="w-12 h-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900">No Errors Found</h3>
-              <p className="text-slate-500">Great job! The system is running smoothly.</p>
+        {/* List View */}
+        <div className="divide-y divide-gray-100 dark:divide-white/5">
+          {paginatedErrors.length === 0 ? (
+            <div className="p-16 text-center">
+              <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                <Tick01Icon className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-black text-gray-900 dark:text-white font-display">No System Errors Reported</h3>
+              <p className="text-xs text-gray-400 mt-1">All telemetry interactions and protocol contracts are functioning cleanly.</p>
             </div>
           ) : (
-            <>
-              {paginatedErrors.map((error) => {
-                const errorMsg = (error.data as any)?.error || 'Unknown Error';
-                const isCritical = isCriticalError(errorMsg);
-                const isExpanded = expandedError === error.id;
+            paginatedErrors.map((item) => {
+              const errorMsg = (item.data as any)?.error || item.type || 'Unknown Error';
+              const category = categorizeError(errorMsg);
+              const isCritical = isCriticalError(errorMsg);
+              const isExpanded = expandedError === item.id;
+              const wallet = item.walletAddress || 'Anonymous';
 
-                return (
-                  <div key={error.id} className="group">
-                    <div 
-                      className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-between ${isExpanded ? 'bg-gray-50' : ''}`}
-                      onClick={() => setExpandedError(isExpanded ? null : error.id)}
-                    >
-                      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div className={`p-2 rounded-full ${isCritical ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
-                          <Alert01Icon className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-medium text-slate-900 truncate">{errorMsg}</h4>
-                            {isCritical && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wide">
-                                Critical
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                            <span>{new Date(error.timestamp).toLocaleString()}</span>
-                            <span>•</span>
-                            <span className="font-mono">{(error.walletAddress || 'Anonymous').slice(0, 6)}...{(error.walletAddress || 'Anonymous').slice(-4)}</span>
-                          </p>
-                        </div>
+              return (
+                <div key={item.id} className="group transition-colors">
+                  <div
+                    onClick={() => setExpandedError(isExpanded ? null : item.id)}
+                    className={`p-4 sm:p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors ${
+                      isExpanded ? 'bg-gray-50 dark:bg-white/[0.03]' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${
+                        isCritical ? 'bg-red-500/15 text-red-500' : 'bg-amber-500/15 text-amber-500'
+                      }`}>
+                        <Alert01Icon className="w-4 h-4" />
                       </div>
-                      <div className="ml-4">
-                        {isExpanded ? <ArrowUp01Icon className="w-5 h-5 text-gray-400" /> : <ArrowDown01Icon className="w-5 h-5 text-gray-400" />}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate max-w-xl font-mono">
+                            {errorMsg}
+                          </h4>
+                          {isCritical && (
+                            <span className="px-2 py-0.2 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-500/15 text-red-500 border border-red-500/25">
+                              Critical
+                            </span>
+                          )}
+                          <span className="px-2 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-white/5 text-gray-500">
+                            {category}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-[11px] text-gray-400 mt-1">
+                          <span className="font-mono">{wallet !== 'Anonymous' ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : 'Guest'}</span>
+                          <span>•</span>
+                          <span>{new Date(item.timestamp).toLocaleString()}</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Expanded Detail View */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div 
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden bg-gray-50 border-b border-gray-100"
-                        >
-                          <div className="p-4 sm:pl-16 pl-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Error Context</h5>
-                              <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg text-xs overflow-x-auto">
-                                {JSON.stringify(error.data, null, 2)}
-                              </pre>
-                            </div>
-                            <div>
-                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">User Details</h5>
-                              <div className="bg-white p-3 rounded-lg border border-gray-200 space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-gray-500">Wallet:</span>
-                                  <span className="font-mono text-slate-700">{error.walletAddress || 'Anonymous'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-gray-500">Action:</span>
-                                  <span className="font-medium text-slate-700">{error.type}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-gray-500">Timestamp:</span>
-                                  <span className="text-slate-700">{new Date(error.timestamp).toISOString()}</span>
-                                </div>
-                              </div>
-                              <button 
-                                onClick={() => {
-                                  if (error.walletAddress && error.walletAddress !== 'undefined') {
-                                    router.push(`/user-interactions/users?address=${error.walletAddress}`);
-                                  }
-                                }}
-                                disabled={!error.walletAddress || error.walletAddress === 'undefined'}
-                                className={`mt-4 w-full py-2 border rounded-lg text-sm font-medium transition-colors ${
-                                  error.walletAddress && error.walletAddress !== 'undefined'
-                                    ? 'bg-white border-gray-300 text-slate-700 hover:bg-gray-50' 
-                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
+
+                    <div className="shrink-0 text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white transition-colors">
+                      {isExpanded ? <ArrowUp01Icon className="w-4 h-4" /> : <ArrowDown01Icon className="w-4 h-4" />}
+                    </div>
+                  </div>
+
+                  {/* Expanded Detail Drawer */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-gray-50/80 dark:bg-black/20 border-t border-b border-gray-100 dark:border-white/5 p-5"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {/* Raw Trace */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10.5px] font-bold text-gray-400 uppercase tracking-widest">
+                                Raw Error Context JSON
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(JSON.stringify(item.data, null, 2), item.id)}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#81D7B4] hover:underline cursor-pointer"
                               >
-                                {error.walletAddress && error.walletAddress !== 'undefined' ? 'View Full User Profile' : 'User Profile Not Available'}
+                                {copiedId === item.id ? (
+                                  <>
+                                    <CheckmarkCircle01Icon className="w-3.5 h-3.5" />
+                                    <span>Copied!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy01Icon className="w-3.5 h-3.5" />
+                                    <span>Copy JSON</span>
+                                  </>
+                                )}
                               </button>
                             </div>
+                            <pre className="p-4 rounded-2xl bg-gray-900 text-red-400 text-xs font-mono overflow-x-auto max-h-56 custom-scrollbar border border-white/10">
+                              {JSON.stringify(item.data || {}, null, 2)}
+                            </pre>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
 
-              {/* Pagination Footer */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-gray-500 text-center sm:text-left">
-                  Showing <span className="font-medium">{Math.min(filteredErrors.length, (currentPage - 1) * itemsPerPage + 1)}</span> to <span className="font-medium">{Math.min(filteredErrors.length, currentPage * itemsPerPage)}</span> of <span className="font-medium">{filteredErrors.length}</span> errors
+                          {/* Action Details */}
+                          <div className="space-y-4">
+                            <div>
+                              <span className="text-[10.5px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+                                Event Telemetry
+                              </span>
+                              <div className="p-4 rounded-2xl bg-white dark:bg-[#0c121e] border border-gray-200/70 dark:border-white/10 space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Wallet:</span>
+                                  <span className="font-mono font-bold text-gray-900 dark:text-white">{wallet}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Operation:</span>
+                                  <span className="font-bold text-gray-900 dark:text-white capitalize">{item.type}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Timestamp:</span>
+                                  <span className="font-mono text-gray-700 dark:text-gray-300">{new Date(item.timestamp).toISOString()}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {wallet !== 'Anonymous' && (
+                              <button
+                                type="button"
+                                onClick={() => router.push(`/user-interactions/users?address=${wallet}`)}
+                                className="w-full py-3 rounded-2xl bg-[#81D7B4]/15 hover:bg-[#81D7B4]/25 text-[#1c4b38] dark:text-[#81D7B4] font-bold text-xs flex items-center justify-center gap-2 border border-[#81D7B4]/30 transition-all cursor-pointer"
+                              >
+                                <UserIcon className="w-4 h-4" />
+                                <span>Inspect Wallet Activity & History</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ArrowLeft01Icon className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm font-medium text-slate-700 min-w-[100px] text-center">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ArrowRight01Icon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </>
+              );
+            })
           )}
         </div>
+
+        {/* Pagination Footer */}
+        {filteredErrors.length > itemsPerPage && (
+          <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between text-xs">
+            <span className="text-gray-400">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl bg-white dark:bg-[#141d2d] border border-gray-200 dark:border-white/10 disabled:opacity-40 cursor-pointer"
+              >
+                <ArrowLeft01Icon className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl bg-white dark:bg-[#141d2d] border border-gray-200 dark:border-white/10 disabled:opacity-40 cursor-pointer"
+              >
+                <ArrowRight01Icon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

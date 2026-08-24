@@ -1,51 +1,8 @@
-/**
- * Custom Hook for Savings Data with Caching
- * 
- * This hook provides a comprehensive solution for fetching and caching user savings data.
- * It implements a cache-first strategy with background updates for optimal performance.
- * 
- * Features:
- * - Immediate display of cached data
- * - Background fetching and cache updates
- * - Error handling with fallback to cached data
- * - Automatic cache invalidation
- * - Loading states for both initial and background fetches
- */
-
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAccount, useChainId } from 'wagmi';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { ethers } from 'ethers';
 import axios from 'axios';
-import { useBitsaveSolana } from './useBitsaveSolana';
-import {
-  SavingsData,
-  cacheSavingsData,
-  getCachedSavingsData,
-  needsBackgroundRefresh,
-  clearCachedSavingsData
-} from '../utils/savingsCache';
-import { handleContractError } from '../lib/contractErrorHandler';
-
-// Import contract ABIs and addresses
-import BitSaveABI from '../app/abi/contractABI.js';
-import childContractABI from '../app/abi/childContractABI.js';
-
-
-const DEBUG = process.env.NODE_ENV === 'development';
-
-// Contract addresses for different networks
-// Base network - dual contract support
-const BASE_CONTRACT_ADDRESS_OLD = "0x3593546078eecd0ffd1c19317f53ee565be6ca13"; // For existing savings
-const BASE_CONTRACT_ADDRESS_NEW = "0x67FFa7a1eb0D05BEaF9dB039c1bD604063040be9"; // For new savings
-const BASE_CONTRACT_MIGRATION_DATE = new Date('2026-02-05T00:00:00Z').getTime() / 1000; // Unix timestamp
-
-// Other networks
-const CELO_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
-const LISK_CONTRACT_ADDRESS = "0x3593546078eECD0FFd1c19317f53ee565be6ca13";
-const BSC_CONTRACT_ADDRESS = "0x0C4A310695702ed713BCe816786Fcc31C11fe932";
-const AVALANCHE_CONTRACT_ADDRESS = "0x7d839923Eb2DAc3A0d1cABb270102E481A208F33";
+import { SavingsData } from '../utils/savingsCache';
 
 // Network chain IDs
 const BASE_CHAIN_ID = BigInt(8453);
@@ -54,43 +11,24 @@ const LISK_CHAIN_ID = BigInt(1135);
 const BSC_CHAIN_ID = BigInt(56);
 const AVALANCHE_CHAIN_ID = BigInt(43114);
 
-// Token mapping for Celo network
-const CELO_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
-  "0x765de816845861e75a25fca122bb6898b8b1282a": { name: "cUSD", decimals: 18, logo: "/cusd.png" },
-  "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3": { name: "USDGLO", decimals: 18, logo: "/usdglo.png" },
-  "0xceba9300f2b948710d2653dd7b07f33a8b32118c": { name: "USDC", decimals: 6, logo: "/usdclogo.png" },
-  "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { name: "Gooddollar", decimals: 18, logo: "/$g.png" }
-};
-
-const AVALANCHE_USDC_E = "0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664";
-
-// Token mapping for Solana Devnet mock tokens
-const SOLANA_TOKEN_MAP: Record<string, { name: string; decimals: number; logo: string }> = {
-  "cb8mk8fag4qa3h6mhaghfnp86j15gwzhowvm9jz9zod": { name: "USDC", decimals: 6, logo: "/usdclogo.png" },
-  "cawshfepcyuzukezvrbskphrfsmsdpyjtkdydjpisi": { name: "USDT", decimals: 6, logo: "/usdt.png" },
-  "9jguwzdzncczkcddojkndsb4yjaglimxg9mdwvkk1eyw": { name: "cNGN", decimals: 6, logo: "/cngn.png" }
-};
-
 interface UseSavingsDataReturn {
   savingsData: SavingsData;
   isLoading: boolean;
   isBackgroundLoading: boolean;
   error: string | null;
   ethPrice: number;
-  currentNetwork: any;
+  currentNetwork: string | null;
   isBaseNetwork: boolean;
   isCeloNetwork: boolean;
   isLiskNetwork: boolean;
   isBSCNetwork: boolean;
   isAvalancheNetwork: boolean;
-  isSolanaNetwork: boolean;
   isCorrectNetwork: boolean;
   refetch: (forceRefresh?: boolean) => Promise<void>;
   clearCache: () => void;
   forceRefreshNetworkState: () => void;
 }
 
-// Default empty savings data
 const defaultSavingsData: SavingsData = {
   totalLocked: "0.00",
   deposits: 0,
@@ -99,148 +37,75 @@ const defaultSavingsData: SavingsData = {
   completedPlans: []
 };
 
-// Helper function to determine which Base contract to use
-const getBaseContractAddress = (creationTimestamp?: number): string => {
-  // If no timestamp provided or it's before migration date, use old contract
-  if (!creationTimestamp || creationTimestamp < BASE_CONTRACT_MIGRATION_DATE) {
-    return BASE_CONTRACT_ADDRESS_OLD;
-  }
-  // Otherwise use new contract
-  return BASE_CONTRACT_ADDRESS_NEW;
-};
+function getTokenLogo(tokenName: string, tokenLogo?: string) {
+  if (tokenLogo) return tokenLogo;
+  if (tokenName === 'cUSD') return '/cusd.png';
+  if (tokenName === 'cNGN') return '/cngn.png';
+  if (tokenName === 'USDGLO') return '/usdglo.png';
+  if (tokenName === 'Gooddollar' || tokenName === '$G') return '/$g.png';
+  if (tokenName === 'USDC') return '/usdclogo.png';
+  return `/${tokenName.toLowerCase()}.png`;
+}
+
+// In-memory global cache across route transitions
+const memoryCache: Record<string, { data: SavingsData; timestamp: number }> = {};
 
 export function useSavingsData(): UseSavingsDataReturn {
-
-
-  // Wagmi hooks for wallet connection
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
   const chainId = useChainId();
-  
-  // Solana hook
-  const { publicKey } = useWallet();
-  const solanaWalletAdapterAddress = publicKey?.toBase58();
-  const { getUserSavings } = useBitsaveSolana();
+  const { ready, authenticated, user, getAccessToken } = usePrivy();
 
-  // Privy hooks for authentication state
-  const { ready, authenticated, user } = usePrivy();
-  const { wallets } = useWallets();
+  const privyEvmWallet = user?.linkedAccounts?.find(
+    (account: any) => account.type === 'wallet' && account.chainType === 'ethereum'
+  ) as { address: string } | undefined;
+  const activeAddress = (wagmiAddress || privyEvmWallet?.address || user?.wallet?.address || '').toLowerCase();
 
-  // Detect Solana wallet from all Privy sources including MetaMask Solana
-  const privySolanaWallet = wallets?.find((w: any) => {
-    if (w.chainType === 'solana') return true;
-    if (['phantom', 'solflare', 'backpack'].includes(w.walletClientType)) return true;
-    if (w.chainId && String(w.chainId).startsWith('solana')) return true;
-    // Any wallet with a Solana-style address (base58, 32-44 chars, not 0x-prefixed)
-    if (w.address && !w.address.startsWith('0x') && w.address.length >= 32 && w.address.length <= 44) return true;
-    return false;
-  });
-  // Also check Privy user's linked accounts for Solana wallet addresses
-  const privyLinkedSolanaAddress = (user as any)?.linkedAccounts?.find(
-    (account: any) => (account.type === 'wallet' && account.chainType === 'solana') || account.chainId === 'solana:mainnet'
-  )?.address;
-  const solanaAddress = solanaWalletAdapterAddress || privySolanaWallet?.address || privyLinkedSolanaAddress;
-
-  // Network overrides from storage
-  const activeNetwork = typeof window !== 'undefined' ? localStorage.getItem('bitsave_active_network') : null;
-  // Consider Solana active if localStorage says so OR if user has a connected Solana wallet
-  const isSolanaActive = activeNetwork === 'solana' || (!!solanaAddress && !wagmiAddress);
-
-  // Use Privy's wallet address as fallback, prioritizing wagmi address
-  const evmAddress = wagmiAddress || user?.wallet?.address as `0x${string}` | undefined;
-  
-  // The effective address based on the active network (fall back to EVM address if no Solana wallet)
-  const address = isSolanaActive ? (solanaAddress || evmAddress) : evmAddress;
-  
-  // Consider connected if either Privy is authenticated, wagmi is connected, or solana wallet is connected
-  const isConnected = isSolanaActive ? (!!solanaAddress || (ready && authenticated) || isWagmiConnected) : ((ready && authenticated) || isWagmiConnected);
-
-
-  // State management - initialize from cache synchronously to avoid empty flash
+  // Instant SWR initial state from memory or localStorage
   const [savingsData, setSavingsData] = useState<SavingsData>(() => {
-    // Try to load cached data synchronously on first render
-    if (typeof window !== 'undefined' && address) {
-      const networkKey = isSolanaActive ? 'solana' : 'all-chains';
-      const cached = getCachedSavingsData(address, networkKey);
-      if (cached) {
-        if (DEBUG) console.log('Initialized with cached savings data');
-        return cached;
-      }
+    if (!activeAddress) return defaultSavingsData;
+    if (memoryCache[activeAddress]?.data) return memoryCache[activeAddress].data;
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(`bitsave_cache_${activeAddress}`);
+        if (saved) return JSON.parse(saved);
+      } catch {}
     }
     return defaultSavingsData;
   });
-  // Start loading as true - will be set to false once data is ready or if wallet isn't connected
-  const [isLoading, setIsLoading] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(() => {
+    if (!activeAddress) return true;
+    if (memoryCache[activeAddress]?.data) return false;
+    if (typeof window !== 'undefined') {
+      try {
+        if (localStorage.getItem(`bitsave_cache_${activeAddress}`)) return false;
+      } catch {}
+    }
+    return true;
+  });
+
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ethPrice, setEthPrice] = useState(3500);
-  const [currentNetwork, setCurrentNetwork] = useState<any>(null);
+  
+  const [currentNetwork, setCurrentNetwork] = useState<string | null>(null);
   const [isBaseNetwork, setIsBaseNetwork] = useState(false);
   const [isCeloNetwork, setIsCeloNetwork] = useState(false);
   const [isLiskNetwork, setIsLiskNetwork] = useState(false);
   const [isBSCNetwork, setIsBSCNetwork] = useState(false);
   const [isAvalancheNetwork, setIsAvalancheNetwork] = useState(false);
-  const [isSolanaNetwork, setIsSolanaNetwork] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
 
-  // Determine current network string identifier
+  const isFetchingRef = useRef(false);
+
+  // Network State
   useEffect(() => {
-    if (isSolanaNetwork) {
-      setCurrentNetwork('solana');
-    } else if (isBaseNetwork) {
-      setCurrentNetwork('base');
-    } else if (isCeloNetwork) {
-      setCurrentNetwork('celo');
-    } else if (isLiskNetwork) {
-      setCurrentNetwork('lisk');
-    } else if (isBSCNetwork) {
-      setCurrentNetwork('bsc');
-    } else if (isAvalancheNetwork) {
-      setCurrentNetwork('avalanche');
-    } else {
-      setCurrentNetwork(null);
-    }
-  }, [isBaseNetwork, isCeloNetwork, isLiskNetwork, isBSCNetwork, isAvalancheNetwork, isSolanaNetwork]);
-
-  // Ref to track if component is mounted
-  const isMountedRef = useRef(true);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // Update network states based on wagmi chainId
-  useEffect(() => {
-    // Also check local storage for manually selected network overrides
-    // or solana wallet adapter connection
-    const activeNetwork = localStorage.getItem('bitsave_active_network');
-    const isSolana = activeNetwork === 'solana' || !!solanaAddress;
-
-    if (!chainId && !isSolana) {
-      setIsBaseNetwork(false);
-      setIsCeloNetwork(false);
-      setIsLiskNetwork(false);
-      setIsBSCNetwork(false);
-      setIsAvalancheNetwork(false);
-      setIsSolanaNetwork(false);
-      setIsCorrectNetwork(false);
+    if (!chainId) {
+      setIsBaseNetwork(false); setIsCeloNetwork(false); setIsLiskNetwork(false);
+      setIsBSCNetwork(false); setIsAvalancheNetwork(false);
+      setIsCorrectNetwork(false); setCurrentNetwork(null);
       return;
     }
-
-    if (isSolana) {
-      setIsSolanaNetwork(true);
-      setIsBaseNetwork(false);
-      setIsCeloNetwork(false);
-      setIsLiskNetwork(false);
-      setIsBSCNetwork(false);
-      setIsAvalancheNetwork(false);
-      setIsCorrectNetwork(true);
-      return;
-    }
-
-    if (!chainId) return;
 
     const chainIdBigInt = BigInt(chainId);
     const isBase = chainIdBigInt === BASE_CHAIN_ID;
@@ -249,551 +114,179 @@ export function useSavingsData(): UseSavingsDataReturn {
     const isBSC = chainIdBigInt === BSC_CHAIN_ID;
     const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
 
-    setIsSolanaNetwork(false);
-    setIsBaseNetwork(isBase);
-    setIsCeloNetwork(isCelo);
-    setIsLiskNetwork(isLisk);
-    setIsBSCNetwork(isBSC);
-    setIsAvalancheNetwork(isAvalanche);
-
-    // Check if user is on one of the supported EVM networks
-    const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche;
-    setIsCorrectNetwork(isSupported);
-  }, [chainId, solanaAddress]);
-
-  // Handle initial loading state when wallet connection changes
-  // Don't reset when chainId is missing if Solana is the active network
-  useEffect(() => {
-    const activeNetwork = localStorage.getItem('bitsave_active_network');
-    const isSolanaActive = activeNetwork === 'solana' || !!solanaAddress;
+    setIsBaseNetwork(isBase); setIsCeloNetwork(isCelo);
+    setIsLiskNetwork(isLisk); setIsBSCNetwork(isBSC); setIsAvalancheNetwork(isAvalanche);
     
-    if (!isConnected || !address || (!chainId && !isSolanaActive)) {
-      setSavingsData(defaultSavingsData);
-      setIsLoading(false);
-      setIsBackgroundLoading(false);
-      setError(null);
-    }
-  }, [isConnected, address, chainId, solanaAddress]);
+    if (isBase) setCurrentNetwork('base');
+    else if (isCelo) setCurrentNetwork('celo');
+    else if (isLisk) setCurrentNetwork('lisk');
+    else if (isBSC) setCurrentNetwork('bsc');
+    else if (isAvalanche) setCurrentNetwork('avalanche');
+    else setCurrentNetwork(null);
 
-  // Network Configurations
-  const NETWORKS_CONFIG = [
-    {
-      chainId: BASE_CHAIN_ID,
-      rpcUrl: 'https://base.publicnode.com',
-      contractAddress: BASE_CONTRACT_ADDRESS_OLD, // Use old contract to fetch existing savings
-      name: 'Base'
-    },
-    {
-      chainId: BASE_CHAIN_ID,
-      rpcUrl: 'https://base.publicnode.com',
-      contractAddress: BASE_CONTRACT_ADDRESS_NEW, // Use new contract to fetch new savings
-      name: 'Base'
-    },
-    {
-      chainId: CELO_CHAIN_ID,
-      rpcUrl: 'https://forno.celo.org',
-      contractAddress: CELO_CONTRACT_ADDRESS,
-      name: 'Celo'
-    },
-    {
-      chainId: LISK_CHAIN_ID,
-      rpcUrl: 'https://rpc.api.lisk.com',
-      contractAddress: LISK_CONTRACT_ADDRESS,
-      name: 'Lisk'
-    },
-    {
-      chainId: BSC_CHAIN_ID,
-      rpcUrl: 'https://bsc-dataseed.binance.org/',
-      contractAddress: BSC_CONTRACT_ADDRESS,
-      name: 'BSC'
-    },
-    {
-      chainId: AVALANCHE_CHAIN_ID,
-      rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
-      contractAddress: AVALANCHE_CONTRACT_ADDRESS,
-      name: 'Avalanche'
-    }
-  ];
+    setIsCorrectNetwork(isBase || isCelo || isLisk || isBSC || isAvalanche);
+  }, [chainId]);
 
-  // Fetch ETH price from CoinGecko via internal API
-  const fetchEthPrice = useCallback(async (): Promise<number> => {
-    try {
-      const response = await axios.get("/api/prices?ids=ethereum");
-      return response.data?.ethereum?.usd || 3500;
-    } catch (error) {
-      if (DEBUG) console.warn("Using fallback ETH price (API Error)");
-      return 3500; // Fallback price
-    }
+  // Price fetcher
+  useEffect(() => {
+    axios.get("/api/prices?ids=ethereum").then(res => setEthPrice(res.data?.ethereum?.usd || 3500)).catch(() => {});
   }, []);
 
-  // Fetch GoodDollar price from CoinGecko via internal API
-  const fetchGoodDollarPrice = useCallback(async (): Promise<number> => {
-    try {
-      const response = await axios.get("/api/prices?ids=gooddollar");
-      return response.data?.gooddollar?.usd || 0.0001086;
-    } catch (error) {
-      if (DEBUG) console.warn("Using fallback GoodDollar price (API Error)");
-      return 0.0001086; // Fallback price
-    }
-  }, []);
-
-  // Main function to fetch savings data from blockchain
-  const fetchSavingsDataFromBlockchain = useCallback(async (
-    isBackgroundFetch = false
-  ): Promise<SavingsData | null> => {
-    if (!isConnected || !address) {
-      return null;
-    }
-
-    // Check if Solana is the active network
-    const activeNetwork = localStorage.getItem('bitsave_active_network');
-    const isSolanaActiveForFetch = activeNetwork === 'solana' || (!!solanaAddress && !wagmiAddress);
-
-    if (isSolanaActiveForFetch) {
-      if (DEBUG) console.log(`=== Starting Solana savings fetch for user: ${address} ===`);
+  const saveCache = (addr: string, data: SavingsData) => {
+    if (!addr) return;
+    memoryCache[addr] = { data, timestamp: Date.now() };
+    if (typeof window !== 'undefined') {
       try {
-        if (isBackgroundFetch) {
-          setIsBackgroundLoading(true);
-        } else {
-          setIsLoading(true);
-        }
-        setError(null);
-
-        const solanaSavings = await getUserSavings();
-        const currentPlans: any[] = [];
-        const completedPlans: any[] = [];
-        let totalLockedUsd = 0;
-        let depositsCount = 0;
-
-        const now = Math.floor(Date.now() / 1000);
-
-        for (const item of solanaSavings) {
-          const account = item.account as any;
-          // Temporarily removing isValid check in case it's undefined on older program deployments
-          // if (!account.isValid) continue;
-
-          const mintStr = account.tokenMint.toBase58().toLowerCase();
-          const tokenInfo = SOLANA_TOKEN_MAP[mintStr] || { name: "USDC", decimals: 6, logo: "/usdclogo.png" };
-
-          const amountVal = Number(account.amount.toString()) / Math.pow(10, tokenInfo.decimals);
-          const amountFormatted = amountVal.toString();
-
-          let price = 1.0;
-          if (tokenInfo.name === "cNGN") {
-            price = 0.00067; // 1 NGN to USD
-          }
-          const usdValue = amountVal * price;
-          totalLockedUsd += usdValue;
-
-          const startTime = Number(account.startTime.toString());
-          const maturityTime = Number(account.maturityTime.toString());
-
-          let progress = 0;
-          if (maturityTime <= startTime || now >= maturityTime) {
-            progress = 100;
-          } else {
-            progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
-          }
-
-          const isCompleted = progress >= 100;
-
-          const plan = {
-            id: account.name,
-            name: account.name,
-            amount: amountFormatted,
-            currentAmount: amountFormatted,
-            startTime,
-            maturityTime,
-            isEth: false,
-            tokenName: tokenInfo.name,
-            tokenLogo: tokenInfo.logo,
-            progress,
-            status: isCompleted ? 'Completed' : 'Active',
-            timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / 86400)} days`,
-            penalty: account.penaltyPercentage.toString(),
-            penaltyPercentage: account.penaltyPercentage,
-            network: 'Solana',
-            chainId: 0,
-            contractAddress: "2yx2FXwxyskf3qhrknysyqNTuXXVsyC1nxyjuLUrVQuJ"
-          };
-
-          if (isCompleted) {
-            completedPlans.push(plan);
-          } else {
-            currentPlans.push(plan);
-          }
-          depositsCount++;
-        }
-
-        // Calculate rewards based on USD value (5 BTS per $1 saved)
-        const rewardsVal = totalLockedUsd * 5;
-
-        const solanaSavingsData: SavingsData = {
-          totalLocked: totalLockedUsd.toFixed(2),
-          deposits: depositsCount,
-          rewards: rewardsVal.toFixed(0),
-          currentPlans,
-          completedPlans
-        };
-
-        // Cache the result
-        if (address) {
-          cacheSavingsData(solanaSavingsData, address, "solana");
-        }
-
-        return solanaSavingsData;
-
-      } catch (err: any) {
-        console.error("Error fetching Solana savings from chain:", err);
-        setError(err.message || "Failed to fetch Solana savings data");
-        return null;
-      } finally {
-        setIsLoading(false);
-        setIsBackgroundLoading(false);
-      }
+        localStorage.setItem(`bitsave_cache_${addr}`, JSON.stringify(data));
+      } catch {}
     }
+  };
 
-    if (DEBUG) console.log(`=== Starting savings fetch for user: ${address} ===`);
-
-    try {
-      // Set appropriate loading state
-      if (isBackgroundFetch) {
-        setIsBackgroundLoading(true);
-      } else {
-        setIsLoading(true);
-      }
-
-      // Clear any previous errors
-      setError(null);
-
-      // Start price fetches in parallel
-      const ethPricePromise = fetchEthPrice();
-      const goodDollarPricePromise = fetchGoodDollarPrice();
-
-      // Fetch prices concurrently
-      const [currentEthPrice, goodDollarPrice] = await Promise.all([
-        ethPricePromise,
-        goodDollarPricePromise
-      ]);
-
-      setEthPrice(currentEthPrice || 3500);
-
-      let aggregatedPlans: any[] = [];
-      let aggregatedCompletedPlans: any[] = [];
-      let aggregatedDeposits = 0;
-      let aggregatedTotalUsdValue = 0;
-      let aggregatedRewards = 0;
-
-      // Fetch from our new Redis-backed API route for EVM chains
-      try {
-        const res = await fetch(`/api/savings-data?address=${address}`);
-        if (res.ok) {
-          const data = await res.json();
-          aggregatedPlans = data.currentPlans || [];
-          aggregatedCompletedPlans = data.completedPlans || [];
-          aggregatedDeposits = data.deposits || 0;
-          aggregatedTotalUsdValue = parseFloat(data.totalLocked) || 0;
-          aggregatedRewards = parseFloat(data.rewards) || 0;
-        } else {
-          console.warn("Failed to fetch EVM savings data from API:", await res.text());
-        }
-      } catch (err) {
-        console.warn("Error fetching EVM savings data from API:", err);
-      }
-
-      // Fetch shared plans for the current user's Savvy Name
-      try {
-        const sharedRes = await fetch(`/api/savings/shared?walletAddress=${address}`);
-        if (sharedRes.ok) {
-          const sharedData = await sharedRes.json();
-          const sharedPlans = sharedData.sharedPlans || [];
-
-          if (sharedPlans.length > 0) {
-            const sharedPromises = sharedPlans.map(async (sp: any) => {
-              try {
-                const netConfig = NETWORKS_CONFIG.find(n => n.name === sp.network);
-                if (!netConfig) return null;
-
-                const provider = new ethers.JsonRpcProvider(netConfig.rpcUrl);
-                let targetContractAddress = sp.contractAddress;
-                if (!targetContractAddress) {
-                  const masterContract = new ethers.Contract(netConfig.contractAddress, BitSaveABI, provider);
-                  const promise = masterContract.getUserChildContractAddress({ from: sp.ownerAddress });
-                  const timeout = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
-                  targetContractAddress = await Promise.race([promise, timeout]);
-                }
-                if (!targetContractAddress || targetContractAddress === ethers.ZeroAddress) return null;
-
-                const childContract = new ethers.Contract(targetContractAddress, childContractABI, provider);
-                const savingPromise = childContract.getSaving(sp.savingName);
-                const timeout = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
-                const savingData: any = await Promise.race([savingPromise, timeout]);
-
-                if (!savingData || !savingData.isValid) return null;
-
-                const tokenId = savingData.tokenId || ethers.ZeroAddress;
-                const isEth = tokenId.toLowerCase() === ethers.ZeroAddress.toLowerCase();
-                let decimals = isEth ? 18 : 6;
-
-                let tokenName = "USDC";
-                let tokenLogo = '/usdclogo.png';
-
-                if (isEth) {
-                  tokenName = "ETH";
-                  tokenLogo = '/eth.png';
-                } else if (netConfig.chainId === CELO_CHAIN_ID) {
-                  const tokenInfo = CELO_TOKEN_MAP[(tokenId as string).toLowerCase()];
-                  if (tokenInfo) {
-                    tokenName = tokenInfo.name;
-                    decimals = tokenInfo.decimals;
-                    tokenLogo = tokenInfo.logo;
-                  } else {
-                    tokenName = 'USDGLO';
-                    tokenLogo = '/usdglo.png';
-                  }
-                } else if (netConfig.chainId === BASE_CHAIN_ID) {
-                  if (tokenId.toLowerCase() === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") {
-                    tokenName = "USDC"; decimals = 6; tokenLogo = '/usdclogo.png';
-                  } else if (tokenId.toLowerCase() === "0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") {
-                    tokenName = "USDGLO"; decimals = 18; tokenLogo = '/usdglo.png';
-                  } else if (tokenId.toLowerCase() === "0x46c85152bfe9f96829aa94755d9f915f9b10ef5f") {
-                    tokenName = "cNGN"; decimals = 6; tokenLogo = '/cngn.png';
-                  }
-                } else if (netConfig.chainId === LISK_CHAIN_ID) {
-                  tokenName = 'USDC'; decimals = 6; tokenLogo = '/usdclogo.png';
-                } else if (netConfig.chainId === AVALANCHE_CHAIN_ID) {
-                  tokenName = 'USDC'; decimals = 6; tokenLogo = '/usdclogo.png';
-                }
-
-                let amountFormatted = "0";
-                try { amountFormatted = ethers.formatUnits(savingData.amount, decimals); } catch (e) { }
-
-                const now = Math.floor(Date.now() / 1000);
-                const startTime = savingData.startTime ? Number(savingData.startTime) : now;
-                const maturityTime = savingData.maturityTime ? Number(savingData.maturityTime) : startTime + (30 * 24 * 60 * 60);
-                let progress = 0;
-                if (maturityTime <= startTime || now >= maturityTime) progress = 100;
-                else progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
-
-                const isCompleted = savingData.isCompleted || progress >= 100;
-
-                return {
-                  id: `${sp.savingName}-${sp.ownerAddress}`,
-                  name: sp.savingName,
-                  amount: amountFormatted,
-                  currentAmount: amountFormatted,
-                  startTime,
-                  maturityTime,
-                  isEth,
-                  tokenName,
-                  tokenLogo,
-                  progress,
-                  status: isCompleted ? 'Completed' : 'Active',
-                  timeLeft: isCompleted ? 'Completed' : `${Math.ceil((maturityTime - now) / 86400)} days`,
-                  penalty: (savingData.penaltyPercentage ?? 0).toString(),
-                  penaltyPercentage: Number(savingData.penaltyPercentage ?? 0),
-                  network: sp.network,
-                  chainId: netConfig.chainId,
-                  contractAddress: targetContractAddress,
-                  isShared: true,
-                  sharedBy: sp.ownerAddress
-                };
-              } catch (e) {
-                console.warn(`Failed to fetch shared plan ${sp.savingName}:`, e);
-                return null;
-              }
-            });
-
-            const sharedResults = await Promise.allSettled(sharedPromises);
-            sharedResults.forEach((result: any) => {
-              if (result.status === 'fulfilled' && result.value) {
-                if (result.value.status === 'Completed') aggregatedCompletedPlans.push(result.value);
-                else aggregatedPlans.push(result.value);
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.warn("Error fetching shared plans mapping:", err);
-      }
-
-      let finalRewards = aggregatedRewards;
-      if (address) {
-        try {
-          const res = await fetch('/api/users/rewards', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address, currentRewards: aggregatedRewards })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.rewards !== undefined) {
-              finalRewards = data.rewards;
-            }
-          }
-        } catch (err) {
-          console.warn('Failed to sync rewards:', err);
-        }
-      }
-
-      const finalSavingsData: SavingsData = {
-        totalLocked: aggregatedTotalUsdValue.toFixed(2),
-        deposits: aggregatedDeposits,
-        rewards: finalRewards.toFixed(0),
-        currentPlans: aggregatedPlans,
-        completedPlans: aggregatedCompletedPlans
-      };
-
-      // Cache the result
-      if (address) {
-        cacheSavingsData(finalSavingsData, address, "all-chains");
-      }
-
-      setSavingsData(finalSavingsData);
-
-      if (isBackgroundFetch) {
-        setIsBackgroundLoading(false);
-      } else {
-        setIsLoading(false);
-      }
-
-      return finalSavingsData;
-
-    } catch (error) {
-      console.error("Error in fetchSavingsDataFromBlockchain:", error);
-      setError("Failed to fetch savings data");
-
-      if (isBackgroundFetch) {
-        setIsBackgroundLoading(false);
-      } else {
-        setIsLoading(false);
-      }
-
-      return null;
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, fetchEthPrice, fetchGoodDollarPrice, solanaAddress, wagmiAddress]);
-
-  // Main fetch function with caching logic
   const fetchSavingsData = useCallback(async (forceRefresh = false) => {
-    // Check if Solana is the active network
-    const activeNetwork = localStorage.getItem('bitsave_active_network');
-    const isSolanaActiveForFetch = activeNetwork === 'solana' || (!!solanaAddress && !wagmiAddress);
+    if (!ready) return;
 
-    if (!isConnected || !address || (!chainId && !isSolanaActiveForFetch)) {
-      setSavingsData(defaultSavingsData);
+    if (!authenticated && !isWagmiConnected && !activeAddress) {
       setIsLoading(false);
-      setIsBackgroundLoading(false);
-      setError(null);
+      setSavingsData(defaultSavingsData);
       return;
     }
 
-    // Use "all-chains" as the cache key since data is aggregated across all networks
-    // But for Solana, keep it isolated
-    const networkChainId = isSolanaActiveForFetch ? "solana" : "all-chains";
-    const cachedData = getCachedSavingsData(address, networkChainId);
-    const needsRefresh = needsBackgroundRefresh(address, networkChainId);
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-    // If we have cached data and not forcing refresh
-    if (cachedData && !forceRefresh) {
-      // Use cached data immediately and stop showing loading shimmer
-      setSavingsData(cachedData);
-      setIsLoading(false);
-      setError(null);
-
-      // If cache is fresh enough, we are done
-      if (!needsRefresh) {
-        return;
-      }
-
-      if (DEBUG) console.log(`Cached data exists but needs refresh for user ${address} on chain ${networkChainId}`);
-      // Fall through to background fetch
+    const hasCachedData = Boolean(memoryCache[activeAddress]?.data);
+    if (!hasCachedData || forceRefresh) {
+      if (hasCachedData) setIsBackgroundLoading(true);
+      else setIsLoading(true);
+    } else {
+      setIsBackgroundLoading(true);
     }
 
-    // Determine if this should be a background fetch
-    // It is background if we have cached data (which we just set above) and we are not forcing refresh
-    const isBackgroundFetch = !!cachedData && !forceRefresh;
-
-    // No cached data or forced refresh - fetch from blockchain
-    if (DEBUG) console.log(`Fetching fresh savings data for user ${address} on chain ${networkChainId} (Background: ${isBackgroundFetch})`);
-
-    const freshData = await fetchSavingsDataFromBlockchain(isBackgroundFetch);
-
-    if (freshData && isMountedRef.current) {
-      if (DEBUG) console.log(`Fresh data received for user ${address} on chain ${networkChainId}`);
-      setSavingsData(freshData);
-      cacheSavingsData(freshData, address, networkChainId);
-      // Ensure loading state is reset after data is set
-      if (!isBackgroundFetch) {
-        setIsLoading(false);
+    try {
+      // 1. Try on-chain contract savings data first if address is present
+      if (activeAddress && activeAddress.startsWith('0x')) {
+        try {
+          const onchainRes = await fetch(`/api/savings-data?address=${activeAddress}`);
+          if (onchainRes.ok) {
+            const onchainData = await onchainRes.json();
+            if (onchainData && Array.isArray(onchainData.currentPlans)) {
+              setSavingsData(onchainData);
+              saveCache(activeAddress, onchainData);
+              setError(null);
+              setIsLoading(false);
+              setIsBackgroundLoading(false);
+              isFetchingRef.current = false;
+              return;
+            }
+          }
+        } catch {
+          // Fallback to supplemental API
+        }
       }
-    } else if (!freshData && isMountedRef.current && !isBackgroundFetch) {
-      // Fallback to default data if fetch failed and we don't have cached data
-      // If it was a background fetch, we keep the cached data we already set
+
+      // 2. Try SaveFi plans API
+      let token: string | null = null;
+      try {
+        token = await getAccessToken();
+      } catch {}
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch('/api/savefi/plans', { headers }).catch(() => null);
+      if (response && response.ok) {
+        const resJson = await response.json().catch(() => ({}));
+        const plans = resJson?.data || [];
+
+        const currentPlans: any[] = [];
+        const completedPlans: any[] = [];
+        let totalLockedUsd = 0;
+        let depositsCount = plans.length;
+
+        const now = Math.floor(Date.now() / 1000);
+
+        plans.forEach((p: any) => {
+          if (currentNetwork && p.chain !== currentNetwork) return;
+
+          const currentAmount = parseFloat(p.current_amount || "0");
+          
+          const startTime = new Date(p.start_time).getTime() / 1000;
+          const maturityTime = new Date(p.maturity_time).getTime() / 1000;
+          
+          let progress = 0;
+          if (maturityTime <= startTime || now >= maturityTime) progress = 100;
+          else progress = Math.min(Math.floor(((now - startTime) / (maturityTime - startTime)) * 100), 100);
+
+          const isCompleted = progress >= 100 || p.status === 'completed';
+
+          const planObj = {
+            id: p.id,
+            name: p.plan_name,
+            currentAmount: p.current_amount,
+            targetAmount: p.target_amount,
+            progress,
+            isEth: p.token_symbol === 'ETH' || p.token_symbol === 'WETH',
+            startTime,
+            maturityTime,
+            penaltyPercentage: p.penalty_percentage,
+            tokenName: p.token_symbol,
+            tokenLogo: getTokenLogo(p.token_symbol),
+            network: p.chain,
+            contractAddress: p.contract_address,
+          };
+
+          if (planObj.isEth) totalLockedUsd += currentAmount * ethPrice;
+          else if (p.token_symbol === 'cNGN') totalLockedUsd += currentAmount * 0.0007426;
+          else totalLockedUsd += currentAmount;
+
+          if (isCompleted || p.status === 'withdrawn') {
+            completedPlans.push(planObj);
+          } else {
+            currentPlans.push(planObj);
+          }
+        });
+
+        setSavingsData({
+          totalLocked: totalLockedUsd.toFixed(2),
+          deposits: depositsCount,
+          rewards: "0.00",
+          currentPlans,
+          completedPlans
+        });
+        setError(null);
+      } else {
+        setSavingsData(defaultSavingsData);
+      }
+      
+    } catch {
       setSavingsData(defaultSavingsData);
+      setError(null);
+    } finally {
       setIsLoading(false);
+      setIsBackgroundLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [isConnected, address, chainId, fetchSavingsDataFromBlockchain, solanaAddress, wagmiAddress]);
+  }, [ready, authenticated, isWagmiConnected, activeAddress, currentNetwork, ethPrice, getAccessToken]);
 
-  // Clear cache function
-  const clearCache = useCallback(() => {
-    if (address && chainId) {
-      clearCachedSavingsData(address, chainId.toString());
-
-    }
-  }, [address, chainId]);
-
-  // Refetch function (forces fresh data by default, but can be soft)
-  const refetch = useCallback(async (forceRefresh = true) => {
-    await fetchSavingsData(forceRefresh);
+  // Initial and reactive fetch on account/network changes
+  useEffect(() => {
+    fetchSavingsData();
   }, [fetchSavingsData]);
 
-  // Force refresh network state by manually triggering network detection
-  const forceRefreshNetworkState = useCallback(() => {
-    if (chainId) {
-      const chainIdBigInt = BigInt(chainId);
-      const isBase = chainIdBigInt === BASE_CHAIN_ID;
-      const isCelo = chainIdBigInt === CELO_CHAIN_ID;
-      const isLisk = chainIdBigInt === LISK_CHAIN_ID;
-      const isBSC = chainIdBigInt === BSC_CHAIN_ID;
-      const isAvalanche = chainIdBigInt === AVALANCHE_CHAIN_ID;
-
-      // Also check local storage for manually selected network overrides
-      // or solana wallet adapter connection
-      const activeNetwork = localStorage.getItem('bitsave_active_network');
-      const isSolana = activeNetwork === 'solana';
-      setIsSolanaNetwork(isSolana);
-
-      setIsBaseNetwork(isSolana ? false : isBase);
-      setIsCeloNetwork(isSolana ? false : isCelo);
-      setIsLiskNetwork(isSolana ? false : isLisk);
-      setIsBSCNetwork(isSolana ? false : isBSC);
-      setIsAvalancheNetwork(isSolana ? false : isAvalanche);
-
-      // Check if user is on one of the supported EVM networks or solana
-      const isSupported = isBase || isCelo || isLisk || isBSC || isAvalanche || isSolana;
-      setIsCorrectNetwork(isSupported);
-    } else {
-      // If no chainId, check if we're explicitly on Solana
-      const activeNetwork = localStorage.getItem('bitsave_active_network');
-      const isSolana = activeNetwork === 'solana';
-      if (isSolana) {
-        setIsSolanaNetwork(true);
-        setIsCorrectNetwork(true);
-      }
-    }
-  }, [chainId]);
-
-  // Initial data fetch on mount or when dependencies change
+  // Reactive listener for transaction events (topup, withdraw, create)
   useEffect(() => {
-    if (isConnected && address && (chainId || isSolanaNetwork)) {
-      fetchSavingsData();
-    } else {
-      setSavingsData(defaultSavingsData);
-      setIsLoading(false);
+    const handleUpdate = () => {
+      fetchSavingsData(true);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('bitsave_tx_updated', handleUpdate);
+      window.addEventListener('bitsave_plan_created', handleUpdate);
+      return () => {
+        window.removeEventListener('bitsave_tx_updated', handleUpdate);
+        window.removeEventListener('bitsave_plan_created', handleUpdate);
+      };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, chainId, isSolanaNetwork]);
+  }, [fetchSavingsData]);
 
   return {
     savingsData,
@@ -807,10 +300,9 @@ export function useSavingsData(): UseSavingsDataReturn {
     isLiskNetwork,
     isBSCNetwork,
     isAvalancheNetwork,
-    isSolanaNetwork,
     isCorrectNetwork,
-    refetch,
-    clearCache,
-    forceRefreshNetworkState
+    refetch: fetchSavingsData,
+    clearCache: () => setSavingsData(defaultSavingsData),
+    forceRefreshNetworkState: () => {},
   };
 }

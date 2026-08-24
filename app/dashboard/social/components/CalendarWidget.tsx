@@ -1,113 +1,173 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar01Icon } from 'hugeicons-react';
+import { Calendar01Icon, Location01Icon, Time01Icon, ArrowRight01Icon } from 'hugeicons-react';
 
-const EVENTS = [
-  {
-    id: 1,
-    month: 'Aug',
-    day: '15',
-    title: 'Community AMA',
-    time: '2:00 PM EST',
-    type: 'Online'
-  },
-  {
-    id: 2,
-    month: 'Aug',
-    day: '28',
-    title: 'Rewards Distribution',
-    time: '12:00 PM EST',
-    type: 'Distribution'
-  }
-];
+interface CommunityEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  time?: string;
+  location?: string;
+  type?: string;
+  url?: string;
+}
 
 export default function CalendarWidget() {
-  const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  
-  // Minimal representation for August 2026
-  // Starts on Saturday
-  const dates = [
-    null, null, null, null, null, null, 1,
-    2, 3, 4, 5, 6, 7, 8,
-    9, 10, 11, 12, 13, 14, 15,
-    16, 17, 18, 19, 20, 21, 22,
-    23, 24, 25, 26, 27, 28, 29,
-    30, 31
-  ];
+  const [events, setEvents] = useState<CommunityEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const events = [
-    { date: 15, type: 'ama', color: 'bg-purple-500' },
-    { date: 28, type: 'rewards', color: 'bg-[#81D7B4]' }
-  ];
+  const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const todayDate = now.getDate();
+  const monthName = now.toLocaleString('default', { month: 'short' });
+
+  // Compute first day of month and total days
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  const dates: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) dates.push(null);
+  for (let d = 1; d <= totalDays; d++) dates.push(d);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch('/api/events');
+        if (res.ok) {
+          const data = await res.json();
+          setEvents(data.events || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch events', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  // Filter events occurring in the active month
+  const activeMonthEvents = events.map(evt => {
+    const d = new Date(evt.date);
+    const isValid = !isNaN(d.getTime());
+    const isThisMonth = isValid && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    return {
+      ...evt,
+      parsedDate: isValid ? d : null,
+      dayOfMonth: isThisMonth ? d.getDate() : null
+    };
+  });
+
+  const eventsThisMonth = activeMonthEvents.filter(e => e.dayOfMonth !== null);
 
   return (
-    <div className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-100 dark:border-white/5 shadow-sm p-7 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4]">
-            <Calendar01Icon className="w-5 h-5" />
+    <div className="bg-white dark:bg-[#161616] rounded-3xl border border-gray-200/70 dark:border-white/10 shadow-sm p-6 sm:p-7 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 flex items-center justify-center text-[#81D7B4]">
+              <Calendar01Icon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white font-instrument">
+                Community Events
+              </h3>
+              <p className="text-[11px] text-gray-400">{monthName} {currentYear} • Official Schedule</p>
+            </div>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Community Calendar</h3>
         </div>
-      </div>
-      <div className="grid grid-cols-7 gap-y-3 gap-x-1 text-center mb-6">
-        {days.map(d => (
-          <div key={d} className="text-[11px] font-bold text-gray-400 dark:text-gray-500">{d}</div>
-        ))}
-        {dates.map((d, i) => {
-          const hasEvent = events.find(e => e.date === d);
-          const isToday = d === 1; // Assuming August 1 is "today" for the demo
 
-          return (
-            <div key={i} className="flex items-center justify-center">
-              {d ? (
-                <div className={`w-8 h-8 flex items-center justify-center rounded-full text-[13px] font-semibold transition-all cursor-pointer
-                  ${isToday ? 'bg-[#81D7B4] text-white shadow-md' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'}
-                  ${hasEvent && !isToday ? 'relative border border-gray-200 dark:border-white/10' : ''}
-                `}>
-                  {d}
-                  {hasEvent && !isToday && (
-                    <span className={`absolute top-0 right-0 w-2 h-2 rounded-full border border-white dark:border-[#1a1a1a] ${hasEvent.color}`}></span>
-                  )}
-                </div>
-              ) : (
-                <div className="w-8 h-8"></div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+        {/* Mini Calendar Matrix */}
+        <div className="grid grid-cols-7 gap-y-2 gap-x-1 text-center mb-6">
+          {days.map(d => (
+            <div key={d} className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">{d}</div>
+          ))}
+          {dates.map((d, i) => {
+            const hasEvent = d ? eventsThisMonth.some(e => e.dayOfMonth === d) : false;
+            const isToday = d === todayDate;
 
-      <div className="space-y-6 flex-1">
-        {EVENTS.map((event, i) => (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="group cursor-pointer flex gap-4"
-          >
-            <div className="w-12 shrink-0 flex flex-col items-center justify-center bg-gray-50 dark:bg-white/5 rounded-2xl py-2 border border-gray-100 dark:border-white/5">
-              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">{event.month}</span>
-              <span className="text-lg font-black text-[#81D7B4] leading-tight">{event.day}</span>
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="text-base font-bold text-gray-800 dark:text-gray-200 leading-snug group-hover:text-[#81D7B4] dark:group-hover:text-[#81D7B4] transition-colors">
-                {event.title}
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] font-medium text-gray-500">
-                  {event.time}
-                </span>
-                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                <span className="text-[11px] font-medium text-[#81D7B4]">
-                  {event.type}
-                </span>
+            return (
+              <div key={i} className="flex items-center justify-center py-0.5">
+                {d ? (
+                  <div className={`w-7 h-7 flex items-center justify-center rounded-xl text-xs font-bold transition-all relative
+                    ${isToday ? 'bg-[#81D7B4] text-white shadow-xs' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'}
+                    ${hasEvent && !isToday ? 'border-2 border-[#81D7B4] text-[#81D7B4] font-black' : ''}
+                  `}>
+                    {d}
+                    {hasEvent && !isToday && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#81D7B4] ring-2 ring-white dark:ring-[#161616]"></span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-7 h-7"></div>
+                )}
               </div>
-            </div>
-          </motion.div>
-        ))}
+            );
+          })}
+        </div>
+
+        {/* Real Events List from Database */}
+        {isLoading ? (
+          <div className="space-y-2.5">
+            <div className="h-12 bg-gray-100 dark:bg-white/5 rounded-2xl animate-pulse" />
+          </div>
+        ) : events.length > 0 ? (
+          <div className="space-y-3">
+            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1">
+              Upcoming Scheduled Events
+            </span>
+            {events.slice(0, 3).map((evt, i) => {
+              const d = new Date(evt.date);
+              const formattedDay = !isNaN(d.getTime()) ? d.getDate() : '01';
+              const formattedMonth = !isNaN(d.getTime()) ? d.toLocaleString('default', { month: 'short' }) : 'Event';
+
+              return (
+                <motion.div
+                  key={evt.id || i}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/70 dark:bg-white/5 border border-gray-100 dark:border-white/5"
+                >
+                  <div className="w-10 h-10 shrink-0 flex flex-col items-center justify-center bg-white dark:bg-[#121212] rounded-xl border border-gray-200/50 dark:border-white/10">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase leading-none">
+                      {formattedMonth}
+                    </span>
+                    <span className="text-sm font-black text-[#81D7B4] leading-tight">
+                      {formattedDay}
+                    </span>
+                  </div>
+                  <div className="flex flex-col justify-center flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 leading-snug truncate">
+                      {evt.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {evt.time || '12:00 PM UTC'}
+                      </span>
+                      {evt.location && (
+                        <span className="text-[9px] font-bold text-[#81D7B4] bg-[#81D7B4]/10 px-1.5 py-0.2 rounded-md truncate max-w-[100px]">
+                          {evt.location}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-5 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 text-center">
+            <Calendar01Icon className="w-6 h-6 text-gray-400 mx-auto mb-1.5" />
+            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 mb-0.5">No Events Scheduled</p>
+            <p className="text-[11px] text-gray-400">Official AMAs, townhalls, and community events will appear here once scheduled by admins.</p>
+          </div>
+        )}
       </div>
     </div>
   );

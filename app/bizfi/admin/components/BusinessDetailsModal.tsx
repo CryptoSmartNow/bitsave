@@ -24,7 +24,7 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
   };
 
   const DetailRow = ({ label, value, icon: Icon }: { label: string; value: string | number | undefined; icon?: any }) => (
-    <div className="flex items-start gap-3 p-3 bg-[#0F1825]/50 rounded-xl border border-[#7B8B9A]/10">
+    <div className="flex items-start gap-3 p-3 bg-[#121212]/50 rounded-xl border border-[#7B8B9A]/10">
       {Icon && <Icon className="w-5 h-5 text-[#9BA8B5] mt-0.5 shrink-0" />}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-[#9BA8B5] uppercase tracking-wider mb-1">{label}</p>
@@ -34,7 +34,7 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0F1825]/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#121212]/80 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -63,7 +63,7 @@ export default function BusinessDetailsModal({ business, onClose, onOpenAgreemen
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
           {/* Status Section */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 bg-[#0F1825]/50 rounded-xl border border-[#7B8B9A]/10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 bg-[#121212]/50 rounded-xl border border-[#7B8B9A]/10">
             <div className="flex-1">
               <p className="text-[#9BA8B5] text-xs font-medium uppercase tracking-wider mb-1">Current Status</p>
               <div className="flex items-center gap-2">

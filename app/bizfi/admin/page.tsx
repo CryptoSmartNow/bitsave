@@ -292,7 +292,7 @@ export default function BizFiAdminPage() {
               <ArrowUpRight01Icon className="w-3 h-3" />
               12%
             </span>
-            <span className="text-[#7B8B9A] font-medium whitespace-nowrap">vs last month</span>
+            <span className="text-gray-400 font-medium whitespace-nowrap">vs last month</span>
           </div>
         </motion.div>
 
@@ -449,7 +449,7 @@ export default function BizFiAdminPage() {
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
             {/* Search Bar */}
             <div className="relative flex-1 sm:w-72">
-              <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A]" />
+              <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search by business or owner name..."
@@ -471,7 +471,7 @@ export default function BizFiAdminPage() {
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
               </select>
-              <FilterIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B8B9A] pointer-events-none" />
+              <FilterIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -520,7 +520,7 @@ export default function BizFiAdminPage() {
                     </td>
                     <td className="px-6 py-5 text-sm text-[#9BA8B5]">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono bg-[#0F1825]/50 px-2 py-1 rounded-md border border-[#7B8B9A]/10 text-xs">
+                        <span className="font-mono bg-[#121212]/50 px-2 py-1 rounded-md border border-[#7B8B9A]/10 text-xs">
                           {biz.owner.substring(0, 6)}...{biz.owner.substring(biz.owner.length - 4)}
                         </span>
                       </div>
@@ -559,7 +559,7 @@ export default function BizFiAdminPage() {
                           <option value="approved">Approved</option>
                           <option value="rejected">Rejected</option>
                         </select>
-                        <button className="p-2 rounded-lg hover:bg-[#1A2538] text-[#7B8B9A] group-hover/action:text-[#81D7B4] group-hover/action:bg-[#81D7B4]/10 transition-all">
+                        <button className="p-2 rounded-lg hover:bg-[#1A2538] text-gray-400 group-hover/action:text-[#81D7B4] group-hover/action:bg-[#81D7B4]/10 transition-all">
                           <MoreVerticalIcon className="w-4 h-4" />
                         </button>
                       </div>
@@ -594,7 +594,7 @@ export default function BizFiAdminPage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-[#F9F9FB] text-base leading-tight">{biz.businessName}</h4>
-                      <p className="text-xs text-[#7B8B9A] font-mono mt-1 flex items-center gap-1">
+                      <p className="text-xs text-gray-400 font-mono mt-1 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#7B8B9A]/50"></span>
                         {biz.owner.substring(0, 6)}...{biz.owner.substring(biz.owner.length - 4)}
                       </p>
@@ -616,7 +616,7 @@ export default function BizFiAdminPage() {
                       }`}></span>
                     <span className="capitalize">{biz.status || 'Unknown'}</span>
                   </div>
-                  <span className="text-xs text-[#7B8B9A] font-medium">
+                  <span className="text-xs text-gray-400 font-medium">
                     {biz.createdAt ? format(new Date(biz.createdAt), 'MMM d, yyyy') : '-'}
                   </span>
                 </div>
@@ -628,7 +628,7 @@ export default function BizFiAdminPage() {
                       onChange={(e) => {
                         if (e.target.value) handleStatusUpdate(biz.transactionHash, e.target.value);
                       }}
-                      className="w-full appearance-none bg-[#0F1825]/50 border border-[#7B8B9A]/20 text-[#81D7B4] py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#0F1825] transition-all"
+                      className="w-full appearance-none bg-[#121212]/50 border border-[#7B8B9A]/20 text-[#81D7B4] py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer focus:outline-none focus:border-[#81D7B4]/50 focus:bg-[#121212] transition-all"
                     >
                       <option value="" disabled>Update Status</option>
                       <option value="pending">Pending</option>
@@ -651,8 +651,8 @@ export default function BizFiAdminPage() {
         <div className="p-4 border-t border-[#7B8B9A]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#9BA8B5]">
           <span>Showing {filteredBusinesses.length} of {businesses.length} entries</span>
           <div className="flex gap-2 w-full sm:w-auto">
-            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#0F1825] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium hover:bg-[#1A2538] transition-colors">Previous</button>
-            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#0F1825] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium hover:bg-[#1A2538] transition-colors">Next</button>
+            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#121212] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium hover:bg-[#1A2538] transition-colors">Previous</button>
+            <button disabled className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-[#121212] border border-[#7B8B9A]/20 opacity-50 cursor-not-allowed font-medium hover:bg-[#1A2538] transition-colors">Next</button>
           </div>
         </div>
       </motion.div>
