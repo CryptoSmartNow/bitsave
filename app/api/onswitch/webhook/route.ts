@@ -68,22 +68,13 @@ export async function POST(req: NextRequest) {
     // ── Step 1: Find the transaction by reference ONLY (not by status) ──
     // This enables idempotent retry handling — we can find already-processed
     // transactions and short-circuit instead of silently swallowing retries.
-    let project = 'wc26';
-    let transactionsCollection = db.collection('wc26_transactions');
-    let transaction = await transactionsCollection.findOne({
+    const transactionsCollection = db.collection('bizswap_transactions');
+    const transaction = await transactionsCollection.findOne({
       reference,
     });
 
     if (!transaction) {
-      project = 'bizswap';
-      transactionsCollection = db.collection('bizswap_transactions');
-      transaction = await transactionsCollection.findOne({
-        reference,
-      });
-    }
-
-    if (!transaction) {
-      console.warn(`[Webhook] ref=${logReference} — Transaction not found in any collection. Ignoring.`);
+      console.warn(`[Webhook] ref=${logReference} — Transaction not found in bizswap_transactions. Ignoring.`);
       return NextResponse.json({ success: true });
     }
 
@@ -158,54 +149,16 @@ export async function POST(req: NextRequest) {
 
       // ── Step 5: Perform fulfillment ───────────────────────────────────
       try {
-        if (project === 'wc26') {
-          const positionsCollection = db.collection('wc26_positions');
-          const poolCollection = db.collection('wc26_pool');
-
-          const pureInvestment = lockedTransaction.shares * 10;
-          const feePaid = lockedTransaction.usdcAmount - pureInvestment;
-
-          await positionsCollection.updateOne(
-            { user_id: lockedTransaction.userId },
-            {
-              $inc: {
-                shares_held: lockedTransaction.shares,
-                total_invested_usd: pureInvestment,
-                total_fees_paid: feePaid > 0 ? feePaid : 0,
-              },
-              $set: { lastUpdated: new Date() },
-              $setOnInsert: { createdAt: new Date() },
-            },
-            { upsert: true }
-          );
-
-          await poolCollection.updateOne(
-            { _id: 'main_pool' as any },
-            {
-              $inc: {
-                current_supply: lockedTransaction.shares,
-                current_tvl_usd: pureInvestment,
-              },
-              $set: { last_updated: new Date() },
-              $setOnInsert: { created_at: new Date() },
-            },
-            { upsert: true }
-          );
-
-          console.log(`[Webhook] ref=${logReference} — Credited user ${lockedTransaction.userId} with ${lockedTransaction.shares} WC26 shares.`);
-
-        } else if (project === 'bizswap') {
-          if (!lockedTransaction.metadata) {
-            throw new Error('No metadata found for bizswap transaction — cannot mint');
-          }
-
-          // Webhook might be delayed. Use the actual transaction creation time.
-          await handleMint({
-            ...lockedTransaction.metadata,
-            originalPurchaseDate: lockedTransaction.createdAt || lockedTransaction.timestamp
-          });
-          console.log(`[Webhook] ref=${logReference} — Minted BizSwap certificate for ${lockedTransaction.userId}.`);
+        if (!lockedTransaction.metadata) {
+          throw new Error('No metadata found for bizswap transaction — cannot mint');
         }
+
+        // Webhook might be delayed. Use the actual transaction creation time.
+        await handleMint({
+          ...lockedTransaction.metadata,
+          originalPurchaseDate: lockedTransaction.createdAt || lockedTransaction.timestamp
+        });
+        console.log(`[Webhook] ref=${logReference} — Minted BizSwap certificate for ${lockedTransaction.userId}.`);
 
       } catch (fulfillmentError: any) {
         // ── Step 5b: Fulfillment failed — mark as failed_fulfillment ───

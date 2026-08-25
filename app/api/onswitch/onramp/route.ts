@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     const db = client.db('bitsave');
 
     // Dynamically save to a specific collection based on the project
-    const collectionName = project ? `${project}_transactions` : 'wc26_transactions';
+    const collectionName = project ? `${project}_transactions` : 'bizswap_transactions';
     const transactionsCollection = db.collection(collectionName);
 
     const transactionRecord: any = {

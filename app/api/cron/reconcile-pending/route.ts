@@ -24,7 +24,6 @@ export async function GET(req: NextRequest) {
     const db = client.db('bitsave');
     const transactionsCollection = db.collection('bizswap_transactions');
     const certsCollection = db.collection('bizswap_certificates');
-    const wc26TransactionsCollection = db.collection('wc26_transactions');
 
     const now = Date.now();
     const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -222,28 +221,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 4. Also check WC26 stale pending transactions > 24 hours
-    try {
-      const staleWc26 = await wc26TransactionsCollection.find({
-        status: { $in: ['pending', 'awaiting_deposit', 'processing'] }
-      }).toArray();
-
-      for (const wcTx of staleWc26) {
-        const rawDate = wcTx.timestamp || wcTx.createdAt || wcTx.created_at;
-        const txTime = rawDate ? new Date(rawDate).getTime() : 0;
-        if (now - txTime > TWENTY_FOUR_HOURS_MS) {
-          await wc26TransactionsCollection.updateOne(
-            { _id: wcTx._id },
-            { $set: { status: 'expired', updated_at: new Date() } }
-          );
-          expiredCount++;
-        }
-      }
-    } catch(wc26Err) {
-      console.warn('[Cron] WC26 stale check non-fatal error:', wc26Err);
-    }
-
-    // 5. Record Cron Execution Heartbeat for Dev-Admin Watch Tower
+    // 4. Record Cron Execution Heartbeat for Dev-Admin Watch Tower
     try {
       await db.collection('system_cron_logs').updateOne(
         { job: 'reconcile-pending' },

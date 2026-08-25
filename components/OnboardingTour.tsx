@@ -20,7 +20,10 @@ interface OnboardingTourProps {
 export default function OnboardingTour({ isOpen, onClose, steps }: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [windowSize, setWindowSize] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 390,
+    height: typeof window !== 'undefined' ? window.innerHeight : 844,
+  }));
 
   const updateTargetRect = useCallback(() => {
     if (!isOpen || !steps[currentStep]) return;
@@ -56,15 +59,17 @@ export default function OnboardingTour({ isOpen, onClose, steps }: OnboardingTou
     if (isOpen && steps[currentStep]) {
       const targetElement = document.querySelector(steps[currentStep].target);
       if (targetElement) {
-        // Scroll element into comfortable view
+        // Scroll element into view smoothly
         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        // Re-measure after scroll animation completes
-        const timer1 = setTimeout(updateTargetRect, 150);
-        const timer2 = setTimeout(updateTargetRect, 400);
+        // Multiple re-measurements to account for mobile scroll inertia
+        const t1 = setTimeout(updateTargetRect, 100);
+        const t2 = setTimeout(updateTargetRect, 300);
+        const t3 = setTimeout(updateTargetRect, 600);
         return () => {
-          clearTimeout(timer1);
-          clearTimeout(timer2);
+          clearTimeout(t1);
+          clearTimeout(t2);
+          clearTimeout(t3);
         };
       } else {
         setTargetRect(null);
@@ -103,88 +108,51 @@ export default function OnboardingTour({ isOpen, onClose, steps }: OnboardingTou
 
   const currentTourStep = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
-  const isMobile = windowSize.width > 0 && windowSize.width < 640;
 
-  // Responsive popover style calculation
-  let popoverStyle: React.CSSProperties = {
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    maxWidth: 'calc(100vw - 32px)',
-    width: '360px',
-  };
+  const screenW = windowSize.width || (typeof window !== 'undefined' ? window.innerWidth : 390);
+  const screenH = windowSize.height || (typeof window !== 'undefined' ? window.innerHeight : 844);
+  const cardWidth = Math.min(340, screenW - 32);
+  const cardEstHeight = 220;
 
-  if (targetRect && windowSize.width > 0) {
-    const padding = 16;
-    const cardWidth = Math.min(360, windowSize.width - (padding * 2));
-    const cardEstHeight = 220;
+  // Pixel-perfect clamping so the card is NEVER cut off on any mobile or desktop screen
+  let clampedLeft = Math.max(16, (screenW - cardWidth) / 2);
+  let clampedTop = Math.max(16, (screenH - cardEstHeight) / 2);
 
-    if (isMobile) {
-      // Mobile-first positioning: check vertical fit relative to highlight
-      const spaceBelow = windowSize.height - targetRect.bottom;
-      const spaceAbove = targetRect.top;
+  if (targetRect) {
+    const targetCenterX = targetRect.left + (targetRect.width / 2);
+    const idealLeft = targetCenterX - (cardWidth / 2);
+    clampedLeft = Math.max(16, Math.min(idealLeft, screenW - cardWidth - 16));
 
-      let topPos = 0;
-      if (spaceBelow >= cardEstHeight + padding) {
-        // Fits below the highlighted element
-        topPos = targetRect.bottom + padding;
-      } else if (spaceAbove >= cardEstHeight + padding) {
-        // Fits above the highlighted element
-        topPos = targetRect.top - cardEstHeight - padding;
-      } else {
-        // Fixed at bottom of screen with safe margin
-        topPos = Math.max(padding, windowSize.height - cardEstHeight - padding);
-      }
+    const spaceBelow = screenH - targetRect.bottom;
+    const spaceAbove = targetRect.top;
 
-      popoverStyle = {
-        top: Math.max(padding, Math.min(topPos, windowSize.height - cardEstHeight - padding)),
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: `${cardWidth}px`,
-        maxWidth: 'calc(100vw - 32px)',
-      };
-    } else {
-      // Desktop positioning
-      const requestedPos = currentTourStep.position || 'bottom';
-
-      if (requestedPos === 'bottom') {
-        popoverStyle = {
-          top: Math.min(targetRect.bottom + padding, windowSize.height - cardEstHeight - padding),
-          left: Math.max(padding, Math.min(targetRect.left + (targetRect.width / 2) - (cardWidth / 2), windowSize.width - cardWidth - padding)),
-          width: `${cardWidth}px`,
-        };
-      } else if (requestedPos === 'top') {
-        popoverStyle = {
-          top: Math.max(padding, targetRect.top - cardEstHeight - padding),
-          left: Math.max(padding, Math.min(targetRect.left + (targetRect.width / 2) - (cardWidth / 2), windowSize.width - cardWidth - padding)),
-          width: `${cardWidth}px`,
-        };
-      } else if (requestedPos === 'left') {
-        popoverStyle = {
-          top: Math.max(padding, Math.min(targetRect.top + (targetRect.height / 2) - 100, windowSize.height - cardEstHeight - padding)),
-          left: Math.max(padding, targetRect.left - padding - cardWidth),
-          width: `${cardWidth}px`,
-        };
-      } else if (requestedPos === 'right') {
-        popoverStyle = {
-          top: Math.max(padding, Math.min(targetRect.top + (targetRect.height / 2) - 100, windowSize.height - cardEstHeight - padding)),
-          left: Math.min(targetRect.right + padding, windowSize.width - cardWidth - padding),
-          width: `${cardWidth}px`,
-        };
-      }
+    let topPos = targetRect.bottom + 12;
+    if (spaceBelow < cardEstHeight + 20 && spaceAbove > cardEstHeight + 20) {
+      topPos = targetRect.top - cardEstHeight - 12;
     }
+
+    clampedTop = Math.max(16, Math.min(topPos, screenH - cardEstHeight - 16));
   }
+
+  const popoverStyle: React.CSSProperties = {
+    position: 'fixed',
+    left: `${clampedLeft}px`,
+    top: `${clampedTop}px`,
+    width: `${cardWidth}px`,
+    maxWidth: 'calc(100vw - 32px)',
+    zIndex: 100000,
+  };
 
   return (
     <div className="fixed inset-0 z-[99999] pointer-events-none">
       <AnimatePresence>
-        {/* Background Overlay with Cutout */}
+        {/* Darkened Cutout Overlay */}
         <motion.div
           key="overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 pointer-events-auto overflow-hidden"
+          className="fixed inset-0 pointer-events-auto overflow-hidden z-[99999]"
           onClick={handleSkip}
         >
           {targetRect ? (
@@ -197,58 +165,57 @@ export default function OnboardingTour({ isOpen, onClose, steps }: OnboardingTou
                 width: targetRect.width + 12,
                 height: targetRect.height + 12,
               }}
-              transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
-              className="absolute bg-transparent rounded-2xl pointer-events-none"
+              transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+              className="fixed bg-transparent rounded-2xl pointer-events-none"
               style={{
-                boxShadow: '0 0 0 9999px rgba(10, 15, 26, 0.75), 0 0 0 2.5px #81D7B4, 0 0 20px rgba(129, 215, 180, 0.45)',
+                boxShadow: '0 0 0 9999px rgba(7, 10, 15, 0.82), 0 0 0 2.5px #81D7B4, 0 0 24px rgba(129, 215, 180, 0.5)',
               }}
             />
           ) : (
-            <div className="absolute inset-0 bg-slate-950/75" />
+            <div className="fixed inset-0 bg-[#070A0F]/85" />
           )}
         </motion.div>
 
         {/* Popover Card */}
         <motion.div
           key={`step-${currentStep}`}
-          layout
-          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
           style={popoverStyle}
-          className="absolute bg-white dark:bg-[#151b28] text-gray-900 dark:text-white rounded-3xl shadow-2xl border border-gray-200/80 dark:border-white/10 pointer-events-auto flex flex-col overflow-hidden backdrop-blur-xl"
+          className="bg-[#0D131F]/95 text-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] border border-white/10 pointer-events-auto flex flex-col overflow-hidden backdrop-blur-2xl"
         >
           <div className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[10px] font-black tracking-widest uppercase text-[#047857] dark:text-[#81D7B4] bg-[#81D7B4]/20 border border-[#81D7B4]/30 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black tracking-widest uppercase text-[#81D7B4] bg-[#81D7B4]/15 border border-[#81D7B4]/30 px-2.5 py-0.5 rounded-full">
                 Step {currentStep + 1} of {steps.length}
               </span>
               <button 
                 onClick={handleSkip}
-                className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5"
+                className="text-gray-400 hover:text-white transition-colors cursor-pointer p-1 rounded-xl hover:bg-white/5"
                 aria-label="Close tour"
               >
                 <Cancel01Icon className="w-4 h-4" />
               </button>
             </div>
             
-            <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white mb-1 tracking-tight">
+            <h3 className="text-sm sm:text-base font-bold text-white mb-1 tracking-tight">
               {currentTourStep.title}
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-xs text-[#A0AEC0] leading-relaxed">
               {currentTourStep.content}
             </p>
           </div>
 
-          <div className="px-4 sm:px-5 py-3 bg-gray-50/80 dark:bg-white/[0.03] border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+          <div className="px-4 sm:px-5 py-3 bg-[#070A0F]/60 border-t border-white/[0.08] flex items-center justify-between">
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
               className={`flex items-center gap-1 text-xs font-bold transition-colors cursor-pointer ${
                 currentStep === 0 
-                  ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-gray-600 cursor-not-allowed' 
+                  : 'text-gray-300 hover:text-white'
               }`}
             >
               <ArrowLeft01Icon className="w-3.5 h-3.5" /> Back
@@ -256,12 +223,12 @@ export default function OnboardingTour({ isOpen, onClose, steps }: OnboardingTou
 
             <button
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#81D7B4] hover:bg-[#6ec9a4] text-[#070A0F] text-xs font-black rounded-xl transition-all duration-150 cursor-pointer shadow-[0_2px_12px_rgba(129,215,180,0.35)] active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#81D7B4] hover:opacity-90 text-white font-black rounded-xl transition-all duration-150 cursor-pointer shadow-[0_2px_12px_rgba(129,215,180,0.35)] active:scale-95"
             >
               {isLastStep ? (
-                <span className="flex items-center gap-1">Finish <Tick01Icon className="w-3.5 h-3.5 stroke-[2.5]" /></span>
+                <span className="flex items-center gap-1 text-white">Finish <Tick01Icon className="w-3.5 h-3.5 stroke-[2.5] text-white" /></span>
               ) : (
-                <span className="flex items-center gap-1">Next <ArrowRight01Icon className="w-3.5 h-3.5" /></span>
+                <span className="flex items-center gap-1 text-white">Next <ArrowRight01Icon className="w-3.5 h-3.5 text-white" /></span>
               )}
             </button>
           </div>

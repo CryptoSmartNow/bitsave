@@ -15,7 +15,7 @@ import {
 } from "hugeicons-react";
 import { PaymentModal } from '@chainrails/react';
 import toast from 'react-hot-toast';
-import { ONSWITCH_COUNTRIES, CountryData } from '@/app/bizswap/wc26/countries';
+import { ONSWITCH_COUNTRIES, CountryData } from '@/lib/countries';
 
 export interface UnifiedFiatModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export interface UnifiedFiatModalProps {
   onSuccess: (txHashOrReference: string) => void;
   onPending?: () => void;
   userId: string;
-  project: 'wc26' | 'bizfi' | 'bizswap';
+  project: 'bizfi' | 'bizswap';
   destinationWallet?: string;
   shares?: number;
   itemDescription?: string;
@@ -247,7 +247,7 @@ export function UnifiedFiatModal({
         onCancel={() => { setCurrentStep('method'); toast.error('Payment cancelled'); }}
         sessionToken={sessionToken}
         amount={amount.toString()}
-        styles={{ theme: 'dark', accentColor: project === 'wc26' ? '#D4AF37' : '#81D7B4' }}
+        styles={{ theme: 'dark', accentColor: project === 'bizfi' ? '#3B82F6' : '#81D7B4' }}
         onSuccess={(tx: any) => {
           toast.success("Payment successful!");
           onSuccess(tx?.hash || tx?.signature || "crypto_tx");
