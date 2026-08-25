@@ -7,20 +7,32 @@ import { MongoClient } from 'mongodb';
 console.log('💓 BitSave Heartbeat Service Started');
 
 
+let cachedClient: MongoClient | null = null;
+async function getHeartbeatDb() {
+    if (!process.env.MONGODB_URI) return null;
+    if (!cachedClient) {
+        cachedClient = new MongoClient(process.env.MONGODB_URI, {
+            maxPoolSize: 3,
+            minPoolSize: 0,
+            serverSelectionTimeoutMS: 5000,
+            connectTimeoutMS: 5000,
+        });
+        await cachedClient.connect();
+    }
+    return cachedClient.db(process.env.MONGODB_DB_NAME || 'bitsave');
+}
+
 // ── 3. Savings Maturity Checks (Daily) ────────────────────────────
 cron.schedule('0 9 * * *', async () => {
     console.log(`[${new Date().toISOString()}] Checking for mature savings from DB...`);
     
-    if (!process.env.MONGODB_URI) {
-        console.warn('MongoDB URI not provided. Skipping maturity checks.');
-        return;
-    }
-
-    let client;
     try {
-        client = new MongoClient(process.env.MONGODB_URI);
-        await client.connect();
-        const db = client.db(process.env.MONGODB_DB_NAME || 'bitsave');
+        const db = await getHeartbeatDb();
+        if (!db) {
+            console.warn('MongoDB not configured. Skipping maturity checks.');
+            return;
+        }
+
         const subsCollection = db.collection('push_subscriptions');
         
         // Find all users who are subscribed to push notifications
@@ -57,8 +69,6 @@ cron.schedule('0 9 * * *', async () => {
         }
     } catch (err: any) {
         console.error('Error in mature savings DB check:', err.message);
-    } finally {
-        if (client) await client.close();
     }
 });
 

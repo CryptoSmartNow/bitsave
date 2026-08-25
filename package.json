@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack",
-    "start": "next start",
+    "start": "NODE_OPTIONS='--max-old-space-size=384' next start",
     "lint": "next lint",
     "proxy": "node scripts/proxy-server.js",
     "agent": "npx tsx scripts/bizmart-agent.ts",

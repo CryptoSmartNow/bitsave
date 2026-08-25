@@ -71,16 +71,16 @@ function FeedbackContent() {
 
             <Link href="/dashboard" className="flex items-center gap-2">
               <div className="w-7 h-7 relative">
-                <Image src="/logo.png" alt="BitSave" fill className="object-contain" />
+                <Image src="/bitsavelogo.png" alt="BitSave" fill className="object-contain" priority />
               </div>
               <span className="font-instrument font-black text-lg text-gray-900 dark:text-white tracking-tight hidden sm:inline">
                 BitSave
               </span>
             </Link>
 
-            <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-1 hidden sm:block" />
+            <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-0.5 hidden sm:block" />
 
-            <span className="px-2.5 py-0.5 rounded-lg bg-[#81D7B4]/15 text-[#81D7B4] border border-[#81D7B4]/30 text-[11px] font-bold">
+            <span className="px-2.5 py-1 rounded-xl bg-[#81D7B4]/15 text-[#81D7B4] border border-[#81D7B4]/30 text-[11px] font-bold tracking-tight shrink-0">
               {getAppContextLabel()}
             </span>
           </div>

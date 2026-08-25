@@ -170,20 +170,20 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
     <div className={`w-full ${embedded ? '' : 'max-w-4xl mx-auto py-2 sm:py-6 px-2 sm:px-4'}`}>
       
       {/* Header Tabs */}
-      <div className="flex items-center justify-between border-b border-gray-200/70 dark:border-white/10 pb-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200/70 dark:border-white/10 pb-4 mb-6">
         <div>
           <h1 className="font-instrument text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-1">
             Help & Feedback
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl">
             Encountered an issue or have a feature idea? Send your feedback directly to the BitSave engineering team.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 p-1 rounded-2xl shrink-0">
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-2xl shrink-0 w-full sm:w-auto">
           <button
             onClick={() => { setActiveTab('submit'); setSubmittedTicketId(null); }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
               activeTab === 'submit' 
                 ? 'bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-xs' 
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
@@ -193,7 +193,7 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
               activeTab === 'history' 
                 ? 'bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-xs' 
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
@@ -210,10 +210,10 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-[#161616] rounded-3xl p-8 sm:p-12 border border-gray-200/70 dark:border-white/10 shadow-sm text-center max-w-xl mx-auto space-y-4"
+            className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-12 border border-gray-200/70 dark:border-white/10 shadow-sm text-center max-w-xl mx-auto space-y-4"
           >
-            <div className="w-16 h-16 rounded-3xl bg-[#81D7B4]/15 text-[#81D7B4] flex items-center justify-center mx-auto shadow-xs">
-              <CheckmarkCircle02Icon className="w-8 h-8" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-[#81D7B4]/15 text-[#81D7B4] flex items-center justify-center mx-auto shadow-xs">
+              <CheckmarkCircle02Icon className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
 
             <h2 className="font-instrument text-2xl font-black text-gray-900 dark:text-white">
@@ -227,7 +227,7 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => setSubmittedTicketId(null)}
-                className="w-full sm:w-auto px-6 py-3 bg-[#81D7B4] hover:opacity-90 text-white font-bold text-xs rounded-2xl shadow-xs transition-all cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3 bg-[#81D7B4] hover:opacity-90 text-white font-black text-xs rounded-2xl shadow-[0_4px_14px_rgba(129,215,180,0.35)] transition-all cursor-pointer"
               >
                 Submit Another Inquiry
               </button>
@@ -241,34 +241,37 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
           </motion.div>
         ) : (
           /* Main Submission Form */
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             
             {/* Category Selector */}
-            <div className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-8 border border-gray-200/70 dark:border-white/10 shadow-sm space-y-4">
-              <label className="block text-xs font-black uppercase tracking-wider text-gray-400">
+            <div className="bg-white dark:bg-[#161616] rounded-3xl p-4 sm:p-7 border border-gray-200/70 dark:border-white/10 shadow-sm space-y-3.5">
+              <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-gray-400">
                 1. Select Category
               </label>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {CATEGORIES.map((cat) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                {CATEGORIES.map((cat, idx) => {
                   const Icon = cat.icon;
                   const isSelected = category === cat.id;
+                  const isLastOdd = idx === CATEGORIES.length - 1;
                   return (
                     <button
                       key={cat.id}
                       type="button"
                       onClick={() => setCategory(cat.id)}
-                      className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
+                      className={`p-2.5 sm:p-3.5 rounded-2xl border text-left flex items-center sm:items-start gap-2.5 sm:gap-3 transition-all cursor-pointer ${
+                        isLastOdd ? 'col-span-2 sm:col-span-1 md:col-span-1' : ''
+                      } ${
                         isSelected 
                           ? 'border-[#81D7B4] bg-[#81D7B4]/10 shadow-xs ring-2 ring-[#81D7B4]/20' 
                           : 'border-gray-200/70 dark:border-white/10 hover:border-[#81D7B4]/50 bg-gray-50/50 dark:bg-white/[0.02]'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${cat.color}`}>
-                        <Icon className="w-4 h-4" />
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 border ${cat.color}`}>
+                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </div>
-                      <div>
-                        <p className={`text-xs font-bold ${isSelected ? 'text-[#81D7B4]' : 'text-gray-900 dark:text-white'}`}>
+                      <div className="min-w-0">
+                        <p className={`text-[11px] sm:text-xs font-bold leading-tight ${isSelected ? 'text-[#81D7B4]' : 'text-gray-900 dark:text-white'}`}>
                           {cat.label}
                         </p>
                       </div>
@@ -279,8 +282,8 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
             </div>
 
             {/* Inquiry Details */}
-            <div className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-8 border border-gray-200/70 dark:border-white/10 shadow-sm space-y-5">
-              <label className="block text-xs font-black uppercase tracking-wider text-gray-400">
+            <div className="bg-white dark:bg-[#161616] rounded-3xl p-4 sm:p-7 border border-gray-200/70 dark:border-white/10 shadow-sm space-y-4 sm:space-y-5">
+              <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-gray-400">
                 2. Inquiry Details
               </label>
 
@@ -342,24 +345,22 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
             </div>
 
             {/* Screenshots & Images (Max 3, Optimized) */}
-            <div className="bg-white dark:bg-[#161616] rounded-3xl p-6 sm:p-8 border border-gray-200/70 dark:border-white/10 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-400">
-                    3. Attach Screenshots (Optional — Max 3)
-                  </label>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
-                    Images are automatically compressed & optimized for rapid transmission.
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+            <div className="bg-white dark:bg-[#161616] rounded-3xl p-4 sm:p-7 border border-gray-200/70 dark:border-white/10 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-gray-400">
+                  3. Attach Screenshots (Optional — Max 3)
+                </label>
+                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 shrink-0 whitespace-nowrap bg-gray-100 dark:bg-white/5 px-2.5 py-0.5 rounded-lg border border-gray-200/60 dark:border-white/10">
                   {images.length}/3 attached
                 </span>
               </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed">
+                Images are automatically compressed & optimized for rapid transmission.
+              </p>
 
               {/* Upload Dropzone */}
               {images.length < 3 && (
-                <div>
+                <div className="pt-1">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -371,15 +372,15 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
                   />
                   <label
                     htmlFor="feedback-image-upload"
-                    className="border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-[#81D7B4] rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-gray-50/50 dark:bg-white/[0.02] group"
+                    className="border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-[#81D7B4] rounded-2xl p-5 sm:p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-gray-50/50 dark:bg-white/[0.02] group"
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-[#81D7B4]/15 text-[#81D7B4] flex items-center justify-center group-hover:scale-105 transition-transform">
-                      <Upload01Icon className="w-5 h-5" />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#81D7B4]/15 text-[#81D7B4] flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <Upload01Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center">
                       Click to browse or drop screenshots here
                     </p>
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-gray-400 text-center">
                       PNG, JPG, or WEBP up to 10MB (automatically resized)
                     </p>
                   </label>
@@ -421,17 +422,17 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
               <button
                 type="submit"
                 disabled={isSubmitting || isCompressing}
-                className="px-8 py-3.5 bg-[#81D7B4] hover:opacity-90 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3.5 bg-[#81D7B4] hover:opacity-90 text-white font-black rounded-2xl text-xs sm:text-sm shadow-[0_4px_14px_rgba(129,215,180,0.35)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Submitting Inquiry...</span>
+                    <span className="text-white">Submitting Inquiry...</span>
                   </>
                 ) : (
                   <>
-                    <SentIcon className="w-4 h-4" />
-                    <span>Submit to Dev Team</span>
+                    <SentIcon className="w-4 h-4 text-white" />
+                    <span className="text-white">Submit to Dev Team</span>
                   </>
                 )}
               </button>

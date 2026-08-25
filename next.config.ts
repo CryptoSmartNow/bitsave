@@ -12,13 +12,17 @@ const withPWA = require("next-pwa")({
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   allowedDevOrigins: ['8460-105-116-13-202.ngrok-free.app'],
   experimental: {
     optimizePackageImports: [
       "framer-motion",
       "lucide-react",
       "@radix-ui/react-dialog",
-      "hugeicons-react"
+      "@radix-ui/react-popover",
+      "hugeicons-react",
+      "@rainbow-me/rainbowkit",
+      "date-fns"
     ],
   },
 

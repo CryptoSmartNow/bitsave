@@ -12,10 +12,13 @@ const dbName = process.env.MONGODB_DB_NAME || 'bitsave';
 export const MONGODB_ENABLED = true;
 
 const options = {
-  serverSelectionTimeoutMS: 10000,
-  connectTimeoutMS: 10000,
-  socketTimeoutMS: 45000,
-  maxPoolSize: 50,
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 5000,
+  socketTimeoutMS: 30000,
+  maxPoolSize: 10,
+  minPoolSize: 1,
+  maxIdleTimeMS: 30000,
+  waitQueueTimeoutMS: 5000,
   retryWrites: true,
   writeConcern: new WriteConcern('majority'),
   directConnection: false,
