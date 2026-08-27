@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "postbuild": "cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/ 2>/dev/null || true",
     "start": "NODE_OPTIONS='--max-old-space-size=280 --optimize-for-size' next start",
     "start:standalone": "NODE_OPTIONS='--max-old-space-size=280 --optimize-for-size' node .next/standalone/server.js",
