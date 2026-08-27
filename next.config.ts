@@ -12,6 +12,8 @@ const withPWA = require("next-pwa")({
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  // Produce lean standalone bundle to save 50%+ RAM on constrained containers (Render 512MB)
+  output: "standalone",
   poweredByHeader: false,
   allowedDevOrigins: ['8460-105-116-13-202.ngrok-free.app'],
   experimental: {
@@ -90,12 +92,11 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    // Disable CPU & RAM intensive server-side on-the-fly image transcoding on Render
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    formats: ["image/webp", "image/avif"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       { protocol: "https", hostname: "unsplash.com", pathname: "/**" },
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },

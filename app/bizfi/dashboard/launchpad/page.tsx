@@ -1,455 +1,391 @@
 'use client';
 
-import { Tick01Icon, Activity01Icon, Dollar01Icon, Calendar01Icon, BarChartIcon, UserMultipleIcon, PlusSignIcon, ArrowDown01Icon, Building04Icon, TextIcon, Clock01Icon, Cancel01Icon, RocketIcon, Folder01Icon } from "hugeicons-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { Activity01Icon, Dollar01Icon, RocketIcon, Shield01Icon, CheckmarkCircle02Icon, Calendar03Icon, PlusSignIcon, Copy01Icon, Folder01Icon, ArrowDown01Icon, Building04Icon } from "hugeicons-react";
+import { useState, useEffect, useMemo } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import "../../bizfi-colors.css";
-import BusinessDetailsModal from "./BusinessDetailsModal";
+import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
+import { Instrument_Serif } from "next/font/google";
+import { BizFiAuthButton } from "@/components/BizFiAuth";
 import KYCStatus from "./components/KYCStatus";
 import KYCSubmissionForm from "./components/KYCSubmissionForm";
 import ProjectTimeline from "./components/ProjectTimeline";
 import RiskAssessment from "./components/RiskAssessment";
+import BusinessDetailsModal from "./BusinessDetailsModal";
 import EmptyState from "@/app/components/EmptyState";
+import "../../bizfi-colors.css";
+
+const instrumentSerif = Instrument_Serif({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal', 'italic'],
+    display: 'swap',
+    variable: '--font-instrument-serif',
+});
+
+interface BusinessProject {
+    businessName: string;
+    owner: string;
+    tier: number | string;
+    tierName?: string;
+    status: string;
+    totalRaise: number;
+    transactionHash: string;
+    kycSteps?: any[];
+    milestones?: any[];
+    risks?: any[];
+    metadata?: any;
+    createdAt?: string;
+}
 
 export default function LaunchPadPage() {
-    const { address: wagmiAddress } = useAccount();
-    const { user } = usePrivy();
-    const address = user?.id || user?.email?.address || wagmiAddress;
-    const [businesses, setBusinesses] = useState<any[]>([]);
+    const { user, authenticated, ready } = usePrivy();
+    const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();
+    const router = useRouter();
+
+    const [businesses, setBusinesses] = useState<BusinessProject[]>([]);
+    const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeProject, setActiveProject] = useState<any>(null);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
-    const [selectedBusiness, setSelectedBusiness] = useState<any>(null); // For modal
-    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [copiedHash, setCopiedHash] = useState(false);
+
+    const isConnected = ready && (authenticated || isWagmiConnected);
+
+    const userIdentifiers = useMemo(() => {
+        const ids = new Set<string>();
+        if (wagmiAddress) {
+            ids.add(wagmiAddress);
+            ids.add(wagmiAddress.toLowerCase());
+        }
+        if (user?.wallet?.address) {
+            ids.add(user.wallet.address);
+            ids.add(user.wallet.address.toLowerCase());
+        }
+        if (user?.id) {
+            ids.add(user.id);
+        }
+        if (user?.email?.address) {
+            ids.add(user.email.address);
+            ids.add(user.email.address.toLowerCase());
+        }
+        // @ts-ignore
+        if (user?.google?.email) {
+            // @ts-ignore
+            ids.add(user.google.email);
+            // @ts-ignore
+            ids.add(user.google.email.toLowerCase());
+        }
+        // @ts-ignore
+        if (user?.phone?.number) {
+            // @ts-ignore
+            ids.add(user.phone.number);
+        }
+
+        if (user?.linkedAccounts && Array.isArray(user.linkedAccounts)) {
+            user.linkedAccounts.forEach((account: any) => {
+                if (account.address) {
+                    ids.add(account.address);
+                    ids.add(account.address.toLowerCase());
+                }
+                if (account.email) {
+                    ids.add(account.email);
+                    ids.add(account.email.toLowerCase());
+                }
+                if (account.phoneNumber) {
+                    ids.add(account.phoneNumber);
+                }
+            });
+        }
+        return Array.from(ids).filter(Boolean);
+    }, [wagmiAddress, user]);
 
     const fetchBusinesses = async () => {
-        if (!address) return;
+        if (!ready) return;
+
+        if (userIdentifiers.length === 0) {
+            setLoading(false);
+            setBusinesses([]);
+            return;
+        }
+
         try {
-            const response = await fetch(`/api/bizfi/business?owner=${address}`);
-            if (response.ok) {
-                const data = await response.json();
-                setBusinesses(data || []);
-                // Update active project if it exists in new data
-                if (activeProject) {
-                    const updated = data.find((b: any) => b.transactionHash === activeProject.transactionHash);
-                    if (updated) setActiveProject(updated);
-                } else if (data && data.length > 0) {
-                    setActiveProject(data[0]);
+            setLoading(true);
+            const queryParams = encodeURIComponent(userIdentifiers.join(','));
+            const res = await fetch(`/api/bizfi/business?owner=${queryParams}`);
+            
+            if (res.ok) {
+                const data = await res.json();
+                const list: BusinessProject[] = Array.isArray(data) ? data : (data.businesses || []);
+                setBusinesses(list);
+                
+                if (list.length > 0) {
+                    if (!selectedTxHash || !list.some(b => b.transactionHash === selectedTxHash)) {
+                        setSelectedTxHash(list[0].transactionHash);
+                    }
+                } else {
+                    setSelectedTxHash(null);
                 }
+            } else {
+                console.error("Failed to fetch businesses:", await res.text());
             }
-        } catch (error) {
-            console.error("Failed to fetch businesses:", error);
+        } catch (err) {
+            console.error("Failed to fetch launchpad businesses:", err);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchBusinesses();
-    }, [address]);
-
-    // Update active project if businesses change (e.g. after create) and no active project
-    useEffect(() => {
-        if (!activeProject && businesses.length > 0) {
-            setActiveProject(businesses[0]);
+        if (ready) {
+            fetchBusinesses();
         }
-    }, [businesses]); // Removed activeProject from dependency to avoid loop if logic changes
+    }, [ready, userIdentifiers]);
 
-    const handleProjectSelect = (project: any) => {
-        setActiveProject(project);
+    const activeProject = businesses.find(b => b.transactionHash === selectedTxHash) || businesses[0] || null;
+
+    const handleProjectSelect = (project: BusinessProject) => {
+        setSelectedTxHash(project.transactionHash);
         setIsProjectSelectorOpen(false);
     };
 
-    const getStatusConfig = (status: string) => {
-        const normalizedStatus = status?.toLowerCase() || 'submitted';
-        switch (normalizedStatus) {
-            case "draft":
-                return { icon: TextIcon, color: "text-gray-400", bg: "bg-gray-800/30", label: "Draft" };
-            case "pending":
-            case "inactive":
-                return { icon: Clock01Icon, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Pending" };
-            case "submitted":
-            case "registered":
-                return { icon: Tick01Icon, color: "text-blue-400", bg: "bg-blue-500/10", label: "Submitted" };
-            case "under_review":
-                return { icon: Clock01Icon, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Under Review" };
-            case "approved":
-                return { icon: Tick01Icon, color: "text-[#81D7B4]", bg: "bg-[#81D7B4]/10", label: "Approved" };
-            case "rejected":
-                return { icon: Cancel01Icon, color: "text-red-400", bg: "bg-red-500/10", label: "Rejected" };
+    const handleCopyHash = (hash: string) => {
+        if (!hash) return;
+        navigator.clipboard.writeText(hash);
+        setCopiedHash(true);
+        setTimeout(() => setCopiedHash(false), 2000);
+    };
+
+    const getStatusConfig = (status?: string) => {
+        const normalized = (status || 'pending').toLowerCase();
+        switch (normalized) {
+            case 'approved':
+                return {
+                    label: 'Approved & Tokenized',
+                    color: 'text-[#81D7B4]',
+                    bg: 'bg-[#81D7B4]/10',
+                    border: 'border-[#81D7B4]/30',
+                    dotBg: 'bg-[#81D7B4]'
+                };
+            case 'under_review':
+            case 'submitted':
+                return {
+                    label: 'Under Compliance Review',
+                    color: 'text-amber-400',
+                    bg: 'bg-amber-400/10',
+                    border: 'border-amber-400/30',
+                    dotBg: 'bg-amber-400'
+                };
+            case 'rejected':
+                return {
+                    label: 'Application Declined',
+                    color: 'text-red-400',
+                    bg: 'bg-red-400/10',
+                    border: 'border-red-400/30',
+                    dotBg: 'bg-red-400'
+                };
             default:
-                return { icon: Clock01Icon, color: "text-gray-400", bg: "bg-gray-800", label: status };
+                return {
+                    label: 'Action Required: Submit KYC',
+                    color: 'text-[#81D7B4]',
+                    bg: 'bg-[#81D7B4]/10',
+                    border: 'border-[#81D7B4]/30',
+                    dotBg: 'bg-[#81D7B4]'
+                };
         }
     };
-
-    const getTierLabel = (tierId: any) => {
-        const tiers: Record<string, string> = {
-            'micro': 'Micro Business',
-            'builder': 'Builder Tier',
-            'growth': 'Growth Business',
-            'enterprise': 'Enterprise Projects',
-            '0': 'Micro Business',
-            '1': 'Builder Tier',
-            '2': 'Growth Business',
-            '3': 'Enterprise Projects'
-        };
-        return tiers[String(tierId)] || 'Standard Tier';
-    };
-
-    const handleViewDetails = (business: any) => {
-        setSelectedBusiness(business);
-        setShowDetailsModal(true);
-    };
-
-    // Derived Metrics
-    const totalListings = businesses.length;
-    
-    // Calculate total revenue across all businesses
-    const totalRevenue = businesses.reduce((acc, business) => {
-        return acc + (parseFloat(business.metadata?.monthlyRevenue) || 0);
-    }, 0);
-
-    // Calculate capital raised (using raiseAmount as a proxy for now, or 0 if not funded yet)
-    // In a real scenario, this would be the actual amount raised, not just requested.
-    // Assuming for now we show 0 or track it if available.
-    // If 'raiseAmount' is the target, we might need another field for 'raised'.
-    // For now, let's assume 0 as per the image default, or sum if we had a 'raised' field.
-    const capitalRaised = 0; 
-
-    // Count approved listings
-    const approvedListings = businesses.filter(b => b.status === 'approved').length;
-    
-    const DASHBOARD_METRICS = [
-        {
-            label: "Total Listings",
-            value: totalListings,
-            change: "+1", // Example static change
-            icon: Building04Icon,
-            isStatus: false
-        },
-        {
-            label: "Total Revenue",
-            value: `$${totalRevenue.toLocaleString()}`,
-            change: "0%", // Example static change
-            icon: Dollar01Icon,
-            isStatus: false
-        },
-        {
-            label: "Capital Raised",
-            value: `$${capitalRaised.toLocaleString()}`,
-            change: "0%", // Example static change
-            icon: RocketIcon,
-            isStatus: false
-        },
-        {
-            label: "Approved Listings",
-            value: approvedListings,
-            change: "Pending", // Status text
-            icon: Tick01Icon,
-            isStatus: true
-        }
-    ];
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#81D7B4]"></div>
+            <div className="w-full min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-3">
+                <div className="w-8 h-8 border-2 border-[#7B8B9A]/30 border-t-[#81D7B4] rounded-full animate-spin" />
+                <p className="text-xs text-[#7B8B9A] font-medium">Loading portfolio...</p>
             </div>
         );
     }
 
-    return (
-        <div className="space-y-6 md:space-y-8 pb-20 px-5 md:px-8 lg:px-10 pt-6 max-w-[1920px] mx-auto">
-            {/* Header & Actions */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Launchpad</h1>
-                    <p className="text-sm md:text-base text-gray-400">Manage your business listings and track performance</p>
-                </div>
-                
-                {/* Project Selector & Create Button */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-                    {/* Project Selector Dropdown */}
-                    {businesses.length > 0 && (
-                        <div className="relative flex-1 sm:flex-initial">
-                            <button
-                                onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                                className="w-full flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white hover:bg-gray-800 transition-colors sm:min-w-[200px] justify-between"
-                            >
-                                <div className="flex items-center gap-2 truncate">
-                                    <Activity01Icon className="w-5 h-5 text-[#81D7B4] shrink-0" />
-                                    <span className="truncate max-w-[140px] whitespace-nowrap">
-                                        {activeProject ? activeProject.businessName : "Select Project"}
-                                    </span>
-                                </div>
-                                <ArrowDown01Icon className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            <AnimatePresence>
-                                {isProjectSelectorOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                        className="absolute right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden"
-                                    >
-                                        <div className="p-2 space-y-1">
-                                            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                                Your Projects
-                                            </div>
-                                            {businesses.map((business) => (
-                                                <button
-                                                    key={business._id || business.transactionHash}
-                                                    onClick={() => handleProjectSelect(business)}
-                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                                                        activeProject === business 
-                                                            ? "bg-[#81D7B4]/10 text-[#81D7B4]" 
-                                                            : "text-gray-300 hover:bg-gray-800"
-                                                    }`}
-                                                >
-                                                    <div className={`w-2 h-2 rounded-full ${activeProject === business ? "bg-[#81D7B4]" : "bg-gray-600"}`} />
-                                                    <span className="truncate">{business.businessName}</span>
-                                                    {activeProject === business && (
-                                                        <Tick01Icon className="w-4 h-4 ml-auto" />
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    )}
-
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#81D7B4] text-[#0B1221] rounded-xl font-bold hover:bg-[#6bcb9f] transition-colors whitespace-nowrap"
-                        onClick={() => window.location.href = '/bizfi/dashboard/create-savings'}
-                    >
-                        <PlusSignIcon className="w-5 h-5" />
-                        New Project
-                    </motion.button>
-                </div>
-            </div>
-
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                {DASHBOARD_METRICS.map((metric, index) => (
-                    <motion.div
-                        key={metric.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-[#121212] p-5 rounded-2xl border border-gray-800 relative h-[140px] flex flex-col justify-between"
-                    >
-                        {/* Top Row: Icon and Change/Status */}
-                        <div className="flex justify-between items-start">
-                            <div className="p-2.5 rounded-xl bg-[#81D7B4]/10 text-[#81D7B4]">
-                                <metric.icon className="w-6 h-6" />
-                            </div>
-                            <span className={`text-sm font-bold whitespace-nowrap ${metric.isStatus ? 'text-gray-400' : 'text-[#81D7B4]'}`}>
-                                {metric.change}
-                            </span>
-                        </div>
-
-                        {/* Bottom Row: Label and Value */}
-                        <div>
-                            <h3 className="text-gray-400 text-sm font-medium mb-1">{metric.label}</h3>
-                            <p className="text-2xl font-bold text-white">{metric.value}</p>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Active Project Overview Section */}
-            <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2 overflow-hidden">
-                        <Activity01Icon className="w-6 h-6 text-[#81D7B4] shrink-0" />
-                        <span className="truncate">
-                            {activeProject ? `Project Status: ${activeProject.businessName}` : "Project Status"}
-                        </span>
-                    </h2>
-                    {activeProject && (
-                        <span className="text-xs text-[#81D7B4] border border-[#81D7B4]/30 px-3 py-1 rounded-full flex items-center gap-2 self-start sm:self-auto whitespace-nowrap shrink-0">
-                            <div className="w-2 h-2 rounded-full bg-[#81D7B4] animate-pulse" />
-                            Active Context
-                        </span>
-                    )}
-                </div>
-
-                {!activeProject ? (
-                     <div className="py-12">
-                        <EmptyState 
-                            title="No Project Selected"
-                            description="Select a project from the dropdown above or create a new one to view details."
-                            icon={Folder01Icon}
-                            actionLabel="Create New Project"
-                            onAction={() => window.location.href = '/bizfi/dashboard/create-savings'}
-                        />
-                     </div>
-                ) : (
-                    <>
-                        {/* KYC Process */}
-                        <motion.div
-                            key={`kyc-${activeProject._id || activeProject.transactionHash}`}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                        >
-                            {(!activeProject?.metadata?.kyc && (activeProject?.status === 'pending' || activeProject?.status === 'inactive')) ? (
-                                <KYCSubmissionForm 
-                                    business={activeProject}
-                                    onSuccess={fetchBusinesses}
-                                />
-                            ) : (
-                                <KYCStatus 
-                                    status={activeProject?.status} 
-                                    steps={activeProject?.kycSteps}
-                                />
-                            )}
-                        </motion.div>
-
-                        {/* Milestones & Risk Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8">
-                            <motion.div
-                                key={`timeline-${activeProject._id || activeProject.transactionHash}`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 }}
-                            >
-                                <ProjectTimeline milestones={activeProject?.milestones} />
-                            </motion.div>
-                            <motion.div
-                                key={`risk-${activeProject._id || activeProject.transactionHash}`}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.4 }}
-                            >
-                                <RiskAssessment risks={activeProject?.risks} />
-                            </motion.div>
-                        </div>
-                    </>
-                )}
-            </div>
-
-            {/* Applications ListView */}
-            <div className="space-y-6">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <BarChartIcon className="w-6 h-6 text-[#81D7B4]" />
-                    All Applications
-                </h2>
-
-                {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#81D7B4]"></div>
+    if (!isConnected) {
+        return (
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-lg mx-auto text-center">
+                <div className="bg-[#1A2538]/40 backdrop-blur-xl border border-[#7B8B9A]/15 p-8 sm:p-10 rounded-3xl shadow-xl space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-[#81D7B4]/15 border border-[#81D7B4]/30 flex items-center justify-center mx-auto text-[#81D7B4]">
+                        <Building04Icon className="w-6 h-6" />
                     </div>
-                ) : businesses.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-3xl border border-dashed border-gray-700 bg-gray-900/30"
-                    >
-                        <div className="p-4 rounded-full bg-gray-800/50 mb-4">
-                            <Activity01Icon className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-2">No Applications Yet</h3>
-                        <p className="text-gray-400 max-w-md mb-6">
-                            Start by registering your first business to see it listed here.
+                    <div className="space-y-1">
+                        <h2 className="text-xl sm:text-2xl font-bold text-[#F9F9FB]">
+                            Connect Your Account
+                        </h2>
+                        <p className="text-xs sm:text-sm text-[#7B8B9A] leading-relaxed">
+                            Sign in or connect your wallet to access your business launchpad, compliance status, and tokenization tools.
                         </p>
-                        <button className="px-6 py-2 bg-[#81D7B4] text-gray-900 rounded-lg font-bold text-sm hover:bg-[#6BC4A0] transition-colors">
-                            Start Registration
-                        </button>
-                    </motion.div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-                        {businesses.map((business, index) => {
-                            const statusConfig = getStatusConfig(business.status || 'submitted');
-                            const StatusIcon = statusConfig.icon;
-                            const tierLabel = getTierLabel(business.tier);
-                            const revenue = business.metadata?.monthlyRevenue
-                                ? `$${Number(business.metadata.monthlyRevenue).toLocaleString()}`
-                                : 'N/A';
-
-                            return (
-                                <motion.div
-                                    key={business.transactionHash || index}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 + (index * 0.1) }}
-                                    className="group relative bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-6 hover:border-[#81D7B4]/30 hover:shadow-lg hover:shadow-[#81D7B4]/5 transition-all"
-                                >
-                                    {/* Header: Name & Status */}
-                                    <div className="flex items-start justify-between mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-800 text-[#81D7B4] border border-gray-700 group-hover:border-[#81D7B4]/30 group-hover:text-[#81D7B4] transition-colors">
-                                                <Activity01Icon className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-white group-hover:text-[#81D7B4] transition-colors">
-                                                    {business.businessName || 'Unnamed Business'}
-                                                </h3>
-                                                <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                                    <Calendar01Icon className="w-3.5 h-3.5" />
-                                                    <span>
-                                                        {business.createdAt
-                                                            ? new Date(business.createdAt).toLocaleDateString()
-                                                            : 'Recent'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.color} border border-transparent`}>
-                                            <StatusIcon className="w-3.5 h-3.5" />
-                                            {statusConfig.label}
-                                        </div>
-                                    </div>
-
-                                    {/* Key Metrics Grid */}
-                                    <div className="grid grid-cols-2 gap-4 mb-6">
-                                        <div className="p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
-                                            <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                                <Activity01Icon className="w-3 h-3" /> Tier
-                                            </p>
-                                            <p className="text-sm font-semibold text-gray-200 truncate">{tierLabel}</p>
-                                        </div>
-                                        <div className="p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
-                                            <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                                <Dollar01Icon className="w-3 h-3" /> Monthly Revenue
-                                            </p>
-                                            <p className="text-sm font-semibold text-gray-200">{revenue}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Action */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-                                        <span className="text-xs text-gray-500">
-                                            ID: {business.transactionHash ? `${business.transactionHash.slice(0, 6)}...${business.transactionHash.slice(-4)}` : 'N/A'}
-                                        </span>
-                                        <button
-                                            onClick={() => handleViewDetails(business)}
-                                            className="flex items-center gap-2 text-sm font-semibold text-[#81D7B4] hover:text-[#6BC4A0] transition-colors"
-                                        >
-                                            <Activity01Icon className="w-4 h-4" />
-                                            View Full Details
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
                     </div>
-                )}
+                    <div className="pt-3 flex justify-center">
+                        <BizFiAuthButton />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!activeProject) {
+        return (
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-5xl mx-auto">
+                <EmptyState 
+                    title="No Registered Businesses Found"
+                    description="You have not submitted a business application yet with this account. Register your business to start tokenization and access onchain liquidity."
+                    actionLabel="Register a Business"
+                    onAction={() => router.push('/bizfi/dashboard')}
+                />
+            </div>
+        );
+    }
+
+    const currentStatus = getStatusConfig(activeProject?.status);
+
+    return (
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 max-w-7xl mx-auto">
+            
+            {/* Header with Project Selector & Switcher */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-[#7B8B9A]/15">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F9F9FB]">
+                        Launchpad <span className={`${instrumentSerif.className} italic font-normal text-[#81D7B4]`}>Console</span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-[#7B8B9A] mt-1 font-medium">
+                        Track identity verification, milestone progression, onchain risk scoring, and tokenization status.
+                    </p>
+                </div>
+
+                {/* Switcher & List New CTA */}
+                <div className="flex items-center gap-3 self-start md:self-auto">
+                    {/* Project Selector Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
+                            className="flex items-center gap-2 px-3.5 py-2 bg-[#1A2538] hover:bg-[#2C3E5D]/50 border border-[#7B8B9A]/20 hover:border-[#81D7B4]/40 text-[#F9F9FB] rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                        >
+                            <Folder01Icon className="w-4 h-4 text-[#81D7B4]" />
+                            <span className="truncate max-w-[140px]">
+                                {activeProject?.businessName || "Select Business"}
+                            </span>
+                            <ArrowDown01Icon className={`w-3.5 h-3.5 text-[#7B8B9A] transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isProjectSelectorOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-[#0F1825] border border-[#7B8B9A]/25 rounded-2xl shadow-2xl z-50 p-2 overflow-hidden backdrop-blur-xl">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-[#7B8B9A] px-3 py-2 border-b border-[#7B8B9A]/15">
+                                    Listed Businesses ({businesses.length})
+                                </div>
+                                <div className="max-h-60 overflow-y-auto space-y-1 mt-1">
+                                    {businesses.map((b) => (
+                                        <button
+                                            key={b.transactionHash}
+                                            onClick={() => handleProjectSelect(b)}
+                                            className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                                                b.transactionHash === activeProject?.transactionHash 
+                                                    ? 'bg-[#81D7B4]/15 text-[#81D7B4] border border-[#81D7B4]/30' 
+                                                    : 'text-[#7B8B9A] hover:text-[#F9F9FB] hover:bg-[#1A2538]'
+                                            }`}
+                                        >
+                                            <span className="truncate font-bold">{b.businessName}</span>
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1A2538] text-[#7B8B9A] border border-[#7B8B9A]/20">
+                                                Tier {b.tier}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={() => router.push('/bizfi/dashboard')}
+                        className="flex items-center gap-1.5 px-3.5 py-2 bg-[#81D7B4] hover:bg-[#9FE0C5] text-[#0F1825] font-bold rounded-xl text-xs transition-all shadow-sm cursor-pointer"
+                    >
+                        <PlusSignIcon className="w-3.5 h-3.5" />
+                        <span>List Another</span>
+                    </button>
+                </div>
             </div>
 
-            {/* Modal */}
-            <BusinessDetailsModal
-                isOpen={showDetailsModal}
-                onClose={() => setShowDetailsModal(false)}
-                data={selectedBusiness?.metadata}
-                status={selectedBusiness?.status || 'Submitted'}
+            {/* Active Project Banner & Metadata Overview */}
+            <div className="bg-[#1A2538]/30 border border-[#7B8B9A]/15 rounded-3xl p-5 sm:p-7 shadow-lg">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="space-y-2 max-w-2xl">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="text-xl sm:text-2xl font-black text-[#F9F9FB] tracking-tight">
+                                {activeProject.businessName}
+                            </span>
+                            <span className="text-xs font-semibold text-[#81D7B4] px-2.5 py-0.5 bg-[#81D7B4]/10 rounded-md border border-[#81D7B4]/20">
+                                Tier {activeProject.tier} {activeProject.tierName ? `(${activeProject.tierName})` : ''}
+                            </span>
+                            <div className={`px-2.5 py-0.5 rounded-md text-xs font-semibold flex items-center gap-1.5 border ${currentStatus.bg} ${currentStatus.color} ${currentStatus.border}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${currentStatus.dotBg}`} />
+                                <span>{currentStatus.label}</span>
+                            </div>
+                        </div>
+
+                        <p className="text-xs sm:text-sm text-[#7B8B9A] leading-relaxed">
+                            {activeProject.metadata?.businessDescription || activeProject.metadata?.ideaSummary || activeProject.metadata?.projectDescription || "Official decentralized enterprise registered on BizFi Protocol."}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                        {/* Copy Transaction Hash */}
+                        <button
+                            onClick={() => handleCopyHash(activeProject.transactionHash)}
+                            className="px-3.5 py-2 rounded-xl bg-[#0F1825] border border-[#7B8B9A]/20 hover:border-[#81D7B4]/40 text-[#7B8B9A] hover:text-[#F9F9FB] flex items-center justify-center gap-2 text-xs font-mono transition-all cursor-pointer"
+                            title="Copy Transaction Hash"
+                        >
+                            <span>{activeProject.transactionHash ? `${activeProject.transactionHash.slice(0, 6)}...${activeProject.transactionHash.slice(-6)}` : 'Onchain Verified'}</span>
+                            <Copy01Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                            {copiedHash && <span className="text-[10px] text-[#81D7B4] font-bold">Copied!</span>}
+                        </button>
+
+                        {/* View Dossier Button */}
+                        <button
+                            onClick={() => setIsDetailsModalOpen(true)}
+                            className="px-4 py-2 bg-[#1A2538] hover:bg-[#2C3E5D]/60 border border-[#7B8B9A]/20 text-[#F9F9FB] hover:text-[#81D7B4] rounded-xl text-xs font-semibold transition-all cursor-pointer text-center"
+                        >
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Lifecycle Stages Component */}
+            <KYCStatus 
+                status={activeProject.status} 
+                steps={activeProject.kycSteps} 
+            />
+
+            {/* If KYC is needed, show submission form */}
+            {(!activeProject.status || activeProject.status.toLowerCase() === "pending") && (
+                <KYCSubmissionForm 
+                    business={activeProject} 
+                    onSuccess={fetchBusinesses} 
+                />
+            )}
+
+            {/* Milestones & Risk Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ProjectTimeline 
+                    milestones={activeProject.milestones}
+                    status={activeProject.status}
+                />
+                <RiskAssessment 
+                    risks={activeProject.risks} 
+                    tier={activeProject.tier}
+                    status={activeProject.status}
+                />
+            </div>
+
+            {/* Details Modal */}
+            <BusinessDetailsModal 
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                data={activeProject.metadata || {}}
+                status={activeProject.status}
             />
         </div>
     );

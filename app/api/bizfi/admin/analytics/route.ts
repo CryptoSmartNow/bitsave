@@ -32,35 +32,38 @@ export async function GET(req: NextRequest) {
         const collection = db.collection(COLLECTION_NAME);
 
         // 3. Fetch Metrics
-
-        // Total Businesses
         const totalBusinesses = await collection.countDocuments();
 
-        // Active Businesses
-        const activeBusinesses = await collection.countDocuments({ status: { $regex: /^active$/i } });
+        // Active / Approved Businesses
+        const activeBusinesses = await collection.countDocuments({ 
+            status: { $in: ['approved', 'active', 'Verified', 'Approved'] } 
+        });
 
-        // Total Revenue (Estimated snapshot)
-        const allBusinesses = await collection.find({}, { projection: { tier: 1 } }).toArray();
+        // Total Revenue Calculation
+        const allBusinesses = await collection.find({}, { projection: { tier: 1, feePaid: 1 } }).toArray();
         const totalRevenue = allBusinesses.reduce((acc, curr) => {
+            if (curr.feePaid) {
+                const parsed = parseFloat(curr.feePaid);
+                if (!isNaN(parsed) && parsed > 0) return acc + parsed;
+            }
             const tier = typeof curr.tier === 'string' ? curr.tier.toLowerCase() : '';
             if (tier === 'enterprise') return acc + 100;
-            if (tier === 'premium') return acc + 50;
-            if (tier === 'standard') return acc + 10;
+            if (tier === 'scaler' || tier === 'premium') return acc + 50;
+            if (tier === 'builder' || tier === 'standard') return acc + 10;
             return acc;
         }, 0);
 
         // Status Distribution
         const statusDistribution = await collection.aggregate([
-            { $group: { _id: "$status", count: { $sum: 1 } } }
+            { $group: { _id: { $toLower: "$status" }, count: { $sum: 1 } } }
         ]).toArray();
 
         // Tier Distribution
         const tierDistribution = await collection.aggregate([
-            { $group: { _id: "$tier", count: { $sum: 1 } } }
+            { $group: { _id: { $toLower: "$tier" }, count: { $sum: 1 } } }
         ]).toArray();
 
         // Time Series Data (Growth over time)
-        // Group by Date (YYYY-MM-DD)
         const growthData = await collection.aggregate([
             {
                 $group: {
@@ -71,11 +74,10 @@ export async function GET(req: NextRequest) {
                 }
             },
             { $sort: { _id: 1 } },
-            { $limit: 30 } // Last 30 days/entries
+            { $limit: 30 }
         ]).toArray();
 
-        // Revenue Trend (Estimated based on tiers)
-        // Standard: $10, Premium: $50, Enterprise: $100
+        // Revenue Trend
         const revenueTrend = await collection.aggregate([
             {
                 $project: {
@@ -83,11 +85,11 @@ export async function GET(req: NextRequest) {
                     revenue: {
                         $switch: {
                             branches: [
-                                { case: { $eq: ["$tier", "enterprise"] }, then: 100 },
-                                { case: { $eq: ["$tier", "premium"] }, then: 50 },
-                                { case: { $eq: ["$tier", "standard"] }, then: 10 }
+                                { case: { $in: [{ $toLower: "$tier" }, ["enterprise"]] }, then: 100 },
+                                { case: { $in: [{ $toLower: "$tier" }, ["scaler", "premium"]] }, then: 50 },
+                                { case: { $in: [{ $toLower: "$tier" }, ["builder", "standard"]] }, then: 10 }
                             ],
-                            default: 0
+                            default: 10
                         }
                     }
                 }
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest) {
             { $limit: 30 }
         ]).toArray();
 
-        // User Activity (New Business Joins per Day - same as growth but ensuring it's named for the chart)
+        // User Activity
         const userActivity = await collection.aggregate([
             {
                 $group: {
@@ -114,13 +116,12 @@ export async function GET(req: NextRequest) {
             { $limit: 30 }
         ]).toArray();
 
-        // Recent Businesses (Increased limit for robustness)
+        // Recent Businesses (Sorted by newest)
         const recentBusinesses = await collection.find({})
             .sort({ createdAt: -1 })
-            .limit(100) // Fetch more for client-side search/pagination
+            .limit(100)
             .toArray();
 
-        // 4. Return Data
         return NextResponse.json({
             metrics: {
                 totalBusinesses,
@@ -137,6 +138,6 @@ export async function GET(req: NextRequest) {
 
     } catch (e: any) {
         console.error("[BizFi Admin API Error]", e);
-        return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

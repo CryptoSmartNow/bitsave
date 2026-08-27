@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
         const messages = await db.collection(COLLECTION_NAME)
             .find({ businessId })
             .sort({ timestamp: 1 })
+            .limit(250)
             .toArray();
 
         return NextResponse.json(messages);

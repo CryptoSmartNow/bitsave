@@ -15,26 +15,26 @@ interface Message {
 type BizFiMode = 'chat' | 'valuation' | 'advisor';
 
 const CHAT_PROMPTS = [
-  { icon: <Activity01Icon className="w-4 h-4" />, label: 'How to ListView', prompt: 'How do I list my business on BizMarket?' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'How to ListView', prompt: 'How do I list my business on BizFi?' },
   { icon: <BarChartIcon className="w-4 h-4" />, label: 'Best BizShares', prompt: 'Give me the best equity BizShares projecting 10% annual growth' },
   { icon: <Shield01Icon className="w-4 h-4" />, label: 'Verification', prompt: 'How does business verification and attestation work on BizFi?' },
   { icon: <Dollar01Icon className="w-4 h-4" />, label: 'Token Pricing', prompt: 'How should I price my BizShare tokens?' },
   { icon: <UserMultipleIcon className="w-4 h-4" />, label: 'For Investors', prompt: 'How do I evaluate a business listing before buying BizShares?' },
-  { icon: <Activity01Icon className="w-4 h-4" />, label: 'KYC Process', prompt: 'What documents do I need for KYC/KYB on BizMarket?' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'KYC Process', prompt: 'What documents do I need for KYC/KYB on BizFi?' },
 ];
 
 const VALUATION_PROMPTS = [
   { icon: <Activity01Icon className="w-4 h-4" />, label: 'Start Valuation', prompt: 'I want to estimate my business valuation. Let\'s begin.' },
-  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Startup', prompt: 'Help me value my early-stage startup for BizMarket listing' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Startup', prompt: 'Help me value my early-stage startup for BizFi listing' },
   { icon: <BarChartIcon className="w-4 h-4" />, label: 'Established Biz', prompt: 'Help me value my established business with existing revenue' },
 ];
 
 const ADVISOR_PROMPTS = [
-  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Generate Pitch', prompt: 'Generate a BizMarket listing pitch for my business' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Generate Pitch', prompt: 'Generate a BizFi listing pitch for my business' },
   { icon: <Activity01Icon className="w-4 h-4" />, label: 'Growth Strategy', prompt: 'What growth strategies would you recommend for a small business in Nigeria?' },
   { icon: <SparklesIcon className="w-4 h-4" />, label: 'Tokenization Plan', prompt: 'Help me create a tokenization strategy for my business' },
   { icon: <Activity01Icon className="w-4 h-4" />, label: 'Funding Plan', prompt: 'Help me create a fundraising plan using BizShares' },
-  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Business Plan', prompt: 'Help me outline a business plan for my BizMarket listing' },
+  { icon: <Activity01Icon className="w-4 h-4" />, label: 'Business Plan', prompt: 'Help me outline a business plan for my BizFi listing' },
   { icon: <BarChartIcon className="w-4 h-4" />, label: 'Financial Model', prompt: 'Help me create financial projections for my business' },
 ];
 
@@ -198,8 +198,8 @@ export default function BizFiAI() {
             onClick={() => setMode(m.key)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
               mode === m.key
-                ? 'bg-[#121212] border border-[#81D7B4]/30 text-[#81D7B4] shadow-md'
-                : 'text-gray-400 hover:text-[#F9F9FB]'
+                ? 'bg-[#0F1825] border border-[#81D7B4]/30 text-[#81D7B4] shadow-md'
+                : 'text-[#7B8B9A] hover:text-[#F9F9FB]'
             }`}
           >
             {m.icon} {m.label}
@@ -221,12 +221,12 @@ export default function BizFiAI() {
                 <button
                   key={p.label}
                   onClick={() => sendMessage(p.prompt)}
-                  className="flex items-center gap-3 px-4 py-3.5 bg-[#121212] border border-[#7B8B9A]/20 hover:border-[#81D7B4] hover:bg-[#81D7B4]/10 hover:shadow-[0_8px_25px_rgba(129,215,180,0.15)] rounded-2xl text-sm font-bold text-[#F9F9FB] transition-all group text-left"
+                  className="flex items-center gap-3 px-4 py-3.5 bg-[#0F1825] border border-[#7B8B9A]/20 hover:border-[#81D7B4] hover:bg-[#81D7B4]/10 hover:shadow-[0_8px_25px_rgba(129,215,180,0.15)] rounded-2xl text-sm font-bold text-[#F9F9FB] transition-all group text-left"
                 >
                   <div className="shrink-0 w-9 h-9 rounded-xl bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] group-hover:bg-[#81D7B4] group-hover:text-[#0F1825] transition-colors">
                     {p.icon}
                   </div>
-                  <span className="group-hover:text-[#2D5A4A] transition-colors text-xs">{p.label}</span>
+                  <span className="group-hover:text-[#81D7B4] transition-colors text-xs">{p.label}</span>
                 </button>
               ))}
             </div>
@@ -245,8 +245,8 @@ export default function BizFiAI() {
                   <div
                     className={`max-w-[85%] sm:max-w-[75%] px-5 py-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === 'user'
-                        ? 'bg-[#81D7B4] text-white font-bold rounded-br-md'
-                        : 'bg-[#121212] text-white border border-[#7B8B9A]/20 font-medium rounded-bl-md markdown-content'
+                        ? 'bg-[#81D7B4] text-[#0F1825] font-bold rounded-br-md'
+                        : 'bg-[#0F1825] text-white border border-[#7B8B9A]/20 font-medium rounded-bl-md markdown-content'
                     }`}
                     dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? msg.content : marked.parse(msg.content) as string }}
                   />
@@ -256,7 +256,7 @@ export default function BizFiAI() {
 
             {isLoading && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                <div className="bg-[#121212] border border-[#7B8B9A]/20 px-5 py-4 rounded-2xl rounded-bl-md">
+                <div className="bg-[#0F1825] border border-[#7B8B9A]/20 px-5 py-4 rounded-2xl rounded-bl-md">
                   <div className="flex gap-1.5">
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-[#81D7B4] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

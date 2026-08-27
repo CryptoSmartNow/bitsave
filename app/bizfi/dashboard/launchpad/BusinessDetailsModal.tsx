@@ -1,6 +1,6 @@
 'use client';
 
-import { Cancel01Icon, Activity01Icon, Dollar01Icon, UserMultipleIcon, Building04Icon, Briefcase01Icon, BulbIcon, GlobeIcon } from "hugeicons-react";
+import { Cancel01Icon, Activity01Icon, Dollar01Icon, UserMultipleIcon, Building04Icon, Briefcase01Icon, BulbIcon, GlobeIcon, LinkSquare01Icon } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -19,14 +19,11 @@ const SECTIONS = [
         label: 'Identity & Overview',
         icon: Building04Icon,
         fields: [
-            // Core
             'businessName', 'startupName', 'registeredBusinessName', 'entRegisteredName',
             'entCompanyName', 'operatingName', 'businessType', 'industry', 'companySector',
             'businessDescription', 'projectDescription', 'ideaSummary',
-            // Registration
             'isRegistered', 'startupRegistered', 'registrationSite', 'entRegistrationSite',
             'yearStarted', 'yearsInOperation', 'entYearsInOperation',
-            // Location
             'country', 'countryOfOperation', 'cityOfOperation', 'businessAddress',
             'operatingLocations', 'entOperatingLocations', 'projectLocation', 'entCountry'
         ]
@@ -36,15 +33,11 @@ const SECTIONS = [
         label: 'Financials & Funding',
         icon: Dollar01Icon,
         fields: [
-            // Revenue/Expenses
             'monthlyRevenue', 'revenueCurrency', 'monthlyExpenses', 'expensesCurrency',
             'revenueRange', 'growthExpenses', 'netProfit', 'projectedRevenue',
-            // Assets/Liabilities
             'startupCost', 'inventoryValue', 'currentAssets', 'currentLiabilities',
             'hasDebts', 'debtsDetails',
-            // Funding Request
             'raiseAmount', 'raiseCurrency', 'growthRaiseAmount', 'raiseOnBizMarket', 'totalCapitalNeeded',
-            // Investment
             'hasInvestors', 'expectedROI', 'annualProjection', 'hasRevenue'
         ]
     },
@@ -64,11 +57,8 @@ const SECTIONS = [
         label: 'Strategy & Vision',
         icon: BulbIcon,
         fields: [
-            // Problem/Solution
             'problemSolving', 'solutionWork', 'validation',
-            // Future
             'vision12Months', 'successVision', 'whyBuilding', 'biggestChallenge', 'growthChallenge', 'projectRisks',
-            // Plans
             'fundUsage', 'capitalUsage', 'fundsUsage', 'fundsUsagePlan', 'expectedMilestones', 'expectedImpact',
             'tokenGrowthCorrelation', 'investorProtection', 'regulatoryCompliance'
         ]
@@ -126,11 +116,10 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
             entCfoName: 'CFO Name',
             entCooName: 'COO Name',
             ceoName: 'CEO Name',
-            cfoName: 'CFO Name',
+            cfoName: 'CEO Email',
             cooName: 'COO Name'
         };
         if (overrides[key]) return overrides[key];
-        // Convert camelCase to Title Case
         return key
             .replace(/([A-Z])/g, ' $1')
             .replace(/^./, str => str.toUpperCase())
@@ -141,7 +130,6 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
         if (!value) return 'N/A';
         const strVal = String(value);
 
-        // Currencies
         if (
             key.toLowerCase().includes('revenue') ||
             key.toLowerCase().includes('expenses') ||
@@ -152,14 +140,12 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
             key.toLowerCase().includes('liabilities') ||
             key.toLowerCase().includes('capital')
         ) {
-            // If it's just a number, format it. If it already has symbols, leave it.
             if (!isNaN(Number(strVal)) && strVal.trim() !== '') {
                 return `$${Number(strVal).toLocaleString()}`;
             }
             return strVal;
         }
 
-        // Links
         if (
             key.toLowerCase().includes('url') ||
             key.toLowerCase().includes('link') ||
@@ -170,8 +156,14 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
             key.toLowerCase().includes('facebook')
         ) {
             return (
-                <a href={strVal} target="_blank" rel="noopener noreferrer" className="text-[#81D7B4] hover:underline truncate block break-all">
-                    {strVal}
+                <a 
+                    href={strVal.startsWith('http') ? strVal : `https://${strVal}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[#81D7B4] hover:underline flex items-center gap-1.5 truncate break-all"
+                >
+                    <span className="truncate">{strVal}</span>
+                    <LinkSquare01Icon className="w-3.5 h-3.5 shrink-0" />
                 </a>
             );
         }
@@ -181,11 +173,11 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
     const getStatusColor = (s: string | null | undefined) => {
         const normalized = s?.toLowerCase() || 'submitted';
         switch (normalized) {
-            case 'approved': return 'bg-[#81D7B4]/10 text-[#81D7B4] border-[#81D7B4]/20';
-            case 'rejected': return 'bg-red-500/10 text-red-400 border-red-500/20';
+            case 'approved': return 'bg-[#81D7B4]/10 text-[#81D7B4] border-[#81D7B4]/25';
+            case 'rejected': return 'bg-red-500/10 text-red-400 border-red-500/25';
             case 'under_review':
-            case 'pending': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-            default: return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'pending': return 'bg-amber-400/10 text-amber-400 border-amber-400/25';
+            default: return 'bg-blue-500/10 text-blue-400 border-blue-500/25';
         }
     };
 
@@ -193,71 +185,63 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
 
     return createPortal(
         <AnimatePresence>
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
                 {/* Backdrop Layer */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 backdrop-blur-md"
-                    style={{ backgroundColor: 'rgba(15, 24, 37, 0.95)' }} // Hardcoded Brand Darkest Blue
+                    className="absolute inset-0 bg-[#0F1825]/90 backdrop-blur-md"
                 />
 
                 {/* Modal Container */}
                 <motion.div
-                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    initial={{ scale: 0.96, opacity: 0, y: 15 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                    className="relative w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl md:rounded-3xl border shadow-2xl"
-                    style={{
-                        borderColor: 'rgba(129, 215, 180, 0.2)', // Brand Green Border
-                        backgroundColor: '#0F1825', // Brand Dark Blue
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                    }}
+                    exit={{ scale: 0.96, opacity: 0, y: 15 }}
+                    className="relative w-full max-w-5xl max-h-[88vh] flex flex-col overflow-hidden rounded-3xl border border-[#7B8B9A]/20 bg-[#0F1825] shadow-[0_25px_60px_rgba(0,0,0,0.85)] z-10"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 md:px-8 py-5 border-b border-gray-800 bg-[#0A1016]">
-                        <div className="flex items-center gap-4 overflow-hidden">
-                            <div className="p-2.5 rounded-xl bg-[#81D7B4]/10 text-[#81D7B4] flex-shrink-0">
-                                <Activity01Icon className="w-6 h-6" />
+                    <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-[#7B8B9A]/15 bg-[#1A2538]/40">
+                        <div className="flex items-center gap-3.5 overflow-hidden">
+                            <div className="p-2.5 rounded-2xl bg-[#81D7B4]/15 text-[#81D7B4] shrink-0 border border-[#81D7B4]/30">
+                                <Activity01Icon className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
-                                <h2 className="text-xl md:text-2xl font-bold text-white truncate">
+                                <h2 className="text-lg sm:text-xl font-black text-[#F9F9FB] truncate">
                                     {data.businessName || data.name || data.startupName || "Application Details"}
                                 </h2>
-                                <p className="text-sm text-gray-400 hidden sm:block">
-                                    Full Application Breakdown
+                                <p className="text-xs text-[#7B8B9A]">
+                                    Complete Metadata Record & Verification Dossier
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                            <div className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(status)}`}>
+                        <div className="flex items-center gap-3 shrink-0">
+                            <div className={`px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider border ${getStatusColor(status)}`}>
                                 {status || 'Submitted'}
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
+                                className="p-2 rounded-xl bg-[#0F1825] hover:bg-[#1A2538] border border-[#7B8B9A]/20 text-[#7B8B9A] hover:text-[#F9F9FB] transition-colors cursor-pointer"
                             >
-                                <Cancel01Icon className="w-6 h-6" />
+                                <Cancel01Icon className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-10 custom-scrollbar bg-[#121212]">
+                    <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 custom-scrollbar">
                         {SECTIONS.map((section) => {
                             const SectionIcon = section.icon;
                             
-                            // Helper to get value from nested structures (like kyc)
-                            const getValue = (data: any, field: string) => {
-                                if (data[field] !== undefined) return data[field];
-                                if (data.kyc && data.kyc[field] !== undefined) return data.kyc[field];
+                            const getValue = (record: any, field: string) => {
+                                if (record[field] !== undefined) return record[field];
+                                if (record.kyc && record.kyc[field] !== undefined) return record.kyc[field];
                                 return undefined;
                             };
 
-                            // Tick if any fields in this section have data
                             const hasData = section.fields.some(field => {
                                 const val = getValue(data, field);
                                 return val && String(val).trim() !== '';
@@ -266,20 +250,19 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                             if (!hasData) return null;
 
                             return (
-                                <div key={section.id} className="space-y-4">
-                                    <div className="flex items-center gap-3 pb-3 border-b border-gray-800/80">
-                                        <SectionIcon className="w-5 h-5 text-[#81D7B4]" />
-                                        <h3 className="text-sm font-bold uppercase tracking-wider text-gray-300">
+                                <div key={section.id} className="space-y-3.5">
+                                    <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#7B8B9A]/15">
+                                        <SectionIcon className="w-4 h-4 text-[#81D7B4]" />
+                                        <h3 className="text-xs font-black uppercase tracking-wider text-[#F9F9FB]">
                                             {section.label}
                                         </h3>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         {section.fields.map(field => {
                                             const value = getValue(data, field);
                                             if (!value || (typeof value === 'string' && value.trim() === '')) return null;
 
-                                            // Determine if this field should span row (long text)
                                             const isLongText = String(value).length > 60 ||
                                                 ['businessDescription', 'projectDescription', 'problemSolving',
                                                     'solutionWork', 'validation', 'whyBuilding', 'successVision',
@@ -288,12 +271,14 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                                             return (
                                                 <div
                                                     key={field}
-                                                    className={`p-4 rounded-xl bg-[#152030] border border-gray-800/50 hover:border-[#81D7B4]/30 transition-all ${isLongText ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}`}
+                                                    className={`p-3.5 rounded-2xl bg-[#1A2538]/30 border border-[#7B8B9A]/15 hover:border-[#81D7B4]/30 transition-all ${
+                                                        isLongText ? 'col-span-1 sm:col-span-2 lg:col-span-3' : ''
+                                                    }`}
                                                 >
-                                                    <p className="text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                                                    <p className="text-[10px] font-bold text-[#7B8B9A] mb-1 uppercase tracking-wider">
                                                         {formatLabel(field)}
                                                     </p>
-                                                    <div className={`text-sm text-gray-200 ${isLongText ? 'leading-relaxed whitespace-pre-wrap' : ''}`}>
+                                                    <div className={`text-xs sm:text-sm font-medium text-[#F9F9FB] ${isLongText ? 'leading-relaxed whitespace-pre-wrap' : ''}`}>
                                                         {formatValue(field, value)}
                                                     </div>
                                                 </div>
@@ -306,23 +291,15 @@ export default function BusinessDetailsModal({ isOpen, onClose, data, status = '
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 md:px-8 py-5 border-t border-gray-800 bg-[#0A1016] flex flex-col md:flex-row gap-4 justify-end">
-                        {data.attestationUid && (
-                            <a
-                                href={`https://base.easscan.org/attestation/view/${data.attestationUid}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full md:w-auto bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-[#81D7B4] px-8 py-3 rounded-xl text-sm font-bold transition-all border border-[#81D7B4]/20 hover:border-[#81D7B4]/40 flex items-center justify-center gap-2"
-                            >
-                                <Activity01Icon className="w-5 h-5" />
-                                View Attestation
-                            </a>
-                        )}
+                    <div className="px-6 sm:px-8 py-4 border-t border-[#7B8B9A]/15 bg-[#1A2538]/30 flex items-center justify-between">
+                        <span className="text-xs text-[#7B8B9A]">
+                            BizFi Attestation Registry
+                        </span>
                         <button
                             onClick={onClose}
-                            className="w-full md:w-auto bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 rounded-xl text-sm font-bold transition-colors border border-gray-700 hover:border-gray-600"
+                            className="px-5 py-2 bg-[#81D7B4] hover:bg-[#9FE0C5] text-[#0F1825] text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                         >
-                            Close Viewer
+                            Close Dossier
                         </button>
                     </div>
                 </motion.div>
