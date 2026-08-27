@@ -3,15 +3,16 @@ import Redis from 'ioredis';
 // Allow users to provide a custom REDIS_URL or fallback gracefully
 const REDIS_URL = process.env.REDIS_URL;
 
-// High-speed In-Memory fallback store
+// High-speed Bounded In-Memory fallback store with strict LRU cap
 interface MemoryCacheItem {
   value: string;
   expiry: number; // Unix timestamp in ms
 }
 
+const MAX_IN_MEMORY_ITEMS = 200; // Strict limit to prevent memory bloating on 512MB RAM
 const memoryStore = new Map<string, MemoryCacheItem>();
 
-// Clean up expired in-memory items periodically (every 5 minutes)
+// Clean up expired in-memory items periodically (every 2 minutes)
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now();
@@ -20,7 +21,7 @@ if (typeof setInterval !== 'undefined') {
         memoryStore.delete(key);
       }
     }
-  }, 5 * 60 * 1000).unref?.();
+  }, 2 * 60 * 1000).unref?.();
 }
 
 let isRedisConnected = false;
@@ -32,7 +33,6 @@ const createRedisClient = () => {
   }
 
   if (!REDIS_URL) {
-    console.log('ℹ️ [Cache] No REDIS_URL configured — using high-performance In-Memory cache.');
     return null;
   }
 
@@ -40,7 +40,7 @@ const createRedisClient = () => {
     const client = new Redis(REDIS_URL, {
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
-      connectTimeout: 4000,
+      connectTimeout: 3000,
       lazyConnect: false,
       retryStrategy(times) {
         // Exponential backoff capped at 15s
@@ -65,9 +65,9 @@ const createRedisClient = () => {
     client.on('error', (err) => {
       isRedisConnected = false;
       const now = Date.now();
-      // Throttle error logs to at most once every 30 seconds to prevent console flood
-      if (now - lastErrorLogTime > 30000) {
-        console.warn(`⚠️ [Cache] Redis connection notice (${err.message}). Seamlessly utilizing in-memory cache.`);
+      // Throttle error logs to at most once every 60 seconds
+      if (now - lastErrorLogTime > 60000) {
+        console.warn(`⚠️ [Cache] Redis connection unavailable (${err.message}). Using bounded in-memory cache.`);
         lastErrorLogTime = now;
       }
     });
@@ -100,7 +100,7 @@ export const redis = getRedisClient();
 
 /**
  * Resilient Cache Retriever
- * Tries Redis first if connected; seamlessly falls back to In-Memory store.
+ * Tries Redis first if connected; seamlessly falls back to bounded In-Memory store.
  */
 export const getCache = async <T>(key: string): Promise<T | null> => {
   try {
@@ -110,12 +110,13 @@ export const getCache = async <T>(key: string): Promise<T | null> => {
       if (cached) {
         return JSON.parse(cached) as T;
       }
+      return null;
     }
   } catch (error) {
     // Fallthrough to memory store on error
   }
 
-  // 2. Fallback to In-Memory cache
+  // 2. Fallback to bounded In-Memory cache
   try {
     const memoryItem = memoryStore.get(key);
     if (memoryItem) {
@@ -134,16 +135,13 @@ export const getCache = async <T>(key: string): Promise<T | null> => {
 
 /**
  * Resilient Cache Setter
- * Stores in both Redis and In-Memory fallback store.
+ * Stores in Redis if connected; otherwise stores in bounded In-Memory fallback store.
  */
 export const setCache = async <T>(key: string, data: T, ttlSeconds: number = 3600): Promise<void> => {
   const serialized = JSON.stringify(data);
   const expiryMs = ttlSeconds > 0 ? Date.now() + ttlSeconds * 1000 : 0;
 
-  // 1. Always write to In-Memory cache
-  memoryStore.set(key, { value: serialized, expiry: expiryMs });
-
-  // 2. Write to Redis if available
+  // 1. Write to Redis if available & connected
   if (redis && isRedisConnected) {
     try {
       if (ttlSeconds > 0) {
@@ -151,10 +149,19 @@ export const setCache = async <T>(key: string, data: T, ttlSeconds: number = 360
       } else {
         await redis.set(key, serialized);
       }
+      return;
     } catch (error) {
-      // Ignored: In-memory copy is already saved
+      // If Redis write fails, fallback below to in-memory store
     }
   }
+
+  // 2. Fallback to In-Memory cache (with LRU eviction to prevent memory leaks)
+  if (memoryStore.size >= MAX_IN_MEMORY_ITEMS) {
+    // Evict oldest item
+    const oldestKey = memoryStore.keys().next().value;
+    if (oldestKey) memoryStore.delete(oldestKey);
+  }
+  memoryStore.set(key, { value: serialized, expiry: expiryMs });
 };
 
 /**
@@ -174,4 +181,3 @@ export const clearCache = async (key: string): Promise<void> => {
     }
   }
 };
-

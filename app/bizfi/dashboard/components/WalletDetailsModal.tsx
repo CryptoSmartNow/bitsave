@@ -98,17 +98,17 @@ export default function WalletDetailsModal({ isOpen, onClose, address, logout }:
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 backdrop-blur-sm bg-gray-900/80"
+                    className="absolute inset-0 backdrop-blur-md bg-[#070A0F]/85"
                 />
 
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                    className="relative w-full max-w-md bg-[#1A2538]/95 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl overflow-hidden mx-4"
+                    className="relative w-full max-w-md bg-[#1A2538]/95 backdrop-blur-xl border border-[#7B8B9A]/25 rounded-3xl shadow-2xl overflow-hidden mx-4"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700/30">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-[#7B8B9A]/15">
                         <div className="flex items-center gap-3">
                             {view === 'send' ? (
                                 <button onClick={resetSendState} className="p-1 -ml-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">

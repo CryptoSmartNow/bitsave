@@ -11,13 +11,14 @@ try {
 const dbName = process.env.MONGODB_DB_NAME || 'bitsave';
 export const MONGODB_ENABLED = true;
 
+// Memory-optimized connection pool settings for low-resource environments (Render 512MB)
 const options = {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 5000,
   socketTimeoutMS: 30000,
-  maxPoolSize: 10,
-  minPoolSize: 1,
-  maxIdleTimeMS: 30000,
+  maxPoolSize: 3, // Reduced from 10 to save socket buffers & memory footprint
+  minPoolSize: 0, // Avoid maintaining idle socket memory
+  maxIdleTimeMS: 15000,
   waitQueueTimeoutMS: 5000,
   retryWrites: true,
   writeConcern: new WriteConcern('majority'),
@@ -36,7 +37,7 @@ const globalWithMongo = globalThis as GlobalWithMongo;
 function getDirectUri(srvUri: string): string {
   if (!srvUri.startsWith('mongodb+srv://')) return srvUri;
   if (srvUri.includes('cluster.i3zan.mongodb.net')) {
-    const match = srvUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@cluster\.i3zan\.mongodb\.net(\/[^?]*)?(\?.*)?/);
+    const match = srvUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@cluster\.i3zan\\.mongodb\\.net(\/[^?]*)?(\?.*)?/);
     if (match) {
       const user = match[1];
       const pass = match[2];
@@ -331,7 +332,6 @@ export async function getBizSwapPayoutsCollection(): Promise<Collection | null> 
     return null;
   }
 }
-
 
 export interface UserInteraction {
   type: string;

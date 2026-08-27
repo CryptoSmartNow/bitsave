@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { marked } from 'marked';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -18,6 +19,10 @@ export default function BizFiAIWidget() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  // Hide the floating widget on chat pages to prevent overlap with the messaging input & send button
+  const isChatPage = pathname?.includes('/chat');
 
   // Load history
   useEffect(() => {
@@ -58,22 +63,36 @@ export default function BizFiAIWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question,
-          chatHistory: messages.slice(-4).map(m => ({ role: m.role === 'user' ? 'User' : 'Assistant', content: m.content })),
-          mode: 'chat'
-        }),
+          context: localStorage.getItem('bizfi_ai_widget_history') || ''
+        })
       });
+
       const data = await response.json();
-      setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: response.ok ? data.reply : 'Sorry, something went wrong.' }]);
-    } catch {
-      setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: 'Unable to connect. Please try again.' }]);
+
+      const botMsg: Message = {
+        id: `b-${Date.now()}`,
+        role: 'bot',
+        content: data.answer || "I'm having trouble connecting right now."
+      };
+
+      setMessages(prev => [...prev, botMsg]);
+    } catch (err) {
+      setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "An error occurred fetching response." }]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages]);
+  }, [input, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
+
+  if (isChatPage) {
+    return null;
+  }
 
   return (
     <>

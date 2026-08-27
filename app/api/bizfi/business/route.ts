@@ -20,9 +20,9 @@ const sendWelcomeEmail = async (email: string, businessName: string, transaction
   try {
     const transporter = createTransporter();
     await transporter.sendMail({
-      from: `"BizMarket Support" <support@bitsave.io>`,
+      from: `"BizFi Support" <support@bitsave.io>`,
       to: email,
-      subject: 'Welcome to BizMarket! Your Business is Now Onchain',
+      subject: 'Welcome to BizFi! Your Business is Now Onchain',
       html: `
         <!DOCTYPE html>
         <html>
@@ -42,7 +42,7 @@ const sendWelcomeEmail = async (email: string, businessName: string, transaction
           .button-container { text-align: center; margin: 40px 0; }
           .button { background-color: #81D7B4; color: #0F1825 !important; font-size: 16px; font-weight: 700; padding: 18px 40px; border-radius: 12px; text-decoration: none; display: inline-block; transition: all 0.2s ease; }
           .tx-box { background-color: #0F1825; border: 1px solid #233248; border-radius: 12px; padding: 20px; margin-top: 30px; word-break: break-all; }
-          .tx-label { color: #7B8B9A; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; font-weight: 600; }
+          .tx-label { color: #7B8B9A; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; font-weight: 600; }
           .tx-hash { color: #81D7B4; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 14px; margin: 0; opacity: 0.9; line-height: 1.5; }
           .footer { text-align: center; margin-top: 40px; }
           .footer p { color: #5F6D7A; font-size: 13px; margin: 8px 0; }
@@ -55,7 +55,7 @@ const sendWelcomeEmail = async (email: string, businessName: string, transaction
               <td align="center">
                 <div class="container" style="max-width: 600px; margin: 0 auto; padding: 40px 20px; text-align: left;">
                   <div class="header" style="text-align: center; margin-bottom: 40px;">
-                    <h1 class="logo" style="color: #81D7B4; font-size: 32px; font-weight: 800; margin: 0;">BizMarket</h1>
+                    <h1 class="logo" style="color: #81D7B4; font-size: 32px; font-weight: 800; margin: 0;">BizFi</h1>
                     <p class="tagline" style="color: #7B8B9A; font-size: 12px; margin-top: 8px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Build Globally &bull; Raise Globally</p>
                   </div>
                   
@@ -65,7 +65,7 @@ const sendWelcomeEmail = async (email: string, businessName: string, transaction
                     <p class="text" style="color: #9BA9B4; line-height: 1.8; font-size: 16px; margin: 0 0 20px 0;">Hello,</p>
                     
                     <p class="text" style="color: #9BA9B4; line-height: 1.8; font-size: 16px; margin: 0 0 20px 0;">
-                      Great job taking the bold step to list <strong class="highlight" style="color: #81D7B4;">${businessName}</strong> on BizMarket! Your business has been successfully registered onchain.
+                      Great job taking the bold step to list <strong class="highlight" style="color: #81D7B4;">${businessName}</strong> on BizFi! Your business has been successfully registered onchain.
                     </p>
 
                     <div class="button-container" style="text-align: center; margin: 40px 0;">
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
       owner: owner.toLowerCase(),
       businessName,
       metadata, // Full form data
-      tier,
+      tier: tier || 'builder',
       feePaid,
       referralCode: referralCode || "",
       createdAt: new Date(),
@@ -145,7 +145,6 @@ export async function POST(req: NextRequest) {
     // Attempt to send welcome email if email provided
     const businessEmail = metadata?.email || metadata?.businessEmail || metadata?.ceoEmail || metadata?.entCeoEmail;
     if (businessEmail) {
-      // Don't await email so we don't block the response
       sendWelcomeEmail(businessEmail, businessName, transactionHash).catch(console.error);
     }
 
@@ -155,7 +154,7 @@ export async function POST(req: NextRequest) {
     console.error(`[Business API Error] ${timestamp} | Context: Save Record`);
     console.error(`[Business API Error] Payload Summary: Owner=${body?.owner}, Name=${body?.businessName}`);
     console.error(`[Business API Error] Details:`, e);
-    return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -163,6 +162,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const owner = searchParams.get("owner");
   const transactionHash = searchParams.get("transactionHash");
+  const limitParam = searchParams.get("limit");
 
   try {
     const db = await getDatabase();
@@ -171,53 +171,55 @@ export async function GET(req: NextRequest) {
     }
 
     let query: any = {};
-    if (owner) {
-      query.owner = owner.toLowerCase();
-    } else if (transactionHash) {
-      query.transactionHash = transactionHash;
+    if (transactionHash) {
+      query = {
+        $or: [
+          { transactionHash: transactionHash },
+          { transactionHash: { $regex: `^${transactionHash}$`, $options: 'i' } }
+        ]
+      };
+    } else if (owner) {
+      const rawOwners = owner.split(',').map(o => o.trim()).filter(Boolean);
+      
+      const exactStrings = Array.from(
+        new Set(rawOwners.flatMap(o => [o, o.toLowerCase(), o.toUpperCase()]))
+      );
+
+      const orList: any[] = [
+        { owner: { $in: exactStrings } },
+        { "metadata.email": { $in: exactStrings } },
+        { "metadata.businessEmail": { $in: exactStrings } },
+        { "metadata.ceoEmail": { $in: exactStrings } },
+        { "metadata.entCeoEmail": { $in: exactStrings } },
+        { "metadata.owner": { $in: exactStrings } },
+        { "metadata.walletAddress": { $in: exactStrings } },
+        { "metadata.wallet": { $in: exactStrings } }
+      ];
+
+      for (const o of rawOwners) {
+        if (!o) continue;
+        const escaped = o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        orList.push({ owner: { $regex: escaped, $options: 'i' } });
+        orList.push({ "metadata.email": { $regex: escaped, $options: 'i' } });
+        orList.push({ "metadata.businessEmail": { $regex: escaped, $options: 'i' } });
+        orList.push({ "metadata.ceoEmail": { $regex: escaped, $options: 'i' } });
+        orList.push({ "metadata.entCeoEmail": { $regex: escaped, $options: 'i' } });
+        orList.push({ "metadata.owner": { $regex: escaped, $options: 'i' } });
+      }
+
+      query = { $or: orList };
     }
 
-    const businesses = await db.collection(COLLECTION_NAME).find(query).sort({ createdAt: -1 }).toArray();
+    let cursor = db.collection(COLLECTION_NAME).find(query).sort({ createdAt: -1 });
+    if (limitParam) {
+      const limit = parseInt(limitParam, 10);
+      if (limit > 0) cursor = cursor.limit(limit);
+    }
 
+    const businesses = await cursor.toArray();
     return NextResponse.json(businesses);
   } catch (e) {
-    console.error("Failed to fetch businesses", e);
-    return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
-  }
-}
-
-export async function PUT(req: NextRequest) {
-  let body;
-  try {
-    body = await req.json();
-    const { transactionHash, owner, updates } = body;
-
-    if (!transactionHash || !owner || !updates) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    const db = await getDatabase();
-    if (!db) {
-      return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
-    }
-
-    const query = {
-      transactionHash,
-      owner: owner.toLowerCase()
-    };
-
-    const result = await db.collection(COLLECTION_NAME).updateOne(
-      query,
-      { $set: updates }
-    );
-
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: "Business not found or unauthorized" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (e: any) {
-    console.error("Failed to update business", e);
-    return NextResponse.json({ error: "Internal CloudServer Error" }, { status: 500 });
+    console.error("[Business API GET Error]", e);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

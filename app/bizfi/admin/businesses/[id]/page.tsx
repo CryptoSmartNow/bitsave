@@ -1,558 +1,593 @@
 'use client';
 
-import { Activity01Icon, Calendar01Icon, Dollar01Icon, Tick01Icon, Download01Icon, Building04Icon, Wallet01Icon } from "hugeicons-react";
+import {
+  ArrowLeft02Icon,
+  Calendar01Icon,
+  Dollar01Icon,
+  Tick01Icon,
+  Cancel01Icon,
+  Building04Icon,
+  Wallet01Icon,
+  Message02Icon,
+  File01Icon,
+  UserIcon,
+  Mail01Icon,
+  GlobalIcon,
+  Copy01Icon,
+  ViewIcon,
+  Shield01Icon,
+  Alert01Icon,
+  Clock01Icon
+} from "hugeicons-react";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import LoanAgreementEditor from '../../components/LoanAgreementEditor';
 
 interface Business {
-    transactionHash: string;
-    owner: string;
-    businessName: string;
-    tier: string;
-    status: string;
-    createdAt: string;
-    feePaid?: string;
-    referralCode?: string;
-    metadata?: any;
+  transactionHash: string;
+  owner: string;
+  businessName: string;
+  tier: string;
+  status: string;
+  createdAt: string;
+  feePaid?: string;
+  referralCode?: string;
+  metadata?: any;
+  loanAgreement?: any;
 }
 
-type TabType = 'overview' | 'kyc' | 'raw';
+type TabType = 'overview' | 'kyc' | 'agreement' | 'raw';
 
 export default function BusinessDetailsPage() {
-    const router = useRouter();
-    const params = useParams();
-    const id = params.id as string;
+  const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
 
-    const [business, setBusiness] = useState<Business | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [updating, setUpdating] = useState(false);
-    const [showAgreement, setShowAgreement] = useState(false);
-    const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [business, setBusiness] = useState<Business | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [updating, setUpdating] = useState(false);
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [copied, setCopied] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (id) {
-            fetchBusiness();
-        }
-    }, [id]);
-
-    const fetchBusiness = async () => {
-        try {
-            const res = await fetch(`/api/bizfi/business?transactionHash=${id}`);
-            if (!res.ok) throw new Error('Failed to fetch business');
-            const data = await res.json();
-            if (data && data.length > 0) {
-                setBusiness(data[0]);
-            } else {
-                setError('Business not found');
-            }
-        } catch (err) {
-            setError('Error loading business details');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleStatusUpdate = async (newStatus: string) => {
-        if (!business) return;
-        setUpdating(true);
-        try {
-            const res = await fetch('/api/bizfi/admin/business/update-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    transactionHash: business.transactionHash,
-                    owner: business.owner,
-                    status: newStatus
-                })
-            });
-
-            if (res.ok) {
-                setBusiness(prev => prev ? { ...prev, status: newStatus } : null);
-            } else {
-                alert('Failed to update status');
-            }
-        } catch (error) {
-            console.error('Update failed:', error);
-            alert('Error updating status');
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    const handleMessage = () => {
-        if (!business) return;
-        const params = new URLSearchParams({
-            businessId: business.owner,
-            businessName: business.businessName
-        });
-        router.push(`/bizfi/admin/chat?${params.toString()}`);
-    };
-
-    const containerVariants: Variants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants: Variants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 100 }
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center text-[#9BA8B5] gap-4">
-                <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 border-4 border-[#81D7B4]/20 rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 border-t-4 border-[#81D7B4] rounded-full animate-spin"></div>
-                </div>
-                <p className="animate-pulse tracking-widest text-sm uppercase font-medium">Loading Business Profile...</p>
-            </div>
-        );
+  useEffect(() => {
+    if (id) {
+      fetchBusiness();
     }
+  }, [id]);
 
-    if (error || !business) {
-        return (
-            <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center text-[#9BA8B5] gap-6">
-                <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                    <Activity01Icon className="w-12 h-12 text-red-500" />
-                </div>
-                <div className="text-center space-y-2">
-                    <h2 className="text-3xl font-bold text-[#F9F9FB]">{error || 'Business not found'}</h2>
-                    <p className="text-lg text-[#9BA8B5]">The business profile you requested could not be located.</p>
-                </div>
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 px-8 py-3 bg-[#1A2538] rounded-xl hover:bg-[#1A2538]/80 transition-all border border-[#7B8B9A]/10 text-[#F9F9FB] font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                    <Activity01Icon className="w-5 h-5" /> Return to Dashboard
-                </button>
-            </div>
-        );
+  const fetchBusiness = async () => {
+    try {
+      const res = await fetch(`/api/bizfi/business?transactionHash=${encodeURIComponent(id)}`);
+      if (!res.ok) throw new Error('Failed to fetch business');
+      const data = await res.json();
+      if (data && data.length > 0) {
+        setBusiness(data[0]);
+      } else {
+        setError('Business profile not found');
+      }
+    } catch (err) {
+      setError('Error loading business details');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!business) return;
+    setUpdating(true);
+    try {
+      const res = await fetch('/api/bizfi/admin/business/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: business.transactionHash,
+          owner: business.owner,
+          status: newStatus
+        })
+      });
+
+      if (res.ok) {
+        setBusiness(prev => prev ? { ...prev, status: newStatus } : null);
+      } else {
+        alert('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      alert('Error updating status');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveAgreement = async (data: any) => {
+    if (!business) return;
+    try {
+      const res = await fetch('/api/bizfi/admin/business/update-agreement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: business.transactionHash,
+          agreement: data
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to save agreement');
+      setBusiness(prev => prev ? { ...prev, loanAgreement: data } : null);
+      setShowAgreement(false);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save loan agreement');
+    }
+  };
+
+  const handleMessage = () => {
+    if (!business) return;
+    const queryParams = new URLSearchParams({
+      businessId: business.owner || business.transactionHash,
+      businessName: business.businessName
+    });
+    router.push(`/bizfi/admin/chat?${queryParams.toString()}`);
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  if (loading) {
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="min-h-screen bg-[#121212] text-[#F9F9FB] pb-20 overflow-x-hidden relative font-sans"
-        >
-            {/* Background Ambient Effects */}
-            <div className="fixed top-0 left-0 w-full h-[60vh] bg-gradient-to-b from-[#1A2538]/50 to-transparent opacity-40 pointer-events-none" />
-            <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#81D7B4]/5 rounded-full blur-[120px] pointer-events-none" />
-            <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-[#3B82F6]/5 rounded-full blur-[120px] pointer-events-none" />
-
-            <div className="max-w-[1400px] mx-auto p-4 sm:p-6 md:p-10 relative z-10">
-                {/* Navigation Header */}
-                <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-10">
-                    <button
-                        onClick={() => router.back()}
-                        className="self-start flex items-center gap-3 text-[#9BA8B5] hover:text-[#F9F9FB] transition-all group"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-[#1A2538]/50 flex items-center justify-center border border-[#7B8B9A]/10 group-hover:border-[#81D7B4]/30 transition-colors">
-                            <Activity01Icon className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-                        </div>
-                        <span className="font-medium">Back to Businesses</span>
-                    </button>
-
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                        <button
-                            onClick={handleMessage}
-                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1A2538]/50 backdrop-blur-md text-[#81D7B4] rounded-lg border border-[#81D7B4]/20 hover:bg-[#81D7B4]/10 transition-all font-medium text-sm"
-                        >
-                            <Activity01Icon className="w-4 h-4" />
-                            <span className="whitespace-nowrap">Message Owner</span>
-                        </button>
-                        <button
-                            onClick={() => setShowAgreement(true)}
-                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#81D7B4] text-[#0F1825] rounded-lg font-bold hover:bg-[#6BC4A0] transition-all shadow-lg shadow-[#81D7B4]/20 text-sm"
-                        >
-                            <Activity01Icon className="w-4 h-4" />
-                            <span className="whitespace-nowrap">Loan Agreement</span>
-                        </button>
-                    </div>
-                </motion.div>
-
-                {/* Hero Section */}
-                <motion.div variants={itemVariants} className="mb-10 relative">
-                    <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/10 p-8 md:p-10 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                            <Activity01Icon className="w-64 h-64 text-[#81D7B4]" />
-                        </div>
-
-                        <div className="flex flex-col gap-6 relative z-10">
-                            {/* Actions Row */}
-                            <div className="flex justify-end w-full">
-                                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                                    <div className="flex items-center bg-[#121212]/80 p-1.5 rounded-xl border border-[#7B8B9A]/10 shadow-inner w-full sm:w-auto backdrop-blur-sm">
-                                        {['approved', 'rejected'].map((status) => {
-                                            if (business.status === status) return null;
-                                            const isApproved = status === 'approved';
-                                            return (
-                                                <button
-                                                    key={status}
-                                                    onClick={() => handleStatusUpdate(status)}
-                                                    disabled={updating}
-                                                    className={`
-                                                        flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all duration-300 whitespace-nowrap
-                                                        ${isApproved
-                                                            ? 'text-[#81D7B4] hover:bg-[#81D7B4]/10 hover:shadow-[0_0_15px_rgba(129,215,180,0.1)]'
-                                                            : 'text-red-400 hover:bg-red-500/10 hover:shadow-[0_0_15px_rgba(248,113,113,0.1)]'
-                                                        }
-                                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                                    `}
-                                                >
-                                                    {isApproved ? (
-                                                        <Tick01Icon className="w-4 h-4" />
-                                                    ) : (
-                                                        <Activity01Icon className="w-4 h-4" />
-                                                    )}
-                                                    <span>Mark as {isApproved ? 'Approved' : 'Rejected'}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Business Info Row */}
-                            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 w-full">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#1A2538] to-[#0F1825] border border-[#7B8B9A]/20 flex items-center justify-center text-[#81D7B4] font-bold text-3xl sm:text-4xl shadow-xl shrink-0">
-                                    {business.businessName.charAt(0)}
-                                </div>
-                                <div className="flex-1 min-w-0 w-full">
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2 flex-wrap">
-                                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#F9F9FB] tracking-tight leading-tight break-words">
-                                            {business.businessName}
-                                        </h1>
-                                        <div className={`w-fit px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border flex items-center gap-1.5 shrink-0 ${business.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                            business.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                                'bg-red-500/10 text-red-400 border-red-500/20'
-                                            }`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${business.status === 'approved' ? 'bg-green-400' :
-                                                business.status === 'pending' ? 'bg-yellow-400' :
-                                                    'bg-red-400'
-                                                }`} />
-                                            {business.status}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 text-[#9BA8B5] text-xs sm:text-sm">
-                                        <div className="flex items-center gap-2 font-mono" title={business.transactionHash}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#7B8B9A]/50"></span>
-                                            <span className="truncate">ID: {business.transactionHash.slice(0, 6)}...{business.transactionHash.slice(-4)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Calendar01Icon className="w-4 h-4 text-[#81D7B4] shrink-0" />
-                                            <span className="whitespace-nowrap">Joined {format(new Date(business.createdAt), 'MMM d, yyyy')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-
-                    {/* Left Sidebar: Stats & Owner (4 cols) */}
-                    <motion.div variants={itemVariants} className="lg:col-span-4 space-y-4 sm:space-y-6 lg:sticky lg:top-8">
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                            <StatCard
-                                label="Business Tier"
-                                value={business.tier}
-                                icon={Building04Icon}
-                                highlight
-                            />
-                            <StatCard
-                                label="Fee Paid"
-                                value={business.feePaid ? `$${business.feePaid}` : 'Free'}
-                                icon={Dollar01Icon}
-                            />
-                        </div>
-
-                        {/* Owner Details Card */}
-                        <div className="bg-[#1A2538]/30 backdrop-blur-md rounded-2xl border border-[#7B8B9A]/10 p-4 sm:p-6">
-                            <h3 className="text-xs font-bold text-[#9BA8B5] uppercase tracking-wider mb-4 sm:mb-5 flex items-center gap-2">
-                                <Activity01Icon className="w-4 h-4 text-[#81D7B4]" />
-                                Owner Information
-                            </h3>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Wallet Address</p>
-                                    <div className="p-3 bg-[#121212]/50 rounded-lg border border-[#7B8B9A]/10 font-mono text-xs sm:text-sm text-[#F9F9FB] break-all select-all hover:border-[#81D7B4]/30 transition-colors">
-                                        {business.owner}
-                                    </div>
-                                </div>
-
-                                {business.referralCode && (
-                                    <div>
-                                        <p className="text-[11px] text-[#9BA8B5] mb-1.5 uppercase font-medium">Referral Code</p>
-                                        <div className="flex items-center gap-3 p-3 bg-[#121212]/50 rounded-lg border border-[#7B8B9A]/10">
-                                            <div className="w-8 h-8 rounded-md bg-[#81D7B4]/10 flex items-center justify-center text-[#81D7B4] shrink-0">
-                                                <Activity01Icon className="w-5 h-5" />
-                                            </div>
-                                            <span className="font-bold text-[#F9F9FB] tracking-wide break-all">{business.referralCode}</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Right Content: Tabs (8 cols) */}
-                    <motion.div variants={itemVariants} className="lg:col-span-8">
-                        {/* Custom Tabs */}
-                        <div className="flex items-center gap-1 mb-6 p-1 bg-[#1A2538]/30 rounded-xl border border-[#7B8B9A]/10 w-full md:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm">
-                            <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="Overview" />
-                            <TabButton active={activeTab === 'kyc'} onClick={() => setActiveTab('kyc')} label="KYC & Documents" />
-                            <TabButton active={activeTab === 'raw'} onClick={() => setActiveTab('raw')} label="Raw Data" />
-                        </div>
-
-                        <div className="min-h-[400px]">
-                            <AnimatePresence mode="wait">
-                                {activeTab === 'overview' && (
-                                    <motion.div
-                                        key="overview"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 p-6 md:p-8">
-                                            <div className="mb-8 pb-4 border-b border-[#7B8B9A]/10">
-                                                <h2 className="text-xl font-bold text-[#F9F9FB]">Business Details</h2>
-                                                <p className="text-sm text-[#9BA8B5] mt-1">Comprehensive information submitted by the business owner</p>
-                                            </div>
-
-                                            {business.metadata ? (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                                    {Object.entries(business.metadata).map(([key, value]) => {
-                                                        if (!value || ['step', 'agreedToTerms', 'kyc'].includes(key)) return null;
-
-                                                        const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                                                        let formattedValue: any = value;
-                                                        if (typeof value === 'boolean') formattedValue = value ? 'Yes' : 'No';
-                                                        if (typeof value === 'object') formattedValue = JSON.stringify(value);
-
-                                                        return (
-                                                            <div key={key} className="group">
-                                                                <p className="text-xs font-medium text-[#9BA8B5] uppercase tracking-wider mb-1.5 group-hover:text-[#81D7B4] transition-colors">{formattedKey}</p>
-                                                                <div className="text-[#F9F9FB] text-base font-medium break-words leading-relaxed py-2 border-b border-[#7B8B9A]/5 group-hover:border-[#7B8B9A]/10 transition-colors">
-                                                                    {formattedValue}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            ) : (
-                                                <div className="text-center py-20 opacity-50">
-                                                    <Activity01Icon className="w-12 h-12 mx-auto mb-4 text-[#9BA8B5]" />
-                                                    <p className="text-[#9BA8B5] font-medium">No additional metadata provided.</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {activeTab === 'kyc' && (
-                                    <motion.div
-                                        key="kyc"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="space-y-6"
-                                    >
-                                        {business.metadata?.kyc ? (
-                                            <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 p-6 md:p-8">
-                                                <div className="mb-8 pb-4 border-b border-[#7B8B9A]/10">
-                                                    <h2 className="text-xl font-bold text-[#F9F9FB]">KYC Verification</h2>
-                                                    <p className="text-sm text-[#9BA8B5] mt-1">Identity and business registration documents</p>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
-                                                    <div className="space-y-5">
-                                                        <div className="flex items-center gap-2 text-[#81D7B4] font-bold text-sm uppercase tracking-wider mb-2">
-                                                            <Activity01Icon className="w-5 h-5" />
-                                                            Identity Info
-                                                        </div>
-                                                        <InfoRow label="ID Type" value={business.metadata.kyc.idType} />
-                                                        <InfoRow label="ID Number" value={business.metadata.kyc.idNumber} mono />
-                                                        <InfoRow label="Contact" value={business.metadata.kyc.contactChannel} />
-                                                    </div>
-
-                                                    <div className="space-y-5">
-                                                        <div className="flex items-center gap-2 text-[#81D7B4] font-bold text-sm uppercase tracking-wider mb-2">
-                                                            <Activity01Icon className="w-5 h-5" />
-                                                            Business Status
-                                                        </div>
-                                                        <InfoRow label="Registered" value={business.metadata.kyc.isRegistered} />
-                                                        {business.metadata.kyc.registrationNumber && (
-                                                            <InfoRow label="Registration No." value={business.metadata.kyc.registrationNumber} mono />
-                                                        )}
-                                                        <InfoRow label="Payout Method" value={business.metadata.kyc.payoutMethod} />
-                                                    </div>
-                                                </div>
-
-                                                <div className="pt-6 border-t border-[#7B8B9A]/10">
-                                                    <h3 className="text-xs font-bold text-[#9BA8B5] uppercase tracking-wider mb-6">Documents</h3>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                        <DocumentCard label="ID Document" url={business.metadata.kyc.idDocumentLink} />
-                                                        <DocumentCard label="Selfie Photo" url={business.metadata.kyc.selfieLink} />
-                                                        <DocumentCard label="Business Docs" url={business.metadata.kyc.businessDocsLink} />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 p-12 text-center">
-                                                <div className="w-16 h-16 rounded-full bg-[#1A2538] border border-[#7B8B9A]/10 flex items-center justify-center mx-auto mb-4 text-[#9BA8B5]">
-                                                    <Activity01Icon className="w-8 h-8" />
-                                                </div>
-                                                <h3 className="text-lg font-bold text-[#F9F9FB] mb-2">KYC Not Submitted</h3>
-                                                <p className="text-[#9BA8B5]">The business has not provided KYC details yet.</p>
-                                            </div>
-                                        )}
-                                    </motion.div>
-                                )}
-
-                                {activeTab === 'raw' && (
-                                    <motion.div
-                                        key="raw"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <div className="bg-[#1A2538]/30 backdrop-blur-xl rounded-2xl border border-[#7B8B9A]/10 p-6 overflow-hidden">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h3 className="text-sm font-bold text-[#F9F9FB] uppercase tracking-wider">Raw JSON</h3>
-                                                <span className="text-[10px] font-mono text-[#9BA8B5] bg-[#121212] px-2 py-1 rounded border border-[#7B8B9A]/10">Read-only</span>
-                                            </div>
-                                            <div className="bg-[#121212] rounded-xl p-4 overflow-x-auto border border-[#7B8B9A]/10 custom-scrollbar">
-                                                <pre className="text-xs font-mono text-[#81D7B4] leading-relaxed">
-                                                    {JSON.stringify(business, null, 2)}
-                                                </pre>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-
-            {/* Loan Agreement Modal */}
-            <AnimatePresence>
-                {showAgreement && (
-                    <LoanAgreementEditor
-                        business={business}
-                        onClose={() => setShowAgreement(false)}
-                        onSave={async (data) => {
-                            console.log('Saved agreement:', data);
-                            setShowAgreement(false);
-                        }}
-                    />
-                )}
-            </AnimatePresence>
-        </motion.div>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <div className="w-12 h-12 border-3 border-[#81D7B4]/20 border-t-[#81D7B4] rounded-full animate-spin"></div>
+        <p className="text-[#81D7B4] text-xs font-bold uppercase tracking-widest animate-pulse">
+          Loading Business Profile...
+        </p>
+      </div>
     );
-}
+  }
 
-// Sub-components
-
-function StatCard({ label, value, icon: Icon, highlight = false }: { label: string, value: string, icon: any, highlight?: boolean }) {
+  if (error || !business) {
     return (
-        <div className={`p-5 rounded-2xl border transition-all duration-300 group hover:scale-[1.02] ${highlight
-            ? 'bg-gradient-to-br from-[#81D7B4]/10 to-[#1A2538]/40 border-[#81D7B4]/20'
-            : 'bg-[#1A2538]/30 backdrop-blur-md border-[#7B8B9A]/10 hover:bg-[#1A2538]/50'
-            }`}>
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${highlight ? 'bg-[#81D7B4]/20 text-[#81D7B4]' : 'bg-[#7B8B9A]/10 text-[#9BA8B5] group-hover:text-[#F9F9FB] transition-colors'
-                }`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BA8B5] mb-1">{label}</p>
-            <p className={`text-xl font-bold ${highlight ? 'text-[#81D7B4]' : 'text-[#F9F9FB]'}`}>{value}</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-6 text-center">
+        <div className="w-20 h-20 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-400">
+          <Alert01Icon className="w-10 h-10" />
         </div>
-    );
-}
-
-function TabButton({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
-    return (
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black text-[#F9F9FB]">{error || 'Business Not Found'}</h2>
+          <p className="text-xs text-[#9BA8B5]">The record could not be found in the protocol registry.</p>
+        </div>
         <button
-            onClick={onClick}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative whitespace-nowrap ${active
-                ? 'text-[#F9F9FB] shadow-sm'
-                : 'text-[#9BA8B5] hover:text-[#F9F9FB] hover:bg-[#F9F9FB]/5'
-                }`}
+          onClick={() => router.push('/bizfi/admin/businesses')}
+          className="flex items-center gap-2 px-6 py-3 bg-[#1A2538] hover:bg-[#253247] rounded-xl border border-[#7B8B9A]/20 text-[#F9F9FB] font-bold text-xs transition-all cursor-pointer"
         >
-            {active && (
-                <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-[#7B8B9A]/20 rounded-lg"
-                    style={{ borderRadius: 8 }}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-            )}
-            <span className="relative z-10">{label}</span>
+          <ArrowLeft02Icon className="w-4 h-4 text-[#81D7B4]" />
+          <span>Return to Businesses</span>
         </button>
+      </div>
     );
-}
+  }
 
-function InfoRow({ label, value, mono = false }: { label: string, value: string, mono?: boolean }) {
-    return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-[#7B8B9A]/5 last:border-0">
-            <span className="text-sm font-medium text-[#9BA8B5]">{label}</span>
-            <span className={`text-sm text-[#F9F9FB] text-right truncate max-w-full sm:max-w-[60%] ${mono ? 'font-mono text-xs bg-[#121212]/50 px-2 py-1 rounded border border-[#7B8B9A]/10' : 'font-medium'}`} title={typeof value === 'string' ? value : undefined}>
-                {value || 'N/A'}
-            </span>
-        </div>
-    );
-}
+  const meta = business.metadata || {};
 
-function DocumentCard({ label, url }: { label: string, url: string | undefined }) {
-    if (!url) return (
-        <div className="flex flex-col items-center justify-center gap-2 p-4 bg-[#121212]/30 text-[#9BA8B5]/50 rounded-xl border border-[#7B8B9A]/10 border-dashed">
-            <Activity01Icon className="w-6 h-6" />
-            <span className="text-xs font-medium">{label} Missing</span>
-        </div>
-    );
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8 pb-16 max-w-[1600px] mx-auto font-sans"
+    >
+      <AnimatePresence>
+        {showAgreement && (
+          <LoanAgreementEditor
+            business={business}
+            onClose={() => setShowAgreement(false)}
+            onSave={handleSaveAgreement}
+          />
+        )}
+      </AnimatePresence>
 
-    return (
-        <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center gap-3 p-4 bg-[#1A2538]/40 text-[#81D7B4] rounded-xl border border-[#7B8B9A]/10 hover:border-[#81D7B4]/30 hover:bg-[#1A2538]/60 transition-all group relative overflow-hidden"
+      {/* Navigation & Action Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <button
+          onClick={() => router.push('/bizfi/admin/businesses')}
+          className="flex items-center gap-2.5 text-[#9BA8B5] hover:text-[#81D7B4] transition-colors cursor-pointer group w-fit"
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#81D7B4]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-10 h-10 rounded-full bg-[#81D7B4]/10 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-                <Download01Icon className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-xl bg-[#1A2538] flex items-center justify-center border border-[#7B8B9A]/20 group-hover:border-[#81D7B4]/40">
+            <ArrowLeft02Icon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          </div>
+          <span className="text-xs font-bold">Back to Businesses</span>
+        </button>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={handleMessage}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#1A2538] hover:bg-[#253247] text-[#81D7B4] rounded-xl border border-[#81D7B4]/30 font-bold text-xs transition-all cursor-pointer active:scale-95 shadow-sm"
+          >
+            <Message02Icon className="w-4 h-4" />
+            <span>Chat with Owner</span>
+          </button>
+
+          <button
+            onClick={() => setShowAgreement(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] rounded-xl font-black text-xs transition-all shadow-md shadow-[#81D7B4]/20 cursor-pointer active:scale-95"
+          >
+            <File01Icon className="w-4 h-4" />
+            <span>Loan Agreement</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Business Hero Banner */}
+      <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#81D7B4]/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="flex items-start sm:items-center gap-4 sm:gap-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#81D7B4]/20 to-[#81D7B4]/5 border border-[#81D7B4]/30 flex items-center justify-center text-[#81D7B4] font-black text-2xl sm:text-3xl shadow-inner shrink-0">
+              {(business.businessName || 'B').charAt(0).toUpperCase()}
             </div>
-            <div className="text-center relative z-10">
-                <span className="block text-xs font-bold text-[#F9F9FB] mb-0.5">{label}</span>
-                <span className="text-[10px] text-[#81D7B4] opacity-80 group-hover:opacity-100">
-                    View Document
+
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-black text-[#F9F9FB] tracking-tight">
+                  {business.businessName}
+                </h1>
+                
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                  business.status === 'approved'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : business.status === 'pending'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    : 'bg-red-500/10 text-red-400 border-red-500/20'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    business.status === 'approved' ? 'bg-emerald-400 animate-pulse' :
+                    business.status === 'pending' ? 'bg-amber-400 animate-pulse' : 'bg-red-400'
+                  }`} />
+                  <span className="capitalize">{business.status || 'pending'}</span>
                 </span>
+
+                <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[#0F1825] text-[#81D7B4] border border-[#81D7B4]/20">
+                  {business.tier || 'builder'} Tier
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-xs text-[#9BA8B5]">
+                <div className="flex items-center gap-1.5">
+                  <Calendar01Icon className="w-3.5 h-3.5 text-[#81D7B4]" />
+                  <span>Registered {business.createdAt ? format(new Date(business.createdAt), 'MMMM d, yyyy') : '-'}</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#7B8B9A]"></span>
+                  <span className="text-[#7B8B9A]">TX:</span>
+                  <button
+                    onClick={() => copyToClipboard(business.transactionHash, 'tx')}
+                    className="hover:text-[#81D7B4] transition-colors inline-flex items-center gap-1"
+                    title="Click to copy full hash"
+                  >
+                    <span>{business.transactionHash ? `${business.transactionHash.slice(0, 8)}...${business.transactionHash.slice(-6)}` : '-'}</span>
+                    <Copy01Icon className="w-3 h-3 text-[#7B8B9A]" />
+                  </button>
+                  {copied === 'tx' && <span className="text-emerald-400 text-[10px] font-bold">Copied!</span>}
+                </div>
+              </div>
             </div>
-        </a>
-    );
+          </div>
+
+          {/* Quick Status Action Switcher */}
+          <div className="flex items-center gap-2 bg-[#0F1825] p-1.5 rounded-2xl border border-[#7B8B9A]/20 w-fit">
+            {business.status !== 'approved' && (
+              <button
+                onClick={() => handleStatusUpdate('approved')}
+                disabled={updating}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold transition-all border border-emerald-500/20 cursor-pointer disabled:opacity-50"
+              >
+                <Tick01Icon className="w-3.5 h-3.5" />
+                <span>Approve</span>
+              </button>
+            )}
+
+            {business.status !== 'pending' && (
+              <button
+                onClick={() => handleStatusUpdate('pending')}
+                disabled={updating}
+                className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-xl text-xs font-bold transition-all border border-amber-500/20 cursor-pointer disabled:opacity-50"
+              >
+                <Clock01Icon className="w-3.5 h-3.5" />
+                <span>Mark Pending</span>
+              </button>
+            )}
+
+            {business.status !== 'rejected' && (
+              <button
+                onClick={() => handleStatusUpdate('rejected')}
+                disabled={updating}
+                className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all border border-red-500/20 cursor-pointer disabled:opacity-50"
+              >
+                <Cancel01Icon className="w-3.5 h-3.5" />
+                <span>Reject</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-2 mt-8 pt-6 border-t border-[#7B8B9A]/15 overflow-x-auto">
+          {[
+            { id: 'overview', label: 'Overview', icon: Building04Icon },
+            { id: 'kyc', label: 'KYC & Metadata', icon: UserIcon },
+            { id: 'agreement', label: 'Loan Agreement', icon: File01Icon },
+            { id: 'raw', label: 'Raw JSON', icon: ViewIcon }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? 'bg-[#81D7B4] text-[#0F1825] shadow-md shadow-[#81D7B4]/20'
+                    : 'text-[#9BA8B5] hover:bg-[#0F1825] hover:text-[#F9F9FB]'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* TAB CONTENT */}
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Core Info Card */}
+            <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 shadow-xl space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-wider text-[#81D7B4] flex items-center gap-2">
+                <Building04Icon className="w-4 h-4" />
+                Business Overview
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block mb-1">Business Name</span>
+                  <p className="font-bold text-[#F9F9FB] text-sm">{business.businessName}</p>
+                </div>
+
+                <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block mb-1">Tier Level</span>
+                  <p className="font-bold text-[#81D7B4] text-sm capitalize">{business.tier || 'builder'}</p>
+                </div>
+
+                <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block mb-1">Fee Paid</span>
+                  <p className="font-bold text-[#F9F9FB] text-sm">
+                    {business.feePaid ? `$${business.feePaid}` : 'Free / Included'}
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block mb-1">Referral Code</span>
+                  <p className="font-bold text-[#F9F9FB] text-sm">{business.referralCode || 'None'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Owner & Contacts Card */}
+            <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 shadow-xl space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-wider text-[#81D7B4] flex items-center gap-2">
+                <UserIcon className="w-4 h-4" />
+                Owner & Contact Channels
+              </h3>
+
+              <div className="space-y-3">
+                <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block mb-1">Owner Wallet Address</span>
+                    <p className="font-mono text-xs text-[#F9F9FB] break-all select-all">{business.owner}</p>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(business.owner, 'owner')}
+                    className="p-2 hover:bg-[#1A2538] rounded-xl text-[#9BA8B5] hover:text-[#81D7B4] transition-colors shrink-0"
+                    title="Copy Address"
+                  >
+                    <Copy01Icon className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 flex items-center gap-3">
+                    <Mail01Icon className="w-4 h-4 text-[#81D7B4] shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block">Email</span>
+                      <p className="text-xs font-medium text-[#F9F9FB] truncate">
+                        {meta.email || meta.businessEmail || meta.ceoEmail || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 flex items-center gap-3">
+                    <GlobalIcon className="w-4 h-4 text-[#81D7B4] shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block">Website</span>
+                      <p className="text-xs font-medium text-[#F9F9FB] truncate">
+                        {meta.website || meta.businessWebsite ? (
+                          <a href={meta.website || meta.businessWebsite} target="_blank" rel="noreferrer" className="text-[#81D7B4] hover:underline">
+                            {meta.website || meta.businessWebsite}
+                          </a>
+                        ) : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar Column */}
+          <div className="space-y-6">
+            {/* Quick Summary Card */}
+            <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 shadow-xl space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-wider text-[#81D7B4] flex items-center gap-2">
+                <Shield01Icon className="w-4 h-4" />
+                Verification Status
+              </h3>
+
+              <div className="p-4 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#7B8B9A]">Protocol Status:</span>
+                  <span className="font-bold text-[#F9F9FB] capitalize">{business.status}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#7B8B9A]">Loan Agreement:</span>
+                  <span className={`font-bold ${business.loanAgreement ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {business.loanAgreement ? 'Generated' : 'Not Created'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#7B8B9A]">Metadata Attached:</span>
+                  <span className="font-bold text-[#81D7B4]">{Object.keys(meta).length} fields</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowAgreement(true)}
+                className="w-full py-3 bg-[#1A2538] hover:bg-[#253247] text-[#81D7B4] rounded-xl border border-[#81D7B4]/30 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <File01Icon className="w-4 h-4" />
+                <span>{business.loanAgreement ? 'Edit Agreement' : 'Generate Agreement'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: KYC & METADATA */}
+      {activeTab === 'kyc' && (
+        <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 sm:p-8 shadow-xl space-y-6">
+          <h3 className="text-base font-black uppercase tracking-wider text-[#81D7B4] flex items-center gap-2">
+            <UserIcon className="w-5 h-5" />
+            Registered KYC & Business Details
+          </h3>
+
+          {Object.keys(meta).length === 0 ? (
+            <div className="p-12 text-center text-[#7B8B9A]">
+              <File01Icon className="w-8 h-8 opacity-30 text-[#81D7B4] mx-auto mb-2" />
+              <p className="text-sm font-bold text-[#F9F9FB]">No additional KYC metadata recorded for this business.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(meta).map(([key, val]) => {
+                if (typeof val === 'object' && val !== null) {
+                  return (
+                    <div key={key} className="p-4 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 md:col-span-2 space-y-1">
+                      <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block">{key}</span>
+                      <pre className="text-xs font-mono text-[#F9F9FB] overflow-x-auto bg-[#1A2538]/50 p-3 rounded-xl">
+                        {JSON.stringify(val, null, 2)}
+                      </pre>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={key} className="p-4 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 space-y-1">
+                    <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider block">
+                      {key.replace(/([A-Z])/g, ' $1')}
+                    </span>
+                    <p className="text-xs font-semibold text-[#F9F9FB] break-words">
+                      {String(val) || '-'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: LOAN AGREEMENT */}
+      {activeTab === 'agreement' && (
+        <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 sm:p-8 shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-black uppercase tracking-wider text-[#81D7B4] flex items-center gap-2">
+                <File01Icon className="w-5 h-5" />
+                Loan Agreement Status
+              </h3>
+              <p className="text-xs text-[#9BA8B5] mt-1">Legally binding covenants & repayment terms</p>
+            </div>
+
+            <button
+              onClick={() => setShowAgreement(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#0F1825] rounded-xl font-bold text-xs transition-all shadow-md shadow-[#81D7B4]/20 cursor-pointer"
+            >
+              <File01Icon className="w-4 h-4" />
+              <span>{business.loanAgreement ? 'Edit Agreement Document' : 'Draft New Agreement'}</span>
+            </button>
+          </div>
+
+          {business.loanAgreement ? (
+            <div className="p-6 bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="p-3 bg-[#1A2538] rounded-xl border border-[#7B8B9A]/10">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase">Principal Sum</span>
+                  <p className="text-sm font-bold text-[#F9F9FB] mt-0.5">{business.loanAgreement.principalSum || '-'}</p>
+                </div>
+                <div className="p-3 bg-[#1A2538] rounded-xl border border-[#7B8B9A]/10">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase">Tenor</span>
+                  <p className="text-sm font-bold text-[#F9F9FB] mt-0.5">{business.loanAgreement.tenor || '-'}</p>
+                </div>
+                <div className="p-3 bg-[#1A2538] rounded-xl border border-[#7B8B9A]/10">
+                  <span className="text-[10px] font-bold text-[#7B8B9A] uppercase">Interest Rate</span>
+                  <p className="text-sm font-bold text-[#81D7B4] mt-0.5">{business.loanAgreement.interestRate || '-'}</p>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <span className="text-[10px] font-bold text-[#7B8B9A] uppercase block mb-1">Repayment Schedule</span>
+                <p className="text-xs text-[#9BA8B5] bg-[#1A2538] p-3 rounded-xl border border-[#7B8B9A]/10">
+                  {business.loanAgreement.repaymentSchedule || 'Standard amortized schedule'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="p-12 text-center text-[#7B8B9A] bg-[#0F1825] rounded-2xl border border-[#7B8B9A]/15">
+              <File01Icon className="w-10 h-10 opacity-30 text-[#81D7B4] mx-auto mb-2" />
+              <p className="text-sm font-bold text-[#F9F9FB]">No loan agreement drafted yet.</p>
+              <p className="text-xs text-[#7B8B9A] mt-1">Click the button above to generate a customized agreement.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: RAW JSON */}
+      {activeTab === 'raw' && (
+        <div className="bg-[#1A2538]/70 backdrop-blur-xl rounded-3xl border border-[#7B8B9A]/20 p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase tracking-wider text-[#81D7B4] flex items-center gap-2">
+              <ViewIcon className="w-4 h-4" />
+              Raw Registry Record
+            </h3>
+            <button
+              onClick={() => copyToClipboard(JSON.stringify(business, null, 2), 'raw')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F1825] hover:bg-[#1A2538] text-[#81D7B4] rounded-xl text-xs font-bold border border-[#7B8B9A]/20 transition-colors"
+            >
+              <Copy01Icon className="w-3.5 h-3.5" />
+              <span>{copied === 'raw' ? 'Copied JSON!' : 'Copy JSON'}</span>
+            </button>
+          </div>
+
+          <pre className="text-xs font-mono text-[#81D7B4] bg-[#0F1825] p-4 rounded-2xl border border-[#7B8B9A]/15 overflow-x-auto max-h-[500px]">
+            {JSON.stringify(business, null, 2)}
+          </pre>
+        </div>
+      )}
+    </motion.div>
+  );
 }
