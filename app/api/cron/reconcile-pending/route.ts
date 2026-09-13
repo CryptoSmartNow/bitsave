@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.ONSWITCH_API_KEY}`
+                'x-service-key': process.env.ONSWITCH_API_KEY
               }
             });
 

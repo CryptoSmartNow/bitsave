@@ -56,7 +56,7 @@ function WatchTowerContent() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active Tab: 'overview' | 'transactions' | 'users' | 'certificates' | 'feedback' | 'updates' | 'leaderboard'
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'users' | 'certificates' | 'feedback' | 'updates' | 'leaderboard'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'users' | 'certificates' | 'mint' | 'feedback' | 'updates' | 'leaderboard'>('overview');
 
   // Telemetry state
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -157,9 +157,9 @@ function WatchTowerContent() {
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <ViewOffSlashIcon className="w-5 h-5" />
+                    'Hide'
                   ) : (
-                    <ViewIcon className="w-5 h-5" />
+                    'Show'
                   )}
                 </button>
               </div>
@@ -178,7 +178,7 @@ function WatchTowerContent() {
               className="w-full py-3.5 bg-[#81D7B4] hover:bg-[#6BC4A0] disabled:opacity-50 text-[#070A0F] font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-[#81D7B4]/25 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
             >
               {isLoggingIn ? 'Authenticating...' : 'Enter Watch Tower'}
-              <FlashIcon className="w-4 h-4" />
+              
             </button>
           </form>
         </div>
@@ -214,13 +214,11 @@ function WatchTowerContent() {
             <SidebarBtn
               active={activeTab === 'overview'}
               onClick={() => setActiveTab('overview')}
-              icon={<Activity01Icon className="w-5 h-5" />}
               label="Live Overview"
             />
             <SidebarBtn
               active={activeTab === 'transactions'}
               onClick={() => setActiveTab('transactions')}
-              icon={<ArrowLeftRightIcon className="w-5 h-5" />}
               label="Transactions & Fixes"
               badge={telemetry?.metrics?.pendingBizswapTxs > 0 ? telemetry.metrics.pendingBizswapTxs : undefined}
               badgeColor="amber"
@@ -228,19 +226,21 @@ function WatchTowerContent() {
             <SidebarBtn
               active={activeTab === 'users'}
               onClick={() => setActiveTab('users')}
-              icon={<UserGroupIcon className="w-5 h-5" />}
               label="Users & Wallets"
             />
             <SidebarBtn
               active={activeTab === 'certificates'}
               onClick={() => setActiveTab('certificates')}
-              icon={<Certificate01Icon className="w-5 h-5" />}
               label="RWA Certificates"
             />
             <SidebarBtn
               active={activeTab === 'feedback'}
               onClick={() => setActiveTab('feedback')}
-              icon={<CustomerService01Icon className="w-5 h-5" />}
+              label="Mint Certificates"
+            />
+            <SidebarBtn
+              active={activeTab === 'mint'}
+              onClick={() => setActiveTab('mint')}
               label="User Feedback"
               badge={telemetry?.metrics?.pendingFeedbackCount > 0 ? telemetry.metrics.pendingFeedbackCount : undefined}
               badgeColor="mint"
@@ -248,13 +248,11 @@ function WatchTowerContent() {
             <SidebarBtn
               active={activeTab === 'updates'}
               onClick={() => setActiveTab('updates')}
-              icon={<Notification01Icon className="w-5 h-5" />}
               label="Announcements"
             />
             <SidebarBtn
               active={activeTab === 'leaderboard'}
               onClick={() => setActiveTab('leaderboard')}
-              icon={<Award01Icon className="w-5 h-5" />}
               label="Leaderboard"
             />
           </nav>
@@ -267,7 +265,7 @@ function WatchTowerContent() {
             disabled={telemetryLoading}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#121A27] hover:bg-[#1C2538] text-[#7B8B9A] hover:text-[#F9F9FB] rounded-xl text-xs font-bold transition-colors cursor-pointer"
           >
-            <RefreshIcon className={`w-4 h-4 ${telemetryLoading ? 'animate-spin text-[#81D7B4]' : ''}`} />
+            
             <span>{telemetryLoading ? 'Syncing...' : 'Sync Telemetry'}</span>
           </button>
           
@@ -275,7 +273,7 @@ function WatchTowerContent() {
             onClick={logout}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-colors cursor-pointer"
           >
-            <Logout01Icon className="w-4 h-4" />
+            
             <span>Logout</span>
           </button>
         </div>
@@ -333,6 +331,7 @@ function WatchTowerContent() {
         {activeTab === 'transactions' && <TransactionsTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'certificates' && <CertificatesTab />}
+        {activeTab === 'mint' && <MintTab />}
         {activeTab === 'feedback' && <FeedbackTab />}
         {activeTab === 'updates' && <UpdatesTab />}
         {activeTab === 'leaderboard' && <LeaderboardTab />}
@@ -375,28 +374,24 @@ function OverviewTab({ telemetry, setActiveTab, onRefreshTelemetry }: { telemetr
           title="Global Accounts"
           value={m.totalUsers?.toLocaleString() || '0'}
           sub="Combined across SaveFi & BizSwap"
-          icon={<UserGroupIcon className="w-5 h-5 text-[#81D7B4]" />}
           onClick={() => setActiveTab('users')}
         />
         <MetricCard
           title="BizSwap 24h Volume"
           value={`$${(m.bizswap?.volumeToday || 0).toLocaleString()}`}
           sub={`${m.bizswap?.completedTodayCount || 0} completed & minted`}
-          icon={<Dollar01Icon className="w-5 h-5 text-[#3B82F6]" />}
           onClick={() => setActiveTab('transactions')}
         />
         <MetricCard
           title="SaveFi Active Savings"
           value={m.savefi?.activeSavingsCount?.toLocaleString() || '0'}
           sub={`${m.savefi?.childVaultsCount || 0} Child Vaults Protected`}
-          icon={<Coins01Icon className="w-5 h-5 text-[#81D7B4]" />}
           onClick={() => setActiveTab('users')}
         />
         <MetricCard
           title="Unresolved Support"
           value={m.pendingFeedbackCount || '0'}
           sub="Feedback awaiting email reply"
-          icon={<CustomerService01Icon className="w-5 h-5 text-amber-400" />}
           highlight={m.pendingFeedbackCount > 0}
           onClick={() => setActiveTab('feedback')}
         />
@@ -435,7 +430,7 @@ function OverviewTab({ telemetry, setActiveTab, onRefreshTelemetry }: { telemetr
               disabled={triggeringCron}
               className="px-4 py-2.5 bg-[#81D7B4] hover:bg-[#6BC4A0] disabled:opacity-50 text-[#070A0F] font-black text-xs rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-2"
             >
-              <FlashIcon className={`w-4 h-4 ${triggeringCron ? 'animate-spin' : ''}`} />
+              
               <span>{triggeringCron ? 'Executing Cron...' : 'Run Reconciler Now'}</span>
             </button>
           </div>
@@ -540,7 +535,7 @@ function OverviewTab({ telemetry, setActiveTab, onRefreshTelemetry }: { telemetr
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <FlashIcon className="w-5 h-5 text-amber-400" />
+                
                 <h3 className="text-sm font-black text-[#F9F9FB] uppercase tracking-wider">Pending Action Center</h3>
               </div>
               <button
@@ -848,7 +843,7 @@ function TransactionsTab() {
                             title="Force Mint Certificate & Complete"
                             className="p-1.5 bg-[#81D7B4]/10 hover:bg-[#81D7B4] text-[#81D7B4] hover:text-[#070A0F] rounded-lg transition-colors cursor-pointer"
                           >
-                            <FlashIcon className="w-4 h-4" />
+                            
                           </button>
                         )}
 
@@ -858,7 +853,7 @@ function TransactionsTab() {
                           title="Inspect JSON & Edit Status"
                           className="p-1.5 bg-[#1C2538] hover:bg-[#2C3E5D] text-[#F9F9FB] rounded-lg transition-colors cursor-pointer"
                         >
-                          <Edit02Icon className="w-4 h-4" />
+                          
                         </button>
 
                         {/* Purge Delete */}
@@ -867,7 +862,7 @@ function TransactionsTab() {
                           title="Purge record"
                           className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer"
                         >
-                          <Delete02Icon className="w-4 h-4" />
+                          
                         </button>
                       </div>
                     </td>
@@ -911,7 +906,7 @@ function TransactionsTab() {
                 <p className="text-xs font-mono text-[#81D7B4]">{activeTx.reference}</p>
               </div>
               <button onClick={() => setActiveTx(null)} className="text-[#7B8B9A] hover:text-white">
-                <Cancel01Icon className="w-6 h-6" />
+                
               </button>
             </div>
 
@@ -1143,7 +1138,7 @@ function UsersTab() {
                 <p className="text-xs font-mono text-[#7B8B9A] truncate max-w-[300px]">{selectedUser.walletAddress}</p>
               </div>
               <button onClick={() => setSelectedUser(null)} className="text-[#7B8B9A] hover:text-white">
-                <Cancel01Icon className="w-6 h-6" />
+                
               </button>
             </div>
 
@@ -1360,6 +1355,75 @@ function CertificatesTab() {
 }
 
 // ─── 5. FEEDBACK & DIRECT EMAIL REPLY INBOX ──────────────────────────
+
+// ─── 4.5. MINT CERTIFICATES TAB ────────────────────────────
+function MintTab() {
+  const [wallet, setWallet] = useState('');
+  const [email, setEmail] = useState('');
+  const [amount, setAmount] = useState('2');
+  const [channel, setChannel] = useState('fiat');
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleMint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch('/api/dev-admin/certificates/mint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet, email, amount, channel, purchaseDate }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('Certificate minted successfully!');
+        setWallet(''); setEmail(''); setAmount('2'); setChannel('fiat'); setPurchaseDate('');
+      } else {
+        toast.error(data.error || 'Failed to mint');
+      }
+    } catch (err) {
+      toast.error('An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-[#0A1019] border border-[#1C2538] rounded-2xl p-6 shadow-xl max-w-2xl">
+      <h3 className="text-lg font-bold text-[#F9F9FB] mb-4">Manual Mint BizShares Certificate</h3>
+      <form onSubmit={handleMint} className="space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">User Wallet</label>
+          <input type="text" value={wallet} onChange={e => setWallet(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" placeholder="0x..." />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">User Email (optional)</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" placeholder="user@example.com" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Number of BizShares</label>
+          <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" required min="1" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Purchase Channel</label>
+          <select value={channel} onChange={e => setChannel(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm">
+            <option value="fiat">Fiat Channel</option>
+            <option value="crypto">Crypto Channel</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Date of Purchase</label>
+          <input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" />
+        </div>
+        <button type="submit" disabled={loading} className="px-4 py-2 bg-[#81D7B4] text-[#070A0F] rounded font-bold">
+          {loading ? 'Minting...' : 'Mint Certificate'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+
 function FeedbackTab() {
   const [feedbackList, setFeedbackList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1652,7 +1716,7 @@ function FeedbackTab() {
                 </p>
               </div>
               <button onClick={() => setSelectedFeedback(null)} className="text-[#7B8B9A] hover:text-white">
-                <Cancel01Icon className="w-6 h-6" />
+                
               </button>
             </div>
 
@@ -1680,7 +1744,7 @@ function FeedbackTab() {
             <div className="flex items-center justify-between pt-1">
               <span className="text-xs text-[#7B8B9A]">Status after sending:</span>
               <div className="flex gap-2">
-                {['reviewed', 'resolved'].map((st) => (
+                {['pending_user', 'reviewed', 'resolved'].map((st) => (
                   <button
                     key={st}
                     type="button"
@@ -1689,7 +1753,7 @@ function FeedbackTab() {
                       newStatus === st ? 'bg-[#81D7B4] text-[#070A0F]' : 'bg-[#121A27] text-[#7B8B9A]'
                     }`}
                   >
-                    {st}
+                    {st === 'pending_user' ? 'Awaiting User' : st}
                   </button>
                 ))}
               </div>

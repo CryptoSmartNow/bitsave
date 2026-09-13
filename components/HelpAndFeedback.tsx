@@ -55,6 +55,8 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submittedTicketId, setSubmittedTicketId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
+  const [isReplying, setIsReplying] = useState<{ [key: string]: boolean }>({});
 
   // Past tickets history
   const [history, setHistory] = useState<any[]>([]);
@@ -126,6 +128,33 @@ export default function HelpAndFeedback({ appContext = 'SaveFi Dashboard', embed
     } finally {
       setIsCompressing(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  
+  const handleReplySubmit = async (ticketId: string) => {
+    const text = replyText[ticketId];
+    if (!text?.trim()) return;
+
+    setIsReplying(prev => ({ ...prev, [ticketId]: true }));
+    try {
+      const res = await fetch('/api/feedback/reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId, userAddress: activeAddress, message: text })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('Reply sent!');
+        setReplyText(prev => ({ ...prev, [ticketId]: '' }));
+        fetchUserHistory();
+      } else {
+        toast.error(data.error || 'Failed to send reply');
+      }
+    } catch (e) {
+      toast.error('Network error');
+    } finally {
+      setIsReplying(prev => ({ ...prev, [ticketId]: false }));
     }
   };
 
