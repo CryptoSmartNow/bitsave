@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
 import { getDatabase } from '@/lib/mongodb';
 import { bizswapReferralWithdrawSchema } from '@/lib/validation';
 import { rateLimit } from '@/lib/rateLimit';
@@ -19,68 +18,6 @@ export async function POST(request: NextRequest) {
     const { walletAddress, amount } = validationResult.data;
     const cleanWallet = walletAddress.trim();
 
-    // 1. Try Supabase
-    try {
-      const supabase = getSupabaseAdmin();
-      if (supabase) {
-        const { data: users, error: userError } = await supabase
-          .from('users')
-          .select('id')
-          .or(`evm_wallet.ilike.${cleanWallet},solana_wallet.eq.${cleanWallet}`);
-
-        const user = users && users.length > 0 ? users[0] : null;
-
-        if (user) {
-          const { data: earnings } = await supabase
-            .from('bizswap_referral_earnings')
-            .select('pending_usdc')
-            .eq('user_id', user.id)
-            .single();
-
-          const pendingBalance = Number(earnings?.pending_usdc || 0);
-
-          if (amount > pendingBalance) {
-            return NextResponse.json({ error: 'Insufficient pending earnings' }, { status: 400 });
-          }
-
-          await supabase
-            .from('bizswap_referral_earnings')
-            .update({
-              pending_usdc: pendingBalance - amount,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id);
-
-          const { data: withdrawal } = await supabase
-            .from('bizswap_withdrawals')
-            .insert({
-              user_id: user.id,
-              wallet: cleanWallet,
-              amount,
-              currency: 'USDC',
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-          return NextResponse.json({
-            success: true,
-            message: 'Withdrawal request submitted successfully',
-            data: {
-              _id: withdrawal?.id || new Date().getTime().toString(),
-              walletAddress: cleanWallet,
-              amount,
-              status: 'pending',
-              requestDate: new Date().toISOString()
-            }
-          });
-        }
-      }
-    } catch (supabaseErr) {
-      console.warn('[Referrals Withdraw] Supabase fallback to MongoDB:', (supabaseErr as any)?.message);
-    }
-
-    // 2. MongoDB fallback
     const db = await getDatabase();
     if (db) {
       const earningsCollection = db.collection('bizswap_referral_earnings');

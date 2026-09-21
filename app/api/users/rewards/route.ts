@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: Request) {
     try {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
         const collection = db.collection('users');
 
         // Case-insensitive address lookup
-        const addressRegex = new RegExp(`^${address}$`, 'i');
+        const addressRegex = new RegExp(`^${escapeRegex(address)}$`, 'i');
         const user = await collection.findOne({ walletAddress: addressRegex });
 
         const currentRewardsNum = Number(currentRewards) || 0;

@@ -53,11 +53,11 @@ function FeedbackContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors pb-20 font-sans">
+    <div className="h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors overflow-hidden font-sans">
       
       {/* Top Universal Ecosystem Header */}
       <header className="sticky top-0 z-30 bg-white/80 dark:bg-[#121212]/80 backdrop-blur-md border-b border-gray-200/70 dark:border-white/10 px-4 sm:px-8 py-3.5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+        <div className="w-full mx-auto flex items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
             <Link 
@@ -70,12 +70,9 @@ function FeedbackContent() {
             </Link>
 
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="w-7 h-7 relative">
-                <Image src="/bitsavelogo.png" alt="BitSave" fill className="object-contain" priority />
+              <div className="w-7 h-7 relative flex items-center justify-center">
+                <Image src="/bitsavelogo.png" alt="BitSave" width={28} height={28} className="object-contain" priority />
               </div>
-              <span className="font-instrument font-black text-lg text-gray-900 dark:text-white tracking-tight hidden sm:inline">
-                BitSave
-              </span>
             </Link>
 
             <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-0.5 hidden sm:block" />
@@ -101,7 +98,7 @@ function FeedbackContent() {
       </header>
 
       {/* Main Feedback Form Component */}
-      <main className="max-w-5xl mx-auto pt-6 px-4 sm:px-6">
+      <main className="w-full h-[calc(100vh-75px)] pt-4 px-4 sm:px-6">
         <HelpAndFeedback appContext={getAppContextLabel()} />
       </main>
 

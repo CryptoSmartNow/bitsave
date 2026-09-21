@@ -1,10 +1,23 @@
 import { getBizSwapCollection, getBizSwapUsersCollection, getDatabase } from '@/lib/mongodb';
-import { getSupabaseAdmin } from '@/lib/supabase';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { BIZSWAP_CHAINS, BizSwapSupportedChain, getChainConfig, getExplorerUrl } from '@/lib/bizswap-contracts';
 
-export async function handleMint(data: any) {
+export interface MintData {
+  wallet?: string;
+  email?: string;
+  instrument: string;
+  investmentAmount: number;
+  feeAmount: number;
+  totalCharged: number;
+  bizswapReferralCode?: string;
+  business?: string;
+  chain?: string;
+  originalPurchaseDate?: string;
+  reference?: string;
+}
+
+export async function handleMint(data: MintData) {
   const {
     wallet,
     instrument,
@@ -39,8 +52,8 @@ export async function handleMint(data: any) {
   const now = data.originalPurchaseDate ? new Date(data.originalPurchaseDate) : new Date();
   const currentTimestamp = Math.floor(now.getTime() / 1000);
 
-  const serialNumber = Math.floor(1000 + Math.random() * 9000).toString();
-  const currentCycle = '2026-MAY';
+  const serialNumber = crypto.randomInt(1000, 10000).toString();
+  const currentCycle = `${now.getFullYear()}-${now.toLocaleString('en-US', { month: 'short' }).toUpperCase()}`;
 
   let vestEndTimestamp = currentTimestamp + 90 * 24 * 60 * 60; // 90 days vesting default
   let yieldStartTimestamp = vestEndTimestamp;
@@ -181,40 +194,6 @@ export async function handleMint(data: any) {
           );
         }
       }
-
-      // 2. Credit in Supabase if available
-      try {
-        const supabase = getSupabaseAdmin();
-        if (supabase) {
-          const { data: suUser } = await supabase
-            .from('users')
-            .select('id')
-            .ilike('referral_code', cleanCode)
-            .single();
-
-          if (suUser?.id) {
-            const { data: currentEarnings } = await supabase
-              .from('bizswap_referral_earnings')
-              .select('pending_usdc, total_earned_usdc')
-              .eq('user_id', suUser.id)
-              .single();
-
-            const newPending = (Number(currentEarnings?.pending_usdc) || 0) + rewardAmount;
-            const newTotal = (Number(currentEarnings?.total_earned_usdc) || 0) + rewardAmount;
-
-            await supabase
-              .from('bizswap_referral_earnings')
-              .upsert({
-                user_id: suUser.id,
-                pending_usdc: newPending,
-                total_earned_usdc: newTotal,
-                updated_at: new Date().toISOString()
-              });
-          }
-        }
-      } catch (suErr) {
-        console.warn('[Referral Reward] Supabase sync notice:', suErr);
-      }
     } catch (refErr) {
       console.error('[Referral Reward] Error crediting referral:', refErr);
     }
@@ -313,7 +292,7 @@ export async function handleMint(data: any) {
         Bitsave Protocol &middot; RWA Yield Platform
       </p>
       <p style="font-size: 12px; color: #4b5563; margin: 0;">
-        &copy; 2026 Bitsave Protocol. All rights reserved.
+        &copy; ${now.getFullYear()} Bitsave Protocol. All rights reserved.
       </p>
     </div>
   </div>

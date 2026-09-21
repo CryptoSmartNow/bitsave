@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
+import { rateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
         const client = await clientPromise;
         if (!client) {
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
         }
 
         if (userAddress) {
-            query.walletAddress = { $regex: new RegExp(`^${userAddress}$`, 'i') };
+            query.walletAddress = { $regex: new RegExp(`^${escapeRegex(userAddress)}$`, 'i') };
         }
 
         if (search) {
@@ -82,7 +84,10 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+    const rateLimitResponse = rateLimit(request, 5, 60000); // 5 requests per minute
+    if (rateLimitResponse) return rateLimitResponse;
+
     try {
         const client = await clientPromise;
         if (!client) {

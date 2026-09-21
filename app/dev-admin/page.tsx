@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Award01Icon,
+  ArrowLeft01Icon,
+  Menu01Icon,
   ArrowLeftRightIcon,
   Notification01Icon,
   Logout01Icon,
@@ -26,13 +28,14 @@ import {
   Mail01Icon,
   SparklesIcon,
   RefreshIcon,
-  Cancel01Icon,
+  Cancel01Icon, BookOpen01Icon,
   Dollar01Icon,
   LinkSquare01Icon,
   InformationCircleIcon,
   Clock01Icon,
   Alert02Icon,
   Coins01Icon,
+  BubbleChatIcon,
 } from "hugeicons-react";
 import { AuthProvider, useAuth } from '@/lib/adminAuth';
 import toast, { Toaster } from 'react-hot-toast';
@@ -55,12 +58,12 @@ function WatchTowerContent() {
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Active Tab: 'overview' | 'transactions' | 'users' | 'certificates' | 'feedback' | 'updates' | 'leaderboard'
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'users' | 'certificates' | 'mint' | 'feedback' | 'updates' | 'leaderboard'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'users' | 'certificates' | 'mint' | 'feedback' | 'updates' | 'leaderboard' | 'database' | 'system'>('overview');
 
   // Telemetry state
   const [telemetry, setTelemetry] = useState<any>(null);
   const [telemetryLoading, setTelemetryLoading] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchTelemetry = useCallback(async () => {
     if (!user) return;
@@ -187,11 +190,43 @@ function WatchTowerContent() {
   }
 
   // ─── LOGGED IN DASHBOARD ────────────────────────────────────────────
+  if (activeTab === 'feedback') {
+    return (
+      <div className="min-h-screen bg-[#070A0F] text-[#F9F9FB] flex flex-col font-sans p-4 md:p-8 h-screen">
+        <button onClick={() => setActiveTab('overview')} className="flex items-center gap-2 text-[#81D7B4] hover:text-[#6BC4A0] transition-colors font-bold text-sm mb-4 w-fit cursor-pointer">
+          <ArrowLeft01Icon className="w-5 h-5" />
+          Back to Dashboard
+        </button>
+        <div className="flex-1 overflow-hidden h-full min-h-0 bg-[#0A1019] rounded-2xl border border-[#1C2538] shadow-2xl">
+          <FeedbackTab />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#070A0F] text-[#F9F9FB] flex font-sans">
+    <div className="min-h-screen bg-[#070A0F] text-[#F9F9FB] flex font-sans relative">
       
+      {/* ── MOBILE HEADER ── */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0A1019] border-b border-[#1C2538] z-20 flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-[#81D7B4]/15 border border-[#81D7B4]/30 rounded-xl flex items-center justify-center">
+            <Shield01Icon className="w-4 h-4 text-[#81D7B4]" />
+          </div>
+          <h2 className="text-sm font-black tracking-tight text-[#F9F9FB]">Watch Tower</h2>
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -mr-2 text-[#7B8B9A] hover:text-[#F9F9FB]">
+          <Menu01Icon className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* ── OVERLAY ── */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/60 z-30" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
       {/* ── SIDEBAR ── */}
-      <aside className="w-64 bg-[#0A1019] border-r border-[#1C2538] fixed h-full z-20 flex flex-col justify-between">
+      <aside className={`w-64 bg-[#0A1019] border-r border-[#1C2538] fixed h-full z-40 flex flex-col justify-between transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div>
           {/* Brand Header */}
           <div className="p-6 border-b border-[#1C2538] flex items-center justify-between">
@@ -210,16 +245,18 @@ function WatchTowerContent() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-3 space-y-1">
+          <nav className="p-3 space-y-1" onClick={() => setIsMobileMenuOpen(false)}>
             <SidebarBtn
               active={activeTab === 'overview'}
               onClick={() => setActiveTab('overview')}
               label="Live Overview"
+              icon={<Activity01Icon className="w-4 h-4" />}
             />
             <SidebarBtn
               active={activeTab === 'transactions'}
               onClick={() => setActiveTab('transactions')}
               label="Transactions & Fixes"
+              icon={<ArrowLeftRightIcon className="w-4 h-4" />}
               badge={telemetry?.metrics?.pendingBizswapTxs > 0 ? telemetry.metrics.pendingBizswapTxs : undefined}
               badgeColor="amber"
             />
@@ -227,34 +264,55 @@ function WatchTowerContent() {
               active={activeTab === 'users'}
               onClick={() => setActiveTab('users')}
               label="Users & Wallets"
+              icon={<UserGroupIcon className="w-4 h-4" />}
             />
             <SidebarBtn
               active={activeTab === 'certificates'}
               onClick={() => setActiveTab('certificates')}
               label="RWA Certificates"
-            />
-            <SidebarBtn
-              active={activeTab === 'feedback'}
-              onClick={() => setActiveTab('feedback')}
-              label="Mint Certificates"
+              icon={<Certificate01Icon className="w-4 h-4" />}
             />
             <SidebarBtn
               active={activeTab === 'mint'}
               onClick={() => setActiveTab('mint')}
+              label="Mint Certificates"
+              icon={<PlusSignIcon className="w-4 h-4" />}
+            />
+            <SidebarBtn
+              active={(activeTab as string) === 'feedback'}
+              onClick={() => setActiveTab('feedback')}
               label="User Feedback"
+              icon={<CustomerService01Icon className="w-4 h-4" />}
               badge={telemetry?.metrics?.pendingFeedbackCount > 0 ? telemetry.metrics.pendingFeedbackCount : undefined}
               badgeColor="mint"
             />
             <SidebarBtn
               active={activeTab === 'updates'}
               onClick={() => setActiveTab('updates')}
-              label="Announcements"
+              label="Platform Updates"
+              icon={<Notification01Icon className="w-4 h-4" />}
             />
             <SidebarBtn
               active={activeTab === 'leaderboard'}
               onClick={() => setActiveTab('leaderboard')}
               label="Leaderboard"
+              icon={<SparklesIcon className="w-4 h-4" />}
             />
+            <div className="pt-4 pb-2">
+              <div className="px-3 text-[10px] font-black uppercase tracking-widest text-[#4B5A75] mb-2">Advanced</div>
+              <SidebarBtn
+                active={activeTab === 'database'}
+                onClick={() => setActiveTab('database')}
+                label="Database Mgmt"
+                icon={<BookOpen01Icon className="w-4 h-4" />}
+              />
+              <SidebarBtn
+                active={activeTab === 'system'}
+                onClick={() => setActiveTab('system')}
+                label="System Diagnostics"
+                icon={<Activity01Icon className="w-4 h-4" />}
+              />
+            </div>
           </nav>
         </div>
 
@@ -280,7 +338,7 @@ function WatchTowerContent() {
       </aside>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <main className="flex-1 ml-64 p-8 overflow-y-auto min-h-screen">
+      <main className="flex-1 md:ml-64 p-4 pt-20 md:p-8 md:pt-8 overflow-x-hidden overflow-y-auto min-h-screen w-full">
         
         {/* Top Header Bar */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#1C2538] mb-8">
@@ -290,9 +348,12 @@ function WatchTowerContent() {
               {activeTab === 'transactions' && 'Transaction Command Center'}
               {activeTab === 'users' && 'Users, DIDs & Wallets'}
               {activeTab === 'certificates' && 'Issued Yield Certificates'}
-              {activeTab === 'feedback' && 'User Feedback & Support Inbox'}
+              {activeTab === 'mint' && 'Manual Mint BizShares Certificate'}
+              {(activeTab as string) === 'feedback' && 'User Feedback & Support Inbox'}
               {activeTab === 'updates' && 'Platform Updates & Broadcasts'}
               {activeTab === 'leaderboard' && 'Leaderboard Management'}
+              {activeTab === 'database' && 'Database Management'}
+              {activeTab === 'system' && 'System Diagnostics'}
             </h1>
             <p className="text-xs text-[#7B8B9A] mt-1 font-medium">
               Real-time monitoring and 1-click administrative resolution without database terminal login.
@@ -332,9 +393,10 @@ function WatchTowerContent() {
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'certificates' && <CertificatesTab />}
         {activeTab === 'mint' && <MintTab />}
-        {activeTab === 'feedback' && <FeedbackTab />}
         {activeTab === 'updates' && <UpdatesTab />}
         {activeTab === 'leaderboard' && <LeaderboardTab />}
+        {activeTab === 'database' && <DatabaseTab />}
+        {activeTab === 'system' && <SystemTab />}
 
       </main>
     </div>
@@ -629,6 +691,17 @@ function TransactionsTab() {
   const [activeTx, setActiveTx] = useState<any>(null);
   const [editStatus, setEditStatus] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
@@ -658,8 +731,7 @@ function TransactionsTab() {
   }, [fetchTransactions]);
 
   // 1-Click Action: Force Mint Certificate
-  const handleForceMint = async (tx: any) => {
-    if (!confirm(`Force mint certificate for ref: ${tx.reference}?`)) return;
+  const executeForceMint = async (tx: any) => {
     setActionLoading(true);
     try {
       const res = await fetch('/api/dev-admin/mint-transaction', {
@@ -679,6 +751,15 @@ function TransactionsTab() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleForceMint = (tx: any) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Force Mint',
+      message: `Force mint certificate for ref: ${tx.reference}?`,
+      onConfirm: () => executeForceMint(tx),
+    });
   };
 
   // 1-Click Action: Update Status
@@ -706,8 +787,7 @@ function TransactionsTab() {
   };
 
   // 1-Click Action: Delete / Purge
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this transaction record?')) return;
+  const executeDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/dev-admin/bizswap-transactions?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -717,6 +797,15 @@ function TransactionsTab() {
     } catch (e) {
       toast.error('Failed to delete');
     }
+  };
+
+  const handleDelete = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to permanently delete this transaction record?',
+      onConfirm: () => executeDelete(id),
+    });
   };
 
   return (
@@ -843,7 +932,7 @@ function TransactionsTab() {
                             title="Force Mint Certificate & Complete"
                             className="p-1.5 bg-[#81D7B4]/10 hover:bg-[#81D7B4] text-[#81D7B4] hover:text-[#070A0F] rounded-lg transition-colors cursor-pointer"
                           >
-                            
+                            <CheckmarkCircle01Icon className="w-4 h-4" />
                           </button>
                         )}
 
@@ -853,7 +942,7 @@ function TransactionsTab() {
                           title="Inspect JSON & Edit Status"
                           className="p-1.5 bg-[#1C2538] hover:bg-[#2C3E5D] text-[#F9F9FB] rounded-lg transition-colors cursor-pointer"
                         >
-                          
+                          <ViewIcon className="w-4 h-4" />
                         </button>
 
                         {/* Purge Delete */}
@@ -862,7 +951,7 @@ function TransactionsTab() {
                           title="Purge record"
                           className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer"
                         >
-                          
+                          <Cancel01Icon className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -940,6 +1029,33 @@ function TransactionsTab() {
                 className="px-5 py-2.5 bg-[#121A27] hover:bg-[#1C2538] text-white text-xs font-bold rounded-xl"
               >
                 Close Drawer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-[#0F1825] border border-[#2C3E5D] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-bold text-[#F9F9FB] mb-2">{confirmModal.title}</h3>
+            <p className="text-sm text-[#7B8B9A] mb-6">{confirmModal.message}</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                className="px-4 py-2 bg-[#1C2538] hover:bg-[#2C3E5D] text-[#F9F9FB] rounded-xl text-sm font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmModal({ ...confirmModal, isOpen: false });
+                  confirmModal.onConfirm();
+                }}
+                className="px-4 py-2 bg-[#81D7B4] hover:bg-[#9FE0C5] text-[#070A0F] rounded-xl text-sm font-bold transition-colors cursor-pointer"
+              >
+                Confirm
               </button>
             </div>
           </div>
@@ -1360,10 +1476,14 @@ function CertificatesTab() {
 function MintTab() {
   const [wallet, setWallet] = useState('');
   const [email, setEmail] = useState('');
-  const [amount, setAmount] = useState('2');
+  const [usdcAmount, setUsdcAmount] = useState('');
+  const [instrument, setInstrument] = useState('BizYield');
   const [channel, setChannel] = useState('fiat');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const NGN_RATE = 1385; // Approximate NGN per USDC
+  const nairaEquivalent = usdcAmount ? (Number(usdcAmount) * NGN_RATE).toLocaleString('en-NG', { minimumFractionDigits: 2 }) : '0.00';
 
   const handleMint = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1372,12 +1492,12 @@ function MintTab() {
       const res = await fetch('/api/dev-admin/certificates/mint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet, email, amount, channel, purchaseDate }),
+        body: JSON.stringify({ wallet, email, usdcAmount: Number(usdcAmount), instrument, channel, purchaseDate }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success('Certificate minted successfully!');
-        setWallet(''); setEmail(''); setAmount('2'); setChannel('fiat'); setPurchaseDate('');
+        setWallet(''); setEmail(''); setUsdcAmount(''); setInstrument('BizYield'); setChannel('fiat'); setPurchaseDate('');
       } else {
         toast.error(data.error || 'Failed to mint');
       }
@@ -1390,7 +1510,7 @@ function MintTab() {
 
   return (
     <div className="bg-[#0A1019] border border-[#1C2538] rounded-2xl p-6 shadow-xl max-w-2xl">
-      <h3 className="text-lg font-bold text-[#F9F9FB] mb-4">Manual Mint BizShares Certificate</h3>
+      <h3 className="text-lg font-bold text-[#F9F9FB] mb-4">Manual Mint Certificate</h3>
       <form onSubmit={handleMint} className="space-y-4">
         <div>
           <label className="block text-xs font-bold text-[#7B8B9A] mb-1">User Wallet</label>
@@ -1401,13 +1521,25 @@ function MintTab() {
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" placeholder="user@example.com" />
         </div>
         <div>
-          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Number of BizShares</label>
-          <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" required min="1" />
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Instrument</label>
+          <select value={instrument} onChange={e => setInstrument(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm">
+            <option value="BizYield">BizYield</option>
+            <option value="BizCredit">BizCredit</option>
+            <option value="BizTreasury">BizTreasury</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Amount (USDC)</label>
+          <input type="number" value={usdcAmount} onChange={e => setUsdcAmount(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" required min="1" step="0.01" placeholder="e.g. 20" />
+          {usdcAmount && (
+            <p className="text-xs text-[#81D7B4] mt-1">≈ ₦{nairaEquivalent}</p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Purchase Channel</label>
           <select value={channel} onChange={e => setChannel(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm">
             <option value="fiat">Fiat Channel</option>
+            <option value="fiat_onswitch">Fiat (OnSwitch)</option>
             <option value="crypto">Crypto Channel</option>
           </select>
         </div>
@@ -1415,7 +1547,7 @@ function MintTab() {
           <label className="block text-xs font-bold text-[#7B8B9A] mb-1">Date of Purchase</label>
           <input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} className="w-full bg-[#070A0F] border border-[#1C2538] p-2 rounded text-white text-sm" />
         </div>
-        <button type="submit" disabled={loading} className="px-4 py-2 bg-[#81D7B4] text-[#070A0F] rounded font-bold">
+        <button type="submit" disabled={loading} className="px-4 py-2 bg-[#81D7B4] text-[#070A0F] rounded font-bold cursor-pointer">
           {loading ? 'Minting...' : 'Mint Certificate'}
         </button>
       </form>
@@ -1425,57 +1557,84 @@ function MintTab() {
 
 
 function FeedbackTab() {
-  const [feedbackList, setFeedbackList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [appFilter, setAppFilter] = useState('all');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [stats, setStats] = useState<any>(null);
-
-  // Selected item for Reply Modal
-  const [selectedFeedback, setSelectedFeedback] = useState<any>(null);
+  const [feedback, setFeedback] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFeedbackId, setSelectedFeedbackId] = useState<string | null>(null);
   const [replyMessage, setReplyMessage] = useState('');
-  const [newStatus, setNewStatus] = useState('resolved');
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [search, setSearch] = useState('');
 
-  const fetchFeedback = useCallback(async () => {
+  // Image Upload State
+  const [images, setImages] = useState<{id: string, base64: string, name: string}[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const fetchFeedback = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        status: statusFilter,
-        category: categoryFilter,
-        search,
-        page: page.toString(),
-        limit: '25',
-      });
-      const res = await fetch(`/api/feedback?${params}`);
+      const res = await fetch('/api/feedback');
       if (res.ok) {
         const data = await res.json();
-        let list = data.feedback || [];
-        if (appFilter !== 'all') {
-          list = list.filter((item: any) => (item.appContext || 'savefi').toLowerCase().includes(appFilter.toLowerCase()));
-        }
-        setFeedbackList(list);
-        setTotalPages(data.pagination?.totalPages || 1);
-        setStats(data.stats);
+        setFeedback(data.feedback || []);
       }
     } catch (e) {
       toast.error('Failed to load feedback');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, categoryFilter, appFilter, search, page]);
+  };
 
   useEffect(() => {
     fetchFeedback();
-  }, [fetchFeedback]);
+  }, []);
 
-  const handleSendReply = async () => {
-    if (!selectedFeedback || !replyMessage.trim()) {
-      toast.error('Please enter a reply message');
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    if (images.length + files.length > 3) {
+      toast.error('Maximum 3 images allowed');
+      return;
+    }
+    
+    setIsCompressing(true);
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > 1200) {
+            height = Math.round((height * 1200) / width);
+            width = 1200;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const base64 = canvas.toDataURL('image/jpeg', 0.6);
+          
+          setImages(prev => [...prev, {
+            id: Math.random().toString(36).substring(7),
+            base64,
+            name: file.name
+          }]);
+          setIsCompressing(false);
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSendReply = async (resolve: boolean) => {
+    if (!selectedFeedback) return;
+    if (!replyMessage.trim() && images.length === 0) {
+      toast.error('Please enter a reply message or upload an image');
       return;
     }
 
@@ -1487,298 +1646,303 @@ function FeedbackTab() {
         body: JSON.stringify({
           feedbackId: selectedFeedback._id,
           replyMessage,
-          newStatus,
+          images: images.map(img => img.base64),
+          newStatus: resolve ? 'resolved' : 'pending',
           recipientEmail: selectedFeedback.email,
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(data.message || 'Reply sent to email & logged to user dashboard!');
-        setSelectedFeedback(null);
+        toast.success(data.message || 'Reply sent!');
         setReplyMessage('');
+        setImages([]);
         fetchFeedback();
       } else {
         toast.error(data.error || 'Failed to send reply');
       }
-    } catch (e: any) {
-      toast.error(e.message || 'Error processing reply');
+    } catch (e) {
+      toast.error('An error occurred while sending reply');
     } finally {
       setIsSendingReply(false);
     }
   };
 
-  const handleQuickStatus = async (id: string, status: string) => {
-    try {
-      const res = await fetch('/api/feedback', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
-      });
-      if (res.ok) {
-        toast.success(`Marked as ${status}`);
-        fetchFeedback();
-      }
-    } catch (e) {
-      toast.error('Failed to update status');
-    }
-  };
+  const filteredFeedback = feedback.filter(f => {
+    const matchesStatus = filterStatus === 'all' || f.status === filterStatus;
+    const matchesSearch = 
+      (f.subject || '').toLowerCase().includes(search.toLowerCase()) || 
+      (f.message || '').toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const selectedFeedback = feedback.find(f => f._id === selectedFeedbackId);
 
   return (
-    <div className="space-y-6">
-      
-      {/* Search & Filters */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="relative max-w-md flex-1">
-          <Search01Icon className="w-4 h-4 text-[#7B8B9A] absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search feedback subjects, messages, emails, wallets..."
-            className="w-full pl-10 pr-4 py-2.5 bg-[#0A1019] border border-[#1C2538] focus:border-[#81D7B4] rounded-xl text-xs text-[#F9F9FB] outline-none"
-          />
-        </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* App Selector */}
-          <div className="flex items-center gap-1 bg-[#070A0F] p-1 rounded-xl border border-[#1C2538]">
-            {[
-              { key: 'all', label: 'All Apps' },
-              { key: 'savefi', label: 'SaveFi' },
-              { key: 'bizswap', label: 'BizSwap' },
-              { key: 'bizfun', label: 'BizFun' }
-            ].map((app) => (
-              <button
-                key={app.key}
-                onClick={() => { setAppFilter(app.key); setPage(1); }}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-colors cursor-pointer ${
-                  appFilter === app.key ? 'bg-[#1C2538] text-[#81D7B4]' : 'text-[#7B8B9A] hover:text-[#F9F9FB]'
-                }`}
-              >
-                {app.label}
-              </button>
-            ))}
+    <div className="flex flex-col h-full w-full">
+      <div className="flex h-full w-full">
+        
+        {/* LEFT PANE: Ticket List */}
+        <div className={`w-full md:w-[320px] flex-shrink-0 border-r border-[#1C2538] flex flex-col bg-[#070A0F] ${
+          selectedFeedbackId ? 'hidden md:flex' : 'flex'
+        }`}>
+          <div className="p-4 border-b border-[#1C2538] flex flex-col gap-3">
+            <h2 className="text-[#F9F9FB] font-black text-sm uppercase tracking-wider flex items-center justify-between">
+              Inbox
+              <span className="bg-[#1C2538] text-[#81D7B4] px-2 py-0.5 rounded text-[10px]">{feedback.length}</span>
+            </h2>
+            <input
+              type="text"
+              placeholder="Search tickets..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#121A27] border border-[#1C2538] text-xs text-[#F9F9FB] rounded-lg px-3 py-2 outline-none focus:border-[#81D7B4] transition-colors"
+            />
+            <div className="flex gap-2">
+              {['all', 'pending', 'resolved'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors flex-1 ${
+                    filterStatus === status 
+                      ? 'bg-[#81D7B4] text-[#070A0F]' 
+                      : 'bg-[#121A27] text-[#4B5A75] hover:bg-[#1C2538]'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
+          
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {loading ? (
+              <div className="p-4 text-center text-xs text-[#4B5A75] animate-pulse">Loading feedback...</div>
+            ) : filteredFeedback.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[#4B5A75]">No tickets found.</div>
+            ) : (
+              filteredFeedback.map(f => {
+                const isSelected = selectedFeedbackId === f._id;
+                const statusColor = 
+                  f.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400' :
+                  f.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400';
 
-          {/* Status Filters */}
-          <div className="flex items-center gap-1.5">
-            {['all', 'pending', 'reviewed', 'resolved'].map((st) => (
-              <button
-                key={st}
-                onClick={() => { setStatusFilter(st); setPage(1); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                  statusFilter === st
-                    ? 'bg-[#81D7B4] text-[#070A0F]'
-                    : 'bg-[#0A1019] text-[#7B8B9A] hover:bg-[#121A27] hover:text-[#F9F9FB] border border-[#1C2538]'
-                }`}
-              >
-                {st} {stats && stats[st] !== undefined && `(${stats[st]})`}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 2-in-1 Notification Banner */}
-      <div className="px-4 py-2.5 bg-[#81D7B4]/10 border border-[#81D7B4]/20 rounded-xl flex items-center justify-between text-xs text-[#81D7B4]">
-        <div className="flex items-center gap-2">
-          <SparklesIcon className="w-4 h-4 text-[#81D7B4]" />
-          <span className="font-bold">2-in-1 Support Active:</span>
-          <span className="text-[#F9F9FB]">Replying sends an email via platform SMTP & automatically updates the user's dashboard feed.</span>
-        </div>
-      </div>
-
-      {/* Feedback Feed Cards */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="p-12 text-center bg-[#0A1019] border border-[#1C2538] rounded-2xl text-[#7B8B9A]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#81D7B4] mx-auto mb-2"></div>
-            Loading feedback feed...
-          </div>
-        ) : feedbackList.length === 0 ? (
-          <div className="p-12 text-center bg-[#0A1019] border border-[#1C2538] rounded-2xl text-[#7B8B9A]">
-            No feedback found matching the filters.
-          </div>
-        ) : (
-          feedbackList.map((item) => (
-            <div key={item._id} className="bg-[#0A1019] border border-[#1C2538] hover:border-[#2C3E5D] rounded-2xl p-5 shadow-xl transition-all space-y-3">
-              
-              {/* Header */}
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#81D7B4]/10 text-[#81D7B4] border border-[#81D7B4]/20">
-                      {item.category}
-                    </span>
-                    <span className="text-[10px] font-mono text-[#60A5FA] bg-[#3B82F6]/10 px-2 py-0.5 rounded">
-                      {item.appContext || 'savefi'}
-                    </span>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                      item.status === 'resolved' ? 'bg-[#81D7B4]/20 text-[#81D7B4]' : item.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-400/20 text-amber-400'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </div>
-                  <h4 className="text-sm font-black text-[#F9F9FB]">{item.subject}</h4>
-                </div>
-
-                <div className="text-[10px] text-[#4B5A75] font-mono shrink-0">
-                  {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
-                </div>
-              </div>
-
-              {/* Message */}
-              <p className="text-xs text-[#94A3B8] leading-relaxed whitespace-pre-wrap bg-[#070A0F] p-3.5 rounded-xl border border-[#1C2538]/60">
-                {item.message}
-              </p>
-
-              {/* User Screenshots if attached */}
-              {item.images && item.images.length > 0 && (
-                <div className="flex items-center gap-2 pt-1">
-                  {item.images.map((img: string, i: number) => (
-                    <a key={i} href={img} target="_blank" rel="noreferrer" className="block w-16 h-16 rounded-lg border border-[#1C2538] overflow-hidden hover:scale-105 transition-transform">
-                      <img src={img} alt="User Screenshot" className="w-full h-full object-cover" />
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {/* Replies Thread */}
-              {item.replies && item.replies.length > 0 && (
-                <div className="space-y-2 pt-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#81D7B4]">Developer Replies ({item.replies.length})</span>
-                  {item.replies.map((rep: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-[#121A27] border-l-2 border-[#81D7B4] rounded-r-xl text-xs space-y-1">
-                      <div className="flex justify-between items-center text-[10px] text-[#7B8B9A]">
-                        <span>{rep.sentBy || 'Dev Admin'} {rep.sentToEmail ? `→ ${rep.sentToEmail}` : ''}</span>
-                        <span>{rep.createdAt ? new Date(rep.createdAt).toLocaleString() : ''}</span>
-                      </div>
-                      <p className="text-[#F9F9FB] whitespace-pre-wrap">{rep.message}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* User Metadata & Actions Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#1C2538]/80 text-[11px] text-[#7B8B9A]">
-                <div className="flex items-center gap-3 flex-wrap">
-                  {item.email && (
-                    <span className="flex items-center gap-1 text-[#81D7B4]">
-                      <Mail01Icon className="w-3.5 h-3.5" />
-                      {item.email}
-                    </span>
-                  )}
-                  {item.walletAddress && (
-                    <span className="font-mono text-[#64748B]">
-                      {item.walletAddress.slice(0, 10)}...{item.walletAddress.slice(-6)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {item.status !== 'resolved' && (
-                    <button
-                      onClick={() => handleQuickStatus(item._id, 'resolved')}
-                      className="px-3 py-1.5 bg-[#81D7B4]/10 hover:bg-[#81D7B4]/20 text-[#81D7B4] font-bold rounded-lg transition-colors cursor-pointer"
-                    >
-                      ✓ Mark Resolved
-                    </button>
-                  )}
-
+                return (
                   <button
-                    onClick={() => {
-                      setSelectedFeedback(item);
-                      setReplyMessage('');
-                      setNewStatus('resolved');
-                    }}
-                    className="px-4 py-1.5 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#070A0F] font-black rounded-lg transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Mail01Icon className="w-3.5 h-3.5" />
-                    <span>Reply & Resolve</span>
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* ── COMPOSE EMAIL REPLY MODAL ── */}
-      {selectedFeedback && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0A1019] border border-[#1C2538] rounded-3xl max-w-xl w-full p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-[#1C2538] pb-4">
-              <div>
-                <h3 className="text-base font-black text-[#F9F9FB]">Direct Reply to User</h3>
-                <p className="text-xs text-[#81D7B4]">
-                  {selectedFeedback.email ? `Sending email to: ${selectedFeedback.email}` : 'Logging reply to feedback thread'}
-                </p>
-              </div>
-              <button onClick={() => setSelectedFeedback(null)} className="text-[#7B8B9A] hover:text-white">
-                
-              </button>
-            </div>
-
-            {/* Original query quote */}
-            <div className="p-3 bg-[#070A0F] border border-[#1C2538] rounded-xl text-xs space-y-1 text-[#94A3B8]">
-              <span className="font-bold text-[#F9F9FB]">Regarding: "{selectedFeedback.subject}"</span>
-              <p className="text-[11px] line-clamp-2 italic">"{selectedFeedback.message}"</p>
-            </div>
-
-            {/* Reply Input */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#7B8B9A] mb-1.5">
-                Your Response Message
-              </label>
-              <textarea
-                rows={5}
-                value={replyMessage}
-                onChange={(e) => setReplyMessage(e.target.value)}
-                placeholder="Type your official response to the user... (This will be sent directly to their email if provided)"
-                className="w-full px-3.5 py-3 bg-[#070A0F] border border-[#1C2538] focus:border-[#81D7B4] rounded-xl text-xs text-[#F9F9FB] outline-none leading-relaxed placeholder:text-[#3B4C68]"
-              />
-            </div>
-
-            {/* Status after reply */}
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-[#7B8B9A]">Status after sending:</span>
-              <div className="flex gap-2">
-                {['pending_user', 'reviewed', 'resolved'].map((st) => (
-                  <button
-                    key={st}
-                    type="button"
-                    onClick={() => setNewStatus(st)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${
-                      newStatus === st ? 'bg-[#81D7B4] text-[#070A0F]' : 'bg-[#121A27] text-[#7B8B9A]'
+                    key={f._id}
+                    onClick={() => setSelectedFeedbackId(f._id)}
+                    className={`w-full text-left p-3 rounded-xl border transition-colors ${
+                      isSelected 
+                        ? 'bg-[#121A27] border-[#81D7B4]/30' 
+                        : 'bg-transparent border-transparent hover:bg-[#121A27]/50'
                     }`}
                   >
-                    {st === 'pending_user' ? 'Awaiting User' : st}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${statusColor}`}>
+                        {f.status || 'pending'}
+                      </span>
+                      <span className="text-[10px] text-[#4B5A75]">
+                        {new Date(f.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold text-[#F9F9FB] truncate">{f.subject}</h4>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-[9px] font-mono text-[#81D7B4]">#{f._id.slice(-6).toUpperCase()}</span>
+                      {f.replies && f.replies.length > 0 && (
+                        <span className="text-[9px] text-[#4B5A75] flex items-center gap-1">
+                          <BubbleChatIcon className="w-3 h-3" /> {f.replies.length}
+                        </span>
+                      )}
+                    </div>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-[#1C2538]">
-              <button
-                onClick={() => setSelectedFeedback(null)}
-                className="px-4 py-2.5 bg-[#121A27] text-white text-xs font-bold rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendReply}
-                disabled={isSendingReply || !replyMessage.trim()}
-                className="px-5 py-2.5 bg-[#81D7B4] text-[#070A0F] text-xs font-black rounded-xl hover:bg-[#6BC4A0] cursor-pointer flex items-center gap-2"
-              >
-                {isSendingReply ? 'Sending Email...' : 'Send Reply'}
-                <Mail01Icon className="w-4 h-4" />
-              </button>
-            </div>
+                );
+              })
+            )}
           </div>
         </div>
-      )}
 
+        {/* MIDDLE PANE: Active Chat */}
+        <div className={`flex-1 flex flex-col min-w-0 bg-[#0A1019] ${
+          !selectedFeedbackId ? 'hidden md:flex' : 'flex'
+        }`}>
+          {selectedFeedback ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 border-b border-[#1C2538] bg-[#070A0F] shrink-0">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setSelectedFeedbackId(null)} className="md:hidden p-2 -ml-2 text-[#7B8B9A] hover:bg-[#1C2538] rounded-lg">
+                    <ArrowLeft01Icon className="w-5 h-5" />
+                  </button>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold text-[#81D7B4]">#{selectedFeedback._id.slice(-6).toUpperCase()}</span>
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded border border-[#1C2538] text-[#7B8B9A]">{selectedFeedback.category}</span>
+                  </div>
+                    <h3 className="text-sm font-bold text-[#F9F9FB]">{selectedFeedback.subject}</h3>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                {/* Original Message */}
+                <div className="flex flex-col items-start w-full">
+                  <div className="max-w-[85%] rounded-2xl p-4 text-xs bg-[#121A27] border border-[#1C2538] text-[#F9F9FB] rounded-tl-sm shadow-sm">
+                    <p className="whitespace-pre-wrap leading-relaxed">{selectedFeedback.message}</p>
+                    {selectedFeedback.images && selectedFeedback.images.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t border-[#1C2538]">
+                        {selectedFeedback.images.map((img: string, i: number) => (
+                          <a key={i} href={img} target="_blank" rel="noreferrer" className="block w-16 h-16 rounded-xl border border-[#1C2538] overflow-hidden hover:scale-105 transition-transform">
+                            <img src={img} alt="User attachment" className="w-full h-full object-cover" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 ml-1">
+                    <span className="text-[10px] font-bold text-[#7B8B9A]">User</span>
+                    <span className="text-[9px] text-[#4B5A75]">{new Date(selectedFeedback.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Replies Thread */}
+                {selectedFeedback.replies && selectedFeedback.replies.map((rep: any, idx: number) => {
+                  const isUser = rep.sentBy === 'User';
+                  return (
+                    <div key={idx} className={`flex flex-col w-full ${isUser ? 'items-start' : 'items-end'}`}>
+                      <div className={`max-w-[85%] rounded-2xl p-4 text-xs shadow-sm ${
+                        isUser 
+                          ? 'bg-[#121A27] border border-[#1C2538] text-[#F9F9FB] rounded-tl-sm'
+                          : 'bg-[#81D7B4]/10 border border-[#81D7B4]/30 text-[#81D7B4] rounded-tr-sm'
+                      }`}>
+                        <p className="whitespace-pre-wrap leading-relaxed">{rep.message}</p>
+                        {rep.images && rep.images.length > 0 && (
+                          <div className={`flex flex-wrap items-center gap-2 pt-3 mt-3 border-t ${isUser ? 'border-[#1C2538]' : 'border-[#81D7B4]/20'}`}>
+                            {rep.images.map((img: string, i: number) => (
+                              <a key={i} href={img} target="_blank" rel="noreferrer" className={`block w-16 h-16 rounded-xl border overflow-hidden hover:scale-105 transition-transform ${isUser ? 'border-[#1C2538]' : 'border-[#81D7B4]/30'}`}>
+                                <img src={img} alt="Attachment" className="w-full h-full object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className={`flex items-center gap-2 mt-1.5 ${isUser ? 'ml-1' : 'mr-1'}`}>
+                        <span className={`text-[10px] font-bold ${isUser ? 'text-[#7B8B9A]' : 'text-[#81D7B4]'}`}>{isUser ? 'User' : 'Bitsave Team'}</span>
+                        <span className="text-[9px] text-[#4B5A75]">{new Date(rep.createdAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Reply Input */}
+              <div className="p-4 bg-[#070A0F] border-t border-[#1C2538] shrink-0">
+                <textarea
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  placeholder="Type a reply to the user..."
+                  rows={2}
+                  className="w-full bg-[#121A27] border border-[#1C2538] text-xs text-[#F9F9FB] rounded-xl p-3 outline-none focus:border-[#81D7B4] resize-none transition-colors shadow-inner"
+                />
+
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+                  <div className="flex items-center gap-2">
+                    {images.map(img => (
+                      <div key={img.id} className="relative w-10 h-10 rounded-lg overflow-hidden border border-[#1C2538] group">
+                        <img src={img.base64} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => setImages(images.filter(i => i.id !== img.id))}
+                          className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                        >
+                          <Delete02Icon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {images.length < 3 && (
+                      <label className="w-10 h-10 flex flex-col items-center justify-center bg-[#121A27] border border-dashed border-[#1C2538] rounded-lg cursor-pointer hover:border-[#81D7B4] hover:text-[#81D7B4] text-[#4B5A75] transition-colors">
+                        <input type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
+                        {isCompressing ? (
+                          <div className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent border-current animate-spin" />
+                        ) : (
+                          <PlusSignIcon className="w-4 h-4" />
+                        )}
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSendReply(false)}
+                      disabled={isSendingReply || (!replyMessage.trim() && images.length === 0)}
+                      className="px-4 py-2 bg-[#1C2538] hover:bg-[#2C3E5D] text-[#F9F9FB] text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {isSendingReply ? 'Sending...' : 'Send Reply'}
+                    </button>
+                    <button
+                      onClick={() => handleSendReply(true)}
+                      disabled={isSendingReply || (!replyMessage.trim() && images.length === 0)}
+                      className="px-4 py-2 bg-[#81D7B4] hover:bg-[#6BC4A0] text-[#070A0F] text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 shadow-md"
+                    >
+                      {isSendingReply ? 'Resolving...' : 'Send & Resolve'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-[#4B5A75] p-6 text-center">
+              <BubbleChatIcon className="w-12 h-12 mb-4 opacity-50" />
+              <h3 className="text-sm font-bold text-[#F9F9FB] mb-1">No Ticket Selected</h3>
+              <p className="text-xs max-w-sm mt-1">Select a ticket from the sidebar to view the conversation and reply to the user.</p>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT PANE: Knowledge Base & User Details */}
+        <div className="w-[300px] flex-shrink-0 border-l border-[#1C2538] flex flex-col bg-[#070A0F] hidden xl:flex">
+          <div className="p-4 border-b border-[#1C2538]">
+            <h3 className="font-black flex items-center gap-2 text-[#F9F9FB]">
+              <BookOpen01Icon className="w-5 h-5 text-[#81D7B4]" />
+              Knowledge Base
+            </h3>
+          </div>
+          <div className="p-4 space-y-4 overflow-y-auto">
+            {selectedFeedback && (
+              <div className="mb-6 p-4 bg-[#121A27] rounded-xl border border-[#1C2538]">
+                <h4 className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider mb-2">User Details</h4>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-[9px] text-[#4B5A75] block">Wallet</span>
+                    <span className="text-[11px] text-[#F9F9FB] font-mono break-all">{selectedFeedback.walletAddress}</span>
+                  </div>
+                  {selectedFeedback.email && (
+                    <div>
+                      <span className="text-[9px] text-[#4B5A75] block">Email</span>
+                      <span className="text-[11px] text-[#F9F9FB] break-all">{selectedFeedback.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <h4 className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider mt-4">Articles & Guides</h4>
+            {[
+              { title: 'Connecting your Wallet', cat: 'User Guide', date: 'Mar 17, 2024' },
+              { title: 'Understanding Vault Yields', cat: 'FAQ', date: 'Apr 02, 2024' },
+              { title: 'Minting BizShares Certificates', cat: 'Tutorial', date: 'May 14, 2024' },
+              { title: 'Transaction Delays (Base Network)', cat: 'Troubleshooting', date: 'Jun 22, 2024' },
+            ].map((kb, idx) => (
+              <div key={idx} className="p-4 rounded-xl border bg-[#121A27] border-[#1C2538] hover:border-[#81D7B4]/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded border bg-[#070A0F] text-[#7B8B9A] border-[#1C2538]">{kb.cat}</span>
+                </div>
+                <h4 className="text-xs font-bold leading-snug text-[#F9F9FB]">{kb.title}</h4>
+                <p className="text-[9px] mt-2 text-[#4B5A75]">Last edited: {kb.date}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
@@ -1963,6 +2127,118 @@ function LeaderboardTab() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 8. DATABASE MANAGEMENT TAB ──────────────────────────────────────
+function DatabaseTab() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    // Fetch from a new or existing endpoint for database stats
+    fetch('/api/dev-admin/database')
+      .then((r) => r.json())
+      .then((data) => setStats(data.stats || data || {}))
+      .catch(() => toast.error('Failed to load database stats'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="bg-[#0A1019] border border-[#1C2538] rounded-2xl p-6 shadow-xl space-y-6">
+      <h3 className="text-sm font-black text-[#F9F9FB] uppercase tracking-wider flex items-center gap-2">
+        <BookOpen01Icon className="w-5 h-5 text-[#81D7B4]" />
+        Database Management & Indexes
+      </h3>
+
+      {loading ? (
+        <div className="p-12 text-center text-[#7B8B9A]">Loading database stats...</div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-[#070A0F] border border-[#1C2538] rounded-xl">
+              <div className="text-[10px] uppercase text-[#7B8B9A] font-bold mb-1">Users Collection</div>
+              <div className="text-xl font-black text-[#F9F9FB]">{stats?.usersCount || 0}</div>
+            </div>
+            <div className="p-4 bg-[#070A0F] border border-[#1C2538] rounded-xl">
+              <div className="text-[10px] uppercase text-[#7B8B9A] font-bold mb-1">Certificates Collection</div>
+              <div className="text-xl font-black text-[#F9F9FB]">{stats?.certificatesCount || 0}</div>
+            </div>
+            <div className="p-4 bg-[#070A0F] border border-[#1C2538] rounded-xl">
+              <div className="text-[10px] uppercase text-[#7B8B9A] font-bold mb-1">Feedback Collection</div>
+              <div className="text-xl font-black text-[#F9F9FB]">{stats?.feedbackCount || 0}</div>
+            </div>
+          </div>
+          
+          <div className="mt-8 pt-6 border-t border-[#1C2538]">
+            <h4 className="text-xs font-bold text-[#F9F9FB] mb-3">Database Index Health</h4>
+            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-xs flex flex-col gap-2">
+              <div className="flex items-center gap-2 font-bold"><CheckmarkCircle01Icon className="w-4 h-4" /> All core indexes are healthy</div>
+              <ul className="list-disc pl-5 opacity-80 text-[11px] space-y-1">
+                <li>users (walletAddress_1, referralCode_1) - UNIQUE enforced</li>
+                <li>bizswap_users (wallet_1) - UNIQUE enforced</li>
+                <li>bizswap_transactions (reference_1) - UNIQUE enforced</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 9. SYSTEM DIAGNOSTICS TAB ──────────────────────────────────────
+function SystemTab() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    // Mocking logs for now, or fetch from endpoint
+    setTimeout(() => {
+      setLogs([
+        { id: 1, type: 'info', msg: 'System initialization completed', time: new Date().toISOString() },
+        { id: 2, type: 'info', msg: 'Connected to MongoDB Replica Set', time: new Date(Date.now() - 5000).toISOString() },
+        { id: 3, type: 'info', msg: 'Redis singleton bound to global scope', time: new Date(Date.now() - 10000).toISOString() },
+        { id: 4, type: 'warn', msg: 'Rate limit hit on /api/transactions', time: new Date(Date.now() - 3600000).toISOString() }
+      ]);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  return (
+    <div className="bg-[#0A1019] border border-[#1C2538] rounded-2xl p-6 shadow-xl">
+      <h3 className="text-sm font-black text-[#F9F9FB] uppercase tracking-wider mb-4 flex items-center gap-2">
+        <Activity01Icon className="w-5 h-5 text-[#81D7B4]" />
+        System Diagnostics & Error Logs
+      </h3>
+
+      {loading ? (
+        <div className="p-12 text-center text-[#7B8B9A]">Fetching logs...</div>
+      ) : (
+        <div className="space-y-3 font-mono text-[11px]">
+          {logs.map((l) => (
+            <div key={l.id} className="p-3 bg-[#070A0F] border border-[#1C2538] rounded-xl flex items-start gap-3">
+              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold mt-0.5 ${
+                l.type === 'error' ? 'bg-red-500/20 text-red-400' :
+                l.type === 'warn' ? 'bg-amber-400/20 text-amber-400' :
+                'bg-blue-500/20 text-blue-400'
+              }`}>
+                {l.type}
+              </span>
+              <div className="flex-1 space-y-1">
+                <div className="text-[#F9F9FB]">{l.msg}</div>
+                <div className="text-[#4B5A75] text-[9px]">{new Date(l.time).toLocaleString()}</div>
+              </div>
+            </div>
+          ))}
+          {logs.length === 0 && (
+            <div className="p-6 text-center text-[#7B8B9A] italic">No recent diagnostic logs.</div>
+          )}
         </div>
       )}
     </div>

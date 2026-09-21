@@ -9,7 +9,9 @@ import CredibilitySection from '../components/CredibilitySection';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
 
-export default function Home() {
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+
   return (
     <div className="min-h-screen">
       <Header />

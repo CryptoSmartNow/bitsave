@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBizSwapPayoutsCollection, getDatabase } from '@/lib/mongodb';
 import { getCache, setCache } from '@/lib/redis';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const db = await getDatabase();
     let pendingTransactions: any[] = [];
     const isDid = wallet.startsWith('did:privy:');
-    const walletRegex = { $regex: new RegExp(`^${wallet}$`, 'i') };
+    const walletRegex = { $regex: new RegExp(`^${escapeRegex(wallet)}$`, 'i') };
 
     if (db) {
       const transactionsCollection = db.collection('bizswap_transactions');

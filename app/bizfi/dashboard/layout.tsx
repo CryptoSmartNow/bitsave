@@ -42,7 +42,6 @@ export default function BizFiDashboardLayout({
         { href: "/bizfi/dashboard/bizcontent", label: "BizContent", icon: Video01Icon },
         { href: "/bizfi/dashboard/chat", label: "Chat", icon: Message02Icon },
         { href: "/bizfi/dashboard/support", label: "Support & FAQs", icon: InformationCircleIcon },
-        { href: "/bizfi/dashboard/feedback", label: "Help & Feedback", icon: HelpCircleIcon },
     ];
 
     const isActive = (href: string) => {

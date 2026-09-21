@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, getTransactionsCollection } from '@/lib/mongodb';
 import axios from 'axios';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       const transactionsCollection = await getTransactionsCollection();
       if (transactionsCollection) {
         const existingTx = await transactionsCollection.findOne({ 
-          useraddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') } 
+          useraddress: { $regex: new RegExp(`^${escapeRegex(newUserWalletAddress)}$`, 'i') } 
         });
         
         if (existingTx) {
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Check if this user was already converted through this referral
     const existingConversion = await referralVisitsCollection.findOne({
       referralCode,
-      visitorWalletAddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') },
+      visitorWalletAddress: { $regex: new RegExp(`^${escapeRegex(newUserWalletAddress)}$`, 'i') },
       converted: true
     });
     
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       {
         referralCode,
         $or: [
-          { visitorWalletAddress: { $regex: new RegExp(`^${newUserWalletAddress}$`, 'i') } },
+          { visitorWalletAddress: { $regex: new RegExp(`^${escapeRegex(newUserWalletAddress)}$`, 'i') } },
           { visitorWalletAddress: null }
         ]
       },

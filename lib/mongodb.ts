@@ -16,10 +16,10 @@ const options = {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 5000,
   socketTimeoutMS: 30000,
-  maxPoolSize: 3, // Reduced from 10 to save socket buffers & memory footprint
-  minPoolSize: 0, // Avoid maintaining idle socket memory
-  maxIdleTimeMS: 15000,
-  waitQueueTimeoutMS: 5000,
+  maxPoolSize: 20, // Increased to support parallel App Router requests
+  minPoolSize: 1, // Keep at least 1 connection alive
+  maxIdleTimeMS: 30000,
+  waitQueueTimeoutMS: 10000,
   retryWrites: true,
   writeConcern: new WriteConcern('majority'),
   directConnection: false,
@@ -37,7 +37,7 @@ const globalWithMongo = globalThis as GlobalWithMongo;
 function getDirectUri(srvUri: string): string {
   if (!srvUri.startsWith('mongodb+srv://')) return srvUri;
   if (srvUri.includes('cluster.i3zan.mongodb.net')) {
-    const match = srvUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@cluster\.i3zan\\.mongodb\\.net(\/[^?]*)?(\?.*)?/);
+    const match = srvUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@cluster\.i3zan\.mongodb\.net(\/[^?]*)?(\?.*)?/);
     if (match) {
       const user = match[1];
       const pass = match[2];

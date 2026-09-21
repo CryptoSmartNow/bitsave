@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { getDatabase } from '@/lib/mongodb';
 import { authenticateRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -10,19 +10,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: ' + authError }, { status: 401 });
     }
 
-    const supabase = getSupabaseAdmin();
-
-    const { data: plans, error: fetchError } = await supabase
-      .from('savings_plans')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (fetchError) {
-      console.warn('Savings plans notice:', fetchError.message);
+    const db = await getDatabase();
+    if (!db) {
+      console.warn('Savings plans notice: Database offline');
       return NextResponse.json({ success: true, data: [] });
     }
 
-    return NextResponse.json({ success: true, data: plans || [] });
+    const userIdStr = (user as any)._id ? (user as any)._id.toString() : (user as any).privy_did || (user as any).id;
+
+    try {
+      const plans = await db.collection('savings_plans')
+        .find({ user_id: userIdStr })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: plans || [] });
+    } catch (fetchError: any) {
+      console.warn('Savings plans notice:', fetchError.message);
+      return NextResponse.json({ success: true, data: [] });
+    }
 
   } catch (error: any) {
     console.warn('Savings plans fetch notice:', error?.message);

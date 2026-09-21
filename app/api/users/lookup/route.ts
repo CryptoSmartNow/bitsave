@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
         const collection = db.collection('users');
 
         const user = await collection.findOne({
-            savvyName: { $regex: new RegExp(`^${savvyName}$`, 'i') }
+            savvyName: { $regex: new RegExp(`^${escapeRegex(savvyName)}$`, 'i') }
         });
 
         if (!user) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
     
     // Update referrer's visit count
     await usersCollection.updateOne(
-      { walletAddress: { $regex: new RegExp(`^${referrer.walletAddress}$`, 'i') } },
+      { walletAddress: { $regex: new RegExp(`^${escapeRegex(referrer.walletAddress)}$`, 'i') } },
       {
         $inc: { referralVisits: 1 },
         $set: { lastReferralVisit: new Date().toISOString() }
@@ -111,7 +112,7 @@ export async function GET(request: NextRequest) {
     const referralVisitsCollection = db.collection('referral_visits');
     
     const user = await usersCollection.findOne({ 
-      walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } 
+      walletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } 
     }).catch(() => null);
     
     const refCode = user?.referralCode || walletAddress.slice(2, 10);
@@ -120,14 +121,14 @@ export async function GET(request: NextRequest) {
     // Get referral statistics
     const totalVisits = await referralVisitsCollection.countDocuments({
       $or: [
-        { referrerWalletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } },
+        { referrerWalletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } },
         { referralCode: user?.referralCode }
       ]
     });
     
     const totalConversions = await referralVisitsCollection.countDocuments({
       $or: [
-        { referrerWalletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } },
+        { referrerWalletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } },
         { referralCode: user?.referralCode }
       ],
       converted: true
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
     const recentVisits = await referralVisitsCollection
       .find({
         $or: [
-          { referrerWalletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } },
+          { referrerWalletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } },
           { referralCode: user?.referralCode }
         ]
       })

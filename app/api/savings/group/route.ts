@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: Request) {
     try {
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
                     }
                 } else {
                     // Look up via Savvy Name
-                    const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${invite}$`, 'i') } });
+                    const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${escapeRegex(invite)}$`, 'i') } });
                     if (user && user.walletAddress) {
                         const cleanWallet = user.walletAddress.toLowerCase();
                         if (!existingWallets.has(cleanWallet)) {
@@ -219,7 +220,7 @@ export async function PUT(request: Request) {
                         existingWallets.add(cleanWallet);
                     }
                 } else {
-                    const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${invite}$`, 'i') } });
+                    const user = await usersCollection.findOne({ savvyName: { $regex: new RegExp(`^${escapeRegex(invite)}$`, 'i') } });
                     if (user && user.walletAddress) {
                         const cleanWallet = user.walletAddress.toLowerCase();
                         if (!existingWallets.has(cleanWallet)) {

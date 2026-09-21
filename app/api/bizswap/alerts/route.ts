@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBizSwapCollection, getBizSwapPayoutsCollection } from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 function timeAgo(date: Date): string {
   const now = new Date();
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
 
-    const walletRegex = { $regex: new RegExp(`^${wallet}$`, 'i') };
+    const walletRegex = { $regex: new RegExp(`^${escapeRegex(wallet)}$`, 'i') };
     const query = {
       $or: [
         { wallet: walletRegex },

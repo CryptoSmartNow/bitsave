@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
+import { getJwtSecret } from '@/lib/adminVerify';
+import { rateLimit } from '@/lib/rateLimit';
 
-const JWT_SECRET_VALUE = process.env.JWT_SECRET;
-if (!JWT_SECRET_VALUE) {
-  console.error('FATAL: JWT_SECRET environment variable is not set!');
-}
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE || 'fallback-dev-only');
+const JWT_SECRET = getJwtSecret();
 
 const ADMIN_PASSWORD = process.env.ADMIN_DASHBOARD_PASSWORD;
 
 // POST - Admin login
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResponse = rateLimit(request, 5, 300000); // 5 attempts per 5 minutes
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const { password } = body;
 

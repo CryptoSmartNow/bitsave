@@ -1,5 +1,3 @@
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing, type Locale } from '@/i18n/routing';
 
@@ -26,19 +24,13 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  // Providing all messages to the client
-  // side is the easiest way to get started
-  const messages = await getMessages();
-
   // Determine if the current locale is RTL
   const isRTL = RTL_LANGUAGES.includes(locale);
   const direction = isRTL ? 'rtl' : 'ltr';
 
   return (
     <>
-      <NextIntlClientProvider messages={messages}>
-        {children}
-      </NextIntlClientProvider>
+      {children}
     </>
   );
 }

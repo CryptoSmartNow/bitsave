@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: Request) {
     try {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
         // Step 1: Verify the savvy name exists
         const usersCollection = db.collection('users');
         const targetUser = await usersCollection.findOne({
-            savvyName: { $regex: new RegExp(`^${sharedWithSavvyName}$`, 'i') }
+            savvyName: { $regex: new RegExp(`^${escapeRegex(sharedWithSavvyName)}$`, 'i') }
         });
 
         if (!targetUser) {

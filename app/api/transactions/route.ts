@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTransactionsCollection, getLeaderboardCollection } from '@/lib/mongodb';
 import { getCache, setCache, clearCache } from '@/lib/redis';
 import { sendPushNotification } from '@/lib/push';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     let query = {};
     if (address) {
-      query = { useraddress: { $regex: new RegExp(`^${address}$`, 'i') } };
+      query = { useraddress: { $regex: new RegExp(`^${escapeRegex(address)}$`, 'i') } };
     }
 
     // Query local MongoDB
@@ -56,12 +57,10 @@ export async function GET(request: NextRequest) {
     // Fail-Proof Self-Healing: If no DB transactions exist for this wallet, auto-reconcile from on-chain vaults
     if (formattedTransactions.length === 0 && address) {
       try {
-        const origin = request.nextUrl.origin || 'http://localhost:3000';
-        const savingsRes = await fetch(`${origin}/api/savings-data?address=${address}`, {
-          signal: AbortSignal.timeout(6000)
-        });
-        if (savingsRes.ok) {
-          const sData = await savingsRes.json();
+        const { fetchSavingsDataForAddress } = await import('@/lib/savings');
+        const sData = await fetchSavingsDataForAddress(address);
+        
+        if (sData) {
           const autoTxs: any[] = [];
           
           (sData.completedPlans || []).forEach((p: any) => {

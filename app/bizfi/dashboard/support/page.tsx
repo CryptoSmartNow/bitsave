@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
 import Link from 'next/link';
 import { Instrument_Serif } from "next/font/google";
-import HelpAndFeedback from "@/components/HelpAndFeedback";
 import "../../bizfi-colors.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -112,7 +111,6 @@ const FAQ_DATABASE: FAQItem[] = [
 ];
 
 export default function SupportPage() {
-    const [activeTab, setActiveTab] = useState<'faqs' | 'ticket'>('faqs');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Topics');
     const [openFAQs, setOpenFAQs] = useState<Record<string, boolean>>({ 'faq-1': true });
@@ -175,36 +173,8 @@ export default function SupportPage() {
                         Find verified answers regarding listing requirements, legal KYB attestations, ERC-3643 token standards, or contact our dedicated compliance officer.
                     </p>
                 </div>
-
-                {/* Tab Switcher */}
-                <div className="flex items-center gap-1.5 p-1 bg-[#1A2538]/70 border border-[#7B8B9A]/20 rounded-2xl shrink-0 self-start md:self-auto">
-                    <button
-                        onClick={() => setActiveTab('faqs')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                            activeTab === 'faqs'
-                                ? 'bg-[#81D7B4] text-[#0F1825] shadow-md'
-                                : 'text-[#7B8B9A] hover:text-[#F9F9FB]'
-                        }`}
-                    >
-                        <InformationCircleIcon className="w-4 h-4" />
-                        <span>FAQs & Guides</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('ticket')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                            activeTab === 'ticket'
-                                ? 'bg-[#81D7B4] text-[#0F1825] shadow-md'
-                                : 'text-[#7B8B9A] hover:text-[#F9F9FB]'
-                        }`}
-                    >
-                        <HelpCircleIcon className="w-4 h-4" />
-                        <span>Submit Ticket</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Quick Action Navigation Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            </div>            {/* Quick Access Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
                 <Link
                     href="/bizfi/dashboard/chat"
                     className="p-5 rounded-2xl bg-[#1A2538]/30 hover:bg-[#1A2538]/70 border border-[#7B8B9A]/15 hover:border-[#81D7B4]/40 transition-all group shadow-sm flex flex-col justify-between"
@@ -252,43 +222,10 @@ export default function SupportPage() {
                         Open Studio &rarr;
                     </span>
                 </Link>
-
-                <div
-                    onClick={() => setActiveTab('ticket')}
-                    className="p-5 rounded-2xl bg-[#1A2538]/30 hover:bg-[#1A2538]/70 border border-[#7B8B9A]/15 hover:border-[#81D7B4]/40 transition-all group shadow-sm flex flex-col justify-between cursor-pointer"
-                >
-                    <div>
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-105 transition-transform">
-                            <HelpCircleIcon className="w-5 h-5" />
-                        </div>
-                        <h3 className="font-bold text-sm text-[#F9F9FB] group-hover:text-amber-400 transition-colors">Submit Support Ticket</h3>
-                        <p className="text-xs text-[#7B8B9A] mt-1 line-clamp-2">Report technical issues or request custom enterprise support.</p>
-                    </div>
-                    <span className="text-[11px] font-semibold text-amber-400 mt-3 inline-flex items-center gap-1">
-                        New Ticket &rarr;
-                    </span>
-                </div>
             </div>
 
             {/* Main Content Area */}
-            {activeTab === 'ticket' ? (
-                <div className="bg-[#1A2538]/30 backdrop-blur-xl border border-[#7B8B9A]/15 rounded-3xl p-5 sm:p-8 shadow-2xl space-y-6">
-                    <div className="flex items-center justify-between border-b border-[#7B8B9A]/15 pb-4">
-                        <div>
-                            <h2 className="text-base sm:text-lg font-bold text-[#F9F9FB]">Direct Developer & Compliance Ticket</h2>
-                            <p className="text-xs text-[#7B8B9A]">Your inquiry is prioritized and sent directly to the core engineering and compliance team</p>
-                        </div>
-                        <button
-                            onClick={() => setActiveTab('faqs')}
-                            className="text-xs text-[#81D7B4] hover:underline font-semibold cursor-pointer shrink-0"
-                        >
-                            &larr; Back to FAQs
-                        </button>
-                    </div>
-                    <HelpAndFeedback appContext="BizFi Dashboard" embedded={true} />
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                     
                     {/* Left Column: Search, Categories & Accordions (8 cols) */}
                     <div className="lg:col-span-8 space-y-6">
@@ -364,13 +301,6 @@ export default function SupportPage() {
                                     <p className="text-xs text-[#7B8B9A]">
                                         Try adjusting your search keywords or submit a direct inquiry to our advisory team.
                                     </p>
-                                    <button
-                                        onClick={() => setActiveTab('ticket')}
-                                        className="px-4 py-2 bg-[#81D7B4] hover:bg-[#9FE0C5] text-[#0F1825] font-bold text-xs rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
-                                    >
-                                        <HelpCircleIcon className="w-3.5 h-3.5" />
-                                        <span>Submit Inquiry</span>
-                                    </button>
                                 </div>
                             ) : (
                                 filteredFAQs.map((faq) => {
@@ -507,10 +437,9 @@ export default function SupportPage() {
                             <div className="pt-2 text-[11px] text-[#7B8B9A] border-t border-[#7B8B9A]/10">
                                 <p>Standard response SLA: <strong className="text-[#F9F9FB]">&lt; 24 business hours</strong>.</p>
                             </div>
-                        </div>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

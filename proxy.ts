@@ -1,15 +1,9 @@
-import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-const intlMiddleware = createMiddleware({
-  // A list of all locales that are supported
-  locales: ['en', 'es', 'fr', 'de', 'zh', 'ja', 'nl', 'pt', 'ko', 'ru', 'ar', 'hi', 'it', 'sv', 'tr'],
+const locales = ['en', 'es', 'fr', 'de', 'zh', 'ja', 'nl', 'pt', 'ko', 'ru', 'ar', 'hi', 'it', 'sv', 'tr'];
+const defaultLocale = 'en';
 
-  // Used when no locale matches
-  defaultLocale: 'en'
-});
-
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Check if the request is for a locale-based dashboard route
@@ -33,13 +27,27 @@ export default function middleware(request: NextRequest) {
     return response;
   }
   
-  // Skip intl middleware for dashboard routes to prevent redirect loops
-  if (pathname.startsWith('/dashboard')) {
-    return NextResponse.next();
+  // Check if we need to redirect a root path to a localized path
+  // Only apply to root / or paths that don't match our specific exceptions
+  const pathnameIsMissingLocale = locales.every(
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+  );
+
+  // If path is missing locale, and isn't a static asset or API, redirect
+  if (
+    pathnameIsMissingLocale && 
+    !pathname.startsWith('/_next') && 
+    !pathname.startsWith('/api') && 
+    !pathname.startsWith('/dashboard') &&
+    !pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webmanifest)$/)
+  ) {
+    // We could check the cookie here, but for simplicity we'll just redirect to default
+    return NextResponse.redirect(
+      new URL(`/${defaultLocale}${pathname === '/' ? '' : pathname}`, request.url)
+    );
   }
-  
-  // For non-dashboard routes, use the default intl middleware
-  return intlMiddleware(request);
+
+  return NextResponse.next();
 }
 
 export const config = {

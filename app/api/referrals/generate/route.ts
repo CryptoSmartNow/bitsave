@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { nanoid } from 'nanoid';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     
     // Check if user already exists
     const user = await usersCollection.findOne({ 
-      walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } 
+      walletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } 
     });
     
     if (user && user.referralCode) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     
     // Update or create user with referral code
     await usersCollection.updateOne(
-      { walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } },
+      { walletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } },
       {
         $set: {
           referralCode,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBizSwapCollection, getDatabase } from '@/lib/mongodb';
 import { getCache, setCache } from '@/lib/redis';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,13 +35,13 @@ export async function GET(req: NextRequest) {
       query = {
         $or: [
           { wallet: wallet },
-          ...(linkedWallet ? [{ wallet: { $regex: new RegExp(`^${linkedWallet}$`, 'i') } }] : [])
+          ...(linkedWallet ? [{ wallet: { $regex: new RegExp(`^${escapeRegex(linkedWallet)}$`, 'i') } }] : [])
         ]
       };
     } else {
       query = {
         $or: [
-          { wallet: { $regex: new RegExp(`^${wallet}$`, 'i') } },
+          { wallet: { $regex: new RegExp(`^${escapeRegex(wallet)}$`, 'i') } },
           { wallet: wallet }
         ]
       };

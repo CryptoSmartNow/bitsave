@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMarketsCollection } from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
 
         const query: any = { txHash: { $exists: true, $ne: null } };
         if (creator) {
-            query.creator = { $regex: new RegExp(`^${creator}$`, 'i') };
+            query.creator = { $regex: new RegExp(`^${escapeRegex(creator)}$`, 'i') };
         }
 
         // Only fetch markets that have a transaction hash (proof of on-chain creation)

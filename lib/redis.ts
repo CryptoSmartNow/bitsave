@@ -82,18 +82,15 @@ const createRedisClient = () => {
 const getRedisClient = () => {
   if (typeof window !== 'undefined') return null;
 
-  if (process.env.NODE_ENV === 'development') {
-    const globalWithRedis = global as typeof globalThis & {
-      _redisClient?: Redis | null;
-    };
+  const globalWithRedis = global as typeof globalThis & {
+    _redisClient?: Redis | null;
+  };
 
-    if (globalWithRedis._redisClient === undefined) {
-      globalWithRedis._redisClient = createRedisClient();
-    }
-    return globalWithRedis._redisClient;
+  if (globalWithRedis._redisClient === undefined) {
+    globalWithRedis._redisClient = createRedisClient();
   }
-
-  return createRedisClient();
+  
+  return globalWithRedis._redisClient;
 };
 
 export const redis = getRedisClient();

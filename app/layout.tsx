@@ -86,19 +86,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${instrumentSerif.variable} ${outfit.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined') {
-                window.console.log = function() {};
-                window.console.info = function() {};
-                window.console.warn = function() {};
-                window.console.error = function() {};
-                window.console.debug = function() {};
-              }
-            `,
-          }}
-        />
       </head>
       <body className={`${inter.className} bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-gray-100`}>
         <Providers>

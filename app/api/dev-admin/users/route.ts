@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
+import { verifyAdmin } from '@/lib/adminVerify';
 
-const JWT_SECRET_VALUE = process.env.JWT_SECRET;
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE || 'fallback-dev-only');
 
-async function verifyAdmin() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin-token')?.value;
-  if (!token) return false;
-  try {
-    await jwtVerify(token, JWT_SECRET);
-    return true;
-  } catch {
-    return false;
-  }
-}
+
 
 export async function GET(req: NextRequest) {
   if (!(await verifyAdmin())) {
@@ -67,11 +55,11 @@ export async function GET(req: NextRequest) {
 
         if (wallet) {
           earnings = await db.collection('bizswap_referral_earnings').findOne({
-            wallet: { $regex: new RegExp(`^${wallet}$`, 'i') },
+            wallet: { $regex: new RegExp(`^${escapeRegex(wallet)}$`, 'i') },
           });
 
           certCount = await db.collection('bizswap_certificates').countDocuments({
-            wallet: { $regex: new RegExp(`^${wallet}$`, 'i') },
+            wallet: { $regex: new RegExp(`^${escapeRegex(wallet)}$`, 'i') },
           });
         }
 
@@ -126,7 +114,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'User ID or wallet address required' }, { status: 400 });
     }
 
-    const userQuery = userId ? { _id: new ObjectId(userId) } : { walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } };
+    const userQuery = userId ? { _id: new ObjectId(userId) } : { walletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } };
 
     const updateDoc: any = { updatedAt: new Date() };
     if (referralCode !== undefined) {

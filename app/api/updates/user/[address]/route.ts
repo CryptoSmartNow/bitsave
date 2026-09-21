@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserReadUpdatesCollection } from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function GET(
   request: NextRequest,
@@ -27,7 +28,7 @@ export async function GET(
 
     // Find all read updates for this user
     const readUpdates = await collection.find({ 
-      useraddress: { $regex: new RegExp(`^${address}$`, 'i') } 
+      useraddress: { $regex: new RegExp(`^${escapeRegex(address)}$`, 'i') } 
     }).toArray();
 
     return NextResponse.json(readUpdates.map((update: any) => ({

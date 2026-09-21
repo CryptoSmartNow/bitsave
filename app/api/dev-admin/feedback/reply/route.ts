@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import nodemailer from 'nodemailer';
+import { verifyAdmin } from '@/lib/adminVerify';
 
-const JWT_SECRET_VALUE = process.env.JWT_SECRET;
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE || 'fallback-dev-only');
 
-async function verifyAdmin() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin-token')?.value;
-  if (!token) return false;
-  try {
-    await jwtVerify(token, JWT_SECRET);
-    return true;
-  } catch {
-    return false;
-  }
-}
+
 
 export async function POST(req: NextRequest) {
   if (!(await verifyAdmin())) {
@@ -26,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { feedbackId, replyMessage, newStatus, recipientEmail } = await req.json();
+    const { feedbackId, replyMessage, newStatus, recipientEmail, images } = await req.json();
 
     if (!feedbackId || !replyMessage?.trim()) {
       return NextResponse.json({ error: 'Feedback ID and reply message are required.' }, { status: 400 });
@@ -125,6 +112,7 @@ export async function POST(req: NextRequest) {
     const replyEntry = {
       id: new ObjectId().toString(),
       message: replyMessage.trim(),
+      images: images || [],
       sentBy: 'Dev Admin',
       sentToEmail: targetEmail || null,
       emailSent,

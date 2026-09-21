@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
 
         // Tick if savvy name is already taken (case-insensitive)
         const existingName = await collection.findOne({
-            savvyName: { $regex: new RegExp(`^${finalSavvyName}$`, 'i') }
+            savvyName: { $regex: new RegExp(`^${escapeRegex(finalSavvyName)}$`, 'i') }
         });
 
         if (existingName) {

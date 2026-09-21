@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function POST(request: Request) {
     try {
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
 
         // Get author's savvy name
         const user = await db.collection('users').findOne({ 
-            walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } 
+            walletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } 
         });
 
         const post = {
@@ -185,7 +186,7 @@ export async function PUT(request: Request) {
         if (action === 'reply' && replyContent && walletAddress) {
             const isBot = walletAddress.toLowerCase().includes('savvybot');
             const user = !isBot ? await db.collection('users').findOne({ 
-                walletAddress: { $regex: new RegExp(`^${walletAddress}$`, 'i') } 
+                walletAddress: { $regex: new RegExp(`^${escapeRegex(walletAddress)}$`, 'i') } 
             }) : null;
 
             const reply = {

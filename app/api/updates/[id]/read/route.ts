@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserReadUpdatesCollection } from '@/lib/mongodb';
+import { escapeRegex } from '@/lib/escapeRegex';
 
 export async function PUT(
   request: NextRequest,
@@ -30,7 +31,7 @@ export async function PUT(
     // Upsert the read status
     await collection.updateOne(
       { 
-        useraddress: { $regex: new RegExp(`^${useraddress}$`, 'i') },
+        useraddress: { $regex: new RegExp(`^${escapeRegex(useraddress)}$`, 'i') },
         updateId: updateId
       },
       { 

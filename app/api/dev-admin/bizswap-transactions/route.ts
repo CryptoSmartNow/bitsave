@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { clearCache } from '@/lib/redis';
+import { verifyAdmin } from '@/lib/adminVerify';
 
-const JWT_SECRET_VALUE = process.env.JWT_SECRET;
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE || 'fallback-dev-only');
 
-async function verifyAdmin() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin-token')?.value;
-  if (!token) return false;
-  try {
-    await jwtVerify(token, JWT_SECRET);
-    return true;
-  } catch {
-    return false;
-  }
-}
+
 
 export async function GET(req: NextRequest) {
   if (!(await verifyAdmin())) {

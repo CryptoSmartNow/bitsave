@@ -1,15 +1,10 @@
 import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
-const isDev = process.env.NODE_ENV !== "production";
-
-const withPWA = require("next-pwa")({
-  dest: "public",
+import withSerwistInit from "@serwist/next";
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "test", // Temporarily enabled in dev for testing push
-  register: true,
-  skipWaiting: true,
 });
-
-const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   // Produce lean standalone bundle to save 50%+ RAM on constrained containers (Render 512MB)
@@ -150,4 +145,4 @@ const nextConfig: NextConfig = {
 
 };
 
-export default withNextIntl(withPWA(nextConfig));
+export default withSerwist(nextConfig);
