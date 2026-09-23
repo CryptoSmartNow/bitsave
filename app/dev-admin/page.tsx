@@ -58,7 +58,7 @@ function WatchTowerContent() {
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'users' | 'certificates' | 'mint' | 'feedback' | 'updates' | 'leaderboard' | 'database' | 'system'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'users' | 'certificates' | 'mint' | 'feedback' | 'updates' | 'leaderboard' | 'database' | 'system' | 'api-keys'>('overview');
 
   // Telemetry state
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -301,6 +301,12 @@ function WatchTowerContent() {
             <div className="pt-4 pb-2">
               <div className="px-3 text-[10px] font-black uppercase tracking-widest text-[#4B5A75] mb-2">Advanced</div>
               <SidebarBtn
+                active={activeTab === 'api-keys'}
+                onClick={() => setActiveTab('api-keys')}
+                label="Partner API Keys"
+                icon={<LinkSquare01Icon className="w-4 h-4" />}
+              />
+              <SidebarBtn
                 active={activeTab === 'database'}
                 onClick={() => setActiveTab('database')}
                 label="Database Mgmt"
@@ -354,6 +360,7 @@ function WatchTowerContent() {
               {activeTab === 'leaderboard' && 'Leaderboard Management'}
               {activeTab === 'database' && 'Database Management'}
               {activeTab === 'system' && 'System Diagnostics'}
+              {activeTab === 'api-keys' && 'Partner API Keys Provisioning'}
             </h1>
             <p className="text-xs text-[#7B8B9A] mt-1 font-medium">
               Real-time monitoring and 1-click administrative resolution without database terminal login.
@@ -397,6 +404,7 @@ function WatchTowerContent() {
         {activeTab === 'leaderboard' && <LeaderboardTab />}
         {activeTab === 'database' && <DatabaseTab />}
         {activeTab === 'system' && <SystemTab />}
+        {activeTab === 'api-keys' && <ApiKeysTab />}
 
       </main>
     </div>
@@ -2290,3 +2298,263 @@ function MetricCard({ title, value, sub, icon, highlight, onClick }: any) {
     </div>
   );
 }
+
+// ─── PARTNER API KEYS TAB ──────────────────────────────────────────────
+function ApiKeysTab() {
+  const [keys, setKeys] = useState<any[]>([]);
+  const [partnerName, setPartnerName] = useState('');
+  const [tier, setTier] = useState('standard');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [isTierDropdownOpen, setIsTierDropdownOpen] = useState(false);
+
+  // Vault Auth State
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [vaultPasscode, setVaultPasscode] = useState('');
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
+  const fetchKeys = async (passcode: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/dev-admin/api-keys', {
+        headers: { 'x-vault-passcode': passcode }
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setKeys(json.data || []);
+        setIsUnlocked(true);
+        setVaultPasscode(passcode);
+      } else {
+        toast.error(json.error || 'Vault locked. Invalid passcode.');
+      }
+    } catch (e) {
+      toast.error('Failed to communicate with vault');
+    } finally {
+      setIsLoading(false);
+      setIsUnlocking(false);
+    }
+  };
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vaultPasscode) return;
+    setIsUnlocking(true);
+    fetchKeys(vaultPasscode);
+  };
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!partnerName.trim()) return toast.error('Partner name required');
+    
+    setIsGenerating(true);
+    setGeneratedKey(null);
+    try {
+      const res = await fetch('/api/dev-admin/api-keys/generate', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-vault-passcode': vaultPasscode
+        },
+        body: JSON.stringify({ partnerName, tier }),
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        toast.success('Key generated successfully!');
+        setGeneratedKey(data.data.rawApiKey);
+        setPartnerName('');
+        fetchKeys(vaultPasscode);
+      } else {
+        toast.error(data.error || 'Failed to generate key');
+      }
+    } catch (error: any) {
+      toast.error('Network error occurred');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyKey = () => {
+    if (!generatedKey) return;
+    navigator.clipboard.writeText(generatedKey);
+    toast.success('Key copied to clipboard!');
+  };
+
+  if (!isUnlocked) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="p-8 rounded-2xl bg-[#0A1019] border border-[#1C2538] w-full max-w-md shadow-2xl">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-red-500/10 rounded-full border border-red-500/20">
+              <Shield01Icon className="w-8 h-8 text-red-500" />
+            </div>
+          </div>
+          <h2 className="text-xl font-black text-white text-center tracking-tight mb-2">Vault Locked</h2>
+          <p className="text-sm text-[#7B8B9A] text-center mb-8">
+            This sector is heavily restricted. Enter the vault passcode to access API Key Provisioning.
+          </p>
+          
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={vaultPasscode}
+                onChange={(e) => setVaultPasscode(e.target.value)}
+                placeholder="Enter Vault Passcode"
+                className="w-full bg-[#060A12] border border-[#1C2538] rounded-xl px-4 py-3 text-center text-white font-mono tracking-[0.3em] focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-colors"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isUnlocking || !vaultPasscode}
+              className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50"
+            >
+              {isUnlocking ? 'Verifying...' : 'Unlock Vault'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="p-6 rounded-2xl bg-[#0A1019] border border-[#1C2538]">
+        <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+          <LinkSquare01Icon className="w-5 h-5 text-[#81D7B4]" />
+          Provision New Key
+        </h2>
+        
+        <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="block text-xs font-medium text-[#7B8B9A] mb-1.5 uppercase tracking-wide">Partner Name</label>
+            <input
+              type="text"
+              value={partnerName}
+              onChange={(e) => setPartnerName(e.target.value)}
+              placeholder="e.g. Acme Corp"
+              className="w-full bg-[#060A12] border border-[#1C2538] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#7B8B9A] mb-1.5 uppercase tracking-wide">Access Tier</label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsTierDropdownOpen(!isTierDropdownOpen)}
+                className="w-full bg-[#060A12] border border-[#1C2538] rounded-xl px-4 py-2.5 text-sm text-white text-left focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4] flex justify-between items-center"
+              >
+                {tier === 'standard' ? 'Standard (Full Access)' : 'Read-Only'}
+                <svg className={`w-4 h-4 transition-transform ${isTierDropdownOpen ? 'rotate-180' : ''} text-[#4B5A75]`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isTierDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-full bg-[#0A1019] border border-[#1C2538] rounded-xl overflow-hidden z-10 shadow-2xl">
+                  <button
+                    type="button"
+                    onClick={() => { setTier('standard'); setIsTierDropdownOpen(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[#81D7B4]/10 hover:text-[#81D7B4] transition-colors"
+                  >
+                    Standard (Full Access)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTier('readonly'); setIsTierDropdownOpen(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[#81D7B4]/10 hover:text-[#81D7B4] transition-colors border-t border-[#1C2538]"
+                  >
+                    Read-Only
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <button
+              type="submit"
+              disabled={isGenerating}
+              className="w-full bg-[#81D7B4] hover:bg-[#6ec2a0] text-[#0A1019] font-bold py-2.5 px-4 rounded-xl transition-colors h-[42px] disabled:opacity-50"
+            >
+              {isGenerating ? 'Generating...' : 'Generate Live Key'}
+            </button>
+          </div>
+        </form>
+
+        {generatedKey && (
+          <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <h3 className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-2 mb-2">
+              <Alert02Icon className="w-4 h-4" />
+              Store this securely
+            </h3>
+            <p className="text-xs text-[#7B8B9A] mb-3">
+              This raw API key is shown exactly once. It will not be stored in the database. Hand it directly to the partner over a secure channel.
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 block bg-[#060A12] border border-[#1C2538] rounded-lg px-3 py-2 text-sm text-white font-mono break-all">
+                {generatedKey}
+              </code>
+              <button
+                onClick={copyKey}
+                className="px-4 py-2 bg-[#1C2538] hover:bg-[#2C3E5D] text-white rounded-lg text-sm font-bold transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-6 rounded-2xl bg-[#0A1019] border border-[#1C2538]">
+        <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+          <UserGroupIcon className="w-5 h-5 text-[#81D7B4]" />
+          Active Integrations
+        </h2>
+        
+        {isLoading ? (
+          <div className="text-sm text-[#7B8B9A] py-4">Loading keys...</div>
+        ) : keys.length === 0 ? (
+          <div className="text-sm text-[#7B8B9A] py-4">No partner keys generated yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#1C2538]">
+                  <th className="py-3 text-xs font-medium text-[#4B5A75] uppercase tracking-wider">Partner Name</th>
+                  <th className="py-3 text-xs font-medium text-[#4B5A75] uppercase tracking-wider">Access Tier</th>
+                  <th className="py-3 text-xs font-medium text-[#4B5A75] uppercase tracking-wider">Status</th>
+                  <th className="py-3 text-xs font-medium text-[#4B5A75] uppercase tracking-wider">Generated On</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1C2538]/50">
+                {keys.map((k, i) => (
+                  <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 text-sm text-white font-medium">{k.partnerName}</td>
+                    <td className="py-3">
+                      <span className={`inline-block px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        k.tier === 'readonly' ? 'bg-blue-500/10 text-blue-400' : 'bg-[#81D7B4]/10 text-[#81D7B4]'
+                      }`}>
+                        {k.tier}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Active
+                      </span>
+                    </td>
+                    <td className="py-3 text-sm text-[#7B8B9A]">
+                      {new Date(k.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

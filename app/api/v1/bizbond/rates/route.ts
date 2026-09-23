@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server';
+import { validateApiKey, unauthorizedResponse } from '@/lib/api-auth';
+
+export async function GET(request: Request) {
+  const auth = await validateApiKey(request);
+  if (auth.error) return unauthorizedResponse(auth.error, auth.status);
+
+  try {
+    // Current rates and configuration for BizBond instruments
+    const rates = [
+      {
+        instrument: 'BizYield',
+        description: 'Revenue Share Pool',
+        apr: 'Variable (Rev Share)',
+        payoutFrequency: 'Monthly',
+        vestingPeriodDays: 90,
+        typeIndex: 0,
+        available: true,
+      },
+      {
+        instrument: 'BizCredit',
+        description: 'Private Credit Pool',
+        apr: '16% Annualised',
+        payoutFrequency: 'Weekly',
+        vestingPeriodDays: 0,
+        typeIndex: 1,
+        available: true,
+      },
+      {
+        instrument: 'BizBond',
+        description: 'Treasury Backed Pool',
+        apr: '10% Fixed',
+        payoutFrequency: 'Quarterly',
+        vestingPeriodDays: 90,
+        typeIndex: 2,
+        available: true,
+      }
+    ];
+
+    return NextResponse.json({
+      success: true,
+      data: rates
+    });
+  } catch (error: any) {
+    console.error('API /rates error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

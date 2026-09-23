@@ -1,0 +1,382 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "BizBond Public API",
+    "description": "Welcome to the BizBond API Documentation.\n\nBizBond (and its sister instruments BizYield and BizCredit) are Real World Asset (RWA) instruments tokenized on-chain. This API allows third-party platforms to integrate BizBond into their ecosystem. The typical flow for a user is:\n1. Check available rates via `/rates`.\n2. Initiate a deposit via `/deposit`, which provides a Chainrails session.\n3. The user completes the fiat-to-crypto onramp via Chainrails on your frontend.\n4. Poll `/deposit/{depositId}/status` until it is marked as `completed`.\n5. Call `/mint` to receive the unsigned transaction payload.\n6. The user signs the transaction in their wallet (non-custodial minting) to receive the BizBond on-chain.\n7. Use `/certificates/{walletAddress}` to list their portfolio or `/claim` to claim accrued yield.\n\n### Security & Architecture (CORS)\nFor strict security, this API does **not** allow Cross-Origin Resource Sharing (CORS) from browsers. You must architect your integration as a **Server-to-Server** flow. \nYour frontend should request data from your own backend, and your backend should securely attach your `x-api-key` to call the BizBond API. This guarantees your API key is never exposed to the public.",
+    "version": "1.1.0"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current Environment"
+    },
+    {
+      "url": "https://bitsave.io",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Your API Key provided by BizSwap Developer Portal. Include this header in all requests."
+      }
+    },
+    "schemas": {
+      "Rate": {
+        "type": "object",
+        "properties": {
+          "instrument": { "type": "string", "example": "BizBond" },
+          "description": { "type": "string", "example": "Treasury Backed Pool" },
+          "apr": { "type": "string", "example": "10% Fixed" },
+          "payoutFrequency": { "type": "string", "example": "Quarterly" },
+          "vestingPeriodDays": { "type": "number", "example": 90 },
+          "typeIndex": { "type": "number", "example": 2 },
+          "available": { "type": "boolean", "example": true }
+        }
+      },
+      "Certificate": {
+        "type": "object",
+        "properties": {
+          "wallet": { "type": "string" },
+          "instrument": { "type": "string" },
+          "investmentAmount": { "type": "number" },
+          "status": { "type": "string" },
+          "nextPayment": { "type": "string", "format": "date-time" },
+          "mintAddress": { "type": "string" },
+          "serialNumber": { "type": "string" },
+          "apr": { "type": "string" },
+          "payoutFrequency": { "type": "string" },
+          "chain": { "type": "string" },
+          "explorerUrl": { "type": "string" }
+        }
+      },
+      "DepositStatus": {
+        "type": "object",
+        "properties": {
+          "depositId": { "type": "string" },
+          "chainrailsSessionId": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+          "amount": { "type": "number" },
+          "instrument": { "type": "string" },
+          "mintInitiated": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/bizbond/rates": {
+      "get": {
+        "summary": "Get available instruments and rates",
+        "description": "Returns the list of available BizBond instruments (BizYield, BizCredit, BizBond), their descriptions, current APR, payout frequency, and vesting periods.",
+        "tags": ["Information"],
+        "responses": {
+          "200": {
+            "description": "Array of available instruments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Rate" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bizbond/deposit": {
+      "post": {
+        "summary": "Initialize a Chainrails deposit session",
+        "description": "Creates a new deposit intent and returns a Chainrails session object. You should use the returned session to render the Chainrails widget on your frontend, allowing the user to deposit fiat or crypto.",
+        "tags": ["Transactions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef1234567890abcdef12345678",
+                    "description": "The destination wallet address."
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 1000,
+                    "description": "The amount to invest in USDC/USDT."
+                  },
+                  "chain": {
+                    "type": "string",
+                    "enum": ["BASE", "SOLANA"],
+                    "example": "BASE"
+                  },
+                  "token": {
+                    "type": "string",
+                    "example": "USDC"
+                  },
+                  "instrument": {
+                    "type": "string",
+                    "enum": ["BizYield", "BizCredit", "BizBond"],
+                    "example": "BizBond"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "example": "order_12345"
+                  }
+                },
+                "required": ["walletAddress", "amount", "instrument"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created Chainrails session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "session": { "type": "object", "description": "Chainrails session data" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bizbond/deposit/{depositId}/status": {
+      "get": {
+        "summary": "Check deposit status",
+        "description": "Poll this endpoint to check if the user has successfully completed the Chainrails payment. Once the status is `completed`, you can proceed to the `/mint` endpoint.",
+        "tags": ["Transactions"],
+        "parameters": [
+          {
+            "name": "depositId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "The internal deposit ID returned when initializing the deposit."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deposit status details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/DepositStatus" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bizbond/mint": {
+      "post": {
+        "summary": "Initiate non-custodial BizBond minting",
+        "description": "Verifies that the deposit has been confirmed by Chainrails and returns the unsigned transaction payload necessary to mint the certificate on-chain. The user must sign this transaction using their Web3 wallet.",
+        "tags": ["Transactions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef1234567890abcdef12345678"
+                  },
+                  "chainrailsSessionId": {
+                    "type": "string",
+                    "example": "crs_abc123",
+                    "description": "The session_id received from the Chainrails deposit step."
+                  },
+                  "chain": {
+                    "type": "string",
+                    "enum": ["BASE", "SOLANA"],
+                    "example": "BASE"
+                  }
+                },
+                "required": ["walletAddress", "chainrailsSessionId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ready to mint transaction data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "certificateId": { "type": "string" },
+                        "contractAddress": { "type": "string" },
+                        "methodName": { "type": "string" },
+                        "args": { "type": "array", "items": {} },
+                        "onChainParams": { "type": "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bizbond/claim": {
+      "post": {
+        "summary": "Initiate non-custodial yield claim",
+        "description": "Generates the unsigned transaction payload required for a user to claim their accrued yield on a specific certificate.",
+        "tags": ["Transactions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef1234567890abcdef12345678"
+                  },
+                  "certificateId": {
+                    "type": "string",
+                    "example": "cert_123abc",
+                    "description": "The unique certificate identifier."
+                  },
+                  "chain": {
+                    "type": "string",
+                    "enum": ["BASE", "SOLANA"],
+                    "example": "BASE"
+                  }
+                },
+                "required": ["walletAddress", "certificateId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ready to claim transaction data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "certificateId": { "type": "string" },
+                        "contractAddress": { "type": "string" },
+                        "methodName": { "type": "string" },
+                        "args": { "type": "array", "items": {} }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bizbond/certificates/{walletAddress}": {
+      "get": {
+        "summary": "Get BizBond certificates by wallet",
+        "description": "Retrieve a list of all BizBond certificates owned by the specified wallet address.",
+        "tags": ["Portfolio"],
+        "parameters": [
+          {
+            "name": "walletAddress",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of certificates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Certificate" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bizbond/certificates/detail/{certificateId}": {
+      "get": {
+        "summary": "Get specific certificate details",
+        "description": "Retrieve comprehensive details for a single BizBond certificate using its unique identifier.",
+        "tags": ["Portfolio"],
+        "parameters": [
+          {
+            "name": "certificateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Certificate" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
