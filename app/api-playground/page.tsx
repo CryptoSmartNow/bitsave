@@ -241,10 +241,10 @@ export default function ApiPlayground() {
       </header>
 
       {/* Split Pane Layout */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         
         {/* Left Pane: Configuration */}
-        <div className="w-1/2 flex flex-col border-r border-[#333333] bg-[#121212] overflow-y-auto custom-scrollbar relative">
+        <div className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-[#333333] bg-[#121212] lg:overflow-y-auto custom-scrollbar relative">
           <div className="p-8">
             <div className="mb-8">
               <h2 className="text-2xl font-black text-white tracking-tight mb-2">Request Config</h2>
@@ -390,7 +390,7 @@ export default function ApiPlayground() {
         </div>
 
         {/* Right Pane: Response Viewer */}
-        <div className="w-1/2 bg-[#1A1A1A] flex flex-col border-l border-[#121212] relative">
+        <div className="w-full lg:w-1/2 min-h-[400px] lg:min-h-0 bg-[#1A1A1A] flex flex-col border-t lg:border-t-0 lg:border-l border-[#121212] relative">
           {/* Response Header */}
           <div className="h-14 border-b border-[#333333] flex items-center justify-between px-6 bg-[#121212]/50 backdrop-blur-md absolute top-0 w-full z-10">
             <span className="text-xs font-bold text-[#7B8B9A] uppercase tracking-wider flex items-center gap-2">

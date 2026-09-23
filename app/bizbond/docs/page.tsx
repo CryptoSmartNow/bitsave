@@ -314,10 +314,10 @@ export default function PremiumApiDocs() {
   );
 
   return (
-    <div className="flex h-screen bg-[#121212] text-[#EDEDED] font-sans overflow-hidden">
+    <div className="flex flex-col lg:flex-row lg:h-screen min-h-screen bg-[#121212] text-[#EDEDED] font-sans lg:overflow-hidden">
       
       {/* Sidebar */}
-      <div className="w-[280px] flex-shrink-0 border-r border-[#333] bg-[#121212] overflow-y-auto">
+      <div className="w-full lg:w-[280px] flex-shrink-0 border-b lg:border-b-0 lg:border-r border-[#333] bg-[#121212] lg:overflow-y-auto">
         <div className="px-6 py-6 border-b border-[#333]">
           <h1 className="text-sm font-semibold tracking-wide">BizBond API</h1>
           <p className="text-xs text-[#888] mt-1">v1.1.0 Reference</p>
@@ -365,10 +365,10 @@ export default function PremiumApiDocs() {
       </div>
 
       {/* Main Content & Code Snippets */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
         
         {/* API Description Panel */}
-        <div className="flex-1 overflow-y-auto p-10 xl:p-16 custom-scrollbar bg-[#121212]">
+        <div className="w-full lg:flex-1 lg:overflow-y-auto p-6 md:p-10 xl:p-16 custom-scrollbar bg-[#121212]">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm font-mono text-[#888] bg-[#1A1A1A] px-2 py-1 rounded border border-[#333]">
@@ -489,7 +489,7 @@ export default function PremiumApiDocs() {
         </div>
 
         {/* Code / Playground Panel */}
-        <div className="w-[450px] lg:w-[500px] xl:w-[600px] bg-[#1A1A1A] border-l border-[#333] overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="w-full lg:w-[450px] xl:w-[500px] 2xl:w-[600px] bg-[#1A1A1A] border-t lg:border-t-0 lg:border-l border-[#333] lg:overflow-y-auto custom-scrollbar flex flex-col flex-shrink-0">
           
           <div className="px-6 py-4 border-b border-[#222] flex items-center gap-2 bg-[#121212]">
             <div className="flex bg-[#1A1A1A] p-1 rounded-lg border border-[#333] w-full">
