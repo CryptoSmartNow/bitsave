@@ -14,9 +14,6 @@ const depositSchema = z.object({
   reference: z.string().optional(),
 });
 
-const LIVE_API_KEY = process.env.CHAINRAILS_API_KEY;
-const BIZSWAP_API_KEY = process.env.BIZSWAP_CHAINRAILS_API_KEY;
-
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
   if (auth.error) return unauthorizedResponse(auth.error, auth.status);
@@ -31,6 +28,8 @@ export async function POST(request: Request) {
 
     const { walletAddress, amount, chain, token, instrument, reference } = parsed.data;
 
+    const LIVE_API_KEY = process.env.CHAINRAILS_API_KEY;
+    const BIZSWAP_API_KEY = process.env.BIZSWAP_CHAINRAILS_API_KEY;
     const CHAINRAILS_API_KEY = LIVE_API_KEY || BIZSWAP_API_KEY;
     if (!CHAINRAILS_API_KEY) {
       return NextResponse.json({ error: 'Payment gateway configuration missing' }, { status: 503 });
