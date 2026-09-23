@@ -40,7 +40,12 @@ export async function POST(request: Request) {
     // Find the deposit intent by the Chainrails session ID or similar identifier
     // Chainrails session object usually has a `session_id` or similar.
     const result = await db.collection('bizbond_deposits').findOneAndUpdate(
-      { "chainrailsSession.sessionId": sessionId }, // Adjust according to actual Chainrails session structure
+      { 
+        $or: [
+          { "chainrailsSession.sessionId": sessionId },
+          { "chainrailsSession.session_id": sessionId }
+        ]
+      },
       { 
         $set: { 
           status: status.toLowerCase() === 'completed' ? 'completed' : 'failed',

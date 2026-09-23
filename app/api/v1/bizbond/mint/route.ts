@@ -31,7 +31,10 @@ export async function POST(request: Request) {
 
     // 1. Verify deposit is completed
     const deposit = await db.collection('bizbond_deposits').findOne({
-      "chainrailsSession.session_id": chainrailsSessionId,
+      $or: [
+        { "chainrailsSession.sessionId": chainrailsSessionId },
+        { "chainrailsSession.session_id": chainrailsSessionId }
+      ],
       walletAddress: walletAddress
     });
 
