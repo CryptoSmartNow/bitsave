@@ -57,11 +57,12 @@ export async function POST(request: Request) {
       token: token as any,
     });
 
+    const depositId = crypto.randomUUID();
     // Save pending deposit intent in database
     const db = await getDatabase();
     if (db) {
       await db.collection('bizbond_deposits').insertOne({
-        depositId: crypto.randomUUID(), // Local tracking ID
+        depositId, // Local tracking ID
         chainrailsSession: sessionResponse, // Save the entire response for reference
         walletAddress,
         amount: numericAmount,
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       data: {
+        depositId,
         session: sessionResponse
       }
     });

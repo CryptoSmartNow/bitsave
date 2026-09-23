@@ -154,6 +154,7 @@
                     "data": {
                       "type": "object",
                       "properties": {
+                        "depositId": { "type": "string", "description": "Local tracking ID for the deposit" },
                         "session": { "type": "object", "description": "Chainrails session data" }
                       }
                     }

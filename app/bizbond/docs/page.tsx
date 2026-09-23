@@ -44,6 +44,7 @@ const endpoints = [
     response: {
       success: true,
       data: {
+        depositId: 'dep_12345abcde',
         session: {
           session_id: 'crs_12345abcde',
           url: 'https://pay.chainrails.com/...'
