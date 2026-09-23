@@ -6,10 +6,7 @@ import { motion } from "framer-motion";
 import Link from 'next/link';
 import { Exo } from "next/font/google";
 
-const exo = Exo({ 
-    subsets: ['latin'],
-    variable: '--font-exo'
-});
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 interface Market {
     _id: string;

@@ -34,11 +34,7 @@ const ensureImageUrl = (url: string | undefined): string => {
 }
 
 // Initialize the Exo font
-const exo = Exo({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk'
-});
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 // Define types for our plan data
 interface Plan {

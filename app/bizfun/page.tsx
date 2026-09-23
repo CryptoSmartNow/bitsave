@@ -9,11 +9,7 @@ import { Exo } from "next/font/google";
 import Link from 'next/link';
 import LanguageSelector from "@/components/LanguageSelector";
 
-const exo = Exo({
-    subsets: ['latin'],
-    display: 'swap',
-    variable: '--font-exo',
-});
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 // Reusable BizMart Link Component
 const BizMartLink = () => (

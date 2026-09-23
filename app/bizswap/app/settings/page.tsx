@@ -8,11 +8,7 @@ import { Exo } from 'next/font/google';
 import toast from 'react-hot-toast';
 import { useBizSwapReferrals } from '@/lib/useBizSwapReferrals';
 
-const exo = Exo({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk',
-});
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 export default function BizSwapSettings() {
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount();

@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Exo } from 'next/font/google';
 import { getChainConfig, getExplorerUrl } from '@/lib/bizswap-contracts';
 
-const exo = Exo({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800', '900'] });
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 interface Holding {
   _id: string;

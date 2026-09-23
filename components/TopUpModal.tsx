@@ -42,10 +42,7 @@ import { handleContractError } from '@/lib/contractErrorHandler';
 import { getTweetButtonProps } from '@/utils/tweetUtils';
 import { getSavingFeeFromContract, estimateGasForTransaction } from '@/utils/contractUtils';
 
-const exo = Exo({
-  subsets: ['latin'],
-  display: 'swap',
-})
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 // Helper function to ensure image URLs are properly formatted for Next.js AiImage
 const ensureImageUrl = (url: string | undefined): string => {

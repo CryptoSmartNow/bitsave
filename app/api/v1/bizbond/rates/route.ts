@@ -9,24 +9,6 @@ export async function GET(request: Request) {
     // Current rates and configuration for BizBond instruments
     const rates = [
       {
-        instrument: 'BizYield',
-        description: 'Revenue Share Pool',
-        apr: 'Variable (Rev Share)',
-        payoutFrequency: 'Monthly',
-        vestingPeriodDays: 90,
-        typeIndex: 0,
-        available: true,
-      },
-      {
-        instrument: 'BizCredit',
-        description: 'Private Credit Pool',
-        apr: '16% Annualised',
-        payoutFrequency: 'Weekly',
-        vestingPeriodDays: 0,
-        typeIndex: 1,
-        available: true,
-      },
-      {
         instrument: 'BizBond',
         description: 'Treasury Backed Pool',
         apr: '10% Fixed',

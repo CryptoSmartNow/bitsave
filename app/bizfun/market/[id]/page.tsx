@@ -10,10 +10,7 @@ import { useAccount } from "wagmi";
 import { BizFiAuthButton } from "@/components/BizFiAuth";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle } from "@radix-ui/react-dialog";
 
-const exo = Exo({
-    subsets: ['latin'],
-    variable: '--font-exo'
-});
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 interface Market {
     _id: string;

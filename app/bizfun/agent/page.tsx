@@ -10,11 +10,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import { Exo } from "next/font/google";
 import Link from 'next/link';
 
-const exo = Exo({
-    subsets: ['latin'],
-    display: 'swap',
-    variable: '--font-exo',
-});
+const exo = Exo({ subsets: ['latin'], display: 'swap', variable: '--font-exo' });
 
 import { MarketWizard } from "@/components/MarketWizard";
 
