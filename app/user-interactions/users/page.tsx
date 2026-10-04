@@ -21,8 +21,6 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { UserInteraction } from '@/lib/interactionTracker';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 
@@ -151,35 +149,27 @@ export default function UserManagementPage() {
   const handleExport = () => {
     if (!selectedUser) return;
     
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text('BitSave User Activity Report', 14, 22);
+    // Generate CSV Header
+    let csvContent = 'Timestamp,Action,Chain,Context\n';
     
-    doc.setFontSize(11);
-    doc.text(`Wallet Address: ${selectedUser.address}`, 14, 34);
-    doc.text(`First Seen: ${new Date(selectedUser.firstSeen).toLocaleString()}`, 14, 42);
-    doc.text(`Last Active: ${new Date(selectedUser.lastSeen).toLocaleString()}`, 14, 50);
-    doc.text(`Total Operations: ${selectedUser.interactionCount}`, 14, 58);
-    doc.text(`Errors Logged: ${selectedUser.errorCount}`, 14, 66);
-    doc.text(`Chains Interacted: ${selectedUser.chains?.join(', ') || 'Base'}`, 14, 74);
-
-    const tableData = selectedUser.interactions.map(i => [
-      new Date(i.timestamp).toLocaleString(),
-      i.type.replace(/_/g, ' '),
-      ((i.data as any)?.chain || '-').toString(),
-      JSON.stringify(i.data || {}).substring(0, 60)
-    ]);
-
-    autoTable(doc, {
-      startY: 84,
-      head: [['Timestamp', 'Action', 'Chain', 'Context']],
-      body: tableData,
-      headStyles: { fillColor: [129, 215, 180] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      styles: { fontSize: 8 },
+    // Generate CSV Rows
+    selectedUser.interactions.forEach(i => {
+      const timestamp = new Date(i.timestamp).toLocaleString().replace(/,/g, '');
+      const action = i.type.replace(/_/g, ' ');
+      const chain = ((i.data as any)?.chain || '-').toString();
+      const context = JSON.stringify(i.data || {}).replace(/,/g, ';').substring(0, 100);
+      csvContent += `${timestamp},${action},${chain},${context}\n`;
     });
 
-    doc.save(`bitsave-profile-${selectedUser.address.slice(0, 8)}.pdf`);
+    // Create a Blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `BitSave_User_Activity_${selectedUser.address.substring(0,6)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleExternalLink = (e: React.MouseEvent) => {

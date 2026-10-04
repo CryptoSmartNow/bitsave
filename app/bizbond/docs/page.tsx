@@ -140,6 +140,33 @@ const endpoints = [
     }
   },
   {
+    id: 'proof',
+    method: 'GET',
+    path: '/api/v1/bizbond/certificates/proof/{certificateId}',
+    name: 'Deployment Proof',
+    description: 'Returns the form data and document link proving how the funds for a certificate were deployed into Treasury Bills.',
+    requestParams: [
+      { name: 'certificateId', type: 'string', required: true, description: 'The unique certificate ID' }
+    ],
+    requestBody: null,
+    response: {
+      success: true,
+      data: {
+        certificateId: 'cert_abc123',
+        wallet: '0x123...456',
+        deployment: {
+          status: 'FUNDS SECURED & DEPLOYED',
+          broker: 'Bitsave Institutional Custody',
+          reference: 'NG-TB-REQ123',
+          amountDeployed: 1000,
+          tradeDate: '2026-10-01T12:00:00.000Z',
+          maturityDate: 'Strict Maturity Match',
+          documentUrl: 'https://storage.bitsave.io/proofs/doc_123.pdf'
+        }
+      }
+    }
+  },
+  {
     id: 'details',
     method: 'GET',
     path: '/api/v1/bizbond/certificates/detail/{certificateId}',
@@ -392,6 +419,11 @@ export default function PremiumApiDocs() {
                 <p className="text-xs text-[#888] mt-2">Required for all requests. Provide your BizBond developer API key.</p>
               </div>
 
+              <h4 className="text-xs font-bold text-[#81D7B4] mb-3">Going Live (Production Access)</h4>
+              <p className="text-xs text-[#A3A3A3] mb-6 leading-relaxed">
+                There are no separate endpoints for sandbox and production. To execute real production transactions, simply pass your live API key (e.g., <code>bsv_live_...</code>). The API automatically detects your live key and routes the request to production.
+              </p>
+
               <h4 className="text-xs font-bold text-white mb-3">Sandbox Testing Keys</h4>
               <p className="text-xs text-[#A3A3A3] mb-4 leading-relaxed">
                 Use the following keys in the Playground to simulate different integration scenarios and permissions:
@@ -550,7 +582,7 @@ export default function PremiumApiDocs() {
                   type="text" 
                   value={apiKey}
                   onChange={e => setApiKey(e.target.value)}
-                  placeholder="Enter a test key (e.g. test_sandbox_standard)"
+                  placeholder="Enter API Key (e.g. bsv_live_... or test_sandbox_...)"
                   className="w-full bg-[#222] border border-[#333] rounded text-sm px-3 py-2 text-white outline-none focus:border-[#81D7B4] transition-colors font-mono"
                 />
               </div>

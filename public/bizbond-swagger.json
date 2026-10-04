@@ -378,6 +378,61 @@
           }
         }
       }
+    },
+    "/api/v1/bizbond/certificates/proof/{certificateId}": {
+      "get": {
+        "summary": "Get Deployment Proof",
+        "description": "Returns the form data and document link proving how the funds for a certificate were deployed into Treasury Bills.",
+        "tags": ["Portfolio"],
+        "parameters": [
+          {
+            "name": "certificateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object with deployment details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "certificateId": { "type": "string" },
+                        "wallet": { "type": "string" },
+                        "deployment": {
+                          "type": "object",
+                          "properties": {
+                            "status": { "type": "string" },
+                            "broker": { "type": "string" },
+                            "reference": { "type": "string" },
+                            "amountDeployed": { "type": "number" },
+                            "tradeDate": { "type": "string" },
+                            "maturityDate": { "type": "string" },
+                            "documentUrl": { "type": "string", "nullable": true }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Certificate ID is required"
+          },
+          "404": {
+            "description": "Certificate not found"
+          }
+        }
+      }
     }
   }
 }

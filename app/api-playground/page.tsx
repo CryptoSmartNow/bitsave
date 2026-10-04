@@ -18,6 +18,7 @@ const ENDPOINTS: Endpoint[] = [
   { id: 'rates', method: 'GET', path: '/api/v1/bizbond/rates', requiresPayload: false },
   { id: 'cert-wallet', method: 'GET', path: '/api/v1/bizbond/certificates/[walletAddress]', requiresPayload: false },
   { id: 'cert-detail', method: 'GET', path: '/api/v1/bizbond/certificates/detail/[certificateId]', requiresPayload: false },
+  { id: 'cert-proof', method: 'GET', path: '/api/v1/bizbond/certificates/proof/[certificateId]', requiresPayload: false },
   { id: 'deposit-get', method: 'GET', path: '/api/v1/bizbond/deposit/[depositId]', requiresPayload: false },
   { 
     id: 'deposit-post', 
@@ -75,7 +76,7 @@ const extractParams = (path: string) => {
 
 export default function ApiPlayground() {
   const [apiKey, setApiKey] = useState('');
-  const [env, setEnv] = useState<'sandbox' | 'production'>('sandbox');
+  const [env, setEnv] = useState<'sandbox' | 'production'>('production');
   const [selectedEndpoint, setSelectedEndpoint] = useState(ENDPOINTS[0]);
   
   // State for dynamic path parameters
@@ -160,6 +161,21 @@ export default function ApiPlayground() {
       
       const endTime = Date.now();
       const timeMs = endTime - startTime;
+
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/pdf')) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setResponse({
+          status: res.status,
+          data: { message: 'PDF document generated and opened in a new tab!', url },
+          timeMs
+        });
+        toast.success(`Request successful (${timeMs}ms)`);
+        setIsLoading(false);
+        return;
+      }
 
       let data;
       try {
@@ -324,16 +340,14 @@ export default function ApiPlayground() {
                   <label className="block text-xs font-bold text-white uppercase tracking-wider mb-3">Path Parameters</label>
                   <div className="space-y-3">
                     {requiredParams.map(param => (
-                      <div key={param} className="flex items-center gap-3">
-                        <div className="w-1/3 text-right">
-                          <span className="text-xs font-mono text-[#4B5A75]">{param}</span>
-                        </div>
+                      <div key={param} className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold text-[#7B8B9A] uppercase tracking-wider pl-1">{param}</span>
                         <input
                           type="text"
                           value={pathParams[param] || ''}
                           onChange={(e) => handleParamChange(param, e.target.value)}
                           placeholder={`Enter ${param}`}
-                          className="w-2/3 bg-[#1A1A1A] border border-[#333333] rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4]/50 transition-all"
+                          className="w-full bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-3 text-sm font-mono text-[#81D7B4] focus:outline-none focus:border-[#81D7B4] focus:ring-1 focus:ring-[#81D7B4]/50 transition-all shadow-inner"
                         />
                       </div>
                     ))}

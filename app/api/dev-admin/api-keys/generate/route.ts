@@ -47,10 +47,14 @@ export async function POST(request: Request) {
     // 3. Hash the key for storage (SHA-256)
     // When a request comes in, we will hash their provided key and compare it to this hash
     const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+    
+    // Generate a unique developer ID to track this partner's requests
+    const developerId = `dev_${crypto.randomUUID().replace(/-/g, '')}`;
 
     // 4. Save to MongoDB
     const result = await db.collection('api_keys').insertOne({
       partnerName,
+      developerId,
       tier,
       keyHash,
       createdAt: new Date(),
