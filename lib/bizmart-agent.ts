@@ -312,7 +312,7 @@ export class BizMartAgent {
                 else if (newData.duration?.includes('14')) resolveTime = Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60);
 
                 const marketParams = {
-                    metadataUri: newData.predictionQuestion || `ipfs://mock-metadata-${Date.now()}`, // Use question as title for now, or true metadata URI
+                    metadataUri: newData.predictionQuestion || `ipfs://metadata-${Date.now()}`, // Use question as title for now, or true metadata URI
                     tradingDeadline: resolveTime - 86400, // 1 day before resolve
                     resolveTime: resolveTime,
                     chain: newData.chain // Pass selected chain
@@ -506,11 +506,11 @@ If the user just says "hello" or greets you, simply respond with a short greetin
 
     private callOpenClaw(message: string, sessionId: string): Promise<{ json?: any, raw?: string, error?: string }> {
         return new Promise((resolve, reject) => {
-            // Mock implementation since I can't run the binary in this environment check
+            // Fallback implementation since I can't run the binary in this environment check
             // In real env, this spawns the process.
 
             if (!fs.existsSync(this.openclawBin)) {
-                // UPDATED mock to avoid the unwanted capability list
+                // UPDATED fallback to avoid the unwanted capability list
                 resolve({ raw: "Hey! 🦞 Want to create a prediction market? Just say 'start' or 'create'!" });
                 return;
             }

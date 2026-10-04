@@ -14,18 +14,7 @@ export async function GET(req: Request) {
     const apiSecret = process.env.DEXPAY_API_SECRET || "";
 
     const isSandbox = false;
-    const allowMocks = false;
-
     if (!apiKey || !apiSecret) {
-      if (allowMocks) {
-        return NextResponse.json({
-          data: {
-            id: orderId,
-            status: "COMPLETED",
-          },
-        });
-      }
-
       return NextResponse.json(
         { error: "DexPay credentials are not configured" },
         { status: 500 }
@@ -53,19 +42,10 @@ export async function GET(req: Request) {
     try {
       data = JSON.parse(text);
     } catch (e) {
-      if (allowMocks) {
-        data = {
-          data: {
-            id: orderId,
-            status: "COMPLETED",
-          },
-        };
-      } else {
-        return NextResponse.json(
-          { error: "DexPay API returned an invalid response", details: text },
-          { status: res.status }
-        );
-      }
+      return NextResponse.json(
+        { error: "DexPay API returned an invalid response", details: text },
+        { status: res.status }
+      );
     }
 
     if (!res.ok && !isSandbox) {

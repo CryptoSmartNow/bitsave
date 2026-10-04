@@ -573,20 +573,7 @@ export function UnifiedFiatModal({
             onClick={async () => {
               setIsSimulating(true);
               try {
-                if (window.location.hostname === 'localhost' || window.location.hostname.includes('ngrok')) {
-                  const res = await fetch('/api/bizswap/mock-pay', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference: onswitchReference || bankDetails?.reference })
-                  });
-                  if (res.ok) {
-                    toast.success('Payment confirmed! Minting certificate...');
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    onSuccess(onswitchReference || bankDetails?.reference);
-                    return;
-                  }
-                }
-                
+
                 if (onPending) {
                   onPending();
                 } else {

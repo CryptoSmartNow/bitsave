@@ -21,57 +21,9 @@ export async function GET(request: NextRequest) {
 
     const interactions = await collection.find({}).sort({ timestamp: -1 }).limit(limit).toArray();
 
-    
-    // If no interactions exist, seed with sample data
+    // If no interactions exist, return empty array
     if (interactions.length === 0) {
-      const sampleData = [
-        {
-          type: 'error',
-          walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS Cancel 10_15_7)',
-          data: {
-            error: 'Transaction failed: Insufficient funds',
-            context: 'Attempting to transfer 100 USDC',
-            stack: 'Error: Insufficient funds\n    at TransactionService.transfer\n    at WalletComponent.handleTransfer'
-          },
-          id: 'error-001',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          sessionId: 'session-001',
-          ip: '192.168.1.100'
-        },
-        {
-          type: 'error',
-          walletAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          data: {
-            error: 'Network timeout: Unable to connect to blockchain',
-            context: 'Loading wallet balance',
-            stack: 'Error: Network timeout\n    at NetworkService.getBalance\n    at WalletService.updateBalance'
-          },
-          id: 'error-002',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          sessionId: 'session-002',
-          ip: '10.0.0.50'
-        },
-        {
-          type: 'error',
-          walletAddress: '0x9876543210fedcba9876543210fedcba98765432',
-          userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0)',
-          data: {
-            error: 'Invalid signature: Transaction signature verification failed',
-            context: 'Signing transaction for token swap',
-            stack: 'Error: Invalid signature\n    at SignatureService.verify\n    at TransactionService.sign'
-          },
-          id: 'error-003',
-          timestamp: new Date(Date.now() - 10800000).toISOString(),
-          sessionId: 'session-003',
-          ip: '172.16.0.25'
-        }
-      ];
-      
-      await collection.insertMany(sampleData);
-  
-      return NextResponse.json(sampleData);
+      return NextResponse.json([]);
     }
     
     // Convert MongoDB documents to the expected format
@@ -90,55 +42,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('API Error fetching interactions:', error);
     console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
-    
-    // Return mock data when database is not available
-    const mockData = [
-      {
-        type: 'error',
-        walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS Cancel 10_15_7)',
-        data: {
-          error: 'Transaction failed: Insufficient funds',
-          context: 'Attempting to transfer 100 USDC',
-          stack: 'Error: Insufficient funds\n    at TransactionService.transfer\n    at WalletComponent.handleTransfer'
-        },
-        id: 'error-001',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        sessionId: 'session-001',
-        ip: '192.168.1.100'
-      },
-      {
-        type: 'error',
-        walletAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        data: {
-          error: 'Network timeout: Unable to connect to blockchain',
-          context: 'Loading wallet balance',
-          stack: 'Error: Network timeout\n    at NetworkService.getBalance\n    at WalletService.updateBalance'
-        },
-        id: 'error-002',
-        timestamp: new Date(Date.now() - 7200000).toISOString(),
-        sessionId: 'session-002',
-        ip: '10.0.0.50'
-      },
-      {
-        type: 'error',
-        walletAddress: '0x9876543210fedcba9876543210fedcba98765432',
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0)',
-        data: {
-          error: 'Invalid signature: Transaction signature verification failed',
-          context: 'Signing transaction for token swap',
-          stack: 'Error: Invalid signature\n    at SignatureService.verify\n    at TransactionService.sign'
-        },
-        id: 'error-003',
-        timestamp: new Date(Date.now() - 10800000).toISOString(),
-        sessionId: 'session-003',
-        ip: '172.16.0.25'
-      }
-    ];
-    
-
-    return NextResponse.json(mockData);
+    // Return empty array when database is not available
+    return NextResponse.json([]);
   }
 }
 

@@ -13,18 +13,16 @@ export async function GET(request: Request) {
 
     if (collection) {
       // In a real app, you might aggregate actual values across MongoDB or an indexer.
-      // For now, we do a basic aggregation or mock it if DB is empty
+      // For now, we do a basic aggregation or fallback if DB is empty
       const certs = await collection.find({}).toArray();
       activeBonds = certs.length;
       totalDeposits = certs.reduce((acc, cert) => acc + (Number(cert.investmentAmount) || 0), 0);
     }
 
-    // Since this is likely testnet or new, we might pad the stats slightly for demonstration, 
-    // or just return the exact values calculated above. Let's return exact plus some baseline.
     const stats = {
-      tvlUsd: 1540000 + totalDeposits, 
-      totalYieldDistributedUsd: 125000,
-      activeBonds: 320 + activeBonds,
+      tvlUsd: totalDeposits, 
+      totalYieldDistributedUsd: 0,
+      activeBonds: activeBonds,
       apyRange: '10% - 16%',
       defaultRate: '0.00%',
       lastUpdated: new Date().toISOString()

@@ -65,7 +65,14 @@ export async function POST(
 
   // Protect this endpoint so only internal Bitsave admins can upload/update proof data
   const adminPassword = request.headers.get('x-admin-password');
-  if (!adminPassword || adminPassword !== process.env.ADMIN_PASSWORD) {
+  const envPassword = process.env.ADMIN_PASSWORD;
+
+  if (!envPassword) {
+    console.error('FATAL: ADMIN_PASSWORD is not set in environment variables');
+    return NextResponse.json({ error: 'Server misconfiguration: Admin password not set' }, { status: 500 });
+  }
+
+  if (!adminPassword || adminPassword !== envPassword) {
     return NextResponse.json({ error: 'Forbidden: Admin access only' }, { status: 403 });
   }
 

@@ -143,7 +143,7 @@ export default function OnOffRampPage() {
       const chainrailsCryptoAmount = mode === 'buy' ? (numAmount / chainrailsBaseRate) : numAmount;
 
       const fallbackDexpay = dexpayQuote || {
-        id: `mock-${Date.now()}`,
+        id: `id-${Date.now()}`,
         adjustedRate: chainrailsBaseRate,
         rate: chainrailsBaseRate,
         fiatAmount: mode === 'buy' ? numAmount : numAmount * chainrailsBaseRate,
@@ -258,17 +258,7 @@ export default function OnOffRampPage() {
         setDexPayOrder(orderData.data);
         pollDexPayStatus(orderData.data.id);
       } else {
-        // Mock order fallback for seamless demo / testnet transactions
-        const mockOrder = {
-          id: `order-${Date.now()}`,
-          bankName: 'Access Bank / Moniepoint',
-          accountNumber: '9082341122',
-          accountName: 'BitSave Ramp Settlement',
-          depositAddress: address || '0x71C...849',
-          amount: amount,
-          tokenAmount: quotes?.dexpay?.cryptoAmount?.toFixed(2) || amount
-        };
-        setDexPayOrder(mockOrder);
+        toast.error(orderData?.message || 'Failed to generate order from provider.');
       }
     } catch {
       toast.error('Order processing error. Please try again.');

@@ -23,8 +23,8 @@ export const HashConnectProvider: React.FC<HashConnectProviderProps> = ({ childr
     try {
       console.log('HashConnect: Connecting...');
       // Basic connection logic would go here
-      setIsConnected(true);
-      setAccountId('0.0.123456'); // Mock account ID
+      // setIsConnected(true);
+      // setAccountId('...'); // TODO: Implement real HashConnect logic
     } catch (error) {
       console.error('HashConnect connection failed:', error);
     }

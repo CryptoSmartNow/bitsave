@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production'
-);
+import { getJwtSecret } from "@/lib/adminVerify";
 
+const JWT_SECRET = getJwtSecret();
 const COLLECTION_NAME = "businesses";
 
 export async function GET(req: NextRequest) {

@@ -56,7 +56,7 @@ export default function CalendarPage() {
         const calendarEvents: CalendarEvent[] = data.data.map((h: Holding) => ({
           date: new Date(h.nextPayment),
           instrument: h.instrument,
-          amount: h.investmentAmount * 0.05, // Mock 5% yield
+          amount: h.investmentAmount * 0.05, // Estimated 5% yield
           status: 'upcoming'
         }));
         

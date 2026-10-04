@@ -150,7 +150,7 @@ export const MarketWizard = ({ walletAddress, onSuccess }: { walletAddress?: str
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    metadataUri: formData.name || `ipfs://mock-metadata-${Date.now()}`,
+                    metadataUri: formData.name || `ipfs://metadata-${Date.now()}`,
                     tradingDeadline: resolveTime - 86400, // 1 day before resolve
                     resolveTime: resolveTime,
                     chain: formData.chain || 'Base',

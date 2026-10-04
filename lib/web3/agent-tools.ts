@@ -96,7 +96,7 @@ export const agentTools = {
         console.log(`Minting USDC from faucet...`);
         
         const hash = await walletClient.writeContract({
-            address: BIZFI_CONFIG.contracts.mockUsdc as `0x${string}`,
+            address: BIZFI_CONFIG.contracts.usdc as `0x${string}`,
             abi: MOCK_USDC_ABI,
             functionName: 'faucet',
             args: []
@@ -174,7 +174,7 @@ export const agentTools = {
         const oracle = "0x0000000000000000000000000000000000000000"; 
         
         const factoryAddress = chainConfig.contracts.predictionMarketFactory as `0x${string}`;
-        const usdcAddress = chainConfig.contracts.mockUsdc as `0x${string}`;
+        const usdcAddress = chainConfig.contracts.usdc as `0x${string}`;
         
         const creationFee = BigInt(10000000); // 10 USDC (10e6)
         
@@ -232,7 +232,7 @@ export const agentTools = {
         console.log(`Approving ${params.spenderAddress} to spend ${params.amount} USDC`);
 
         const hash = await walletClient.writeContract({
-            address: BIZFI_CONFIG.contracts.mockUsdc as `0x${string}`,
+            address: BIZFI_CONFIG.contracts.usdc as `0x${string}`,
             abi: ERC20_ABI,
             functionName: 'approve',
             args: [params.spenderAddress as `0x${string}`, amountWei]

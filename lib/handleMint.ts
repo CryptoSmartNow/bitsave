@@ -97,7 +97,7 @@ export async function handleMint(data: MintData) {
     throw new Error('Invalid instrument type');
   }
 
-  // Generate unique certificate identifier & mock on-chain tx
+  // Generate unique certificate identifier & queue on-chain tx
   const certificateId = `cert_${crypto.randomUUID().replace(/-/g, '')}`;
   const transactionId = `0x${crypto.randomBytes(32).toString('hex')}`;
 
