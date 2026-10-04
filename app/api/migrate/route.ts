@@ -6,8 +6,9 @@ export async function GET(request: NextRequest) {
   // Simple protection
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
+  const expectedSecret = process.env.MIGRATION_SECRET;
   
-  if (secret !== 'migration_secret_2024') {
+  if (!expectedSecret || secret !== expectedSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
