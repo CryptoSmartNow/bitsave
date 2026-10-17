@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // 1. Fetch Leaderboard
     console.log('Fetching leaderboard from external API...');
     const leaderboardResponse = await axios.get('https://bitsaveapi.vercel.app/leaderboard', {
-      headers: { 'Cancel-API-Key': process.env.NEXT_PUBLIC_API_KEY || '' }
+      headers: { 'Cancel-API-Key': process.env.CANCEL_API_KEY || process.env.MIGRATION_API_KEY || process.env.NEXT_PUBLIC_API_KEY || '' }
     });
     
     const leaderboardData = leaderboardResponse.data;
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         try {
             console.log(`Fetching transactions for ${user.useraddress}...`);
             const txResponse = await axios.get(`https://bitsaveapi.vercel.app/transactions/${user.useraddress}`, {
-                headers: { 'Cancel-API-Key': process.env.NEXT_PUBLIC_API_KEY || '' }
+                headers: { 'Cancel-API-Key': process.env.CANCEL_API_KEY || process.env.MIGRATION_API_KEY || process.env.NEXT_PUBLIC_API_KEY || '' }
             });
             
             const txData = txResponse.data;
