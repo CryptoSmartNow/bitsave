@@ -46,40 +46,40 @@ const hedera = {
   testnet: true,
 } as const;
 
-// Define custom Botchain Testnet
-const botchainTestnet = {
-  id: 968,
-  name: 'BOT Testnet',
-  network: 'botchain-testnet',
-  nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 },
+// Define custom Arc Testnet
+const arcTestnet = {
+  id: 5042002,
+  name: 'Arc Testnet',
+  network: 'arc-testnet',
+  nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://testnet-rpc.botchain.app'] },
-    public: { http: ['https://testnet-rpc.botchain.app'] },
+    default: { http: ['https://rpc.testnet.arc.network', 'https://rpc.testnet.arc.io'] },
+    public: { http: ['https://rpc.testnet.arc.network', 'https://rpc.testnet.arc.io'] },
   },
   blockExplorers: {
-    default: { name: 'BOT Testnet Explorer', url: 'https://testnet-scan.botchain.app' },
+    default: { name: 'ArcScan', url: 'https://testnet.arcscan.app' },
   },
   testnet: true,
 } as const;
 
-// Define custom Botchain Mainnet
-const botchainMainnet = {
-  id: 969,
-  name: 'Botchain Mainnet',
-  network: 'botchain-mainnet',
-  nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 },
+// Define custom Arc Mainnet
+const arcMainnet = {
+  id: 5042,
+  name: 'Arc Mainnet',
+  network: 'arc-mainnet',
+  nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.botchain.app'] },
-    public: { http: ['https://rpc.botchain.app'] },
+    default: { http: ['https://rpc.mainnet.arc.network', 'https://rpc.mainnet.arc.io'] },
+    public: { http: ['https://rpc.mainnet.arc.network', 'https://rpc.mainnet.arc.io'] },
   },
   blockExplorers: {
-    default: { name: 'Botchain Explorer', url: 'https://scan.botchain.app' },
+    default: { name: 'ArcScan', url: 'https://arcscan.app' },
   },
 } as const;
 
 // Wagmi configuration for EVM chains with multi-RPC high availability fallback
 export const config = createConfig({
-  chains: [base, celo, lisk, avalanche, mainnet, baseSepolia, optimismSepolia, arbitrumSepolia, polygonAmoy],
+  chains: [base, celo, lisk, avalanche, mainnet, baseSepolia, optimismSepolia, arbitrumSepolia, polygonAmoy, arcTestnet, arcMainnet],
   connectors: [
     injected(),
   ],
@@ -113,6 +113,14 @@ export const config = createConfig({
     [optimismSepolia.id]: http(),
     [arbitrumSepolia.id]: http(),
     [polygonAmoy.id]: http(),
+    [arcTestnet.id]: fallback([
+      http('https://rpc.testnet.arc.network'),
+      http('https://rpc.testnet.arc.io'),
+    ]),
+    [arcMainnet.id]: fallback([
+      http('https://rpc.mainnet.arc.network'),
+      http('https://rpc.mainnet.arc.io'),
+    ]),
   },
   ssr: true,
 });
@@ -143,7 +151,7 @@ function InnerProviders({ children }: { children: ReactNode }) {
           },
         },
         loginMethods: ['wallet', 'email', 'google', 'twitter', 'linkedin', 'discord', 'apple'],
-        supportedChains: [base, baseSepolia, botchainTestnet, botchainMainnet, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet],
+        supportedChains: [base, baseSepolia, arcTestnet, arcMainnet, optimismSepolia, arbitrumSepolia, polygonAmoy, celo, avalanche, lisk, hedera, mainnet],
         externalWallets: {
           walletConnect: { enabled: true },
         },

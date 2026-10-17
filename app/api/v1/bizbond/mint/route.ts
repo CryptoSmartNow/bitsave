@@ -8,7 +8,7 @@ import { z } from 'zod';
 const mintSchema = z.object({
   walletAddress: z.string().min(1, 'Wallet address is required'),
   chainrailsSessionId: z.string().min(1, 'Chainrails session ID is required'),
-  chain: z.enum(['BASE', 'SOLANA']).default('BASE'),
+  chain: z.enum(['BASE', 'SOLANA', 'ARC', 'BOTCHAIN']).default('BASE'),
 });
 
 export async function POST(request: Request) {
@@ -53,7 +53,8 @@ export async function POST(request: Request) {
 
     const { instrument, amount, token } = deposit;
     
-    const selectedChainKey: BizSwapSupportedChain = chain.toLowerCase() === 'botchain' ? 'botchain' : 'base';
+    const selectedChainKey: BizSwapSupportedChain =
+      (chain.toLowerCase() === 'arc' || chain.toLowerCase() === 'botchain') ? 'arc' : 'base';
     const chainConfig = getChainConfig(selectedChainKey);
 
     // 2. Generate Specs

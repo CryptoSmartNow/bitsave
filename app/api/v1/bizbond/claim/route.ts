@@ -7,7 +7,7 @@ import { z } from 'zod';
 const claimSchema = z.object({
   walletAddress: z.string().min(1, 'Wallet address is required'),
   certificateId: z.string().min(1, 'Certificate ID is required'),
-  chain: z.enum(['BASE', 'SOLANA']).default('BASE'),
+  chain: z.enum(['BASE', 'SOLANA', 'ARC', 'BOTCHAIN']).default('BASE'),
 });
 
 export async function POST(request: Request) {
@@ -35,7 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Certificate not found or does not belong to this wallet' }, { status: 404 });
     }
 
-    const selectedChainKey: BizSwapSupportedChain = chain.toLowerCase() === 'botchain' ? 'botchain' : 'base';
+    const selectedChainKey: BizSwapSupportedChain =
+      (chain.toLowerCase() === 'arc' || chain.toLowerCase() === 'botchain') ? 'arc' : 'base';
     const chainConfig = getChainConfig(selectedChainKey);
 
     // Return the unsigned transaction payload so the third party can prompt their user to sign

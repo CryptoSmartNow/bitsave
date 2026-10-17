@@ -178,8 +178,10 @@ export default function BizSwapAppPage() {
     }
 
     const savedChain = localStorage.getItem('bizswap_selectedChain');
-    if (savedChain === 'base' || savedChain === 'botchain') {
+    if (savedChain === 'base' || savedChain === 'arc') {
       setSelectedChain(savedChain);
+    } else if (savedChain === 'botchain') {
+      setSelectedChain('arc');
     }
 
     const savedInst = localStorage.getItem('bizswap_selectedInst');
@@ -337,8 +339,8 @@ export default function BizSwapAppPage() {
                 chainId: hexChainId,
                 chainName: targetConfig.name,
                 nativeCurrency: {
-                  name: chainKey === 'botchain' ? 'BOT' : 'ETH',
-                  symbol: chainKey === 'botchain' ? 'BOT' : 'ETH',
+                  name: chainKey === 'arc' ? 'USDC' : 'ETH',
+                  symbol: chainKey === 'arc' ? 'USDC' : 'ETH',
                   decimals: 18,
                 },
                 rpcUrls: [targetConfig.rpcUrl],
@@ -503,7 +505,7 @@ export default function BizSwapAppPage() {
               Buy <span className="font-instrument italic font-normal text-[#81D7B4]">BizShares</span>
             </h1>
             <p className="text-xs sm:text-sm text-[#7B8B9A] mt-1 font-medium leading-relaxed">
-              Acquire yield-generating Real-World Asset BizShares on Base and Botchain.
+              Acquire yield-generating Real-World Asset BizShares on Base and Arc Network.
             </p>
           </div>
 
@@ -554,33 +556,33 @@ export default function BizSwapAppPage() {
                   )}
                 </button>
 
-                {/* Botchain Option */}
+                {/* Arc Network Option */}
                 <button
                   type="button"
-                  onClick={() => handleNetworkChange('botchain')}
+                  onClick={() => handleNetworkChange('arc')}
                   className={`group relative p-3 sm:p-3.5 rounded-xl border transition-all duration-300 flex items-center gap-3 text-left cursor-pointer ${
-                    selectedChain === 'botchain'
-                      ? 'bg-[#10B981]/10 border-[#10B981] shadow-[0_0_24px_rgba(16,185,129,0.25)]'
+                    selectedChain === 'arc'
+                      ? 'bg-[#3B82F6]/10 border-[#3B82F6] shadow-[0_0_24px_rgba(59,130,246,0.25)]'
                       : 'bg-[#070A0F] border-[#182338] hover:border-[#2C3E5D]'
                   }`}
                 >
                   <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center p-1 border transition-all shrink-0 ${
-                    selectedChain === 'botchain' ? 'bg-[#10B981]/20 border-[#10B981] shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'bg-[#121A27] border-[#1E293B]'
+                    selectedChain === 'arc' ? 'bg-[#3B82F6]/20 border-[#3B82F6] shadow-[0_0_12px_rgba(59,130,246,0.4)]' : 'bg-[#121A27] border-[#1E293B]'
                   }`}>
-                    <Image src="/botchain-logo.png" alt="Botchain Logo" width={28} height={28} className="rounded-full object-contain" />
+                    <Image src="/arc-logo.png" alt="Arc Network Logo" width={28} height={28} className="rounded-lg object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-xs sm:text-sm font-black ${selectedChain === 'botchain' ? 'text-[#F9F9FB]' : 'text-[#8DA2B5]'}`}>
-                        Botchain
+                      <span className={`text-xs sm:text-sm font-black ${selectedChain === 'arc' ? 'text-[#F9F9FB]' : 'text-[#8DA2B5]'}`}>
+                        Arc Network
                       </span>
-                      <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#10B981]/20 text-[#34D399]">Testnet</span>
+                      <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#3B82F6]/20 text-[#60A5FA]">Mainnet</span>
                     </div>
-                    <p className="text-[9px] sm:text-[10px] text-[#64748B] font-medium truncate mt-0.5">Mint on Botchain &middot; Chain 968</p>
+                    <p className="text-[9px] sm:text-[10px] text-[#64748B] font-medium truncate mt-0.5">Mint on Arc &middot; Chain 5042</p>
                   </div>
-                  {selectedChain === 'botchain' && (
-                    <div className="w-4 h-4 rounded-full bg-[#10B981] flex items-center justify-center shrink-0">
-                      <CheckmarkCircle01Icon className="w-3.5 h-3.5 text-[#070A0F]" />
+                  {selectedChain === 'arc' && (
+                    <div className="w-4 h-4 rounded-full bg-[#3B82F6] flex items-center justify-center shrink-0">
+                      <CheckmarkCircle01Icon className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
                 </button>

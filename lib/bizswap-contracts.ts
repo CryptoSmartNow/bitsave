@@ -2,7 +2,7 @@
  * BizSwap Multi-Chain Contract Configuration
  *
  * Central module exporting ABIs, addresses, chains, and types for BizSwap
- * supporting both Base (Chain 8453) and Botchain (Chain 968 Testnet / 677 Mainnet).
+ * supporting both Base (Chain 8453) and Arc Network (Chain 5042002 Testnet / 5042 Mainnet).
  */
 
 // ─── ABIs ────────────────────────────────────────────────────────
@@ -12,6 +12,7 @@ import BizSwapSaleABI from '@/app/abi/bizswap_abi/BizSwapSale.json';
 import PayoutVaultABI from '@/app/abi/bizswap_abi/PayoutVault.json';
 import BizSwapLPABI from '@/app/abi/bizswap_abi/BizSwapLP.json';
 import TreasuryRouterABI from '@/app/abi/bizswap_abi/TreasuryRouter.json';
+import ArcBizSwapABI from '@/app/abi/bizswap_abi/ArcBizSwap.json';
 import BotchainBizSwapABI from '@/app/abi/bizswap_abi/BotchainBizSwap.json';
 import BizSwapControllerABI from '@/app/abi/bizswap_abi/BizSwapController.json';
 
@@ -22,6 +23,7 @@ export {
   PayoutVaultABI,
   BizSwapLPABI,
   TreasuryRouterABI,
+  ArcBizSwapABI,
   BotchainBizSwapABI,
   BizSwapControllerABI,
 };
@@ -72,7 +74,7 @@ export const ERC20ABI = [
 ] as const;
 
 // ─── Supported Chains ───────────────────────────────────────────
-export type BizSwapSupportedChain = 'base' | 'botchain';
+export type BizSwapSupportedChain = 'base' | 'arc';
 
 export interface ChainConfig {
   id: number;
@@ -116,21 +118,21 @@ export const BIZSWAP_CHAINS: Record<BizSwapSupportedChain, ChainConfig> = {
       revenueWallet: (process.env.NEXT_PUBLIC_BIZSWAP_EVM_REVENUE_WALLET || '0x125629FAab442e459C1015FCBa50499D0aAB8EE0') as `0x${string}`,
     },
   },
-  botchain: {
-    id: 968, // Testnet 968 (or 677 for Mainnet)
-    key: 'botchain',
-    name: 'BOT Chain',
-    shortName: 'Botchain',
-    badge: 'Botchain',
-    currency: 'USDT',
+  arc: {
+    id: 5042, // Arc Mainnet 5042 (or 5042002 for Testnet)
+    key: 'arc',
+    name: 'Arc Mainnet',
+    shortName: 'Arc',
+    badge: 'Arc Mainnet',
+    currency: 'USDC',
     tokenDecimals: 6,
-    rpcUrl: process.env.NEXT_PUBLIC_BOTCHAIN_RPC_URL || 'https://testnet-rpc.botchain.ai',
-    explorerUrl: 'https://testnet-explorer.botchain.ai',
-    explorerTokenPath: 'https://testnet-explorer.botchain.ai/token',
+    rpcUrl: process.env.NEXT_PUBLIC_ARC_RPC_URL || 'https://rpc.mainnet.arc.network',
+    explorerUrl: 'https://arcscan.app',
+    explorerTokenPath: 'https://arcscan.app/token',
     contracts: {
-      controllerOrProxy: (process.env.NEXT_PUBLIC_BOTCHAIN_BIZSWAP_PROXY || '0x1621E1f293D9a31e4d598cFA5309ec061899704b') as `0x${string}`,
-      paymentAsset: (process.env.NEXT_PUBLIC_BOTCHAIN_USDT || '0x75edC9335175Fc0552D51D48439F229c10420fe3') as `0x${string}`,
-      revenueWallet: (process.env.NEXT_PUBLIC_BOTCHAIN_REVENUE_WALLET || '0x038a4e7c11193eBdF6FE574bD9eCf6989c8bEafe') as `0x${string}`,
+      controllerOrProxy: (process.env.NEXT_PUBLIC_ARC_BIZSWAP_PROXY || '0x82af2D999a2e37160086D48150b7A40CEFAfaAA9') as `0x${string}`,
+      paymentAsset: (process.env.NEXT_PUBLIC_ARC_USDC || '0x3600000000000000000000000000000000000000') as `0x${string}`,
+      revenueWallet: (process.env.NEXT_PUBLIC_ARC_REVENUE_WALLET || '0x038a4e7c11193eBdF6FE574bD9eCf6989c8bEafe') as `0x${string}`,
     },
   },
 };
@@ -191,8 +193,16 @@ export function parseMarketConfig(
 }
 
 export function getChainConfig(chainKey?: string | null): ChainConfig {
-  if (chainKey === 'botchain' || chainKey === '968' || chainKey === '677') {
-    return BIZSWAP_CHAINS.botchain;
+  const normalized = (chainKey || '').toLowerCase();
+  if (
+    normalized === 'arc' ||
+    normalized === '5042002' ||
+    normalized === '5042' ||
+    normalized === 'botchain' ||
+    normalized === '968' ||
+    normalized === '677'
+  ) {
+    return BIZSWAP_CHAINS.arc;
   }
   return BIZSWAP_CHAINS.base;
 }

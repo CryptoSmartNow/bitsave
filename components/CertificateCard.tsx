@@ -225,8 +225,8 @@ export function CertificateCard({ holding }: CertificateCardProps) {
       {/* Network Badge */}
       <div className="absolute top-6 right-6 z-30 flex items-center gap-2">
         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md border shadow-md ${
-          chain === 'botchain'
-            ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40'
+          chain === 'arc' || chain === 'botchain'
+            ? 'bg-[#8B5CF6]/20 text-[#C084FC] border-[#8B5CF6]/40'
             : 'bg-[#0052FF]/20 text-[#60A5FA] border-[#0052FF]/40'
         }`}>
           🌐 {chainConfig.name}

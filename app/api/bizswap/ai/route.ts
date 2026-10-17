@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         if (!response.ok) {
             const errorText = await response.text();
             console.warn('ChainGPT API issue for BizSwap, providing instant guidance:', response.status, errorText);
-            const fallbackReply = `Hello! I am your **BizSwap Assistant**. 💎\n\n- **BizYield**: Revenue sharing with ~24% annualized benchmark and monthly payouts.\n- **BizCredit**: Private credit instrument offering a fixed 16% annualized return with weekly payouts.\n- **BizBond**: Secured treasury-backed instrument with 10% fixed APR paid quarterly.\n\nAll instruments are backed by on-chain verifiable certificates on Base and Botchain. Select your desired instrument above to begin!`;
+            const fallbackReply = `Hello! I am your **BizSwap Assistant**. 💎\n\n- **BizYield**: Revenue sharing with ~24% annualized benchmark and monthly payouts.\n- **BizCredit**: Private credit instrument offering a fixed 16% annualized return with weekly payouts.\n- **BizBond**: Secured treasury-backed instrument with 10% fixed APR paid quarterly.\n\nAll instruments are backed by on-chain verifiable certificates on Base and Arc Network. Select your desired instrument above to begin!`;
             return NextResponse.json({ reply: fallbackReply, status: 'success', fallback: true });
         }
 

@@ -1,7 +1,7 @@
-import { getBizSwapCollection, getBizSwapUsersCollection, getDatabase } from '@/lib/mongodb';
+import { getBizSwapCollection, getDatabase } from '@/lib/mongodb';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-import { BIZSWAP_CHAINS, BizSwapSupportedChain, getChainConfig, getExplorerUrl } from '@/lib/bizswap-contracts';
+import { BizSwapSupportedChain, getChainConfig, getExplorerUrl } from '@/lib/bizswap-contracts';
 
 export interface MintData {
   wallet?: string;
@@ -39,7 +39,8 @@ export async function handleMint(data: MintData) {
     throw new Error('Database unavailable');
   }
 
-  const selectedChainKey: BizSwapSupportedChain = chain === 'botchain' ? 'botchain' : 'base';
+  const selectedChainKey: BizSwapSupportedChain =
+    (chain?.toLowerCase() === 'arc' || chain?.toLowerCase() === 'botchain') ? 'arc' : 'base';
   const chainConfig = getChainConfig(selectedChainKey);
 
   // Determine Certificate Specs & Timelines
@@ -101,7 +102,7 @@ export async function handleMint(data: MintData) {
   const certificateId = `cert_${crypto.randomUUID().replace(/-/g, '')}`;
   const transactionId = `0x${crypto.randomBytes(32).toString('hex')}`;
 
-  // On-chain parameters for Base and Botchain contracts
+  // On-chain parameters for Base and Arc contracts
   const onChainParams = {
     chain: selectedChainKey,
     chainId: chainConfig.id,
@@ -113,7 +114,7 @@ export async function handleMint(data: MintData) {
     feeAmountUsdCents: Math.round(feeAmount * 100),
     entitlementBpsOrUnits: entitlementBps,
     instrumentType: instrumentTypeIndex,
-    // Botchain params
+    // Arc params
     vestEndTimestamp,
     yieldStartTimestamp,
     cycle: currentCycle,
